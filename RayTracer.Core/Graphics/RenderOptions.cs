@@ -1,7 +1,7 @@
 namespace RayTracer.Core.Graphics;
 
-
 public record RenderOptions(
 		int Width,
-		int Height
+		int Height,
+		bool DebugNormals = true
 		);

@@ -1,4 +1,4 @@
-using RayTracer.Core.Meshes;
+using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Scenes;
 

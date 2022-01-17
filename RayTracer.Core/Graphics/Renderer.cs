@@ -27,14 +27,20 @@ public static class Renderer
 			for (int y = 0; y < options.Height; y++)
 			{
 				//Get the view ray from the camera
-				Ray r = cam.GetRay((float)x / options.Width, (float)y / options.Height);
+				//We have to flip the y- value because the camera expects y=0 to be the bottom
+				//But the image expects it to be at the top
+				Ray r = cam.GetRay((float)x / options.Width, (float)(options.Height -y -1) / options.Height);
 
+				//Sky colour
 				float t   = 0.5f * (r.Direction.Y + 1);
 				Rgb24 col = new(ToByte((1 - t) + (0.5f * t)), ToByte((1 - t) + (0.7f * t)), ToByte((1 - t) + (1f * t)));
+
 				//Loop over the objects to see if we hit anything
 				foreach (SceneObject sceneObject in objects)
-					if (sceneObject.Hittable.Hit(r))
+					if (sceneObject.Hittable.Hit(r) > 0)
+					{
 						col = new Rgb24(255, 0, 0);
+					}
 
 				image[x, y] = col;
 			}

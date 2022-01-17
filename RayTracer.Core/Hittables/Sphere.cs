@@ -1,7 +1,7 @@
 using RayTracer.Core.Graphics;
 using System.Numerics;
 
-namespace RayTracer.Core.Meshes;
+namespace RayTracer.Core.Hittables;
 
 public class Sphere : Hittable
 {
@@ -9,7 +9,7 @@ public class Sphere : Hittable
 	public float   Radius;
 
 	/// <inheritdoc/>
-	public override bool Hit(Ray ray)
+	public override float Hit(Ray ray)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
 		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;
@@ -19,6 +19,9 @@ public class Sphere : Hittable
 		float   c      = oc.LengthSquared() - (Radius * Radius);
 
 		float discriminant = (halfB * halfB) - (a * c);
-		return discriminant > 0;
+		if (discriminant < 0)
+			return -1f;
+		else
+			return (-halfB - MathF.Sqrt(discriminant) ) / a;
 	}
 }
