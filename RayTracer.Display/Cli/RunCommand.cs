@@ -1,8 +1,12 @@
 using JetBrains.Annotations;
+using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace RayTracer.Display.Cli;
@@ -28,10 +32,9 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			AnsiConsole.Write(table);
 		}
 		//Select scene
-		AnsiConsole.MarkupLine("[bold]Please select which scene you wish to load:[/]");
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
-						.Title("Title")
+						.Title("[bold]Please select which scene you wish to load:[/]")
 						.AddChoices(
 								BuiltinScenes.Sphere,
 								BuiltinScenes.TwoSpheres
@@ -39,6 +42,9 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		);
 		AnsiConsole.MarkupLine($"Selected scene is [bold]{scene}[/]");
 
+		Image image = Renderer.Render(scene);
+		image.Save(File.OpenWrite(settings.OutputFile), new PngEncoder());
+		Process.Start("gwenview", $"\"{settings.OutputFile}\"").WaitForExit();
 		return 0;
 	}
 
@@ -57,7 +63,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 		[Description("The output path for the rendered image")]
 		[CommandOption("-o|--output|--output-file")]
-		[DefaultValue("/image.png")]
+		[DefaultValue("./image.png")]
 		public string OutputFile { get; init; } = null!;
 	}
 }
