@@ -24,13 +24,14 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 					Title = new TableTitle("[bold]Provided Options:[/]")
 			};
 			//Headings for the columns
-			table.AddColumn("Option");
-			table.AddColumn("Value");
+			table.AddColumn("[bold]Option[/]");
+			table.AddColumn("[bold]Value[/]");
 
 			foreach (PropertyInfo propertyInfo in typeof(Settings).GetProperties())
 				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
 			AnsiConsole.Write(table);
 		}
+		RenderOptions renderOptions = new(settings.Width, settings.Height);
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
@@ -40,9 +41,9 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 								BuiltinScenes.TwoSpheres
 						)
 		);
-		AnsiConsole.MarkupLine($"Selected scene is [bold]{scene}[/]");
+		AnsiConsole.MarkupLine($"Selected scene is [italic]{scene}[/]");
 
-		Image image = Renderer.Render(scene);
+		Image image = Renderer.Render(scene, renderOptions);
 		image.Save(File.OpenWrite(settings.OutputFile), new PngEncoder());
 		Process.Start("gwenview", $"\"{settings.OutputFile}\"").WaitForExit();
 		return 0;

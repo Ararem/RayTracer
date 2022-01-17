@@ -1,3 +1,5 @@
+using RayTracer.Core.Graphics;
+
 namespace RayTracer.Core.Meshes;
 
 /// <summary>
@@ -5,5 +7,5 @@ namespace RayTracer.Core.Meshes;
 /// </summary>
 public abstract class Mesh
 {
-
+	public abstract bool Hit(Ray ray);
 }

@@ -63,15 +63,19 @@ public sealed class Camera
 	}
 
 	/// <summary>
-	///  Gets the world-space ray that corresponds to the given pixel's <paramref name="uv"/> coordinate
+	///  Gets the world-space ray that corresponds to the given pixel's <paramref name="u"/><paramref name="v"/> coordinate
 	/// </summary>
-	/// <param name="uv">The UV coordinate of the pixel</param>
-	/// <remarks>It is expected that the <paramref name="uv"/> coordinate is normalized to the range [0..1] for the X and Y values</remarks>
-	public Ray GetRay(Vector2 uv)
+	/// <param name="u">The UV coordinate of the pixel</param>
+	/// <param name="v">The UV coordinate of the pixel</param>
+	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
+	public Ray GetRay(float u, float v)
 	{
-		if (Vector2.Clamp(Vector2.Zero, Vector2.One, uv) != uv)
-			throw new ArgumentOutOfRangeException(nameof(uv), uv, "UV coordinates are only accepted in the range [0..1]");
-		return new Ray(Zero, new Vector3(uv, 0));
+		if (u is <0 or >1)
+			throw new ArgumentOutOfRangeException(nameof(u), u, "UV coordinates are only accepted in the range [0..1]");
+		if (v is <0 or >1)
+			throw new ArgumentOutOfRangeException(nameof(v), v, "UV coordinates are only accepted in the range [0..1]");
+
+		return Ray.FromPoints(LookFrom, LowerLeftCorner + (u*Horizontal) + (v*Vertical));
 	}
 
 #region Internal View-Ray Vectors
