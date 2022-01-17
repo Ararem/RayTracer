@@ -14,36 +14,22 @@ namespace RayTracer.Core.Graphics;
 public sealed class Camera
 {
 	/// <summary>
-	///  How far away from the camera should the optimal focus point be (affects blur)
-	/// </summary>
-	public readonly float FocusDistance;
-
-	/// <summary>
 	///  The horizontal field-of-view angle (in degrees)
 	/// </summary>
 	public readonly float HorizontalFov;
-
-	/// <summary>
-	///  How large the simulated lens should be (affects blur)
-	/// </summary>
-	/// <seealso cref="FocusDistance"/>
-	public readonly float LensRadius;
 
 	/// <summary>
 	///  The vertical field-of-view angle (in degrees)
 	/// </summary>
 	public readonly float VerticalFov;
 
-
-	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float lensRadius, float verticalFov, float aspectRatio, float focusDistance)
+	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio)
 	{
 		LookFrom      = lookFrom;
 		LookTowards   = lookTowards;
 		UpVector      = upVector;
-		LensRadius    = lensRadius;
 		VerticalFov   = verticalFov;
-		HorizontalFov = verticalFov * aspectRatio;
-		FocusDistance = focusDistance;
+		HorizontalFov = verticalFov / aspectRatio;
 
 		float theta          = VerticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
@@ -57,9 +43,9 @@ public sealed class Camera
 		U = Normalize(Cross(UpVector, W));
 		V = Cross(W, U);
 
-		Horizontal      = FocusDistance * viewportWidth * U;
-		Vertical        = FocusDistance * viewportHeight * V;
-		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - (FocusDistance * W);
+		Horizontal      = viewportWidth * U;
+		Vertical        = viewportHeight * V;
+		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - W;
 	}
 
 	/// <summary>

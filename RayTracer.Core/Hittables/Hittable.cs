@@ -3,9 +3,9 @@ using RayTracer.Core.Graphics;
 namespace RayTracer.Core.Meshes;
 
 /// <summary>
-/// Base class for a mesh. Represents the surface/structure of a render-able object.
+/// Base class for a hittable. Represents the surface/structure of a render-able object.
 /// </summary>
-public abstract class Mesh
+public abstract class Hittable
 {
 	public abstract bool Hit(Ray ray);
 }

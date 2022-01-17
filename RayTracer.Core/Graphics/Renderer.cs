@@ -33,8 +33,8 @@ public static class Renderer
 				Rgb24 col = new(ToByte((1 - t) + (0.5f * t)), ToByte((1 - t) + (0.7f * t)), ToByte((1 - t) + (1f * t)));
 				//Loop over the objects to see if we hit anything
 				foreach (SceneObject sceneObject in objects)
-					if (sceneObject.Mesh.Hit(r))
-						col = new Rgb24(1, 0, 0);
+					if (sceneObject.Hittable.Hit(r))
+						col = new Rgb24(255, 0, 0);
 
 				image[x, y] = col;
 			}
