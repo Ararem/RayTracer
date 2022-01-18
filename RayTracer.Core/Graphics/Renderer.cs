@@ -1,6 +1,7 @@
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Numerics;
 
 namespace RayTracer.Core.Graphics;
 
@@ -29,7 +30,7 @@ public static class Renderer
 				//Get the view ray from the camera
 				//We have to flip the y- value because the camera expects y=0 to be the bottom
 				//But the image expects it to be at the top
-				Ray r = cam.GetRay((float)x / options.Width, (float)(options.Height -y -1) / options.Height);
+				Ray r = cam.GetRay((float)x / options.Width, (float)(options.Height - y - 1) / options.Height);
 
 				//Sky colour
 				float t   = 0.5f * (r.Direction.Y + 1);
@@ -37,9 +38,17 @@ public static class Renderer
 
 				//Loop over the objects to see if we hit anything
 				foreach (SceneObject sceneObject in objects)
-					if (sceneObject.Hittable.Hit(r) > 0)
+					if (sceneObject.Hittable.TryHit(r) is { } hit)
 					{
-						col = new Rgb24(255, 0, 0);
+						if (options.DebugNormals)
+						{
+							Vector3 n = (hit.Normal + Vector3.One) / 2f;
+							col = new Rgb24(n.X.ToByte(), n.Y.ToByte(), n.Z.ToByte());
+						}
+						else
+						{
+							col = new Rgb24(255, ToByte(hit.K / 5f), 0);
+						}
 					}
 
 				image[x, y] = col;

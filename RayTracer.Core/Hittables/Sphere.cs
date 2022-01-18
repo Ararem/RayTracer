@@ -3,13 +3,16 @@ using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
 
-public class Sphere : Hittable
+/// <summary>
+/// Implementation of <see cref="Hittable"/> for a sphere
+/// </summary>
+public sealed class Sphere : Hittable
 {
 	public Vector3 Centre;
 	public float   Radius;
 
 	/// <inheritdoc/>
-	public override float Hit(Ray ray)
+	public override HitRecord? TryHit(Ray ray)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
 		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;
@@ -19,9 +22,11 @@ public class Sphere : Hittable
 		float   c      = oc.LengthSquared() - (Radius * Radius);
 
 		float discriminant = (halfB * halfB) - (a * c);
+		//No solution to the quadratic
 		if (discriminant < 0)
-			return -1f;
-		else
-			return (-halfB - MathF.Sqrt(discriminant) ) / a;
+			return null;
+		float   k      = (-halfB - MathF.Sqrt(discriminant) ) / a;
+		Vector3 normal = Vector3.Normalize(ray.PointAt(k) - new Vector3(0, 0, -1));
+		return new(k, normal);
 	}
 }

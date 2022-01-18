@@ -8,6 +8,7 @@ using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+#pragma warning disable CS8765
 
 namespace RayTracer.Display.Cli;
 
@@ -31,7 +32,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
 			AnsiConsole.Write(table);
 		}
-		RenderOptions renderOptions = new(settings.Width, settings.Height);
+		RenderOptions renderOptions = new(settings.Width, settings.Height,0.001f, float.PositiveInfinity, false);
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()

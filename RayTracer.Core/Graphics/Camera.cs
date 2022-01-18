@@ -23,8 +23,27 @@ public sealed class Camera
 	/// </summary>
 	public readonly float VerticalFov;
 
+	/// <summary>
+	///  Constructor for creating a camera
+	/// </summary>
+	/// <param name="lookFrom">Position the camera is located at - where it looks from</param>
+	/// <param name="lookTowards">Point the camera should point towards - this will be the focus of the camera</param>
+	/// <param name="upVector">
+	///  Vector direction the camera considers 'upwards'. Use this to rotate the camera around the central view ray (lookFrom -> lookToward) - inverting this
+	///  is like rotating the camera upside-down
+	/// </param>
+	/// <param name="verticalFov">Angle in degrees for the vertical field of view</param>
+	/// <param name="aspectRatio">Aspect ratio of the camera (width/height)</param>
+	/// <exception cref="ArithmeticException">
+	///  Thrown when vector arithmetic returns invalid results because the camera's <paramref name="upVector"/> has the same direction as the forward vector.
+	///  To fix this, simply modify the <paramref name="lookFrom"/>, <paramref name="lookTowards"/> or <paramref name="upVector"/> so that the
+	///  <paramref name="upVector"/> points in a different direction to the direction of <paramref name="lookFrom"/> -> <paramref name="lookTowards"/>.
+	/// So ensure that <c>Cross(UpVector, LookFrom - LookTowards) != Zero</c> before calling this constructor
+	/// </exception>
 	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio)
 	{
+		//Have to ensure it's normalized because this is a direction-type vector
+		upVector      = Normalize(upVector);
 		LookFrom      = lookFrom;
 		LookTowards   = lookTowards;
 		UpVector      = upVector;
@@ -56,12 +75,12 @@ public sealed class Camera
 	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
 	public Ray GetRay(float u, float v)
 	{
-		if (u is <0 or >1)
+		if (u is < 0 or > 1)
 			throw new ArgumentOutOfRangeException(nameof(u), u, "UV coordinates are only accepted in the range [0..1]");
-		if (v is <0 or >1)
+		if (v is < 0 or > 1)
 			throw new ArgumentOutOfRangeException(nameof(v), v, "UV coordinates are only accepted in the range [0..1]");
 
-		return Ray.FromPoints(LookFrom, LowerLeftCorner + (u*Horizontal) + (v*Vertical));
+		return Ray.FromPoints(LookFrom, LowerLeftCorner + (u * Horizontal) + (v * Vertical));
 	}
 
 #region Internal View-Ray Vectors
