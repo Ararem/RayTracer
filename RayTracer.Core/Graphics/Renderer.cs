@@ -1,3 +1,4 @@
+using RayTracer.Core.Debugging;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -32,24 +33,59 @@ public static class Renderer
 				//But the image expects it to be at the top
 				Ray r = cam.GetRay((float)x / options.Width, (float)(options.Height - y - 1) / options.Height);
 
+				#if DEBUG
+
+				//Check camera view ray magnitude is 1
+				if (Math.Abs(r.Direction.LengthSquared() - 1f) > 0.001f)
+					GraphicsError.Add(GraphicsErrorType.RayDirectionWrongMagnitude, cam);
+				#endif
+
 				//Sky colour
 				float t   = 0.5f * (r.Direction.Y + 1);
 				Rgb24 col = new(ToByte((1 - t) + (0.5f * t)), ToByte((1 - t) + (0.7f * t)), ToByte((1 - t) + (1f * t)));
 
 				//Loop over the objects to see if we hit anything
 				foreach (SceneObject sceneObject in objects)
-					if (sceneObject.Hittable.TryHit(r) is { } hit)
+				{
+					//Account for the offset of the object
+					Ray correctedRay = new(r.Origin - sceneObject.Position, r.Direction);
+					//TODO: Object rotation
+					if (sceneObject.Hittable.TryHit(correctedRay, options.KMin, options.KMax) is { } hit)
 					{
-						if (options.DebugNormals)
+						#if DEBUG
+						//Check that the normal magnitude is approx 1 unit
+						//Don't have to sqrt it because 1 squared is 1
+						if (Math.Abs(hit.Normal.LengthSquared() - 1f) > 0.001f)
+							GraphicsError.Add(GraphicsErrorType.NormalsWrongMagnitude, sceneObject);
+
+						//Check if the K value is in the correct range
+						if((hit.K < options.KMin) || (hit.K > options.KMax))
+							GraphicsError.Add(GraphicsErrorType.KValueNotInRange, sceneObject);
+
+						#endif
+						switch (options.DebugVisualisation)
 						{
-							Vector3 n = (hit.Normal + Vector3.One) / 2f;
-							col = new Rgb24(n.X.ToByte(), n.Y.ToByte(), n.Z.ToByte());
-						}
-						else
-						{
-							col = new Rgb24(255, ToByte(hit.K / 5f), 0);
+							case GraphicsDebugVisualisation.Normals:
+							{
+								//Convert normal values [-1..1] to [0..1]
+								Vector3 n = (hit.Normal + Vector3.One) / 2f;
+								col = new Rgb24(n.X.ToByte(), n.Y.ToByte(), n.Z.ToByte());
+								break;
+							}
+							case GraphicsDebugVisualisation.FaceDirection:
+							{
+								//Convert normal values [-1..1] to [0..1]
+								col = hit.OutsideFace ? new Rgb24(0, 255, 0) : new Rgb24(255, 0, 0);
+								break;
+							}
+							//Render the object normally
+							case GraphicsDebugVisualisation.None:
+							default:
+								col = new Rgb24(255, ToByte(hit.K / 5f), 0);
+								break;
 						}
 					}
+				}
 
 				image[x, y] = col;
 			}
