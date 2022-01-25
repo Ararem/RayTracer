@@ -17,10 +17,10 @@ using System.Reflection;
 namespace RayTracer.Display.Cli;
 
 [PublicAPI]
-internal sealed class RunCommand : Command<RunCommand.Settings>
+internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 {
 	/// <inheritdoc/>
-	public override int Execute(CommandContext context, Settings settings)
+	public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
 	{
 		//Print settings to console
 		{
@@ -36,7 +36,9 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
 			AnsiConsole.Write(table);
 		}
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.DebugVisualisation);
+
+
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.DebugVisualisation);
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
@@ -48,7 +50,13 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		);
 		AnsiConsole.MarkupLine($"Selected scene is [italic]{scene}[/]");
 
-		Image image = Renderer.Render(scene, renderOptions);
+
+		//Render the scene
+		AsyncRenderJob renderJob = new(scene, renderOptions);
+		Image          image     = await renderJob;
+
+
+		//Print any errors
 		if (!GraphicsError.Errors.IsEmpty)
 		{
 			ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> errors = GraphicsError.Errors;
@@ -93,6 +101,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 					bool exists                         = errors[errorType].TryGetValue(obj, out ulong count);
 					if (!exists || (count == 0)) row[i] = noErrorsMarkup;
+					//Change the count text's colour depending on how large the count is
 					else row[i] = new Markup(
 							@$"[{count switch
 							{
@@ -118,8 +127,10 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			AnsiConsole.MarkupLine("[green]Finished rendering![/]");
 		}
 
-		image.Save(File.OpenWrite(settings.OutputFile), new PngEncoder());
-		Process.Start(
+
+		//Save and open the image for viewing
+		await image.SaveAsync(File.OpenWrite(settings.OutputFile), new PngEncoder());
+		await Process.Start(
 				new ProcessStartInfo
 				{
 						FileName  = "gwenview",
@@ -130,7 +141,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 						RedirectStandardInput  = true,
 						RedirectStandardOutput = true
 				}
-		)!.WaitForExit();
+		)!.WaitForExitAsync();
 		return 0;
 	}
 
@@ -164,7 +175,13 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		[DefaultValue("./image.png")]
 		public string OutputFile { get; init; } = null!;
 
-		[Description("The output path for the rendered image")]
+		//TODO: Make this an int to change how many threads at a time, maybe even modifiable on the fly
+		[Description("Flag for enabling multithreaded rendering")]
+		[CommandOption("-t|--threaded")]
+		[DefaultValue(false)]
+		public bool Threaded { get; init; }
+
+		[Description("Flag for enabling debugging visualisations, such as surface normals")]
 		[CommandOption("--debug|--visualise")]
 		[DefaultValue(GraphicsDebugVisualisation.None)]
 		public GraphicsDebugVisualisation DebugVisualisation { get; init; }
