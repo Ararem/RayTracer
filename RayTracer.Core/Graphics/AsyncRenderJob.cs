@@ -2,8 +2,6 @@ using RayTracer.Core.Debugging;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -17,18 +15,25 @@ namespace RayTracer.Core.Graphics;
 /// </remarks>
 public sealed class AsyncRenderJob
 {
+	/// <summary>
+	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
+	/// </summary>
+	/// <param name="scene">The scene containing the objects and camera for the render</param>
+	/// <param name="renderOptions">
+	///  Record containing options that affect how the resulting image is produced, such as resolution, multisample count or debug
+	///  visualisations
+	/// </param>
 	public AsyncRenderJob(Scene scene, RenderOptions renderOptions)
 	{
-		Scene         = scene;
-		Buffer        = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
-		RenderOptions = renderOptions;
-		RenderCompleted   = false;
+		Scene                = scene;
+		Buffer               = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		RenderOptions        = renderOptions;
+		taskCompletionSource = new TaskCompletionSource<Image<Rgb24>>(this);
 		Task.Run(RenderInternal);
 	}
 
 	private void RenderInternal()
 	{
-		RenderCompleted                            = false;
 		(_, Camera cam, SceneObject[] objects) = Scene;
 		Image<Rgb24> image = new(RenderOptions.Width, RenderOptions.Height);
 		for (int x = 0; x < RenderOptions.Width; x++)
@@ -98,7 +103,8 @@ public sealed class AsyncRenderJob
 			}
 		}
 
-		RenderCompleted = true;
+		//Notify that the render is complete
+		taskCompletionSource.SetResult(image);
 	}
 
 	/// <summary>
@@ -106,7 +112,7 @@ public sealed class AsyncRenderJob
 	/// </summary>
 	public static byte ToByte(float f) => (byte)(255f * f);
 
-	#region State
+#region State
 
 	/// <summary>
 	///  The scene that is being rendered
@@ -130,61 +136,17 @@ public sealed class AsyncRenderJob
 	/// <summary>
 	///  Whether this render job has completed rendering
 	/// </summary>
-	public bool RenderCompleted { get; private set; } = false;
+	public bool RenderCompleted => taskCompletionSource.Task.IsCompleted;
+
+	/// <summary>
+	///  Internal object used for task-like awaiting
+	/// </summary>
+	private readonly TaskCompletionSource<Image<Rgb24>> taskCompletionSource;
 
 	/// <summary>
 	///  Gets the task awaiter for this instance
 	/// </summary>
-	public AsyncRenderJobAwaiter GetAwaiter() => new(this);
-
-	/// <summary>
-	/// Task awaiter for a <see cref="AsyncRenderJob"/>
-	/// </summary>
-	public readonly struct AsyncRenderJobAwaiter : INotifyCompletion
-	{
-		/// <summary>
-		/// Creates an awaiter for a render job
-		/// </summary>
-		/// <param name="parent"></param>
-		public AsyncRenderJobAwaiter(AsyncRenderJob parent)
-		{
-			Parent = parent;
-		}
-
-		/// <summary>
-		///  Gets the result of this render job (the image buffer). Throws if render has not yet completed
-		/// </summary>
-		public Image<Rgb24> GetResult()
-		{
-			if (!IsCompleted) throw new InvalidOperationException("Render has not yet completed");
-			return Parent.Buffer;
-		}
-
-		/// <summary>
-		///  Parent render job this awaiter is for
-		/// </summary>
-		public AsyncRenderJob Parent { get; }
-
-		/// <summary>
-		///  Gets whether the render job has completed
-		/// </summary>
-		public bool IsCompleted
-		{
-			get
-			{
-				bool complete = Parent.RenderCompleted;
-				Debug.WriteLine($"RenderComplete: {complete}");
-				return complete;
-			}
-		}
-
-		/// <inheritdoc/>
-		public void OnCompleted(Action continuation)
-		{
-			//Not supported
-			throw new NotImplementedException($"Continuations not supported ({continuation})");
-		}
-	}
+	public TaskAwaiter<Image<Rgb24>> GetAwaiter() => taskCompletionSource.Task.GetAwaiter();
 
 #endregion
 }
