@@ -83,7 +83,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 			//Build the rows. Each row represents the erroring object, and the error counts for it
 			var    row            = new IRenderable[allErrorTypes.Length + 1];
-			Markup noErrorsMarkup = new Markup("[italic green]N/A[/]");
+			Markup noErrorsMarkup = new("[italic green]N/A[/]");
 			foreach (object obj in allObjects)
 			{
 				Array.Fill(row, new Markup("[bold red]ERROR[/]"));
@@ -99,21 +99,22 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 						continue;
 					}
 
-					bool exists                         = errors[errorType].TryGetValue(obj, out ulong count);
+					bool exists = errors[errorType].TryGetValue(obj, out ulong count);
 					if (!exists || (count == 0)) row[i] = noErrorsMarkup;
 					//Change the count text's colour depending on how large the count is
-					else row[i] = new Markup(
-							@$"[{count switch
-							{
-									< 100   => "#afd700",
-									< 500   => "#ffff00",
-									< 1000  => "#ffaf00",
-									< 2500  => "#ff8700",
-									< 5000  => "#ff5f00",
-									< 10000 => "#ff2f00",
-									_       => "#ff0000"
-							}} bold]{count}[/]"
-					);
+					else
+						row[i] = new Markup(
+								@$"[{count switch
+								{
+										< 100   => "#afd700",
+										< 500   => "#ffff00",
+										< 1000  => "#ffaf00",
+										< 2500  => "#ff8700",
+										< 5000  => "#ff5f00",
+										< 10000 => "#ff2f00",
+										_       => "#ff0000"
+								}} bold]{count}[/]"
+						);
 				}
 
 				table.AddRow(row);

@@ -7,5 +7,6 @@ app.Configure(
 		{
 			config.ValidateExamples()
 				.PropagateExceptions();
-		});
+		}
+);
 return app.Run(args);

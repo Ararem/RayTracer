@@ -72,6 +72,6 @@ public sealed class Sphere : Hittable
 		return new Vector2(u, v);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override string ToString() => $"Sphere {{Radius: {Radius}}}";
 }

@@ -15,7 +15,7 @@ public static class BuiltinScenes
 	public static readonly Scene Sphere = new(
 			"Sphere Scene", new Camera(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY, 20, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere", Vector3.UnitX*0.0f, new Sphere { Radius = .1f })
+					new("Sphere", Vector3.UnitX * 0.0f, new Sphere { Radius = .1f })
 			}
 	);
 

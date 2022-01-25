@@ -8,14 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
-	  <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
-	  <PackageReference Include="Spectre.Console" Version="0.43.0" />
-	  <PackageReference Include="Spectre.Console.ImageSharp" Version="0.43.0" />
+		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0"/>
+		<PackageReference Include="SixLabors.ImageSharp" Version="1.0.4"/>
+		<PackageReference Include="Spectre.Console" Version="0.43.0"/>
+		<PackageReference Include="Spectre.Console.ImageSharp" Version="0.43.0"/>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 </Project>

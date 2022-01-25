@@ -49,7 +49,7 @@ public sealed class AsyncRenderJob
 
 				//Check camera view ray magnitude is 1
 				if (Math.Abs(r.Direction.LengthSquared() - 1f) > 0.001f)
-					GraphicsError.Add(GraphicsErrorType.RayDirectionWrongMagnitude, cam);
+					GraphicsError.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, cam);
 				#endif
 
 				//Sky colour
@@ -68,11 +68,11 @@ public sealed class AsyncRenderJob
 						//Check that the normal magnitude is approx 1 unit
 						//Don't have to sqrt it because 1 squared is 1
 						if (Math.Abs(hit.Normal.LengthSquared() - 1f) > 0.001f)
-							GraphicsError.Add(GraphicsErrorType.NormalsWrongMagnitude, sceneObject);
+							GraphicsError.RecordError(GraphicsErrorType.NormalsWrongMagnitude, sceneObject);
 
 						//Check if the K value is in the correct range
 						if ((hit.K < RenderOptions.KMin) || (hit.K > RenderOptions.KMax))
-							GraphicsError.Add(GraphicsErrorType.KValueNotInRange, sceneObject);
+							GraphicsError.RecordError(GraphicsErrorType.KValueNotInRange, sceneObject);
 
 						#endif
 						switch (RenderOptions.DebugVisualisation)

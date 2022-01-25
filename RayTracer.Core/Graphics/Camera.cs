@@ -9,7 +9,7 @@ namespace RayTracer.Core.Graphics;
 ///  Represents a camera that is used to render a <see cref="Scene"/>
 /// </summary>
 /// <remarks>
-///  This class handles the creation of view rays for each pixel, which the <see cref="Renderer"/> then uses to create the scene image
+///  This class handles the creation of view rays for each pixel, which renderers then use to create the scene image
 /// </remarks>
 public sealed class Camera
 {
@@ -38,7 +38,7 @@ public sealed class Camera
 	///  Thrown when vector arithmetic returns invalid results because the camera's <paramref name="upVector"/> has the same direction as the forward vector.
 	///  To fix this, simply modify the <paramref name="lookFrom"/>, <paramref name="lookTowards"/> or <paramref name="upVector"/> so that the
 	///  <paramref name="upVector"/> points in a different direction to the direction of <paramref name="lookFrom"/> -> <paramref name="lookTowards"/>.
-	/// So ensure that <c>Cross(UpVector, LookFrom - LookTowards) != Zero</c> before calling this constructor
+	///  So ensure that <c>Cross(UpVector, LookFrom - LookTowards) != Zero</c> before calling this constructor
 	/// </exception>
 	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio)
 	{

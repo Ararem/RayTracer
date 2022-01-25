@@ -3,7 +3,7 @@ using System.Numerics;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-/// Record containing information about when a <see cref="Graphics.Ray"/> intersects with a <see cref="Hittable"/>
+///  Record containing information about when a <see cref="Graphics.Ray"/> intersects with a <see cref="Hittable"/>
 /// </summary>
 /// <param name="Point">The point on the surface of the object where the intersection occured (relative to the object's centre, so object-space)</param>
 /// <param name="Normal">The surface normal at the intersection</param>
@@ -15,4 +15,4 @@ public readonly record struct HitRecord(
 		float   K,
 		bool    OutsideFace,
 		Vector2 UV
-				);
+);
