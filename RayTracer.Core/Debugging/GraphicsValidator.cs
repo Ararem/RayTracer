@@ -1,13 +1,18 @@
-#if DEBUG
+using RayTracer.Core.Graphics;
+using RayTracer.Core.Hittables;
 using System.Collections.Concurrent;
+using System.Numerics;
+using static RayTracer.Core.Debugging.GraphicsErrorType;
 
 namespace RayTracer.Core.Debugging;
 
 /// <summary>
-///  Base class for implementing an object that
+///  Static class for validating graphics
 /// </summary>
-public abstract class GraphicsError
+public static class GraphicsValidator
 {
+#region Storing errors
+
 	/// <summary>
 	///  Dictionary that stores how many times each error type has occurred, on a per-object basis
 	/// </summary>
@@ -42,5 +47,56 @@ public abstract class GraphicsError
 		//Or we create a new key for the object and set it's error count to 1
 		objectCountMap.AddOrUpdate(erroringObject, 1, (_, oldVal) => oldVal + 1);
 	}
+
+#endregion
+
+#region Validation Methods
+
+	/// <summary>
+	///  Ensures a given ray's direction has a correct magnitude (of 1)
+	/// </summary>
+	public static void CheckRayDirectionMagnitude(ref Ray r, object source)
+	{
+		if (Math.Abs(r.Direction.LengthSquared() - 1f) > 0.001f)
+		{
+			RecordError(RayDirectionWrongMagnitude, source);
+			r = r with { Direction = Vector3.Normalize(r.Direction) };
+		}
+	}
+
+	/// <summary>
+	///  Ensures a <see cref="HitRecord"/>'s <see cref="HitRecord.Normal"/> has a magnitude of 1
+	/// </summary>
+	public static void CheckNormalMagnitude(ref HitRecord hit, object source)
+	{
+		//Check that the normal magnitude is approx 1 unit
+		//Don't have to sqrt it because 1 squared is 1
+		if (Math.Abs(hit.Normal.LengthSquared() - 1f) > 0.001f)
+		{
+			RecordError(NormalsWrongMagnitude, source);
+			hit = hit with
+			{
+					Normal = Vector3.Normalize(hit.Normal)
+			};
+		}
+	}
+
+	/// <summary>
+	///  Validates a <see cref="HitRecord"/>'s K value is in the correct range
+	/// </summary>
+	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, object source)
+	{
+		if (hit.K < options.KMin)
+		{
+			RecordError(KValueNotInRange, source);
+			hit = hit with { K = options.KMin };
+		}
+		else if (hit.K > options.KMax)
+		{
+			RecordError(KValueNotInRange, source);
+			hit = hit with { K = options.KMax };
+		}
+	}
+
+#endregion
 }
-#endif

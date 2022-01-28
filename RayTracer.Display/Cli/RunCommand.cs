@@ -38,7 +38,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		}
 
 
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.DebugVisualisation);
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, 1, settings.DebugVisualisation);
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
@@ -57,9 +57,9 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 
 		//Print any errors
-		if (!GraphicsError.Errors.IsEmpty)
+		if (!GraphicsValidator.Errors.IsEmpty)
 		{
-			ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> errors = GraphicsError.Errors;
+			ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> errors = GraphicsValidator.Errors;
 			AnsiConsole.MarkupLine("[red]Finished rendering with errors[/]");
 			//Print a list of all the errors that occurred
 			Table table = new()

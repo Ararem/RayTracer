@@ -17,11 +17,13 @@ namespace RayTracer.Core.Graphics;
 /// </param>
 /// <param name="DebugVisualisation">Flag for enabling debugging related options, such as showing surface normals</param>
 /// <param name="Threaded">Flag for enabling multi-threaded rendering</param>
+/// <param name="Samples">How many samples to average, to create a less noisy image</param>
 public sealed record RenderOptions(
 		int                        Width,
 		int                        Height,
 		float                      KMin,
 		float                      KMax,
-		bool                       Threaded,
+		bool                       Threaded, //TODO: Implement threading/customisable concurrency level
+		int                        Samples,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
 );

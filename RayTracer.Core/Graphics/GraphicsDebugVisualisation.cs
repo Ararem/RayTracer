@@ -22,5 +22,10 @@ public enum GraphicsDebugVisualisation
 	///  Display which direction a face points in (inside or outside)
 	/// </summary>
 	/// <remarks>Outside face is green, inside is red</remarks>
-	FaceDirection
+	FaceDirection,
+
+	/// <summary>
+	///  Output a greyscale image based on how close the intersection is to the camera.
+	/// </summary>
+	Depth
 }

@@ -1,3 +1,4 @@
+using RayTracer.Core.Environment;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using System.Numerics;
@@ -16,7 +17,8 @@ public static class BuiltinScenes
 			"Sphere Scene", new Camera(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY, 20, 16f / 9f), new SceneObject[]
 			{
 					new("Sphere", Vector3.UnitX * 0.0f, new Sphere { Radius = .1f })
-			}
+			},
+			new DefaultSkyBox()
 	);
 
 	/// <summary>
@@ -28,6 +30,7 @@ public static class BuiltinScenes
 					new("Sphere 1", Vector3.Zero, new Sphere { Radius = .1f }),
 					new("Sphere 2", Vector3.Zero, new Sphere { Radius = .1f }),
 					new("Sphere 3", Vector3.Zero, new Sphere { Radius = .1f })
-			}
+			},
+			new DefaultSkyBox()
 	);
 }
