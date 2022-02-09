@@ -12,6 +12,7 @@ namespace RayTracer.Core;
 /// <summary>
 ///  Represents an RGB colour
 /// </summary>
+//P.S. (To America) - This is how you spell "color" the correct way
 [PublicAPI]
 [SuppressMessage("Usage", "CA2225", MessageId = "Operator overloads have named alternates")]
 public readonly struct Colour : IFormattable

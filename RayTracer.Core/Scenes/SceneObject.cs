@@ -1,5 +1,5 @@
 using RayTracer.Core.Hittables;
-using System.Numerics;
+using RayTracer.Core.Materials;
 
 namespace RayTracer.Core.Scenes;
 
@@ -8,11 +8,12 @@ namespace RayTracer.Core.Scenes;
 /// </summary>
 /// <param name="Name">The name of this object</param>
 /// <param name="Hittable">The mesh used for calculating intersections with this object (it's geometry)</param>
-public record SceneObject(
+public sealed record SceneObject(
 		string   Name,
-		Vector3  Position,
-		Hittable Hittable)
+		Hittable Hittable,
+		Material Material
+)
 {
 	/// <inheritdoc/>
-	public override string ToString() => $"'{Name}' ({Hittable}) @ {Position}";
+	public override string ToString() => $"'{Name}' {{Shape: {Hittable}, Material: {Material}}})";
 }

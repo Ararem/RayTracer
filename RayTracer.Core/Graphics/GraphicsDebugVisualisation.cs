@@ -27,5 +27,13 @@ public enum GraphicsDebugVisualisation
 	/// <summary>
 	///  Output a greyscale image based on how close the intersection is to the camera.
 	/// </summary>
-	Depth
+	Depth,
+
+	/// <summary>
+	///  Whenever a ray hits an object, display a debug texture (useful for seeing if objects are visible in the scene)
+	/// </summary>
+	/// <remarks>
+	///  Generates the colour from the pixel's coordinates, creating a checker pattern
+	/// </remarks>
+	PixelCoordDebugTexture
 }

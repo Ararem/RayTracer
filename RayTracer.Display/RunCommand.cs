@@ -4,6 +4,7 @@ using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Spectre.Console.Rendering;
@@ -17,10 +18,10 @@ using System.Reflection;
 namespace RayTracer.Display.Cli;
 
 [PublicAPI]
-internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
+internal sealed class RunCommand : Command<RunCommand.Settings>
 {
 	/// <inheritdoc/>
-	public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+	public override int Execute(CommandContext context, Settings settings)
 	{
 		//Print settings to console
 		{
@@ -38,7 +39,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		}
 
 
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, 1, settings.DebugVisualisation);
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.Samples, settings.MaxBounces, settings.DebugVisualisation);
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
@@ -53,7 +54,22 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		//Render the scene
 		AsyncRenderJob renderJob = new(scene, renderOptions);
-		Image          image     = await renderJob;
+
+		//Create a live display that shows what the current image preview is like
+		ImageRenderable canvasImage = new(renderJob.Buffer) { MaxWidth = 76, Resampler = new NearestNeighborResampler() };
+		AnsiConsole.Live(canvasImage)
+					.StartAsync(
+							async ctx =>
+							{
+								while (!renderJob.RenderCompleted)
+								{
+									ctx.Refresh();
+									await Task.Delay(1000);
+								}
+							}
+					);
+
+		Image image = renderJob.GetAwaiter().GetResult();
 
 
 		//Print any errors
@@ -130,8 +146,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 
 		//Save and open the image for viewing
-		await image.SaveAsync(File.OpenWrite(settings.OutputFile), new PngEncoder());
-		await Process.Start(
+		image.Save(File.OpenWrite(settings.OutputFile), new PngEncoder());
+		Process.Start(
 				new ProcessStartInfo
 				{
 						FileName  = "gwenview",
@@ -142,7 +158,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 						RedirectStandardInput  = true,
 						RedirectStandardOutput = true
 				}
-		)!.WaitForExitAsync();
+		)!.WaitForExit();
 		return 0;
 	}
 
@@ -181,6 +197,16 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		[CommandOption("-t|--threaded")]
 		[DefaultValue(false)]
 		public bool Threaded { get; init; }
+
+		[Description("How many times to sample each pixel")]
+		[CommandOption("-s|--samples")]
+		[DefaultValue(100)]
+		public int Samples { get; init; }
+
+		[Description("Maximum number of times a ray can bounce")]
+		[CommandOption("-b|--bounces")]
+		[DefaultValue(100)]
+		public int MaxBounces { get; init; }
 
 		[Description("Flag for enabling debugging visualisations, such as surface normals")]
 		[CommandOption("--debug|--visualise")]

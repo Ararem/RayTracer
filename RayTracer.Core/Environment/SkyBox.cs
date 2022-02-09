@@ -5,6 +5,9 @@ namespace RayTracer.Core.Environment;
 /// <summary>
 ///  Base class for implementing a skybox
 /// </summary>
+/// <remarks>
+/// We essentially treat the skybox as an infinitely far away object (behind everything), and uses it to calculate sky lighting. The colour returned by <see cref="GetSkyColour"/> is interpreted as the emissive colour of a material.
+/// </remarks>
 public abstract class SkyBox
 {
 	/// <summary>

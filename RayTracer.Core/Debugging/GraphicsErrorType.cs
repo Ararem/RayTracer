@@ -31,5 +31,11 @@ public enum GraphicsErrorType
 	///  Indicates that the ray-object intersection code for a <see cref="Hittable"/> is incorrect (most likely it returns the closes point and does not
 	///  validate their distance along the ray)
 	/// </remarks>
-	KValueNotInRange
+	KValueNotInRange,
+
+	/// <summary>
+	///  The <see cref="HitRecord.K"/> value for two ray-object intersections (same ray, unique objects) are <b>exactly</b> the same.
+	/// </summary>
+	/// <footer>See <a href="https://en.wikipedia.org/wiki/Z-fighting">Z-Fighting</a></footer>
+	ZFighting
 }
