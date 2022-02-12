@@ -8,21 +8,22 @@ namespace RayTracer.Core.Hittables;
 /// </summary>
 public sealed class Sphere : Hittable
 {
+	public Vector3 Centre = Vector3.Zero;
+
 	/// <summary>
 	///  The radius of the sphere (distance from centre to it's surface)
 	/// </summary>
-	public float Radius;
+	public float Radius = 1f;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
-		//Since (due to design decisions) the objects are treated as if they are always centred at (0,0,0) from the hittable's point of view
-		//We don't have to account for any offsets here
 		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;
+		Vector3 oc     = rayPos - Centre;
 		float   a      = rayDir.LengthSquared();
-		float   halfB  = Vector3.Dot(rayPos, rayDir);
-		float   c      = rayPos.LengthSquared() - (Radius * Radius);
+		float   halfB  = Vector3.Dot(oc, rayDir);
+		float   c      = oc.LengthSquared() - (Radius * Radius);
 
 		float discriminant = (halfB * halfB) - (a * c);
 		if (discriminant < 0) return null; //No solutions to where ray intersects with sphere because of negative square root
@@ -41,7 +42,7 @@ public sealed class Sphere : Hittable
 
 		float   k             = root;                                    //How far along the ray we had to go to hit the sphere
 		Vector3 point         = ray.PointAt(k);                          //Closest point on the surface of the sphere that we hit
-		Vector3 outwardNormal = point / Radius;                          //Normal direction at the point. Will always face outwards
+		Vector3 outwardNormal = (point - Centre) / Radius;               //Normal direction at the point. Will always face outwards
 		bool    inside        = Vector3.Dot(rayDir, outwardNormal) > 0f; //If the ray is 'inside' the sphere
 
 		//This flips the normal if the ray is inside the sphere
@@ -67,7 +68,7 @@ public sealed class Sphere : Hittable
 		float theta = MathF.Acos(-p.Y);
 		float phi   = MathF.Atan2(-p.Z, p.X) + MathF.PI;
 
-		float u = phi / (2 * MathF.PI);
+		float u = phi   / (2 * MathF.PI);
 		float v = theta / MathF.PI;
 		return new Vector2(u, v);
 	}

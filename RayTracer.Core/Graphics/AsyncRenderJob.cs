@@ -37,7 +37,7 @@ public sealed class AsyncRenderJob
 		Buffer                       = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
 		this.renderOptions           = renderOptions;
 		rawBuffer                    = new Colour[renderOptions.Width * renderOptions.Height];
-		sampleCounts                 = new int[renderOptions.Width * renderOptions.Height];
+		sampleCounts                 = new int[renderOptions.Width    * renderOptions.Height];
 		taskCompletionSource         = new TaskCompletionSource<Image<Rgb24>>(this);
 		TotalRawPixels               = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height * (ulong)this.renderOptions.Samples;
 		TotalTruePixels              = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height;
@@ -67,26 +67,27 @@ public sealed class AsyncRenderJob
 		taskCompletionSource.SetResult(Buffer);
 	}
 
+	/// <summary>
+	///  Renders
+	/// </summary>
+	/// <param name="x"></param>
+	/// <param name="y"></param>
 	private void RenderAndUpdatePixel(int x, int y)
 	{
 		//Get the view ray from the camera
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
-		Ray worldRay = camera.GetRay((float)x / renderOptions.Width, (float)(renderOptions.Height - y - 1) / renderOptions.Height);
+		Ray ray = camera.GetRay((float)x / renderOptions.Width, (float)(renderOptions.Height - y - 1) / renderOptions.Height);
 
 		//Check camera view ray magnitude is 1
-		GraphicsValidator.CheckRayDirectionMagnitude(ref worldRay, camera);
+		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
 
 		//Sky colour
-		Colour col = skybox.GetSkyColour(worldRay);
+		Colour col = skybox.GetSkyColour(ray);
 
 		//Loop over the objects to see if we hit anything
 		foreach (SceneObject sceneObject in objects)
-		{
-			//Account for the offset of the object
-			Ray transformCorrectedRay = new(worldRay.Origin - sceneObject.Position, worldRay.Direction);
-			//TODO: Object rotation
-			if (sceneObject.Hittable.TryHit(transformCorrectedRay, renderOptions.KMin, renderOptions.KMax) is { } hit)
+			if (sceneObject.Hittable.TryHit(ray, renderOptions.KMin, renderOptions.KMax) is { } hit)
 			{
 				GraphicsValidator.CheckNormalMagnitude(ref hit, sceneObject);
 				GraphicsValidator.CheckKValueRange(ref hit, renderOptions, sceneObject);
@@ -129,13 +130,23 @@ public sealed class AsyncRenderJob
 					case GraphicsDebugVisualisation.PixelCoordDebugTexture:
 						col = MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Blue + Colour.Red;
 						break;
+					case GraphicsDebugVisualisation.ScatterDirection:
+						TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMaterial);
+						if (maybeMaterial is { } mat)
+						{
+							//Convert vector values [-1..1] to [0..1]
+							Vector3 scat = mat.Scatter((HitRecord)maybeHit!)?.Direction ?? -Vector3.One;
+							Vector3 n    = (scat + Vector3.One) / 2f;
+							col = (Colour)n;
+						}
+
+						break;
 					case GraphicsDebugVisualisation.None:
 					default:
-						col = CalculateRayColourRecursive(transformCorrectedRay, 0); //WORLD OR LOCAL RAY PROBLEMS RERFLECT
+						col = CalculateRayColourRecursive(ray, 0); //WORLD OR LOCAL RAY PROBLEMS RERFLECT
 						break;
 				}
 			}
-		}
 
 		//Now we have our pixel, write it to the buffers
 		UpdateBuffers(x, y, col);
@@ -150,7 +161,7 @@ public sealed class AsyncRenderJob
 	///  ray from the camera
 	/// </param>
 	//TODO: Try figure out if it's possible to make this non-recursive somehow. Perhaps a `while` loop or something?
-	private Colour CalculateRayColourRecursive(Ray worldRay, Ray localRay, int bounces)
+	private Colour CalculateRayColourRecursive(Ray ray, int bounces)
 	{
 		//Ensure we don't go too deep
 		if (bounces > renderOptions.MaxBounces)

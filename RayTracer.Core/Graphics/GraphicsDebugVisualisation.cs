@@ -35,5 +35,10 @@ public enum GraphicsDebugVisualisation
 	/// <remarks>
 	///  Generates the colour from the pixel's coordinates, creating a checker pattern
 	/// </remarks>
-	PixelCoordDebugTexture
+	PixelCoordDebugTexture,
+
+	/// <summary>
+	///  Display the object scatter direction. Similar to <see cref="Normals"/>
+	/// </summary>
+	ScatterDirection
 }
