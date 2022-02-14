@@ -53,7 +53,8 @@ public sealed class AsyncRenderJob
 			{
 				for (int s = 0; s < renderOptions.Samples; s++)
 				{
-					RenderAndUpdatePixel(x, y);
+					Colour col = RenderPixel(x, y);
+					UpdateBuffers(x, y, col);
 					Increment(ref rawPixelsRendered);
 				}
 
@@ -68,16 +69,17 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	///  Renders
+	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>).
 	/// </summary>
-	/// <param name="x"></param>
-	/// <param name="y"></param>
-	private void RenderAndUpdatePixel(int x, int y)
+	/// <remarks>
+	///	<paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.
+	/// </remarks>
+	/// <param name="x">X coordinate of the pixel</param>
+	/// <param name="y">Y coordinate of the pixel</param>
+	private Colour RenderPixel(int x, int y)
 	{
 		//Get the view ray from the camera
-		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
-		//But the image expects it to be at the top (Graphics APIs amirite?)
-		Ray ray = camera.GetRay((float)x / renderOptions.Width, (float)(renderOptions.Height - y - 1) / renderOptions.Height);
+		Ray ray = camera.GetRay((float)x / renderOptions.Width, (float)y / renderOptions.Height);
 
 		//Check camera view ray magnitude is 1
 		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
@@ -148,8 +150,7 @@ public sealed class AsyncRenderJob
 				}
 			}
 
-		//Now we have our pixel, write it to the buffers
-		UpdateBuffers(x, y, col);
+		return col;
 	}
 
 	/// <summary>
@@ -258,14 +259,26 @@ public sealed class AsyncRenderJob
 		}
 	}
 
-	private void UpdateBuffers(int x, int y, Colour pixel)
+	/// <summary>
+	///  Updates the pixel and colour buffers for the pixel at (<paramref name="x"/>, <paramref name="y"/>), on the basis that that pixel was just rendered
+	///  with a <paramref name="colour"/>, and the average needs to be updated
+	/// </summary>
+	/// <param name="x">X coordinate for the pixel (camera coords, left to right)</param>
+	/// <param name="y">Y coordinate for the pixel (camera coords, bottom to top)</param>
+	/// <param name="colour">Colour that the pixel was just rendered as</param>
+	private void UpdateBuffers(int x, int y, Colour colour)
 	{
+		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
+		//But the image expects it to be at the top (Graphics APIs amirite?)
+		//The (X,Y) we're given is camera coords
+		y = renderOptions.Height - y - 1;
+
 		//Lock to prevent other threads from changing our pixel
 		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
 		bufferLock.EnterWriteLock();
 		int i = Compress2DIndex(x, y, renderOptions.Width, renderOptions.Height);
 		sampleCounts[i]++;
-		rawBuffer[i] += pixel;
+		rawBuffer[i] += colour;
 		Buffer[x, y] =  (Rgb24)(rawBuffer[i] / sampleCounts[i]);
 		bufferLock.ExitWriteLock();
 	}
