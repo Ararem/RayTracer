@@ -41,19 +41,21 @@ public sealed class Sphere : Hittable
 		}
 
 		float   k             = root;                                    //How far along the ray we had to go to hit the sphere
-		Vector3 point         = ray.PointAt(k);                          //Closest point on the surface of the sphere that we hit
-		Vector3 outwardNormal = (point - Centre) / Radius;               //Normal direction at the point. Will always face outwards
+		Vector3 worldPoint    = ray.PointAt(k);                          //Closest point on the surface of the sphere that we hit (world space)
+		Vector3 localPoint    = worldPoint - Centre;                     //Same as above but from the centre of this sphere
+		Vector3 outwardNormal = localPoint / Radius;                     //Normal direction at the point. Will always face outwards
 		bool    inside        = Vector3.Dot(rayDir, outwardNormal) > 0f; //If the ray is 'inside' the sphere
 
 		//This flips the normal if the ray is inside the sphere
 		//This forces the normal to always be going against the ray
 		Vector3 normal = inside ? -outwardNormal : outwardNormal;
 		Vector2 uv     = GetSphereUV(outwardNormal);
-		return new HitRecord(point, normal, k, !inside, uv);
+		return new HitRecord(worldPoint, localPoint, normal, k, !inside, uv);
 	}
 
 	/// <summary>
-	///  Gets UV coordinates from a point <paramref name="p"/> on the sphere's surface
+	///  Gets UV coordinates from a point <paramref name="p"/> on the sphere's surface. The point must be on the surface of a sphere centred at (0, 0, 0),
+	///  with a radius > 0
 	/// </summary>
 	/// <param name="p">The point on the sphere's surface</param>
 	public static Vector2 GetSphereUV(Vector3 p)
