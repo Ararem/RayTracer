@@ -1,11 +1,9 @@
 using JetBrains.Annotations;
-using RayTracer.Core;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
-using RayTracer.Core.Materials;
 using System.Numerics;
 
-namespace OLDRayTracer.Materials;
+namespace RayTracer.Core.Materials;
 
 /// <summary>
 ///  A material that has diffuse-like properties.
@@ -29,19 +27,17 @@ public sealed class DiffuseMaterial : Material
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)
 	{
-		Vector3 scatter = Rand.RandomInUnitSphere(); //Pick a random scatter direction
-		scatter = Vector3.Dot(scatter, hit.Normal) > 0
+		Vector3 scatter = Rand.RandomInUnitSphere();   //Pick a random scatter direction
+		scatter = Vector3.Dot(scatter, hit.Normal) > 0 //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
 				? scatter
-				: -scatter; //Ensure the resulting scatter is in the same direction as the normal
-		// scatter += meshHit.Normal;
+				: -scatter;
 
-		// Catch degenerate scatter direction
+		// Catch degenerate scatter direction (when scatter magnitude is almost 0)
 		const float thresh = (float)1e-5;
 		if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
 			scatter = hit.Normal;
 
-		Vector3 point = hit.Point;
-		Ray     r     = new(point, Vector3.Normalize(scatter));
+		Ray r = new(hit.Point, Vector3.Normalize(scatter));
 		return r;
 	}
 
