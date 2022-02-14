@@ -133,7 +133,7 @@ public sealed class AsyncRenderJob
 						col = MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Blue + Colour.Red;
 						break;
 					case GraphicsDebugVisualisation.ScatterDirection:
-						TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMaterial);
+						TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? maybeMaterial);
 						if (maybeMaterial is { } mat)
 						{
 							//Convert vector values [-1..1] to [0..1]
@@ -173,7 +173,7 @@ public sealed class AsyncRenderJob
 
 		//TODO: Track how many times a given depth was reached
 		//Find the nearest hit along the ray
-		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
+		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? material))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
 			//See if the material scatters the ray
@@ -210,7 +210,7 @@ public sealed class AsyncRenderJob
 	}
 
 	[ContractAnnotation("=> true, maybeHit: notnull, material: notnull; => false, maybeHit: null, material:null")]
-	private bool TryFindClosestHit(Ray ray, out HitRecord? maybeHit, out Material? material)
+	private bool TryFindClosestHit(Ray ray, out HitRecord? maybeHit, out MaterialBase? material)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 

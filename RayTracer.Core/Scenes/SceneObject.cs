@@ -9,9 +9,9 @@ namespace RayTracer.Core.Scenes;
 /// <param name="Name">The name of this object</param>
 /// <param name="Hittable">The mesh used for calculating intersections with this object (it's geometry)</param>
 public sealed record SceneObject(
-		string   Name,
-		Hittable Hittable,
-		Material Material
+		string       Name,
+		Hittable     Hittable,
+		MaterialBase Material
 )
 {
 	/// <inheritdoc/>

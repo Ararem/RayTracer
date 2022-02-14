@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
+using RayTracer.Core.Textures;
 using System.Numerics;
 
 namespace RayTracer.Core.Materials;
@@ -8,21 +9,20 @@ namespace RayTracer.Core.Materials;
 /// <summary>
 ///  A material that has diffuse-like properties.
 /// </summary>
-public sealed class DiffuseMaterial : Material
+public sealed class DiffuseMaterial : MaterialBase
 {
 	/// <summary>
-	///  Creates a new <see cref="DiffuseMaterial"/> from an <paramref name="colour"/> colour
+	///  The albedo (colour) texture of this material
 	/// </summary>
-	public DiffuseMaterial(Colour colour)
-	{
-		Colour = colour;
-	}
+	[PublicAPI] public TextureBase Texture;
 
 	/// <summary>
-	///  The albedo (colour) of this material
+	///  Creates a new <see cref="DiffuseMaterial"/> from an <paramref name="texture"/>
 	/// </summary>
-	[PublicAPI]
-	public Colour Colour { get; }
+	public DiffuseMaterial(TextureBase texture)
+	{
+		Texture = texture;
+	}
 
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)
@@ -37,10 +37,10 @@ public sealed class DiffuseMaterial : Material
 		if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
 			scatter = hit.Normal;
 
-		Ray r = new(hit.Point, Vector3.Normalize(scatter));
+		Ray r = new(hit.WorldPoint, Vector3.Normalize(scatter));
 		return r;
 	}
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit, int bounces) => colour *= Colour;
+	public override void DoColourThings(ref Colour colour, HitRecord hit, int bounces) => colour *= Texture.GetColour(hit);
 }
