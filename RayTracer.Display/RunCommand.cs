@@ -45,8 +45,10 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				new SelectionPrompt<Scene>()
 						.Title("[bold]Please select which scene you wish to load:[/]")
 						.AddChoices(
-								BuiltinScenes.Sphere,
-								BuiltinScenes.TwoSpheres
+								typeof(BuiltinScenes)
+										.GetFields(BindingFlags.Public | BindingFlags.Static)
+										.Where(f => f.FieldType == typeof(Scene))
+										.Select(f => (Scene)f.GetValue(null)!)
 						)
 		);
 		AnsiConsole.MarkupLine($"Selected scene is [italic]{scene}[/]");
