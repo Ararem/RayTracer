@@ -3,7 +3,7 @@ using System.Numerics;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Record containing information about when a <see cref="Graphics.Ray"/> intersects with a <see cref="Hittable"/>
+///  Record containing information about when a <see cref="Graphics.Ray"/> intersects with a <see cref="HittableBase"/>
 /// </summary>
 /// <param name="LocalPoint">The point on the surface of the object where the intersection occured (relative to the object's centre, so object-space)</param>
 /// <param name="WorldPoint">The point on the surface of the object where the intersection occured (relative to the centre of the scene, so world-space)</param>

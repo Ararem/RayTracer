@@ -4,9 +4,9 @@ using System.Numerics;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Implementation of <see cref="Hittable"/> for a sphere
+///  Implementation of <see cref="HittableBase"/> for a sphere
 /// </summary>
-public sealed class Sphere : Hittable
+public sealed class Sphere : HittableBase
 {
 	public Vector3 Centre = Vector3.Zero;
 
