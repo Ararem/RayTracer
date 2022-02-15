@@ -66,7 +66,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 								while (!renderJob.RenderCompleted)
 								{
 									ctx.Refresh();
-									await Task.Delay(1000);
+									await Task.Delay(5000);
 								}
 							}
 					);
