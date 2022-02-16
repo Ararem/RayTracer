@@ -118,7 +118,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			renderStatsTable.AddRow("Time",                 $"{elapsed.ToString(time)} elapsed, {(estimatedTotalTime - elapsed).ToString(time)} remaining, {estimatedTotalTime.ToString(time)} total");
 			renderStatsTable.AddRow("Raw Pixels Rendered",  $"{renderJob.RawPixelsRendered.ToString(num)} ({percentageRaw.ToString(percent)}) rendered, {rawPixelsRemaining.ToString(num)} remaining, {totalRawPixels.ToString(num)} total");
 			renderStatsTable.AddRow("True Pixels Rendered", $"{renderJob.TruePixelsRendered.ToString(num)} ({percentageTrue.ToString(percent)}) rendered, {truePixelsRemaining.ToString(num)} remaining, {totalTruePixels.ToString(num)} total");
-			renderStatsTable.AddRow("Rays",                 $"{renderJob.RaysScattered.ToString(num)} ({rayScatterPercentage.ToString(percent)}) scattered, {renderJob.RaysAbsorbed.ToString(num)} ({rayAbsorbedPercentage.ToString(percent)}) absorbed, {renderJob.BounceLimitExceeded.ToString(num)} ({rayExceededPercentage.ToString(percent)}) exceeded, {renderJob.SkyRays.ToString(num)} ({skyRayPercentage.ToString(percent)} sky, {rayCount.ToString(num)} total");
+			renderStatsTable.AddRow("Rays",                 $"{renderJob.RaysScattered.ToString(num)} ({rayScatterPercentage.ToString(percent)}) scattered, {renderJob.RaysAbsorbed.ToString(num)} ({rayAbsorbedPercentage.ToString(percent)}) absorbed, {renderJob.BounceLimitExceeded.ToString(num)} ({rayExceededPercentage.ToString(percent)}) exceeded, {renderJob.SkyRays.ToString(num)} ({skyRayPercentage.ToString(percent)}) sky, {rayCount.ToString(num)} total");
 			renderStatsTable.AddRow("Depth Buffer",         "[bold italic red]Coming soon...[/]");
 
 			AnsiConsole.Write(statsAndImageTable);

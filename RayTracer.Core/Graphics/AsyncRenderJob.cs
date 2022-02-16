@@ -81,7 +81,7 @@ public sealed class AsyncRenderJob
 	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>).
 	/// </summary>
 	/// <remarks>
-	///	<paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.
+	///  <paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.
 	/// </remarks>
 	/// <param name="x">X coordinate of the pixel</param>
 	/// <param name="y">Y coordinate of the pixel</param>
@@ -89,77 +89,66 @@ public sealed class AsyncRenderJob
 	{
 		//Get the view ray from the camera
 		Ray ray = camera.GetRay((float)x / renderOptions.Width, (float)y / renderOptions.Height);
+		//Switch depending on how we want to view the scene
+		//Only if we don't have visualisations do we render the scene normally.
+		if (renderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
 
-		//Check camera view ray magnitude is 1
-		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
-
-		//Sky colour
-		Colour col = skybox.GetSkyColour(ray);
-
-		//Loop over the objects to see if we hit anything
-		foreach (SceneObject sceneObject in objects)
-			if (sceneObject.Hittable.TryHit(ray, renderOptions.KMin, renderOptions.KMax) is { } hit)
+		//`CalculateRayColourRecursive` will do the intersection code for us, so if we're not using it we have to manually check
+		//Note that these visualisations will not 'bounce' off the scene objects.
+		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? maybeMaterial))
+		{
+			HitRecord hit = (HitRecord)maybeHit!;
+			switch (renderOptions.DebugVisualisation)
 			{
-				GraphicsValidator.CheckNormalMagnitude(ref hit, sceneObject);
-				GraphicsValidator.CheckKValueRange(ref hit, renderOptions, sceneObject);
-
-				switch (renderOptions.DebugVisualisation)
+				case GraphicsDebugVisualisation.Normals:
 				{
-					case GraphicsDebugVisualisation.Normals:
-					{
-						//Convert normal values [-1..1] to [0..1]
-						Vector3 n = (hit.Normal + Vector3.One) / 2f;
-						col = (Colour)n;
-						break;
-					}
-					case GraphicsDebugVisualisation.FaceDirection:
-					{
-						//Convert normal values [-1..1] to [0..1]
-						col = hit.OutsideFace ? Colour.Green : Colour.Red;
-						break;
-					}
-					//Render the object normally
-					case GraphicsDebugVisualisation.Depth:
-					{
-						//I have several ways for displaying the depth
-						//Changing `a` affects how steep the curve is. Higher values cause a faster drop off
-						//Have to ensure it's >0 or else all functions return 1
-						const float a = .200f;
-						// ReSharper disable once JoinDeclarationAndInitializer
-						float t;
-						float z = hit.K - renderOptions.KMin;
-
-						// t   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
-						// t   = MathF.Pow(MathF.E, -a * z);                    //Exponential
-						// t   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
-						// t   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
-						t   = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
-						col = new Colour(t);
-						break;
-					}
-					//Debug texture based on X/Y pixel coordinates
-					case GraphicsDebugVisualisation.PixelCoordDebugTexture:
-						col = MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Blue + Colour.Red;
-						break;
-					case GraphicsDebugVisualisation.ScatterDirection:
-						TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? maybeMaterial);
-						if (maybeMaterial is { } mat)
-						{
-							//Convert vector values [-1..1] to [0..1]
-							Vector3 scat = mat.Scatter((HitRecord)maybeHit!)?.Direction ?? -Vector3.One;
-							Vector3 n    = (scat + Vector3.One) / 2f;
-							col = (Colour)n;
-						}
-
-						break;
-					case GraphicsDebugVisualisation.None:
-					default:
-						col = CalculateRayColourRecursive(ray, 0); //WORLD OR LOCAL RAY PROBLEMS REFLECT
-						break;
+					//Convert normal values [-1..1] to [0..1]
+					Vector3 n = (hit.Normal + Vector3.One) / 2f;
+					return (Colour)n;
 				}
-			}
+				case GraphicsDebugVisualisation.FaceDirection:
+				{
+					//Outside is green, inside is red
+					return hit.OutsideFace ? Colour.Green : Colour.Red;
+				}
+				//Render how far away the objects are from the camera
+				case GraphicsDebugVisualisation.Depth:
+				{
+					//I have several ways for displaying the depth
+					//Changing `a` affects how steep the curve is. Higher values cause a faster drop off
+					//Have to ensure it's >0 or else all functions return 1
+					const float a = .200f;
+					// ReSharper disable once JoinDeclarationAndInitializer
+					float t;
+					float z = hit.K - renderOptions.KMin;
 
-		return col;
+					// t   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
+					// t   = MathF.Pow(MathF.E, -a * z);                    //Exponential
+					// t   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
+					// t   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
+					t = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
+					return new Colour(t);
+				}
+				//Debug texture based on X/Y pixel coordinates
+				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
+					return MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Blue + Colour.Red;
+				case GraphicsDebugVisualisation.ScatterDirection:
+					if (maybeMaterial is { } mat)
+					{
+						//Convert vector values [-1..1] to [0..1]
+						Vector3 scat = mat.Scatter((HitRecord)maybeHit!)?.Direction ?? -Vector3.One;
+						Vector3 n    = (scat + Vector3.One) / 2f;
+						return (Colour)n;
+					}
+					else
+					{
+						return Colour.Black;
+					}
+			}
+		}
+
+		//No object was intersected with, return black
+		return Colour.Black;
 	}
 
 	/// <summary>
@@ -173,6 +162,9 @@ public sealed class AsyncRenderJob
 	//TODO: Try figure out if it's possible to make this non-recursive somehow. Perhaps a `while` loop or something?
 	private Colour CalculateRayColourRecursive(Ray ray, int bounces)
 	{
+		//Check ray magnitude is 1
+		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
+
 		//Ensure we don't go too deep
 		if (bounces > renderOptions.MaxBounces)
 		{
@@ -201,6 +193,7 @@ public sealed class AsyncRenderJob
 			{
 				//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 				Increment(ref raysScattered);
+				GraphicsValidator.CheckRayDirectionMagnitude(ref ray, material);
 				futureBounces = CalculateRayColourRecursive((Ray)maybeNewRay, bounces + 1);
 			}
 
@@ -234,6 +227,8 @@ public sealed class AsyncRenderJob
 			//No point continuing if there was no hit
 			if (maybeHit is not { } hit) continue;
 
+			GraphicsValidator.CheckNormalMagnitude(ref hit, obj);
+			GraphicsValidator.CheckKValueRange(ref hit, renderOptions, obj);
 			//If it's the first hit, or it's closer, update the variable
 			if (maybeClosest is not var (oldObj, oldHit)) //Check first hit (because it's null)
 			{
