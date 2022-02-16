@@ -4,6 +4,7 @@ using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -12,16 +13,21 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using Color = Spectre.Console.Color;
 
 #pragma warning disable CS8765
 
 namespace RayTracer.Display.Cli;
 
 [PublicAPI]
+[NoReorder]
 internal sealed class RunCommand : Command<RunCommand.Settings>
 {
-	/// <inheritdoc/>
-	public override int Execute(CommandContext context, Settings settings)
+	/// <summary>
+	///  Displays and confirms the settings passed in by the user
+	/// </summary>
+	/// <returns>The confirmed scene and render options, to use for render execution</returns>
+	private static (Scene Scene, RenderOptions Options) ConfirmSettings(CommandContext context, Settings settings)
 	{
 		//Print settings to console
 		{
@@ -52,27 +58,79 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 						)
 		);
 		AnsiConsole.MarkupLine($"Selected scene is [italic]{scene}[/]");
+		return (scene, renderOptions);
+	}
 
+	/// <summary>
+	///  Creates a little live display for while the render is running
+	/// </summary>
+	private static void DisplayProgress(AsyncRenderJob renderJob)
+	{
+		//By using an outer loop, we can make the console easier to modify realtime while debugging
+		while (!renderJob.RenderCompleted)
+		{
+			//Don't update as fast as possible or we get flickering
+			Thread.Sleep(2000);
+			AnsiConsole.Clear();
 
-		//Render the scene
-		AsyncRenderJob renderJob = new(scene, renderOptions);
+			//TODO: Update console window title
 
-		//Create a live display that shows what the current image preview is like
-		ImageRenderable canvasImage = new(renderJob.Buffer) { MaxWidth = 76, Resampler = new NearestNeighborResampler() };
-		AnsiConsole.Live(canvasImage)
-					.StartAsync(
-							async ctx =>
-							{
-								while (!renderJob.RenderCompleted)
-								{
-									ctx.Refresh();
-									await Task.Delay(5000);
-								}
-							}
-					);
+			//The outermost table that just splits the render stats from the image preview
+			Table statsAndImageTable = new Table
+			{
+					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Red),
+					Title  = new TableTitle($"[bold red underline]RayTracer v{typeof(Scene).Assembly.GetName().Version} - {renderJob.Scene.Name}[/]")
+			}.AddColumns("Render Statistics", "Image Preview");
 
-		Image image = renderJob.GetAwaiter().GetResult();
+			//TODO: Fix the width so it's a bit better (auto adjust?)
+			ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
+			{
+					// MaxWidth = 76,
+					Resampler = new NearestNeighborResampler()
+			};
 
+			Table renderStatsTable = new Table
+			{
+					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue),
+					Title  = new TableTitle("[bold blue underline]Render Statistics[/]")
+			}.AddColumns("Property", "Value").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
+
+			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
+
+			ulong totalRawPixels  = renderJob.TotalRawPixels;
+			ulong totalTruePixels = renderJob.TotalTruePixels;
+
+			float    percentageRendered    = (float)renderJob.RawPixelsRendered / totalRawPixels;
+			float    rawPixelsRemaining    = totalRawPixels - renderJob.RawPixelsRendered,        truePixelsRemaining = totalTruePixels - renderJob.TruePixelsRendered;
+			float    percentageRaw         = (float)renderJob.RawPixelsRendered / totalRawPixels, percentageTrue      = (float)renderJob.TruePixelsRendered / totalTruePixels;
+			TimeSpan elapsed               = renderJob.Stopwatch.Elapsed;
+			TimeSpan estimatedTotalTime    = elapsed / percentageRendered;
+			ulong    rayCount              = renderJob.RayCount;
+			float    rayScatterPercentage  = (float)renderJob.RaysScattered       / rayCount;
+			float    rayAbsorbedPercentage = (float)renderJob.RaysAbsorbed        / rayCount;
+			float    rayExceededPercentage = (float)renderJob.BounceLimitExceeded / rayCount;
+			float    skyRayPercentage      = (float)renderJob.SkyRays             / rayCount;
+
+			//TODO: Progress..?
+			const string time    = "h\\:mm\\:ss"; //Format string for timespan
+			const string percent = "p1";          //Format string for percentages
+			const string num     = "n0";
+			renderStatsTable.AddRow("Time",                 $"{elapsed.ToString(time)} elapsed, {(estimatedTotalTime - elapsed).ToString(time)} remaining, {estimatedTotalTime.ToString(time)} total");
+			renderStatsTable.AddRow("Raw Pixels Rendered",  $"{renderJob.RawPixelsRendered.ToString(num)} ({percentageRaw.ToString(percent)}) rendered, {rawPixelsRemaining.ToString(num)} remaining, {totalRawPixels.ToString(num)} total");
+			renderStatsTable.AddRow("True Pixels Rendered", $"{renderJob.TruePixelsRendered.ToString(num)} ({percentageTrue.ToString(percent)}) rendered, {truePixelsRemaining.ToString(num)} remaining, {totalTruePixels.ToString(num)} total");
+			renderStatsTable.AddRow("Rays",                 $"{renderJob.RaysScattered.ToString(num)} ({rayScatterPercentage.ToString(percent)}) scattered, {renderJob.RaysAbsorbed.ToString(num)} ({rayAbsorbedPercentage.ToString(percent)}) absorbed, {renderJob.BounceLimitExceeded.ToString(num)} ({rayExceededPercentage.ToString(percent)}) exceeded, {renderJob.SkyRays.ToString(num)} ({skyRayPercentage.ToString(percent)} sky, {rayCount.ToString(num)} total");
+			renderStatsTable.AddRow("Depth Buffer",         "[bold italic red]Coming soon...[/]");
+
+			AnsiConsole.Write(statsAndImageTable);
+		}
+	}
+
+	/// <summary>
+	///  Function to be called once a render job is finished. Also returns the rendered image
+	/// </summary>
+	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
+	{
+		Image<Rgb24> image = renderJob.GetAwaiter().GetResult();
 
 		//Print any errors
 		if (!GraphicsValidator.Errors.IsEmpty)
@@ -104,6 +162,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			Markup noErrorsMarkup = new("[italic green]N/A[/]");
 			foreach (object obj in allObjects)
 			{
+				//Fill the array with error messages so that I can tell when i mess up, also saves the app from crashing if that happens (because the default is null)
 				Array.Fill(row, new Markup("[bold red]ERROR[/]"));
 				row[0] = new Markup(obj.ToString()!);
 				//Calculate all the columns (error count values) for the current object. Important that the loop is shifted +1 so that i=0 is the object name
@@ -146,6 +205,21 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			AnsiConsole.MarkupLine("[green]Finished rendering![/]");
 		}
 
+		return image;
+	}
+
+	/// <inheritdoc/>
+	public override int Execute(CommandContext context, Settings settings)
+	{
+		//Get the settings for how and what we'll render
+		(Scene scene, RenderOptions renderOptions) = ConfirmSettings(context, settings);
+
+		//Start the render job and display the progress while we wait
+		AsyncRenderJob renderJob = new(scene, renderOptions);
+		DisplayProgress(renderJob);
+
+		//Finalize everything
+		Image<Rgb24> image = FinalizeRenderJob(renderJob);
 
 		//Save and open the image for viewing
 		image.Save(File.OpenWrite(settings.OutputFile), new PngEncoder());

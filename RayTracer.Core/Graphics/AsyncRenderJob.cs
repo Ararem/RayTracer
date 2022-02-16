@@ -6,6 +6,7 @@ using RayTracer.Core.Materials;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static RayTracer.Core.Graphics.GraphicsHelper;
@@ -34,38 +35,46 @@ public sealed class AsyncRenderJob
 	{
 		ArgumentNullException.ThrowIfNull(scene);
 		ArgumentNullException.ThrowIfNull(renderOptions);
-		Buffer                       = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		ImageBuffer                  = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
 		this.renderOptions           = renderOptions;
-		rawBuffer                    = new Colour[renderOptions.Width * renderOptions.Height];
-		sampleCounts                 = new int[renderOptions.Width    * renderOptions.Height];
+		rawColourBuffer              = new Colour[renderOptions.Width * renderOptions.Height];
+		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
 		taskCompletionSource         = new TaskCompletionSource<Image<Rgb24>>(this);
 		TotalRawPixels               = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height * (ulong)this.renderOptions.Samples;
 		TotalTruePixels              = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height;
 		(_, camera, objects, skybox) = scene;
+		Scene                        = scene;
+		Stopwatch                    = Stopwatch.StartNew();
 		Task.Run(RenderInternal);
 	}
 
 	private void RenderInternal()
 	{
+		/*
+		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in
+		 * It doesn't even matter if some pixels are rendered with different sample counts, since i'm using a multi-buffer approach to store the averaging data
+		 * I'm doing a x->y->s nested loop approach, but you could also have `s` as the outer loop, or even render the pixels completely randomly..?????
+		 * Also makes it easy to turn it into an async method with `System.Threading.Parallel`
+		 */
 		for (int x = 0; x < renderOptions.Width; x++)
 		{
 			for (int y = 0; y < renderOptions.Height; y++)
 			{
 				for (int s = 0; s < renderOptions.Samples; s++)
-				{
-					Colour col = RenderPixel(x, y);
-					UpdateBuffers(x, y, col);
-					Increment(ref rawPixelsRendered);
-				}
-
+					RenderAndUpdatePixel(x, y, s);
 				Increment(ref truePixelsRendered);
 			}
-
-			// Thread.Sleep(30);
 		}
 
 		//Notify that the render is complete
-		taskCompletionSource.SetResult(Buffer);
+		taskCompletionSource.SetResult(ImageBuffer);
+	}
+
+	private void RenderAndUpdatePixel(int x, int y, int s)
+	{
+		Colour col = RenderPixel(x, y);
+		UpdateBuffers(x, y, col);
+		Increment(ref rawPixelsRendered);
 	}
 
 	/// <summary>
@@ -145,7 +154,7 @@ public sealed class AsyncRenderJob
 						break;
 					case GraphicsDebugVisualisation.None:
 					default:
-						col = CalculateRayColourRecursive(ray, 0); //WORLD OR LOCAL RAY PROBLEMS RERFLECT
+						col = CalculateRayColourRecursive(ray, 0); //WORLD OR LOCAL RAY PROBLEMS REFLECT
 						break;
 				}
 			}
@@ -173,6 +182,7 @@ public sealed class AsyncRenderJob
 
 		//TODO: Track how many times a given depth was reached
 		//Find the nearest hit along the ray
+		Increment(ref rayCount);
 		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? material))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
@@ -268,6 +278,7 @@ public sealed class AsyncRenderJob
 	/// <param name="colour">Colour that the pixel was just rendered as</param>
 	private void UpdateBuffers(int x, int y, Colour colour)
 	{
+		//TODO: If we remove the `readonly` restriction on `Colour`, we can use `Interlocked` to update the values atomically, no locking required
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
 		//The (X,Y) we're given is camera coords
@@ -277,9 +288,9 @@ public sealed class AsyncRenderJob
 		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
 		bufferLock.EnterWriteLock();
 		int i = Compress2DIndex(x, y, renderOptions.Width, renderOptions.Height);
-		sampleCounts[i]++;
-		rawBuffer[i] += colour;
-		Buffer[x, y] =  (Rgb24)(rawBuffer[i] / sampleCounts[i]);
+		sampleCountBuffer[i]++;
+		rawColourBuffer[i] += colour;
+		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
 		bufferLock.ExitWriteLock();
 	}
 
@@ -296,17 +307,22 @@ public sealed class AsyncRenderJob
 	/// <summary>
 	///  Raw buffer containing denormalized colour values ([0..SampleCount])
 	/// </summary>
-	private readonly Colour[] rawBuffer;
+	private readonly Colour[] rawColourBuffer;
 
 	/// <summary>
 	///  Buffer recording how many samples make up a given pixel, to create averages
 	/// </summary>
-	private readonly int[] sampleCounts;
+	private readonly int[] sampleCountBuffer;
 
 	/// <summary>
 	///  Image buffer for the output image
 	/// </summary>
-	public Image<Rgb24> Buffer { get; }
+	public Image<Rgb24> ImageBuffer { get; }
+
+	/// <summary>
+	///  The scene that is being rendered
+	/// </summary>
+	public Scene Scene { get; }
 
 #endregion
 
@@ -341,6 +357,11 @@ public sealed class AsyncRenderJob
 	public ulong RaysAbsorbed => raysAbsorbed;
 
 	/// <summary>
+	///  How many rays did not hit any objects, and hit the sky
+	/// </summary>
+	public ulong SkyRays { get; } = 0;
+
+	/// <summary>
 	///  How many 'raw' pixels need to be rendered (including multisampled pixels)
 	/// </summary>
 	public ulong TotalRawPixels { get; }
@@ -353,9 +374,21 @@ public sealed class AsyncRenderJob
 	private ulong bounceLimitExceeded = 0;
 
 	/// <summary>
-	///  How many pixels have been rendered, including multisampled pixels
+	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by <see cref="RenderOptions.MaxBounces"/>
 	/// </summary>
 	public ulong BounceLimitExceeded => bounceLimitExceeded;
+
+	private ulong rayCount = 0;
+
+	/// <summary>
+	///  How many rays were rendered so far (scattered, absorbed, etc)
+	/// </summary>
+	public ulong RayCount => rayCount;
+
+	/// <summary>
+	///  Stopwatch used to time how long has elapsed since the rendering started
+	/// </summary>
+	public Stopwatch Stopwatch { get; }
 
 #endregion
 

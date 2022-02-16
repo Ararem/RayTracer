@@ -3,9 +3,13 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using Spectre.Console;
 using Spectre.Console.Rendering;
+using Color = Spectre.Console.Color;
 
-namespace Spectre.Console;
+namespace RayTracer.Display;
+
+//I had to modify this from the Spectre.Console one because it wouldn't let me use Rgb24, and wouldn't let me pass in the image myself
 
 /// <summary>
 ///  Represents a renderable image.
