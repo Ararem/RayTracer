@@ -77,24 +77,40 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				//Don't update as fast as possible or we get flickering
 				Thread.Sleep(2000);
 				AnsiConsole.Clear();
-				string appTitle = $"RayTracer v{typeof(Scene).Assembly.GetName().Version} - {renderJob.Scene.Name}";
-				Console.Title = appTitle;
+				string appTitle = $"[bold red underline]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [italic]{renderJob.Scene.Name}[/][/]";
+				Console.Title = Markup.Remove(appTitle);
 
 				//The outermost table that just splits the render stats from the image preview
 				Table statsAndImageTable = new()
 				{
 						Border = new NoTableBorder(),
-						Title  = new TableTitle($"[bold red underline]{appTitle}[/]")
+						Title  = new TableTitle(appTitle)
 				};
+				//Give a nice little "Rendering..." animation
+				{
+					const double f = 5;  //Total time per ellipsis cycle
+					const double a = 5d; //Max ellipses per cycle
+
+					double sec    = renderJob.Stopwatch.Elapsed.TotalSeconds;
+					double sin    = Math.Sin(((sec / f) * Math.PI) / 2);
+					double inv    = Math.Asin(sin);
+					double abs    = Math.Abs(inv);
+					double scaled = ((abs * a) / Math.PI) * 2;
+					int    round  = (int)Math.Round(scaled);
+					statsAndImageTable.Caption = new TableTitle($"[bold green]{new string(' ', round) /*Centres string*/}Rendering{new string('.', round)}[/]");
+				}
 				statsAndImageTable.AddColumns(
 						new TableColumn("[bold blue underline]Render Statistics[/]\n").Centered(),
 						new TableColumn("[bold blue underline]Image Preview[/]\n").Centered()
 				);
 
-				//TODO: Fix the width so it's a bit better (auto adjust?)
+				//Make sure we don't exceed the vertical space limit when trying to maximise the width
+				int   maxHeight = Console.WindowHeight - 4; //The `-4` is so that we leave enough room for the title (1) + heading (2) + caption (1) = 4
+				float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
+				int   maxWidth  = (int)(maxHeight * aspect);
 				ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
 				{
-						// MaxWidth  = 3,
+						MaxWidth  = maxWidth, PixelWidth = 2,
 						Resampler = new NearestNeighborResampler()
 				};
 
@@ -118,14 +134,24 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
 				const string percentFormat = "p1";          //Format string for percentages
 				const string numFormat     = "n0";
-				const int    numAlign      = 12;
+				const int    numAlign      = 15;
 				const int    percentAlign  = 8;
 
-				renderStatsTable.AddRow("Time",                 $"{elapsed.ToString(timeFormat)} elapsed, {(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining, {estimatedTotalTime.ToString(timeFormat)} total");
-				renderStatsTable.AddRow("Raw Pixels Rendered",  $"{Format(renderJob.RawPixelsRendered,  totalRawPix)}  rendered |{Format(rawPixelsRemaining,   totalRawPix)} remaining | {totalRawPix.ToString(numFormat),numAlign} total");
-				renderStatsTable.AddRow("True Pixels Rendered", $"{Format(renderJob.TruePixelsRendered, totalTruePix)}  rendered |{Format(truePixelsRemaining, totalTruePix)} remaining | {totalTruePix.ToString(numFormat),numAlign} total");
-				renderStatsTable.AddRow("Rays",                 $"{Format(renderJob.RaysScattered,      rayCount)} scattered |{Format(renderJob.RaysAbsorbed,  rayCount)} absorbed  | {Format(renderJob.BounceLimitExceeded, rayCount)} exceeded | {Format(renderJob.SkyRays, rayCount)} sky | {rayCount.ToString(numFormat)} total");
-				renderStatsTable.AddRow("Depth Buffer",         "[bold italic red]Coming soon...[/]");
+				renderStatsTable.AddRow("[bold]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
+				renderStatsTable.AddRow("",                      $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
+				renderStatsTable.AddRow("",                      $"{estimatedTotalTime.ToString(timeFormat)} total");
+				renderStatsTable.AddRow("[bold]Raw Pixels[/]",   $"{Format(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+				renderStatsTable.AddRow("",                      $"{Format(rawPixelsRemaining,          totalRawPix)} remaining");
+				renderStatsTable.AddRow("",                      $"{totalRawPix.ToString(numFormat),numAlign}          total");
+				renderStatsTable.AddRow("[bold]True Pixels[/]",  $"{Format(renderJob.TruePixelsRendered, totalTruePix)} rendered");
+				renderStatsTable.AddRow("",                      $"{Format(truePixelsRemaining,          totalTruePix)} remaining");
+				renderStatsTable.AddRow("",                      $"{totalTruePix.ToString(numFormat),numAlign}          total");
+				renderStatsTable.AddRow("[bold]Rays[/]",         $"{Format(renderJob.RaysScattered,       rayCount)} scattered");
+				renderStatsTable.AddRow("",                      $"{Format(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+				renderStatsTable.AddRow("",                      $"{Format(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+				renderStatsTable.AddRow("",                      $"{Format(renderJob.SkyRays,             rayCount)} sky");
+				renderStatsTable.AddRow("",                      $"{rayCount.ToString(numFormat),numAlign}          total");
+				renderStatsTable.AddRow("[bold]Depth Buffer[/]", "[bold italic red]Coming soon...[/]");
 
 				static string Format(ulong val, ulong total)
 				{
