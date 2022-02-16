@@ -105,7 +105,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				);
 
 				//Make sure we don't exceed the vertical space limit when trying to maximise the width
-				int   maxHeight = Console.WindowHeight - 4; //The `-4` is so that we leave enough room for the title (1) + heading (2) + caption (1) = 4
+				int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 				float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 				int   maxWidth  = (int)(maxHeight * aspect);
 				ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
