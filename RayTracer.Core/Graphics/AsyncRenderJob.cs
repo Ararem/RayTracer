@@ -98,6 +98,7 @@ public sealed class AsyncRenderJob
 		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? maybeMaterial))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
+			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
 			switch (renderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -136,7 +137,7 @@ public sealed class AsyncRenderJob
 					if (maybeMaterial is { } mat)
 					{
 						//Convert vector values [-1..1] to [0..1]
-						Vector3 scat = mat.Scatter((HitRecord)maybeHit!)?.Direction ?? -Vector3.One;
+						Vector3 scat = mat.Scatter((HitRecord)maybeHit)?.Direction ?? -Vector3.One;
 						Vector3 n    = (scat + Vector3.One) / 2f;
 						return (Colour)n;
 					}
@@ -208,6 +209,7 @@ public sealed class AsyncRenderJob
 		//No object was hit (at least not in the range), so return the skybox colour
 		else
 		{
+			Increment(ref skyRays);
 			return skybox.GetSkyColour(ray);
 		}
 	}
@@ -252,8 +254,8 @@ public sealed class AsyncRenderJob
 		//If we hit anything, set the variables, otherwise make them null
 		if (maybeClosest is var (sceneObject, hitRecord))
 		{
-			maybeHit = hitRecord!;
-			material = sceneObject.Material!;
+			maybeHit = hitRecord;
+			material = sceneObject.Material;
 			return true;
 		}
 		else
@@ -351,10 +353,12 @@ public sealed class AsyncRenderJob
 	/// </summary>
 	public ulong RaysAbsorbed => raysAbsorbed;
 
+	private ulong skyRays = 0;
+
 	/// <summary>
 	///  How many rays did not hit any objects, and hit the sky
 	/// </summary>
-	public ulong SkyRays { get; } = 0;
+	public ulong SkyRays => skyRays;
 
 	/// <summary>
 	///  How many 'raw' pixels need to be rendered (including multisampled pixels)

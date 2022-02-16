@@ -69,59 +69,73 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		//By using an outer loop, we can make the console easier to modify realtime while debugging
 		while (!renderJob.RenderCompleted)
 		{
-			//Don't update as fast as possible or we get flickering
-			Thread.Sleep(2000);
-			AnsiConsole.Clear();
-
-			//TODO: Update console window title
-
-			//The outermost table that just splits the render stats from the image preview
-			Table statsAndImageTable = new Table
+			//BUG: Having this local function is dumb, but it's the only way to get hot reload working (maybe it's stuck in the `while` loop?)
+			void X()
 			{
-					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Red),
-					Title  = new TableTitle($"[bold red underline]RayTracer v{typeof(Scene).Assembly.GetName().Version} - {renderJob.Scene.Name}[/]")
-			}.AddColumns("Render Statistics", "Image Preview");
+				//TODO: Update console window title
 
-			//TODO: Fix the width so it's a bit better (auto adjust?)
-			ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
-			{
-					// MaxWidth = 76,
-					Resampler = new NearestNeighborResampler()
-			};
+				//Don't update as fast as possible or we get flickering
+				Thread.Sleep(2000);
+				AnsiConsole.Clear();
+				string appTitle = $"RayTracer v{typeof(Scene).Assembly.GetName().Version} - {renderJob.Scene.Name}";
+				Console.Title = appTitle;
 
-			Table renderStatsTable = new Table
-			{
-					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue),
-					Title  = new TableTitle("[bold blue underline]Render Statistics[/]")
-			}.AddColumns("Property", "Value").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
+				//The outermost table that just splits the render stats from the image preview
+				Table statsAndImageTable = new()
+				{
+						Border = new NoTableBorder(),
+						Title  = new TableTitle($"[bold red underline]{appTitle}[/]")
+				};
+				statsAndImageTable.AddColumns(
+						new TableColumn("[bold blue underline]Render Statistics[/]\n").Centered(),
+						new TableColumn("[bold blue underline]Image Preview[/]\n").Centered()
+				);
 
-			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
+				//TODO: Fix the width so it's a bit better (auto adjust?)
+				ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
+				{
+						// MaxWidth  = 3,
+						Resampler = new NearestNeighborResampler()
+				};
 
-			ulong totalRawPixels  = renderJob.TotalRawPixels;
-			ulong totalTruePixels = renderJob.TotalTruePixels;
+				Table renderStatsTable = new Table
+				{
+						Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
+				}.AddColumns("Property", "Value").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
 
-			float    percentageRendered    = (float)renderJob.RawPixelsRendered / totalRawPixels;
-			float    rawPixelsRemaining    = totalRawPixels - renderJob.RawPixelsRendered,        truePixelsRemaining = totalTruePixels - renderJob.TruePixelsRendered;
-			float    percentageRaw         = (float)renderJob.RawPixelsRendered / totalRawPixels, percentageTrue      = (float)renderJob.TruePixelsRendered / totalTruePixels;
-			TimeSpan elapsed               = renderJob.Stopwatch.Elapsed;
-			TimeSpan estimatedTotalTime    = elapsed / percentageRendered;
-			ulong    rayCount              = renderJob.RayCount;
-			float    rayScatterPercentage  = (float)renderJob.RaysScattered       / rayCount;
-			float    rayAbsorbedPercentage = (float)renderJob.RaysAbsorbed        / rayCount;
-			float    rayExceededPercentage = (float)renderJob.BounceLimitExceeded / rayCount;
-			float    skyRayPercentage      = (float)renderJob.SkyRays             / rayCount;
+				statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
 
-			//TODO: Progress..?
-			const string time    = "h\\:mm\\:ss"; //Format string for timespan
-			const string percent = "p1";          //Format string for percentages
-			const string num     = "n0";
-			renderStatsTable.AddRow("Time",                 $"{elapsed.ToString(time)} elapsed, {(estimatedTotalTime - elapsed).ToString(time)} remaining, {estimatedTotalTime.ToString(time)} total");
-			renderStatsTable.AddRow("Raw Pixels Rendered",  $"{renderJob.RawPixelsRendered.ToString(num)} ({percentageRaw.ToString(percent)}) rendered, {rawPixelsRemaining.ToString(num)} remaining, {totalRawPixels.ToString(num)} total");
-			renderStatsTable.AddRow("True Pixels Rendered", $"{renderJob.TruePixelsRendered.ToString(num)} ({percentageTrue.ToString(percent)}) rendered, {truePixelsRemaining.ToString(num)} remaining, {totalTruePixels.ToString(num)} total");
-			renderStatsTable.AddRow("Rays",                 $"{renderJob.RaysScattered.ToString(num)} ({rayScatterPercentage.ToString(percent)}) scattered, {renderJob.RaysAbsorbed.ToString(num)} ({rayAbsorbedPercentage.ToString(percent)}) absorbed, {renderJob.BounceLimitExceeded.ToString(num)} ({rayExceededPercentage.ToString(percent)}) exceeded, {renderJob.SkyRays.ToString(num)} ({skyRayPercentage.ToString(percent)}) sky, {rayCount.ToString(num)} total");
-			renderStatsTable.AddRow("Depth Buffer",         "[bold italic red]Coming soon...[/]");
+				float    percentageRendered = (float)renderJob.RawPixelsRendered / renderJob.TotalRawPixels;
+				ulong    totalTruePix       = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
+				ulong    rayCount           = renderJob.RayCount;
+				TimeSpan elapsed            = renderJob.Stopwatch.Elapsed;
 
-			AnsiConsole.Write(statsAndImageTable);
+				ulong    rawPixelsRemaining  = renderJob.TotalRawPixels  - renderJob.RawPixelsRendered;
+				ulong    truePixelsRemaining = renderJob.TotalTruePixels - renderJob.TruePixelsRendered;
+				TimeSpan estimatedTotalTime  = elapsed / percentageRendered;
+
+				//TODO: Progress bars..
+				const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
+				const string percentFormat = "p1";          //Format string for percentages
+				const string numFormat     = "n0";
+				const int    numAlign      = 12;
+				const int    percentAlign  = 8;
+
+				renderStatsTable.AddRow("Time",                 $"{elapsed.ToString(timeFormat)} elapsed, {(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining, {estimatedTotalTime.ToString(timeFormat)} total");
+				renderStatsTable.AddRow("Raw Pixels Rendered",  $"{Format(renderJob.RawPixelsRendered,  totalRawPix)}  rendered |{Format(rawPixelsRemaining,   totalRawPix)} remaining | {totalRawPix.ToString(numFormat),numAlign} total");
+				renderStatsTable.AddRow("True Pixels Rendered", $"{Format(renderJob.TruePixelsRendered, totalTruePix)}  rendered |{Format(truePixelsRemaining, totalTruePix)} remaining | {totalTruePix.ToString(numFormat),numAlign} total");
+				renderStatsTable.AddRow("Rays",                 $"{Format(renderJob.RaysScattered,      rayCount)} scattered |{Format(renderJob.RaysAbsorbed,  rayCount)} absorbed  | {Format(renderJob.BounceLimitExceeded, rayCount)} exceeded | {Format(renderJob.SkyRays, rayCount)} sky | {rayCount.ToString(numFormat)} total");
+				renderStatsTable.AddRow("Depth Buffer",         "[bold italic red]Coming soon...[/]");
+
+				static string Format(ulong val, ulong total)
+				{
+					return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+				}
+
+				AnsiConsole.Write(statsAndImageTable);
+			}
+
+			X();
 		}
 	}
 
