@@ -161,14 +161,15 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
 
-			float    percentageRendered = (float)renderJob.RawPixelsRendered / renderJob.TotalRawPixels;
-			ulong    totalTruePix       = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
-			ulong    rayCount           = renderJob.RayCount;
-			TimeSpan elapsed            = renderJob.Stopwatch.Elapsed;
+			ulong    totalTruePixels = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
+			ulong    rayCount        = renderJob.RayCount;
+			int      totalPasses     = renderJob.RenderOptions.Passes;
+			TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
 
-			ulong    rawPixelsRemaining  = renderJob.TotalRawPixels  - renderJob.RawPixelsRendered;
-			ulong    truePixelsRemaining = renderJob.TotalTruePixels - renderJob.TruePixelsRendered;
-			TimeSpan estimatedTotalTime  = elapsed / percentageRendered;
+			float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
+			ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
+			int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+			TimeSpan estimatedTotalTime = elapsed / percentageRendered;
 
 			//TODO: Progress bars..
 			const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
@@ -181,23 +182,32 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
 			renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
 			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Raw Pixels[/]",   $"{Format(renderJob.RawPixelsRendered, totalRawPix)} rendered");
-			renderStatsTable.AddRow("",                                        $"{Format(rawPixelsRemaining,          totalRawPix)} remaining");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+			renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
 			renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
 			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]True Pixels[/]",  $"{Format(renderJob.TruePixelsRendered, totalTruePix)} rendered");
-			renderStatsTable.AddRow("",                                        $"{Format(truePixelsRemaining,          totalTruePix)} remaining");
-			renderStatsTable.AddRow("",                                        $"{totalTruePix.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
+			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
+			renderStatsTable.AddRow("",                                        $"{totalTruePixels.ToString(numFormat),numAlign}          pixels high");
 			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{Format(renderJob.RaysScattered,       rayCount)} scattered");
-			renderStatsTable.AddRow("",                                        $"{Format(renderJob.RaysAbsorbed,        rayCount)} absorbed");
-			renderStatsTable.AddRow("",                                        $"{Format(renderJob.BounceLimitExceeded, rayCount)} exceeded");
-			renderStatsTable.AddRow("",                                        $"{Format(renderJob.SkyRays,             rayCount)} sky");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
+			renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
+			renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
+			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
 			renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
 			renderStatsTable.AddRow("",                                        "");
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
 
-			static string Format(ulong val, ulong total)
+			static string FormatU(ulong val, ulong total)
+			{
+				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+			}
+
+			static string FormatI(int val, int total)
 			{
 				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 			}

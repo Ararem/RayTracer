@@ -36,41 +36,52 @@ public sealed class AsyncRenderJob
 		ArgumentNullException.ThrowIfNull(scene);
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		ImageBuffer                  = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
-		this.renderOptions           = renderOptions;
+		RenderOptions                = renderOptions;
 		rawColourBuffer              = new Colour[renderOptions.Width * renderOptions.Height];
 		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
 		taskCompletionSource         = new TaskCompletionSource<Image<Rgb24>>(this);
-		TotalRawPixels               = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height * (ulong)this.renderOptions.Samples;
-		TotalTruePixels              = (ulong)this.renderOptions.Width * (ulong)this.renderOptions.Height;
+		TotalRawPixels               = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
+		TotalTruePixels              = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height;
 		(_, camera, objects, skybox) = scene;
 		Scene                        = scene;
-		Stopwatch                    = Stopwatch.StartNew();
+		Stopwatch                    = new Stopwatch();
 		Task.Run(RenderInternal);
 	}
 
 	private void RenderInternal()
 	{
+		Stopwatch.Start();
 		/*
 		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in
 		 * It doesn't even matter if some pixels are rendered with different sample counts, since i'm using a multi-buffer approach to store the averaging data
 		 * I'm doing a x->y->s nested loop approach, but you could also have `s` as the outer loop, or even render the pixels completely randomly..?????
 		 * Also makes it easy to turn it into an async method with `System.Threading.Parallel`
 		 */
-		for (int x = 0; x < renderOptions.Width; x++)
+		// for (int x = 0; x < renderOptions.Width; x++)
+		// {
+		// 	for (int y = 0; y < renderOptions.Height; y++)
+		// 	{
+		// 		for (int s = 0; s < renderOptions.Samples; s++)
+		// 			RenderAndUpdatePixel(x, y, s);
+		// 		Increment(ref truePixelsRendered);
+		// 	}
+		// }
+
+		//Same comment from above applies, just different order
+		for (int p = 0; p < RenderOptions.Passes; p++)
 		{
-			for (int y = 0; y < renderOptions.Height; y++)
-			{
-				for (int s = 0; s < renderOptions.Samples; s++)
-					RenderAndUpdatePixel(x, y, s);
-				Increment(ref truePixelsRendered);
-			}
+			for (int x = 0; x < RenderOptions.Width; x++)
+				for (int y = 0; y < RenderOptions.Height; y++)
+					RenderAndUpdatePixel(x, y, p);
+			Increment(ref passesRendered);
 		}
 
 		//Notify that the render is complete
 		taskCompletionSource.SetResult(ImageBuffer);
+		Stopwatch.Stop();
 	}
 
-	private void RenderAndUpdatePixel(int x, int y, int s)
+	private void RenderAndUpdatePixel(int x, int y, int p)
 	{
 		Colour col = RenderPixel(x, y);
 		UpdateBuffers(x, y, col);
@@ -88,10 +99,10 @@ public sealed class AsyncRenderJob
 	private Colour RenderPixel(int x, int y)
 	{
 		//Get the view ray from the camera
-		Ray ray = camera.GetRay((float)x / renderOptions.Width, (float)y / renderOptions.Height);
+		Ray ray = camera.GetRay((float)x / RenderOptions.Width, (float)y / RenderOptions.Height);
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
-		if (renderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
+		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
 
 		//`CalculateRayColourRecursive` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects.
@@ -99,7 +110,7 @@ public sealed class AsyncRenderJob
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
 			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-			switch (renderOptions.DebugVisualisation)
+			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
 				{
@@ -121,7 +132,7 @@ public sealed class AsyncRenderJob
 					const float a = .200f;
 					// ReSharper disable once JoinDeclarationAndInitializer
 					float t;
-					float z = hit.K - renderOptions.KMin;
+					float z = hit.K - RenderOptions.KMin;
 
 					// t   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
 					// t   = MathF.Pow(MathF.E, -a * z);                    //Exponential
@@ -167,7 +178,7 @@ public sealed class AsyncRenderJob
 		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
 
 		//Ensure we don't go too deep
-		if (bounces > renderOptions.MaxBounces)
+		if (bounces > RenderOptions.MaxBounces)
 		{
 			Increment(ref bounceLimitExceeded);
 			return Colour.Black;
@@ -220,8 +231,8 @@ public sealed class AsyncRenderJob
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
 		(SceneObject obj, HitRecord hit)? maybeClosest = null;
-		float                             kMin         = renderOptions.KMin;
-		float                             kMax         = renderOptions.KMax;
+		float                             kMin         = RenderOptions.KMin;
+		float                             kMax         = RenderOptions.KMax;
 		foreach (SceneObject obj in objects)
 		{
 			//Try and hit the object
@@ -230,7 +241,7 @@ public sealed class AsyncRenderJob
 			if (maybeHit is not { } hit) continue;
 
 			GraphicsValidator.CheckNormalMagnitude(ref hit, obj.Hittable);
-			GraphicsValidator.CheckKValueRange(ref hit, renderOptions, obj.Hittable);
+			GraphicsValidator.CheckKValueRange(ref hit, RenderOptions, obj.Hittable);
 			//If it's the first hit, or it's closer, update the variable
 			if (maybeClosest is not var (oldObj, oldHit)) //Check first hit (because it's null)
 			{
@@ -279,12 +290,12 @@ public sealed class AsyncRenderJob
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
 		//The (X,Y) we're given is camera coords
-		y = renderOptions.Height - y - 1;
+		y = RenderOptions.Height - y - 1;
 
 		//Lock to prevent other threads from changing our pixel
 		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
 		bufferLock.EnterWriteLock();
-		int i = Compress2DIndex(x, y, renderOptions.Width, renderOptions.Height);
+		int i = Compress2DIndex(x, y, RenderOptions.Width, RenderOptions.Height);
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
@@ -296,7 +307,11 @@ public sealed class AsyncRenderJob
 	private readonly Camera        camera;
 	private readonly SkyBox        skybox;
 	private readonly SceneObject[] objects;
-	private readonly RenderOptions renderOptions;
+
+	/// <summary>
+	///  Options used to render
+	/// </summary>
+	public RenderOptions RenderOptions { get; }
 
 	//TODO: Make a better locking system than locking the entire array
 	private readonly ReaderWriterLockSlim bufferLock = new();
@@ -332,12 +347,12 @@ public sealed class AsyncRenderJob
 
 	private ulong rawPixelsRendered = 0;
 
-	private ulong truePixelsRendered = 0;
+	private int passesRendered = 0;
 
 	/// <summary>
-	///  How many pixels of the final image have been actually rendered, not including multisampled pixels
+	///  How many passes have been rendered
 	/// </summary>
-	public ulong TruePixelsRendered => truePixelsRendered;
+	public int PassesRendered => passesRendered;
 
 	private ulong raysScattered = 0;
 
@@ -373,7 +388,8 @@ public sealed class AsyncRenderJob
 	private ulong bounceLimitExceeded = 0;
 
 	/// <summary>
-	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by <see cref="RenderOptions.MaxBounces"/>
+	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
+	///  <see cref="RayTracer.Core.Graphics.RenderOptions.MaxBounces"/>
 	/// </summary>
 	public ulong BounceLimitExceeded => bounceLimitExceeded;
 
