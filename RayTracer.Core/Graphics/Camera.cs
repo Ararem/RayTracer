@@ -52,7 +52,7 @@ public sealed class Camera
 
 		float theta          = VerticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
-		float viewportHeight = 2f * h;
+		float viewportHeight = 2f          * h;
 		float viewportWidth  = aspectRatio * viewportHeight;
 
 		//Magic that lets us position and rotate the camera
@@ -62,7 +62,7 @@ public sealed class Camera
 		U = Normalize(Cross(UpVector, W));
 		V = Cross(W, U);
 
-		Horizontal      = viewportWidth * U;
+		Horizontal      = viewportWidth  * U;
 		Vertical        = viewportHeight * V;
 		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - W;
 	}

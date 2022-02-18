@@ -17,7 +17,7 @@ using Color = Spectre.Console.Color;
 
 #pragma warning disable CS8765
 
-namespace RayTracer.Display.Cli;
+namespace RayTracer.Display;
 
 [PublicAPI]
 [NoReorder]
