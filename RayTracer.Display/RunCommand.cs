@@ -5,7 +5,7 @@ using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using SixLabors.ImageSharp.Processing;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Spectre.Console.Rendering;
@@ -151,7 +151,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
 			{
 					MaxConsoleWidth = true ? maxWidth : 38,
-					Resampler       = new NearestNeighborResampler()
+					Resampler       = KnownResamplers.RobidouxSharp
 			};
 
 			Table renderStatsTable = new Table

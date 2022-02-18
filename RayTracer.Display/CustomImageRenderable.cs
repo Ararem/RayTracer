@@ -78,16 +78,23 @@ public sealed class CustomImageRenderable : Renderable
 		}
 
 		//Now loop over the resized image. Since we have 2x vertical resolution, we skip every 2nd row
-		string upperPixel = new('▀', 1);
 		for (int y = 0; y < image.Height; y += 2)
 		{
 			for (int x = 0; x < image.Width; x++)
 				yield return new Segment(
-						upperPixel,
+						#if false //You can change if you use the upper or lower blocks, because sometimes one looks better than the other
+						"▀",
 						new Style(
 								new Color(image[x, y].R,     image[x, y].G,     image[x, y].B),
 								new Color(image[x, y + 1].R, image[x, y + 1].G, image[x, y + 1].B)
 						)
+						#else
+						"▄",
+						new Style(
+								new Color(image[x, y + 1].R, image[x, y + 1].G, image[x, y + 1].B),
+								new Color(image[x, y].R,     image[x, y].G,     image[x, y].B)
+						)
+						#endif
 				);
 			yield return Segment.LineBreak;
 		}
