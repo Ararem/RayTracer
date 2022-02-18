@@ -9,11 +9,12 @@ namespace RayTracer.Core.Scenes;
 /// <param name="Name">The name of this object</param>
 /// <param name="Hittable">The mesh used for calculating intersections with this object (it's geometry)</param>
 public sealed record SceneObject(
+		// ReSharper disable once NotAccessedPositionalProperty.Global
 		string       Name,
 		HittableBase Hittable,
 		MaterialBase Material
 )
 {
-	/// <inheritdoc/>
-	public override string ToString() => $"'{Name}' {{Shape: {Hittable}, Material: {Material}}})";
+	// /// <inheritdoc/>
+	// public override string ToString() => $"Scene Object '{Name}' {{Shape: {Hittable}, Material: {Material}}})";
 }

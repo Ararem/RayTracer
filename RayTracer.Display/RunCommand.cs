@@ -23,6 +23,38 @@ namespace RayTracer.Display;
 [NoReorder]
 internal sealed class RunCommand : Command<RunCommand.Settings>
 {
+#region Markup Styles
+
+	/// <summary>
+	///  Most important - style for the app title text
+	/// </summary>
+	private const string AppTitleMarkup = "bold red underline";
+
+	/// <summary>
+	///  Markup for the title of an <see cref="IRenderable"/>
+	/// </summary>
+	private const string TitleMarkup = "bold blue";
+
+	/// <summary>
+	///  Markup for the heading of a table
+	/// </summary>
+	private const string HeadingMarkup = "italic blue";
+
+	/// <summary>
+	///  Markup for when displaying a scene name/selection
+	/// </summary>
+	private const string SceneMarkup = "italic";
+
+	/// <summary>
+	///  Markup for the "Rendering..." animation
+	/// </summary>
+	private const string RenderingAnimationMarkup = "italic green";
+
+	private const string StatsCategoryMarkup  = "bold";
+	private const string FinishedRenderMarkup = "bold underline";
+
+#endregion
+
 	/// <summary>
 	///  Displays and confirms the settings passed in by the user
 	/// </summary>
@@ -33,11 +65,11 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		{
 			Table table = new()
 			{
-					Title = new TableTitle("[bold]Provided Options:[/]")
+					Title = new TableTitle($"[{TitleMarkup}]Provided Options:[/]")
 			};
 			//Headings for the columns
-			table.AddColumn("[bold]Option[/]");
-			table.AddColumn("[bold]Value[/]");
+			table.AddColumn($"[{HeadingMarkup}]Option[/]");
+			table.AddColumn($"[{HeadingMarkup}]Value[/]");
 
 			foreach (PropertyInfo propertyInfo in typeof(Settings).GetProperties())
 				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
@@ -49,15 +81,16 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 		//Select scene
 		Scene scene = AnsiConsole.Prompt(
 				new SelectionPrompt<Scene>()
-						.Title("[bold]Please select which scene you wish to load:[/]")
+						.Title($"[{TitleMarkup}]Please select which scene you wish to load:[/]")
 						.AddChoices(
 								typeof(BuiltinScenes)
 										.GetFields(BindingFlags.Public | BindingFlags.Static)
 										.Where(f => f.FieldType == typeof(Scene))
 										.Select(f => (Scene)f.GetValue(null)!)
 						)
+						.UseConverter(s => $"[{SceneMarkup}]{s}[/]")
 		);
-		AnsiConsole.MarkupLine($"Selected scene is [italic]{scene}[/]");
+		AnsiConsole.MarkupLine($"Selected scene is [{SceneMarkup}]{scene}[/]");
 		return (scene, renderOptions);
 	}
 
@@ -67,101 +100,109 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 	private static void DisplayProgress(AsyncRenderJob renderJob)
 	{
 		//By using an outer loop, we can make the console easier to modify realtime while debugging
-		while (!renderJob.RenderCompleted)
+		while (!renderJob.RenderCompleted) Display();
+		#if DEBUG
+		for (int i = 0; !Console.KeyAvailable || (Console.ReadKey(true).Key != ConsoleKey.Enter); i = (i + 1) % 5)
 		{
-			//BUG: Having this local function is dumb, but it's the only way to get hot reload working (maybe it's stuck in the `while` loop?)
-			void X()
+			Display();
+			AnsiConsole.MarkupLine($"[bold purple underline italic]Render completed. Press enter to continue{new string('.', i)}[/]");
+		}
+		#endif
+
+		//BUG: Having this local function is dumb, but it's the only way to get hot reload working (maybe it's stuck in the `while` loop?)
+		void Display()
+		{
+			//TODO: Update console window title
+
+			//Don't update as fast as possible or we get flickering
+			Thread.Sleep(2000);
+			AnsiConsole.Clear();
+			string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
+			Console.Title = Markup.Remove(appTitle);
+
+			//The outermost table that just splits the render stats from the image preview
+			Table statsAndImageTable = new()
 			{
-				//TODO: Update console window title
+					Border = new NoTableBorder(),
+					Title  = new TableTitle(appTitle)
+			};
+			//Give a nice little "Rendering..." animation
+			{
+				const double f = 5; //Total time per ellipsis cycle
+				const double a = 5; //Max ellipses per cycle
 
-				//Don't update as fast as possible or we get flickering
-				Thread.Sleep(2000);
-				AnsiConsole.Clear();
-				string appTitle = $"[bold red underline]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [italic]{renderJob.Scene.Name}[/][/]";
-				Console.Title = Markup.Remove(appTitle);
+				double sec    = renderJob.Stopwatch.Elapsed.TotalSeconds;
+				double sin    = Math.Sin(((sec / f) * Math.PI) / 2);
+				double inv    = Math.Asin(sin);
+				double abs    = Math.Abs(inv);
+				double scaled = ((abs * a) / Math.PI) * 2;
+				int    round  = (int)Math.Round(scaled);
+				statsAndImageTable.Caption = new TableTitle($"[{RenderingAnimationMarkup}]{new string(' ', round) /*Centres string*/}Rendering{new string('.', round)}[/]");
+			}
+			statsAndImageTable.AddColumns(
+					new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+					new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+			);
 
-				//The outermost table that just splits the render stats from the image preview
-				Table statsAndImageTable = new()
-				{
-						Border = new NoTableBorder(),
-						Title  = new TableTitle(appTitle)
-				};
-				//Give a nice little "Rendering..." animation
-				{
-					const double f = 5;  //Total time per ellipsis cycle
-					const double a = 5d; //Max ellipses per cycle
+			//Make sure we don't exceed the vertical space limit when trying to maximise the width
+			int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
+			float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
+			int   maxWidth  = (int)(maxHeight * aspect);
+			CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
+			{
+					MaxConsoleWidth = true ? maxWidth : 38,
+					Resampler       = new NearestNeighborResampler()
+			};
 
-					double sec    = renderJob.Stopwatch.Elapsed.TotalSeconds;
-					double sin    = Math.Sin(((sec / f) * Math.PI) / 2);
-					double inv    = Math.Asin(sin);
-					double abs    = Math.Abs(inv);
-					double scaled = ((abs * a) / Math.PI) * 2;
-					int    round  = (int)Math.Round(scaled);
-					statsAndImageTable.Caption = new TableTitle($"[bold green]{new string(' ', round) /*Centres string*/}Rendering{new string('.', round)}[/]");
-				}
-				statsAndImageTable.AddColumns(
-						new TableColumn("[bold blue underline]Render Statistics[/]\n").Centered(),
-						new TableColumn("[bold blue underline]Image Preview[/]\n").Centered()
-				);
+			Table renderStatsTable = new Table
+			{
+					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
+			}.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
 
-				//Make sure we don't exceed the vertical space limit when trying to maximise the width
-				int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
-				float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
-				int   maxWidth  = (int)(maxHeight * aspect);
-				CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
-				{
-						MaxConsoleWidth = maxWidth,
-						Resampler       = new NearestNeighborResampler()
-				};
+			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
 
-				Table renderStatsTable = new Table
-				{
-						Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
-				}.AddColumns("Property", "Value").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
+			float    percentageRendered = (float)renderJob.RawPixelsRendered / renderJob.TotalRawPixels;
+			ulong    totalTruePix       = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
+			ulong    rayCount           = renderJob.RayCount;
+			TimeSpan elapsed            = renderJob.Stopwatch.Elapsed;
 
-				statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
+			ulong    rawPixelsRemaining  = renderJob.TotalRawPixels  - renderJob.RawPixelsRendered;
+			ulong    truePixelsRemaining = renderJob.TotalTruePixels - renderJob.TruePixelsRendered;
+			TimeSpan estimatedTotalTime  = elapsed / percentageRendered;
 
-				float    percentageRendered = (float)renderJob.RawPixelsRendered / renderJob.TotalRawPixels;
-				ulong    totalTruePix       = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
-				ulong    rayCount           = renderJob.RayCount;
-				TimeSpan elapsed            = renderJob.Stopwatch.Elapsed;
+			//TODO: Progress bars..
+			const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
+			const string percentFormat = "p1";          //Format string for percentages
+			const string numFormat     = "n0";
+			const int    numAlign      = 15;
+			const int    percentAlign  = 8;
 
-				ulong    rawPixelsRemaining  = renderJob.TotalRawPixels  - renderJob.RawPixelsRendered;
-				ulong    truePixelsRemaining = renderJob.TotalTruePixels - renderJob.TruePixelsRendered;
-				TimeSpan estimatedTotalTime  = elapsed / percentageRendered;
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
+			renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
+			renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Raw Pixels[/]",   $"{Format(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+			renderStatsTable.AddRow("",                                        $"{Format(rawPixelsRemaining,          totalRawPix)} remaining");
+			renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]True Pixels[/]",  $"{Format(renderJob.TruePixelsRendered, totalTruePix)} rendered");
+			renderStatsTable.AddRow("",                                        $"{Format(truePixelsRemaining,          totalTruePix)} remaining");
+			renderStatsTable.AddRow("",                                        $"{totalTruePix.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{Format(renderJob.RaysScattered,       rayCount)} scattered");
+			renderStatsTable.AddRow("",                                        $"{Format(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+			renderStatsTable.AddRow("",                                        $"{Format(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+			renderStatsTable.AddRow("",                                        $"{Format(renderJob.SkyRays,             rayCount)} sky");
+			renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
 
-				//TODO: Progress bars..
-				const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
-				const string percentFormat = "p1";          //Format string for percentages
-				const string numFormat     = "n0";
-				const int    numAlign      = 15;
-				const int    percentAlign  = 8;
-
-				renderStatsTable.AddRow("[bold]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
-				renderStatsTable.AddRow("",                      $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
-				renderStatsTable.AddRow("",                      $"{estimatedTotalTime.ToString(timeFormat)} total");
-				renderStatsTable.AddRow("[bold]Raw Pixels[/]",   $"{Format(renderJob.RawPixelsRendered, totalRawPix)} rendered");
-				renderStatsTable.AddRow("",                      $"{Format(rawPixelsRemaining,          totalRawPix)} remaining");
-				renderStatsTable.AddRow("",                      $"{totalRawPix.ToString(numFormat),numAlign}          total");
-				renderStatsTable.AddRow("[bold]True Pixels[/]",  $"{Format(renderJob.TruePixelsRendered, totalTruePix)} rendered");
-				renderStatsTable.AddRow("",                      $"{Format(truePixelsRemaining,          totalTruePix)} remaining");
-				renderStatsTable.AddRow("",                      $"{totalTruePix.ToString(numFormat),numAlign}          total");
-				renderStatsTable.AddRow("[bold]Rays[/]",         $"{Format(renderJob.RaysScattered,       rayCount)} scattered");
-				renderStatsTable.AddRow("",                      $"{Format(renderJob.RaysAbsorbed,        rayCount)} absorbed");
-				renderStatsTable.AddRow("",                      $"{Format(renderJob.BounceLimitExceeded, rayCount)} exceeded");
-				renderStatsTable.AddRow("",                      $"{Format(renderJob.SkyRays,             rayCount)} sky");
-				renderStatsTable.AddRow("",                      $"{rayCount.ToString(numFormat),numAlign}          total");
-				renderStatsTable.AddRow("[bold]Depth Buffer[/]", "[bold italic red]Coming soon...[/]");
-
-				static string Format(ulong val, ulong total)
-				{
-					return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
-				}
-
-				AnsiConsole.Write(statsAndImageTable);
+			static string Format(ulong val, ulong total)
+			{
+				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 			}
 
-			X();
+			AnsiConsole.Write(statsAndImageTable);
 		}
 	}
 
@@ -171,16 +212,16 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
 		Image<Rgb24> image = renderJob.GetAwaiter().GetResult();
+		AnsiConsole.MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors
 		if (!GraphicsValidator.Errors.IsEmpty)
 		{
 			ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> errors = GraphicsValidator.Errors;
-			AnsiConsole.MarkupLine("[red]Finished rendering with errors[/]");
 			//Print a list of all the errors that occurred
 			Table table = new()
 			{
-					Title = new TableTitle("[bold red]Errors occured during render:[/]")
+					Title = new TableTitle($"[{TitleMarkup}]Errors occured during render:[/]")
 			};
 			//I chose to have the error type on the top (column) and the object on the left (row)
 			//We have to build a comprehensive list of all possible rows and columns that occur in all dimensions/levels of the dictionaries (not all objects will exist for all error types and vice versa)
@@ -188,8 +229,8 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			HashSet<object>     allObjects    = new();                               //Aggregated of all the objects that had any errors (can be just one type of error or all types)
 
 			//Important to create all the columns first, before we create the rows, or we get exceptions (not enough columns)
-			table.AddColumn("[bold]Erroring object[/]");
-			foreach (GraphicsErrorType errorType in allErrorTypes) table.AddColumn($"[bold]{errorType}[/]");
+			table.AddColumn($"[{HeadingMarkup}]Erroring object[/]");
+			foreach (GraphicsErrorType errorType in allErrorTypes) table.AddColumn($"[{HeadingMarkup}]{errorType}[/]");
 			//Aggregate all the objects that had errors
 			foreach (GraphicsErrorType errorType in allErrorTypes)
 			{
@@ -199,12 +240,12 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 			//Build the rows. Each row represents the erroring object, and the error counts for it
 			var    row            = new IRenderable[allErrorTypes.Length + 1];
-			Markup noErrorsMarkup = new("[italic green]N/A[/]");
+			Markup noErrorsMarkup = new("[dim italic green]N/A[/]"); //The error never occurred for this object
 			foreach (object obj in allObjects)
 			{
 				//Fill the array with error messages so that I can tell when i mess up, also saves the app from crashing if that happens (because the default is null)
-				Array.Fill(row, new Markup("[bold red]ERROR[/]"));
-				row[0] = new Markup(obj.ToString()!);
+				Array.Fill(row, new Markup("[bold red underline rapidblink]INTERNAL ERROR[/]"));
+				row[0] = new Markup(obj.ToString()!); //First item is the object's name
 				//Calculate all the columns (error count values) for the current object. Important that the loop is shifted +1 so that i=0 is the object name
 				for (int i = 1; i <= allErrorTypes.Length; i++)
 				{
@@ -237,12 +278,12 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				table.AddRow(row);
 			}
 
-
 			AnsiConsole.Write(table);
 		}
 		else
 		{
-			AnsiConsole.MarkupLine("[green]Finished rendering![/]");
+			//TODO: Separate style for this
+			AnsiConsole.MarkupLine($"[{FinishedRenderMarkup}]No errors occured during render[/]");
 		}
 
 		return image;
