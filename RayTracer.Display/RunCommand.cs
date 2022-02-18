@@ -108,10 +108,10 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 				int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 				float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 				int   maxWidth  = (int)(maxHeight * aspect);
-				ImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
+				CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
 				{
-						MaxWidth  = maxWidth, PixelWidth = 2,
-						Resampler = new NearestNeighborResampler()
+						MaxConsoleWidth = maxWidth,
+						Resampler       = new NearestNeighborResampler()
 				};
 
 				Table renderStatsTable = new Table
