@@ -6,15 +6,8 @@ namespace RayTracer.Core.Hittables;
 /// <summary>
 ///  Implementation of <see cref="HittableBase"/> for a sphere
 /// </summary>
-public sealed class Sphere : HittableBase
+public sealed record Sphere(Vector3 Centre, float Radius) : HittableBase
 {
-	public Vector3 Centre = Vector3.Zero;
-
-	/// <summary>
-	///  The radius of the sphere (distance from centre to it's surface)
-	/// </summary>
-	public float Radius = 1f;
-
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
@@ -48,9 +41,10 @@ public sealed class Sphere : HittableBase
 
 		//This flips the normal if the ray is inside the sphere
 		//This forces the normal to always be going against the ray
-		Vector3 normal = inside ? -outwardNormal : outwardNormal;
-		Vector2 uv     = GetSphereUV(outwardNormal);
-		return new HitRecord(worldPoint, localPoint, normal, k, !inside, uv);
+		Vector3   normal = inside ? -outwardNormal : outwardNormal;
+		Vector2   uv     = GetSphereUV(outwardNormal);
+		HitRecord hit    = new(worldPoint, localPoint, normal, k, !inside, uv);
+		return hit;
 	}
 
 	/// <summary>

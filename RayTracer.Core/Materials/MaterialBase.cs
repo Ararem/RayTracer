@@ -6,7 +6,7 @@ namespace RayTracer.Core.Materials;
 /// <summary>
 ///  A class that defines a material that a <see cref="HittableBase"/> can have
 /// </summary>
-public abstract class MaterialBase
+public abstract record MaterialBase
 {
 	/// <summary>
 	///  Scatters an input ray, according to this material's properties

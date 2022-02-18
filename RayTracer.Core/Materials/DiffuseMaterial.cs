@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
@@ -9,21 +8,11 @@ namespace RayTracer.Core.Materials;
 /// <summary>
 ///  A material that has diffuse-like properties.
 /// </summary>
-public sealed class DiffuseMaterial : MaterialBase
+/// <param name="Texture">
+///  The albedo (colour) texture of this material
+/// </param>
+public sealed record DiffuseMaterial(TextureBase Texture) : MaterialBase
 {
-	/// <summary>
-	///  The albedo (colour) texture of this material
-	/// </summary>
-	[PublicAPI] public TextureBase Texture;
-
-	/// <summary>
-	///  Creates a new <see cref="DiffuseMaterial"/> from an <paramref name="texture"/>
-	/// </summary>
-	public DiffuseMaterial(TextureBase texture)
-	{
-		Texture = texture;
-	}
-
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)
 	{

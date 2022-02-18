@@ -1,5 +1,6 @@
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
+using RayTracer.Core.Materials;
 using System.Collections.Concurrent;
 using System.Numerics;
 using static RayTracer.Core.Debugging.GraphicsErrorType;
@@ -11,6 +12,8 @@ namespace RayTracer.Core.Debugging;
 /// </summary>
 public static class GraphicsValidator
 {
+	private const float MagnitudeEqualityError = 0.01f;
+
 #region Storing errors
 
 	/// <summary>
@@ -55,9 +58,21 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Ensures a given ray's direction has a correct magnitude (of 1)
 	/// </summary>
-	public static void CheckRayDirectionMagnitude(ref Ray r, object source)
+	public static void CheckRayDirectionMagnitude(ref Ray r, MaterialBase source)
 	{
-		if (Math.Abs(r.Direction.LengthSquared() - 1f) > 0.001f)
+		if (Math.Abs(r.Direction.LengthSquared() - 1f) > MagnitudeEqualityError)
+		{
+			RecordError(RayDirectionWrongMagnitude, source);
+			r = r with { Direction = Vector3.Normalize(r.Direction) };
+		}
+	}
+
+	/// <summary>
+	///  Ensures a given ray's direction has a correct magnitude (of 1)
+	/// </summary>
+	public static void CheckRayDirectionMagnitude(ref Ray r, Camera source)
+	{
+		if (Math.Abs(r.Direction.LengthSquared() - 1f) > MagnitudeEqualityError)
 		{
 			RecordError(RayDirectionWrongMagnitude, source);
 			r = r with { Direction = Vector3.Normalize(r.Direction) };
@@ -67,11 +82,11 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Ensures a <see cref="HitRecord"/>'s <see cref="HitRecord.Normal"/> has a magnitude of 1
 	/// </summary>
-	public static void CheckNormalMagnitude(ref HitRecord hit, object source)
+	public static void CheckNormalMagnitude(ref HitRecord hit, HittableBase source)
 	{
 		//Check that the normal magnitude is approx 1 unit
 		//Don't have to sqrt it because 1 squared is 1
-		if (Math.Abs(hit.Normal.LengthSquared() - 1f) > 0.001f)
+		if (Math.Abs(hit.Normal.LengthSquared() - 1f) > MagnitudeEqualityError)
 		{
 			RecordError(NormalsWrongMagnitude, source);
 			hit = hit with
@@ -84,7 +99,7 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Validates a <see cref="HitRecord"/>'s K value is in the correct range
 	/// </summary>
-	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, object source)
+	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, HittableBase source)
 	{
 		if (hit.K < options.KMin)
 		{

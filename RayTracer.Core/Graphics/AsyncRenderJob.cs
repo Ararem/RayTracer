@@ -229,8 +229,8 @@ public sealed class AsyncRenderJob
 			//No point continuing if there was no hit
 			if (maybeHit is not { } hit) continue;
 
-			GraphicsValidator.CheckNormalMagnitude(ref hit, obj);
-			GraphicsValidator.CheckKValueRange(ref hit, renderOptions, obj);
+			GraphicsValidator.CheckNormalMagnitude(ref hit, obj.Hittable);
+			GraphicsValidator.CheckKValueRange(ref hit, renderOptions, obj.Hittable);
 			//If it's the first hit, or it's closer, update the variable
 			if (maybeClosest is not var (oldObj, oldHit)) //Check first hit (because it's null)
 			{
@@ -245,10 +245,10 @@ public sealed class AsyncRenderJob
 
 			//This shouldn't happen, but just a little debug check to make sure nothing funky happens if the K's are the (exact) same
 			//Because I'm using `<` instead of `<=`, this means that the object we first iterate will be prioritized if multiple hittables have the same distance values
-			// (this would happen when several objects overlap exactly at a certain point)
+			//(this would happen when several objects overlap exactly at a certain point)
 			//Also due to the control flow, we know that the 'old' object is stored as `closest.obj`, and the 'current' is `obj`
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			else if (currentK == newK) GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (obj1: oldObj, obj2: obj));
+			else if (currentK == newK) GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
 		}
 
 		//If we hit anything, set the variables, otherwise make them null
