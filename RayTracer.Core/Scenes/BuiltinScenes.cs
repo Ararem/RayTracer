@@ -30,11 +30,11 @@ public static class BuiltinScenes
 	///  Simple scene with two spheres at (+-1, 0, 0)
 	/// </summary>
 	public static readonly Scene ThreeSpheres = new(
-			"Three Spheres", new Camera(new Vector3(0, 1, 5), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
+			"Three Spheres", new Camera(new Vector3(0, 1, 5), Zero, UnitY, 5, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere 1", new Sphere(new Vector3(0.2f),  .1f), new DiffuseMaterial(Red   + (0.5f * White))),
-					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new DiffuseMaterial(Green + (0.5f * White))),
-					new("Sphere 3", new Sphere(new Vector3(-0.2f), .1f), new DiffuseMaterial(Blue  + (0.5f * White)))
+					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new DiffuseMaterial(Lerp(Red,   White, 0.1f))),
+					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new DiffuseMaterial(Lerp(Green, White, 0.8f))),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new DiffuseMaterial(Lerp(Blue,  White, 0.1f)))
 			},
 			new DefaultSkyBox()
 	);
