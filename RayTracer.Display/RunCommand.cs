@@ -101,7 +101,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 	{
 		//By using an outer loop, we can make the console easier to modify realtime while debugging
 		while (!renderJob.RenderCompleted) Display();
-		#if DEBUG
+		#if DEBUG //While we're in debug, keep the display running so I can continue editing it
 		for (int i = 0; !Console.KeyAvailable || (Console.ReadKey(true).Key != ConsoleKey.Enter); i = (i + 1) % 5)
 		{
 			Display();

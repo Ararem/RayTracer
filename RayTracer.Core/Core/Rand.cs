@@ -1,5 +1,7 @@
 using JetBrains.Annotations;
 using System.Numerics;
+using static System.MathF;
+using static System.Numerics.Vector3;
 
 namespace RayTracer.Core;
 #pragma warning disable CA5394 //I don't care about security, I just want some random numbers
@@ -39,7 +41,7 @@ public static class Rand
 	/// <summary>
 	///  Returns a vector on the surface of a unit sphere
 	/// </summary>
-	public static Vector3 RandomOnUnitSphere() => Vector3.Normalize(RandomInUnitCube());
+	public static Vector3 RandomOnUnitSphere() => Normalize(RandomInUnitCube());
 
 	/// <summary>
 	///  Returns a vector inside a unit sphere
@@ -59,11 +61,9 @@ public static class Rand
 	/// </summary>
 	public static Vector2 RandomInUnitCircle()
 	{
-		while (true)
-		{
-			Vector2 p = new(RandomPlusMinusOne(), RandomPlusMinusOne());
-			if (p.LengthSquared() >= 1) continue;
-			return p;
-		}
+		float theta = RandomFloat(0, 2 * PI);
+		float r     = Sqrt(RandomFloat());
+		(float x, float y) = SinCos(theta);
+		return new Vector2(r * x, r * y);
 	}
 }
