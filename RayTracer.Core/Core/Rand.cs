@@ -55,13 +55,13 @@ public static class Rand
 	}
 
 	/// <summary>
-	///  Returns a vector that has (X,Y) such that X and Y are within a circle of radius 1, with a Z value of 0
+	///  Returns a vector that has (X,Y) such that X and Y are within a circle of radius 1
 	/// </summary>
-	public static Vector3 RandomInUnitDisk()
+	public static Vector2 RandomInUnitCircle()
 	{
 		while (true)
 		{
-			Vector3 p = new(RandomPlusMinusOne(), RandomPlusMinusOne(), 0);
+			Vector2 p = new(RandomPlusMinusOne(), RandomPlusMinusOne());
 			if (p.LengthSquared() >= 1) continue;
 			return p;
 		}

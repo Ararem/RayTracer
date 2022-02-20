@@ -80,7 +80,12 @@ public sealed class Camera
 		if (v is < 0 or > 1)
 			throw new ArgumentOutOfRangeException(nameof(v), v, "UV coordinates are only accepted in the range [0..1]");
 
-		return Ray.FromPoints(LookFrom, LowerLeftCorner + (u * Horizontal) + (v * Vertical));
+		//
+		Vector2 rand    = Rand.RandomInUnitCircle();
+		Vector3 offset  = (U * rand.X) + (V * rand.Y);
+		Vector3 origin  = LookFrom;
+		Vector3 towards = LowerLeftCorner + (u * Horizontal) + (v * Vertical);
+		return Ray.FromPoints(origin, towards);
 	}
 
 #region Internal View-Ray Vectors
