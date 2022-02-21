@@ -115,7 +115,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			//TODO: Update console window title
 
 			//Don't update as fast as possible or we get flickering
-			Thread.Sleep(2000);
+			Thread.Sleep(5000);
 			AnsiConsole.Clear();
 			string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
 			Console.Title = Markup.Remove(appTitle);
@@ -161,7 +161,8 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
 
-			ulong    totalTruePixels = renderJob.TotalTruePixels, totalRawPix = renderJob.TotalRawPixels;
+			int      totalTruePixels = renderJob.TotalTruePixels;
+			ulong    totalRawPix     = renderJob.TotalRawPixels;
 			ulong    rayCount        = renderJob.RayCount;
 			int      totalPasses     = renderJob.RenderOptions.Passes;
 			TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
@@ -188,7 +189,7 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			renderStatsTable.AddRow("",                                        "");
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
 			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
-			renderStatsTable.AddRow("",                                        $"{totalTruePixels.ToString(numFormat),numAlign}          pixels high");
+			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
 			renderStatsTable.AddRow("",                                        "");
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
 			renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
@@ -199,6 +200,10 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
 			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
 			renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
+			renderStatsTable.AddRow("",                                        "");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
+			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
+			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
 			renderStatsTable.AddRow("",                                        "");
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
 

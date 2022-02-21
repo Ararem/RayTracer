@@ -41,7 +41,7 @@ public sealed class AsyncRenderJob
 		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
 		taskCompletionSource         = new TaskCompletionSource<Image<Rgb24>>(this);
 		TotalRawPixels               = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		TotalTruePixels              = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height;
+		TotalTruePixels              = RenderOptions.Width        * RenderOptions.Height;
 		(_, camera, objects, skybox) = scene;
 		Scene                        = scene;
 		Stopwatch                    = new Stopwatch();
@@ -68,11 +68,21 @@ public sealed class AsyncRenderJob
 		// }
 
 		//Same comment from above applies, just different order
+		//Values are also compressed into a single number, then unpacked after
+		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
 		for (int p = 0; p < RenderOptions.Passes; p++)
 		{
-			for (int x = 0; x < RenderOptions.Width; x++)
-				for (int y = 0; y < RenderOptions.Height; y++)
-					RenderAndUpdatePixel(x, y, p);
+			for (int i = 0; i < TotalTruePixels; i++)
+			{
+				//This way, we render each row from left to right
+				//Rows are rendered bottom to top (on the image)
+				//And each pass is rendered one at a time
+				int x = i % RenderOptions.Width;
+				int y = i / RenderOptions.Width;
+
+				RenderAndUpdatePixel(x, y, p);
+			}
+
 			Increment(ref passesRendered);
 		}
 
@@ -383,7 +393,7 @@ public sealed class AsyncRenderJob
 	/// <summary>
 	///  How many 'true' pixels need to be rendered (not including multisampling)
 	/// </summary>
-	public ulong TotalTruePixels { get; }
+	public int TotalTruePixels { get; }
 
 	private ulong bounceLimitExceeded = 0;
 
