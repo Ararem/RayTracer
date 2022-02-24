@@ -5,7 +5,7 @@ using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Spectre.Console.Rendering;
@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using Color = Spectre.Console.Color;
 
 #pragma warning disable CS8765
@@ -99,126 +100,296 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 	/// </summary>
 	private static void DisplayProgress(AsyncRenderJob renderJob)
 	{
-		//By using an outer loop, we can make the console easier to modify realtime while debugging
-		while (!renderJob.RenderCompleted) Display();
-		#if DEBUG //While we're in debug, keep the display running so I can continue editing it
-		for (int i = 0; !Console.KeyAvailable || (Console.ReadKey(true).Key != ConsoleKey.Enter); i = (i + 1) % 5)
-		{
-			Display();
-			AnsiConsole.MarkupLine($"[bold purple underline italic]Render completed. Press enter to continue{new string('.', i)}[/]");
-		}
-		#endif
+		AnsiConsole.Clear();
 
+		const int renderingAnimInterval = 250;
+		const int imageInterval         = 3000;
+		const int renderStatsInterval   = 1000;
+
+		//The async tasks the live displays return
+		Task renderingAnimTask;
+		Task imageTask;
+		Task renderStatsTask;
+
+	#region App Title
+
+		//First thing is the title
+		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
+		Console.Title = Markup.Remove(appTitle);
+		AnsiConsole.Write(new Markup(appTitle).Centered());
+
+	#endregion
+
+	#region Rendering animation
+
+		//Then we do a little rendering animation to show that something is happening
+		renderingAnimTask = AnsiConsole.Live(new Markup("Rendering animation"))
+										.StartAsync(
+												async ctx =>
+												{
+													StringBuilder sb = new(100);
+													while (!renderJob.RenderCompleted)
+													{
+														break;
+														const double f = 2.5; //Total time per ellipsis cycle (s)
+														const double a = 5;   //Max ellipses per cycle
+
+														int    n;
+														double sec = renderJob.Stopwatch.Elapsed.TotalSeconds;
+														//Triangle wave, goes up and down
+														// {
+														// 	double sin    = Math.Sin((sec / f) * Math.PI);
+														// 	double inv    = Math.Asin(sin);
+														// 	double abs    = Math.Abs(inv);
+														// 	double scaled = ((abs * a) / Math.PI) * 2;
+														// 	n  = (int)Math.Round(scaled);
+														// }
+														//Sawtooth wave
+														{
+															//Get fractional part of the
+															double frac   = (sec / f) % 1;
+															double scaled = frac      * (a + 1);
+															n = (int)Math.Floor(scaled);
+														}
+														sb.Clear();
+														sb.Append($"[{RenderingAnimationMarkup}]");
+														//Pad/centre string
+														sb.Append(' ', n);
+														sb.Append("Rendering");
+														sb.Append('.', n);
+														sb.Append("[/]");
+
+														ctx.UpdateTarget(new Markup(sb.ToString()).Centered());
+														await Task.Delay(renderingAnimInterval);
+													}
+												}
+										);
+
+	#endregion
+
+	#region Stats and Image table (outer)
+
+		//The outermost table that just splits the render stats from the image preview
+		Table statsAndImageTable = new() { Border = new NoTableBorder() };
+		statsAndImageTable.AddColumns(
+				new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+				new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+		);
+
+	#endregion
+
+	#region Image buffer display
+
+		//The image that shows the current render buffer
+		//Make sure we don't exceed the vertical space limit when trying to maximise the width
+		int                   maxHeight        = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
+		float                 aspect           = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
+		int                   maxWidth         = (int)(maxHeight * aspect);
+		CustomImageRenderable imageRenderable  = new(renderJob.ImageBuffer) { Resampler = CubicResampler.RobidouxSharp, MaxConsoleWidth = true ? maxWidth : 38 };
+		LiveDisplay           imageLiveDisplay = AnsiConsole.Live(imageRenderable);
+		imageTask = imageLiveDisplay.StartAsync(
+				async ctx =>
+				{
+					while (!renderJob.RenderCompleted)
+					{
+						ctx.Refresh();
+						await Task.Delay(imageInterval);
+					}
+				}
+		);
+
+	#endregion
+
+	#region Render stats table
+
+		Table renderStatsTable = new Table
+		{
+				Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
+		}.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
+
+		LiveDisplay renderStatsLiveDisplay = AnsiConsole.Live(renderStatsTable);
+		renderStatsTask = renderStatsLiveDisplay.StartAsync(
+				async ctx =>
+				{
+					while (!renderJob.RenderCompleted)
+					{
+						int      totalTruePixels = renderJob.TotalTruePixels;
+						ulong    totalRawPix     = renderJob.TotalRawPixels;
+						ulong    rayCount        = renderJob.RayCount;
+						int      totalPasses     = renderJob.RenderOptions.Passes;
+						TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
+
+						float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
+						ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
+						int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+						TimeSpan estimatedTotalTime = elapsed / percentageRendered;
+
+						//TODO: Progress bars..
+						const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
+						const string percentFormat = "p1";          //Format string for percentages
+						const string numFormat     = "n0";
+						const int    numAlign      = 15;
+						const int    percentAlign  = 8;
+
+						renderStatsTable.Rows.Clear();
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
+						renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
+						renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+						renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
+						renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
+						renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
+						renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
+						renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
+						renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
+						renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+						renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+						renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
+						renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
+						renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
+						renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
+						renderStatsTable.AddRow("",                                        "");
+						renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
+
+						await Task.Delay(renderStatsInterval);
+
+						static string FormatU(ulong val, ulong total)
+						{
+							return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+						}
+
+						static string FormatI(int val, int total)
+						{
+							return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+						}
+					}
+				}
+		);
+
+	#endregion
+
+
+	#region Putting it all together
+
+		// statsAndImageTable.AddRow(renderStatsLiveDisplay, imageLiveDisplay);
+		// AnsiConsole.Write(statsAndImageTable);
+
+		Task.WaitAll(imageTask, renderingAnimTask, renderStatsTask);
+
+	#endregion
+
+		//
 		//BUG: Having this local function is dumb, but it's the only way to get hot reload working (maybe it's stuck in the `while` loop?)
-		void Display()
-		{
-			//TODO: Update console window title
+		// void Display()
+		// {
+		// //The outermost table that just splits the render stats from the image preview
+		// Table statsAndImageTable = new()
+		// {
+		// 		Border = new NoTableBorder(),
+		// 		Title  = new TableTitle(appTitle)
+		// };
+		// //Give a nice little "Rendering..." animation
+		// {
+		// 	const double f = 5; //Total time per ellipsis cycle
+		// 	const double a = 5; //Max ellipses per cycle
+		//
+		// 	double sec    = renderJob.Stopwatch.Elapsed.TotalSeconds;
+		// 	double sin    = Math.Sin(((sec / f) * Math.PI) / 2);
+		// 	double inv    = Math.Asin(sin);
+		// 	double abs    = Math.Abs(inv);
+		// 	double scaled = ((abs * a) / Math.PI) * 2;
+		// 	int    round  = (int)Math.Round(scaled);
+		// 	statsAndImageTable.Caption = new TableTitle($"[{RenderingAnimationMarkup}]{new string(' ', round) /*Centres string*/}Rendering{new string('.', round)}[/]");
+		// }
+		// statsAndImageTable.AddColumns(
+		// 		new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+		// 		new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+		// );
 
-			//Don't update as fast as possible or we get flickering
-			Thread.Sleep(5000);
-			AnsiConsole.Clear();
-			string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
-			Console.Title = Markup.Remove(appTitle);
+		// //Make sure we don't exceed the vertical space limit when trying to maximise the width
+		// int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
+		// float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
+		// int   maxWidth  = (int)(maxHeight * aspect);
+		// CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
+		// {
+		// 		MaxConsoleWidth = true ? maxWidth : 38,
+		// 		Resampler       = KnownResamplers.RobidouxSharp
+		// };
 
-			//The outermost table that just splits the render stats from the image preview
-			Table statsAndImageTable = new()
-			{
-					Border = new NoTableBorder(),
-					Title  = new TableTitle(appTitle)
-			};
-			//Give a nice little "Rendering..." animation
-			{
-				const double f = 5; //Total time per ellipsis cycle
-				const double a = 5; //Max ellipses per cycle
+		// Table renderStatsTable = new Table
+		// {
+		// 		Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
+		// }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
+		//
+		// statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
+		//
+		// int      totalTruePixels = renderJob.TotalTruePixels;
+		// ulong    totalRawPix     = renderJob.TotalRawPixels;
+		// ulong    rayCount        = renderJob.RayCount;
+		// int      totalPasses     = renderJob.RenderOptions.Passes;
+		// TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
+		//
+		// float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
+		// ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
+		// int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+		// TimeSpan estimatedTotalTime = elapsed / percentageRendered;
+		//
+		// //TODO: Progress bars..
+		// const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
+		// const string percentFormat = "p1";          //Format string for percentages
+		// const string numFormat     = "n0";
+		// const int    numAlign      = 15;
+		// const int    percentAlign  = 8;
+		//
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
+		// renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
+		// renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+		// renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
+		// renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
+		// renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
+		// renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
+		// renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
+		// renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
+		// renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+		// renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+		// renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
+		// renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
+		// renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
+		// renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
+		// renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
+		//
+		// static string FormatU(ulong val, ulong total)
+		// {
+		// 	return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+		// }
+		//
+		// static string FormatI(int val, int total)
+		// {
+		// 	return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+		// }
 
-				double sec    = renderJob.Stopwatch.Elapsed.TotalSeconds;
-				double sin    = Math.Sin(((sec / f) * Math.PI) / 2);
-				double inv    = Math.Asin(sin);
-				double abs    = Math.Abs(inv);
-				double scaled = ((abs * a) / Math.PI) * 2;
-				int    round  = (int)Math.Round(scaled);
-				statsAndImageTable.Caption = new TableTitle($"[{RenderingAnimationMarkup}]{new string(' ', round) /*Centres string*/}Rendering{new string('.', round)}[/]");
-			}
-			statsAndImageTable.AddColumns(
-					new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-					new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-			);
-
-			//Make sure we don't exceed the vertical space limit when trying to maximise the width
-			int   maxHeight = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
-			float aspect    = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
-			int   maxWidth  = (int)(maxHeight * aspect);
-			CustomImageRenderable imagePreviewRenderable = new(renderJob.ImageBuffer)
-			{
-					MaxConsoleWidth = true ? maxWidth : 38,
-					Resampler       = KnownResamplers.RobidouxSharp
-			};
-
-			Table renderStatsTable = new Table
-			{
-					Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue)
-			}.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the count is correct, but we don't want them shown
-
-			statsAndImageTable.AddRow(renderStatsTable, imagePreviewRenderable);
-
-			int      totalTruePixels = renderJob.TotalTruePixels;
-			ulong    totalRawPix     = renderJob.TotalRawPixels;
-			ulong    rayCount        = renderJob.RayCount;
-			int      totalPasses     = renderJob.RenderOptions.Passes;
-			TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
-
-			float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
-			ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
-			int      passesRemaining    = totalPasses - renderJob.PassesRendered;
-			TimeSpan estimatedTotalTime = elapsed / percentageRendered;
-
-			//TODO: Progress bars..
-			const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
-			const string percentFormat = "p1";          //Format string for percentages
-			const string numFormat     = "n0";
-			const int    numAlign      = 15;
-			const int    percentAlign  = 8;
-
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
-			renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
-			renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
-			renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
-			renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
-			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
-			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
-			renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
-			renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
-			renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
-			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
-			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
-
-			static string FormatU(ulong val, ulong total)
-			{
-				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
-			}
-
-			static string FormatI(int val, int total)
-			{
-				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
-			}
-
-			AnsiConsole.Write(statsAndImageTable);
-		}
+		// AnsiConsole.Write(statsAndImageTable);
+		// }
 	}
 
 	/// <summary>
