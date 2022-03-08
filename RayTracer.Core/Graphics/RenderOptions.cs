@@ -30,4 +30,10 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxBounces,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
-);
+)
+{
+	/// <summary>
+	///  Default render options
+	/// </summary>
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, true, 100, 100);
+}

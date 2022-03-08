@@ -1,4 +1,4 @@
-﻿using RayTracer.Display;
+﻿using RayTracer.Display.SpectreConsole;
 using Spectre.Console.Cli;
 
 var app = new CommandApp<RunCommand>();

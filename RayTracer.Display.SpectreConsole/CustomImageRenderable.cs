@@ -7,7 +7,7 @@ using Spectre.Console;
 using Spectre.Console.Rendering;
 using Color = Spectre.Console.Color;
 
-namespace RayTracer.Display;
+namespace RayTracer.Display.SpectreConsole;
 
 //I had to modify this from the Spectre.Console one because it wouldn't let me use Rgb24, and wouldn't let me pass in the image myself
 
