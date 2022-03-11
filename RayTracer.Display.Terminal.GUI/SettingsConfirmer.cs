@@ -13,8 +13,6 @@ namespace RayTracer.Display.Terminal.GUI;
 /// </summary>
 internal sealed class SettingsConfirmer : Toplevel
 {
-	private static readonly ITextValidateProvider IntValidator = new TextRegexProvider(@"^-?0*?((?'integer'\d+)|(?'PreFloat'\d+\.\d*)|(?'PostFloat'\.\d+))$") { ValidateOnInput = true };
-
 	public SettingsConfirmer()
 	{
 		Id = "Settings Confirmer TopLevel";
@@ -25,22 +23,24 @@ internal sealed class SettingsConfirmer : Toplevel
 				X  = 0, Y = 0, Width = Fill(), Height = Fill(),
 				Id = "Settings Confirmer Window"
 		};
-
-		TableView table = new()
-		{
-				X  = 0, Y = 0,
-				Id = "Property setter table"
-		};
-		//TODO: TABLEEEEEEEEEE
 		//Generate all the property inputs here
-		View? prev = null;
-		foreach (PropertyInfo propInfo in typeof(RenderOptions).GetProperties())
+		View?          prevContainer = null;
+		PropertyInfo[] props         = typeof(RenderOptions).GetProperties();
+		int            maxNameLength = props.Max(p => p.Name.Length);
+		foreach (PropertyInfo propInfo in props)
 		{
-			string name      = propInfo.Name;
-			Label  nameLabel = new(name) { Id = $"{name} name label" };
-			var    view      = new View { X   = 0, Width = Fill(), Height = 1, Id = $"{name} container view" };
-			view.Y = prev is null ? 0 : Pos.Bottom(view); //Try place below the previous property layout
-			view.Add(nameLabel);
+			string name = propInfo.Name;
+			var containerView = new View
+			{
+					X      = 0,
+					Y      = prevContainer is null ? 0 : Pos.Bottom(prevContainer), //Try place below the previous property layout
+					Width  = Fill(),
+					Height = 1,
+					Id     = $"'{name}' container view"
+			};
+
+			Label nameLabel = new($"{name}:") { X = 0, Y = 0, Width = 15, Height = 1, Id = $"{name} name label" };
+			containerView.Add(nameLabel);
 			if (propInfo.PropertyType == typeof(int))
 			{
 				int min        = int.MinValue, max = int.MaxValue;
@@ -50,128 +50,90 @@ internal sealed class SettingsConfirmer : Toplevel
 				if (propInfo.GetCustomAttribute<ValueRangeAttribute>() is { } range) (min, max)     = ((int)range.From, (int)range.To);
 
 				//Create the text field that only allows numbers to be input
-				TextValidateField entryField = new(IntValidator) { Text = defaultVal.ToString(), Id = $"Int {name} entry field" };
-				//Whenever the user finishes inputting, ensure it's in our valid range
-				entryField.Leave += args =>
+				TextValidateField entryField = new(IntValidator)
 				{
-					var f = (TextValidateField)args.View;
+						Text = defaultVal.ToString(), Id = $"'{name}' (int) entry field"
+				};
+				//Whenever the user finishes inputting, ensure it's in our valid range
+				entryField.Leave += _ =>
+				{
 					//If we didn't manage to parse the value as an int, reset it to the default
-					if (!int.TryParse(f.Text.ToString(), out int v)) f.Text = defaultVal.ToString();
-					if (v < min) f.Text                                     = (v = min).ToString();
-					if (v > max) f.Text                                     = (v = max).ToString();
+					if (!int.TryParse(entryField.Text.ToString(), out int v)) entryField.Text = defaultVal.ToString();
+					if (v < min) entryField.Text                                              = (v = min).ToString();
+					if (v > max) entryField.Text                                              = (v = max).ToString();
 					//Now we've got a valid value, update the property on the instance
 					propInfo.SetValue(Options, v);
 				};
-				view.Add(entryField);
+				containerView.Add(entryField);
+			}
+			else if (propInfo.PropertyType == typeof(float))
+			{
+				float min        = float.MinValue, max = float.MaxValue;
+				float defaultVal = (float)propInfo.GetValue(RenderOptions.Default)!;
+				//If the value can't be neg, set the min to 0
+				if (propInfo.GetCustomAttribute(typeof(NonNegativeValueAttribute)) is not null) min = 0;
+				if (propInfo.GetCustomAttribute<ValueRangeAttribute>() is { } range) (min, max)     = ((float)range.From, (float)range.To);
+
+				//Create the text field that only allows numbers to be input
+				TextValidateField entryField = new(FloatValidator)
+				{
+						Text = defaultVal.ToString(), Id = $"'{name}' (float) entry field"
+				};
+				//Whenever the user finishes inputting, ensure it's in our valid range
+				entryField.Leave += _ =>
+				{
+					//If we didn't manage to parse the value as an int, reset it to the default
+					if (!float.TryParse(entryField.Text.ToString(), out float v)) entryField.Text = defaultVal.ToString();
+					if (v < min) entryField.Text                                                  = (v = min).ToString();
+					if (v > max) entryField.Text                                                  = (v = max).ToString();
+					//Now we've got a valid value, update the property on the instance
+					propInfo.SetValue(Options, v);
+				};
+				containerView.Add(entryField);
 			}
 			else if (propInfo.PropertyType == typeof(bool))
 			{
-				CheckBox toggle = new() { Id = $"Bool {name} toggle" };
+				CheckBox toggle = new()
+				{
+						Id      = $"'{name}' (bool) toggle",
+						Checked = (bool)propInfo.GetValue(Options)!,
+						Text    = "Tezt"
+				};
 				toggle.Toggled += b => propInfo.SetValue(Options, b);
-				view.Add(toggle);
+				containerView.Add(toggle);
 			}
 			else
 			{
-				view.Add(new Label($"ERROR: Type {propInfo.PropertyType} unsupported") { Id = $"Prop {name} error label" });
+				containerView.Add(
+						new Label($"ERROR: Type {propInfo.PropertyType} unsupported")
+						{
+								Id = $"Prop {name} error label"
+						}
+				);
 			}
 
-			mainWin.Add(view);
-			prev = view;
+			mainWin.Add(containerView);
+			//Position the value subview correctly
+			containerView.Subviews[1].X      = Pos.Right(nameLabel);
+			containerView.Subviews[1].Y      = 0;
+			containerView.Subviews[1].Height = 1;
+			containerView.Subviews[1].Width  = maxNameLength;
+
+			prevContainer = containerView;
 		}
 
 		Add(mainWin);
+
+		//TODO: Quit button, with validation
+		mainWin.Add(new Button("Confirm Settings") { X = 0, Y = Pos.Bottom(mainWin) - 1, Height = 1 });
 	}
+
+	//NOTE: If these providers are reused, we get problems with the input fields all showing the same result (due to shared provider state)
+	//	So we have to make the properties return a new instance each time to avoid this
+	private static ITextValidateProvider FloatValidator => new TextRegexProvider(@"^-?0*?((?'integer'\d+)|(?'PreFloat'\d+\.\d*)|(?'PostFloat'\.\d+)|(?'Infinity'∞))$") { ValidateOnInput = true };
+
+	private static ITextValidateProvider IntValidator => new TextRegexProvider(@"^-?0*?(\d+)$") { ValidateOnInput = true };
 
 	public RenderOptions Options { get; } = RenderOptions.Default; //Start with default values
 	public Scene?        Scene   { get; } = null;                  //Can only be null if the user quits without selecting the scene (i hope)
-
-	// private sealed class IntValidateProvider : ITextValidateProvider
-	// {
-	// 	private List<Rune> text;
-	// 	private int        min, max;
-	// 	public int value => ustring.Make(text).ToString()
-	//
-	// 	/// <summary>Empty Constructor.</summary>
-	// 	public IntValidateProvider(int min, int max, int startingValue)
-	// 	{
-	// 	}
-	//
-	//
-	// 	/// <inheritdoc/>
-	// 	public ustring Text
-	// 	{
-	// 		get => ustring.Make(text);
-	// 		set
-	// 		{
-	// 			text = value != ustring.Empty ? value.ToRuneList() : null;
-	// 			SetupText();
-	// 		}
-	// 	}
-	//
-	// 	/// <inheritdoc/>
-	// 	public ustring DisplayText => Text;
-	//
-	// 	/// <summary>
-	// 	///  When true, validates with the regex pattern on each input, preventing the input if it's not valid.
-	// 	/// </summary>
-	// 	public bool ValidateOnInput { get; } = true;
-	//
-	// 	/// <inheritdoc/>
-	// 	public bool IsValid => Validate(text);
-	//
-	// 	/// <inheritdoc/>
-	// 	public bool Fixed => false;
-	//
-	// 	/// <inheritdoc/>
-	// 	public int Cursor(int pos)
-	// 	{
-	// 		if (pos < 0)
-	// 			return CursorStart();
-	// 		return pos >= text.Count ? CursorEnd() : pos;
-	// 	}
-	//
-	// 	/// <inheritdoc/>
-	// 	public int CursorStart() => 0;
-	//
-	// 	/// <inheritdoc/>
-	// 	public int CursorEnd() => text.Count;
-	//
-	// 	/// <inheritdoc/>
-	// 	public int CursorLeft(int pos) => pos > 0 ? pos - 1 : pos;
-	//
-	// 	/// <inheritdoc/>
-	// 	public int CursorRight(int pos) => pos < text.Count ? pos + 1 : pos;
-	//
-	// 	/// <inheritdoc/>
-	// 	public bool Delete(int pos)
-	// 	{
-	// 		if ((text.Count > 0) && (pos < text.Count))
-	// 			text.RemoveAt(pos);
-	// 		return true;
-	// 	}
-	//
-	// 	/// <inheritdoc/>
-	// 	public bool InsertAt(char ch, int pos)
-	// 	{
-	// 		List<Rune> list = text.ToList();
-	// 		list.Insert(pos, ch);
-	// 		if (!Validate(list) && ValidateOnInput)
-	// 			return false;
-	// 		text.Insert(pos, ch);
-	// 		return true;
-	// 	}
-	//
-	// 	private bool Validate(List<Rune> text) => regex.Match(ustring.Make(text).ToString()).Success;
-	//
-	// 	private void SetupText()
-	// 	{
-	// 		if ((text != null) && IsValid)
-	// 			return;
-	// 		text = new List<Rune>();
-	// 	}
-	//
-	// 	/// <summary>Compiles the regex pattern for validation./&gt;</summary>
-	// 	private void CompileMask() => regex = new Regex(ustring.Make((IList<Rune>)pattern).ToString(), RegexOptions.Compiled);
-	// }
-	//
 }
