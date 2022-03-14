@@ -15,7 +15,11 @@ internal sealed class SettingsConfirmer : Toplevel
 {
 	public SettingsConfirmer()
 	{
-		Id = "Settings Confirmer TopLevel";
+		Id     = "Settings Confirmer TopLevel";
+		X      = Y = 0;
+		Width  = Fill();
+		Height = Fill();
+
 		//Create all the UI elements here
 		Window mainWin = new("Confirm Render settings")
 		{
@@ -23,12 +27,12 @@ internal sealed class SettingsConfirmer : Toplevel
 				X  = 0, Y = 0, Width = Fill(), Height = Fill(),
 				Id = "Settings Confirmer Window"
 		};
+		Add(mainWin);
 
 		//Generate all the property inputs here
-		View?          prevContainer  = null;
-		PropertyInfo[] props          = typeof(RenderOptions).GetProperties();
-		Dim            maxNameLength  = props.Max(p => p.Name.Length);
-		Dim            maxValueLength = maxNameLength;
+		View?          prevContainer = null;
+		PropertyInfo[] props         = typeof(RenderOptions).GetProperties();
+		Dim            maxNameLength = props.Max(p => p.Name.Length);
 		foreach (PropertyInfo propInfo in props)
 		{
 			string name = propInfo.Name;
@@ -62,7 +66,7 @@ internal sealed class SettingsConfirmer : Toplevel
 						X      = Pos.Right(nameLabel),
 						Y      = 0,
 						Height = 1,
-						Width  = maxNameLength
+						Width  = Fill()
 				};
 				//Whenever the user finishes inputting, ensure it's in our valid range
 				entryField.Leave += _ =>
@@ -91,7 +95,7 @@ internal sealed class SettingsConfirmer : Toplevel
 						X      = Pos.Right(nameLabel),
 						Y      = 0,
 						Height = 1,
-						Width  = maxNameLength
+						Width  = Fill()
 				};
 				//Whenever the user finishes inputting, ensure it's in our valid range, then update property
 				entryField.Leave += _ =>
@@ -111,7 +115,11 @@ internal sealed class SettingsConfirmer : Toplevel
 				{
 						Id      = $"'{name}' (bool) toggle",
 						Checked = (bool)propInfo.GetValue(Options)!,
-						Text    = propInfo.GetValue(Options)!.ToString()
+						Text    = propInfo.GetValue(Options)!.ToString(),
+						X       = Pos.Right(nameLabel),
+						Y       = 0,
+						Height  = 1,
+						Width   = Fill()
 				};
 				//Whenever value changed, update property and display
 				toggle.Toggled += b =>
@@ -125,10 +133,17 @@ internal sealed class SettingsConfirmer : Toplevel
 			}
 			else if (type.IsAssignableTo(typeof(Enum)))
 			{
-				ComboBox combo  = new() { Id = $"'{name}' enum combobox" };
-				Array    values = Enum.GetValues(type);
+				List<Enum> values = Enum.GetValues(type).Cast<Enum>().ToList();
+				ComboBox combo = new()
+				{
+						Id     = $"'{name}' enum combobox",
+						X      = Pos.Right(nameLabel),
+						Y      = 0,
+						Height = values.Count + 1,                    //Have to leave enough space to see the values
+						Width  = values.Max(e => e.ToString().Length) //Set the width to match the length of the longest enum value
+				};
 				combo.SetSource(values);
-				combo.SelectedItemChanged += args => { propInfo.SetValue(Options, values.GetValue(args.Item)); };
+				combo.SelectedItemChanged += args => { propInfo.SetValue(Options, values[args.Item]); };
 				//HACK: Doesn't seem to be a way to directly change the selected item, gotta reflect it.
 				//Set the selected item to be the current value of the property
 				object currentValue = propInfo.GetValue(Options)!;
@@ -140,7 +155,11 @@ internal sealed class SettingsConfirmer : Toplevel
 				containerView.Add(
 						new Label($"ERROR: Type {type} unsupported")
 						{
-								Id = $"'{name}' ({type}) error label"
+								Id     = $"'{name}' ({type}) error label",
+								X      = Pos.Right(nameLabel),
+								Y      = 0,
+								Height = 1,
+								Width  = Fill()
 						}
 				);
 			}
@@ -152,21 +171,21 @@ internal sealed class SettingsConfirmer : Toplevel
 		}
 
 		//Add scene selector
+		List<Scene> scenes = BuiltinScenes.GetAll().ToList();
 		ComboBox sceneSelect = new()
 		{
 				Id     = "Scene Selector ComboBox",
 				Text   = "Select a scene to render",
 				X      = 0, Y = Pos.Bottom(prevContainer),
-				Height = Fill(),
+				Height = scenes.Count + 1,
 				Width  = Fill()
 		};
-		sceneSelect.SetSource(BuiltinScenes.GetAll().ToList());
+		sceneSelect.SetSource(scenes);
 		sceneSelect.SelectedItemChanged += args => Scene = (Scene)args.Value;
 
-		//Set the correct widths for the name and value views
-		foreach (View view in mainWin.Subviews)
-		{
-		}
+		//Have to fix up the heights for the container views, since some subviews (like ComboBoxes take up more than one line)
+		foreach (View container in mainWin.Subviews[0].Subviews)
+			container.Height = container.Subviews[1].Height;
 
 		//TODO: Quit button, with validation
 		Button confirmButton = new("Confirm Settings") { X = 0, Y = Pos.Bottom(mainWin) - 3, Height = 1 };
@@ -176,7 +195,6 @@ internal sealed class SettingsConfirmer : Toplevel
 				RequestStop();
 		};
 		mainWin.Add(confirmButton);
-		Add(mainWin);
 	}
 
 	//NOTE: If these providers are reused, we get problems with the input fields all showing the same result (due to shared provider state)
