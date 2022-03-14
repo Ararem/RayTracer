@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Core", "RayTracer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Benchmarks", "RayTracer.Benchmarks\RayTracer.Benchmarks.csproj", "{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.Terminal.GUI", "RayTracer.Display.Terminal.GUI\RayTracer.Display.Terminal.GUI.csproj", "{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.TerminalDotGUI", "RayTracer.Display.TerminalDotGUI\RayTracer.Display.TerminalDotGUI.csproj", "{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

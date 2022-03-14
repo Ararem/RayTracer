@@ -6,7 +6,7 @@ using Terminal.Gui;
 using Terminal.Gui.TextValidateProviders;
 using static Terminal.Gui.Dim;
 
-namespace RayTracer.Display.Terminal.GUI;
+namespace RayTracer.Display.TerminalDotGUI;
 
 /// <summary>
 ///  TopLevel class that is used to confirm the settings that will be used to render the app
@@ -23,13 +23,16 @@ internal sealed class SettingsConfirmer : Toplevel
 				X  = 0, Y = 0, Width = Fill(), Height = Fill(),
 				Id = "Settings Confirmer Window"
 		};
+
 		//Generate all the property inputs here
-		View?          prevContainer = null;
-		PropertyInfo[] props         = typeof(RenderOptions).GetProperties();
-		int            maxNameLength = props.Max(p => p.Name.Length);
+		View?          prevContainer  = null;
+		PropertyInfo[] props          = typeof(RenderOptions).GetProperties();
+		Dim            maxNameLength  = props.Max(p => p.Name.Length);
+		Dim            maxValueLength = maxNameLength;
 		foreach (PropertyInfo propInfo in props)
 		{
 			string name = propInfo.Name;
+			Type   type = propInfo.PropertyType;
 			var containerView = new View
 			{
 					X      = 0,
@@ -39,9 +42,12 @@ internal sealed class SettingsConfirmer : Toplevel
 					Id     = $"'{name}' container view"
 			};
 
-			Label nameLabel = new($"{name}:") { X = 0, Y = 0, Width = 15, Height = 1, Id = $"{name} name label" };
+			Label nameLabel = new($"{name}:") { X = 0, Y = 0, Width = maxNameLength, Height = 1, Id = $"{name} name label" };
 			containerView.Add(nameLabel);
-			if (propInfo.PropertyType == typeof(int))
+
+		#region Property value view implementation
+
+			if (type == typeof(int))
 			{
 				int min        = int.MinValue, max = int.MaxValue;
 				int defaultVal = (int)propInfo.GetValue(RenderOptions.Default)!;
@@ -52,7 +58,11 @@ internal sealed class SettingsConfirmer : Toplevel
 				//Create the text field that only allows numbers to be input
 				TextValidateField entryField = new(IntValidator)
 				{
-						Text = defaultVal.ToString(), Id = $"'{name}' (int) entry field"
+						Text   = defaultVal.ToString(), Id = $"'{name}' (int) entry field",
+						X      = Pos.Right(nameLabel),
+						Y      = 0,
+						Height = 1,
+						Width  = maxNameLength
 				};
 				//Whenever the user finishes inputting, ensure it's in our valid range
 				entryField.Leave += _ =>
@@ -66,7 +76,7 @@ internal sealed class SettingsConfirmer : Toplevel
 				};
 				containerView.Add(entryField);
 			}
-			else if (propInfo.PropertyType == typeof(float))
+			else if (type == typeof(float))
 			{
 				float min        = float.MinValue, max = float.MaxValue;
 				float defaultVal = (float)propInfo.GetValue(RenderOptions.Default)!;
@@ -77,9 +87,13 @@ internal sealed class SettingsConfirmer : Toplevel
 				//Create the text field that only allows numbers to be input
 				TextValidateField entryField = new(FloatValidator)
 				{
-						Text = defaultVal.ToString(), Id = $"'{name}' (float) entry field"
+						Text   = defaultVal.ToString(), Id = $"'{name}' (float) entry field",
+						X      = Pos.Right(nameLabel),
+						Y      = 0,
+						Height = 1,
+						Width  = maxNameLength
 				};
-				//Whenever the user finishes inputting, ensure it's in our valid range
+				//Whenever the user finishes inputting, ensure it's in our valid range, then update property
 				entryField.Leave += _ =>
 				{
 					//If we didn't manage to parse the value as an int, reset it to the default
@@ -91,41 +105,78 @@ internal sealed class SettingsConfirmer : Toplevel
 				};
 				containerView.Add(entryField);
 			}
-			else if (propInfo.PropertyType == typeof(bool))
+			else if (type == typeof(bool))
 			{
 				CheckBox toggle = new()
 				{
 						Id      = $"'{name}' (bool) toggle",
 						Checked = (bool)propInfo.GetValue(Options)!,
-						Text    = "Tezt"
+						Text    = propInfo.GetValue(Options)!.ToString()
 				};
-				toggle.Toggled += b => propInfo.SetValue(Options, b);
+				//Whenever value changed, update property and display
+				toggle.Toggled += b =>
+				{
+					//For some reason the bool is the previous state, so flip it to get the current
+					b ^= true;
+					propInfo.SetValue(Options, b);
+					toggle.Text = propInfo.GetValue(Options)!.ToString();
+				};
 				containerView.Add(toggle);
+			}
+			else if (type.IsAssignableTo(typeof(Enum)))
+			{
+				ComboBox combo  = new() { Id = $"'{name}' enum combobox" };
+				Array    values = Enum.GetValues(type);
+				combo.SetSource(values);
+				combo.SelectedItemChanged += args => { propInfo.SetValue(Options, values.GetValue(args.Item)); };
+				//HACK: Doesn't seem to be a way to directly change the selected item, gotta reflect it.
+				//Set the selected item to be the current value of the property
+				object currentValue = propInfo.GetValue(Options)!;
+				typeof(ComboBox).GetMethod("SetValue", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combo, new[] { currentValue });
+				containerView.Add(combo);
 			}
 			else
 			{
 				containerView.Add(
-						new Label($"ERROR: Type {propInfo.PropertyType} unsupported")
+						new Label($"ERROR: Type {type} unsupported")
 						{
-								Id = $"Prop {name} error label"
+								Id = $"'{name}' ({type}) error label"
 						}
 				);
 			}
 
-			mainWin.Add(containerView);
-			//Position the value subview correctly
-			containerView.Subviews[1].X      = Pos.Right(nameLabel);
-			containerView.Subviews[1].Y      = 0;
-			containerView.Subviews[1].Height = 1;
-			containerView.Subviews[1].Width  = maxNameLength;
+		#endregion
 
+			mainWin.Add(containerView);
 			prevContainer = containerView;
 		}
 
-		Add(mainWin);
+		//Add scene selector
+		ComboBox sceneSelect = new()
+		{
+				Id     = "Scene Selector ComboBox",
+				Text   = "Select a scene to render",
+				X      = 0, Y = Pos.Bottom(prevContainer),
+				Height = Fill(),
+				Width  = Fill()
+		};
+		sceneSelect.SetSource(BuiltinScenes.GetAll().ToList());
+		sceneSelect.SelectedItemChanged += args => Scene = (Scene)args.Value;
+
+		//Set the correct widths for the name and value views
+		foreach (View view in mainWin.Subviews)
+		{
+		}
 
 		//TODO: Quit button, with validation
-		mainWin.Add(new Button("Confirm Settings") { X = 0, Y = Pos.Bottom(mainWin) - 1, Height = 1 });
+		Button confirmButton = new("Confirm Settings") { X = 0, Y = Pos.Bottom(mainWin) - 3, Height = 1 };
+		confirmButton.Clicked += () =>
+		{
+			if (MessageBox.Query("Confirm", "Are you sure you wish to confirm these settings?", "Yes", "No") == 0)
+				RequestStop();
+		};
+		mainWin.Add(confirmButton);
+		Add(mainWin);
 	}
 
 	//NOTE: If these providers are reused, we get problems with the input fields all showing the same result (due to shared provider state)
@@ -134,6 +185,6 @@ internal sealed class SettingsConfirmer : Toplevel
 
 	private static ITextValidateProvider IntValidator => new TextRegexProvider(@"^-?0*?(\d+)$") { ValidateOnInput = true };
 
-	public RenderOptions Options { get; } = RenderOptions.Default; //Start with default values
-	public Scene?        Scene   { get; } = null;                  //Can only be null if the user quits without selecting the scene (i hope)
+	public RenderOptions Options { get; }              = RenderOptions.Default; //Start with default values
+	public Scene?        Scene   { get; private set; } = null;                  //Can only be null if the user quits without selecting the scene (i hope)
 }

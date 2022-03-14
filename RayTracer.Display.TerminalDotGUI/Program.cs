@@ -1,6 +1,6 @@
 ﻿using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
-using RayTracer.Display.Terminal.GUI;
+using RayTracer.Display.TerminalDotGUI;
 using Terminal.Gui;
 using static Terminal.Gui.Dim;
 
@@ -14,7 +14,8 @@ SettingsConfirmer confirmer = new();
 Application.UseSystemConsole = true; //BUG: Problem with linux (unix?) console, clicks itself
 Application.Run(confirmer);
 RenderOptions renderOptions = confirmer.Options;
-Scene         scene         = confirmer.Scene;
+Scene?        scene         = confirmer.Scene;
+if (scene is null) return; //Quit if user cancelled
 
 top.MenuBar = new MenuBar(new[] { new MenuBarItem("Title of this menu bar item", "Help text for this menu item", () => MessageBox.Query("MessageBox Title", "Message", "Button1", "Button2")) });
 top.Add(top.MenuBar);

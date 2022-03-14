@@ -4,6 +4,7 @@ using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
 using System.Numerics;
+using System.Reflection;
 using static RayTracer.Core.Colour;
 using static System.Numerics.Vector3;
 
@@ -50,4 +51,15 @@ public static class BuiltinScenes
 			},
 			new DefaultSkyBox()
 	);
+
+	/// <summary>
+	/// Gets all the builtin scenes
+	/// </summary>
+	public static IEnumerable<Scene> GetAll()
+	{
+		return typeof(BuiltinScenes)
+				.GetFields(BindingFlags.Public | BindingFlags.Static)
+				.Where(f => f.FieldType == typeof(Scene))
+				.Select(f => (Scene)f.GetValue(null)!);
+	}
 }
