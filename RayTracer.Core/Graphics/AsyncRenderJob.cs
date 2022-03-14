@@ -23,6 +23,7 @@ namespace RayTracer.Core.Graphics;
 [UsedImplicitly(ImplicitUseKindFlags.Access, ImplicitUseTargetFlags.WithMembers)]
 public sealed class AsyncRenderJob
 {
+	//TODO: Allow cancelling of the render job partway through
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
 	/// </summary>

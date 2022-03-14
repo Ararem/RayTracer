@@ -107,18 +107,20 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 	#endregion
 
-		AnsiConsole.Live(Text.Empty)
-					.Start(
+		//The outermost table that just splits the render stats from the image preview
+		Table statsAndImageTable = new() { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
+		statsAndImageTable.AddColumns(
+				new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+				new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+		);
+
+		AnsiConsole.Live(statsAndImageTable)
+					.StartAsync(
 							async ctx =>
 							{
 								while (!renderJob.RenderCompleted)
 								{
-									//The outermost table that just splits the render stats from the image preview
-									Table statsAndImageTable = new() { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
-									statsAndImageTable.AddColumns(
-											new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-											new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-									);
+									statsAndImageTable.Rows.Clear();
 
 								#region Rendering... animation
 
@@ -236,17 +238,18 @@ internal sealed class RunCommand : Command<RunCommand.Settings>
 
 									Debug.WriteLine("Rows");
 									statsAndImageTable.AddRow(renderStatsTable, imageRenderable);
-									Debug.WriteLine("Update"); //BUG: This just freezes for some reason, can't even debug it
-									ctx.UpdateTarget(statsAndImageTable);
+									Debug.WriteLine("Refresh"); //BUG: This just freezes for some reason, can't even debug it
+									ctx.Refresh();
 									Debug.WriteLine("Delay");
-									// await Task.Delay(interval);
+									Debug.WriteLine(interval);
+									await Task.Delay(interval);
 									Debug.WriteLine("Loop");
 									Debug.WriteLine(elapsed);
 
 								#endregion
 								}
 							}
-					);
+					).Wait();
 
 		//
 		//BUG: Having this local function is dumb, but it's the only way to get hot reload working (maybe it's stuck in the `while` loop?)

@@ -11,9 +11,9 @@ namespace RayTracer.Display.TerminalDotGUI;
 /// <summary>
 ///  TopLevel class that is used to confirm the settings that will be used to render the app
 /// </summary>
-internal sealed class SettingsConfirmer : Toplevel
+internal sealed class SettingsConfirmerApp : Toplevel
 {
-	public SettingsConfirmer()
+	public SettingsConfirmerApp()
 	{
 		Id     = "Settings Confirmer TopLevel";
 		X      = Y = 0;
