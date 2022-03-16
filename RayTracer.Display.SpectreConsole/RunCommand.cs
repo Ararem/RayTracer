@@ -97,7 +97,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	{
 		AnsiConsole.Clear();
 
-		const int interval = 50; //How long between updates of the live display
+		const int interval = 500; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
@@ -106,35 +106,39 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		//The outermost table that just splits the render stats from the image preview
 		Table statsAndImageTable;
 
-		//This allows us to restart the loop, resetting the console and fixing any size issues
-		bool restart = false;
-	loop:
-		AnsiConsole.Clear();
-		await AnsiConsole.Live(Text.Empty).StartAsync(
-				async ctx =>
-				{
-					statsAndImageTable = new() { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
-					statsAndImageTable.AddColumns(
-							new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-							new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-					);
-					while (!renderJob.RenderCompleted)
+		//The outer loop allows us to 'reset' the console, fixing any size issues
+		//We use a live display and an inner loop, as clearing and recreating the table causes really bad flickering
+		while (true)
+		{
+			(int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
+			AnsiConsole.Clear();
+			await AnsiConsole.Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(
+					async ctx =>
 					{
-						UpdateLiveDisplay();
-						ctx.Refresh();
-						await Task.Delay(interval);
-						if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C))
+						//Create a new table (reset)
+						statsAndImageTable = new Table { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
+						statsAndImageTable.AddColumns(
+								new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+								new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+						);
+						ctx.UpdateTarget(statsAndImageTable);
+
+						//Inner loop doesn't flicker (gasp)
+						while (!renderJob.RenderCompleted)
 						{
-							restart = true;
-							return;
+							//Automatically reset if dimensions changed
+							(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
+							if (prevDims != currDims) break;
+							UpdateLiveDisplay();
+							ctx.Refresh();
+							//await Task.Delay(interval);
+							//Allow for a manual reset using the 'C' key
+							if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) break;
 						}
 					}
-				}
-		);
-		if (restart)
-		{
-			restart = false;
-			goto loop;
+			);
+			//Quit if the render is done
+			if (renderJob.RenderCompleted) break;
 		}
 
 		void UpdateLiveDisplay()
