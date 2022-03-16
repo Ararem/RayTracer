@@ -3,55 +3,17 @@ using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
 
-using static MathF;
-
-public class XYPlane : Hittable
+/// <summary>
+/// 
+/// </summary>
+/// <param name="XLow">Low X value for this plane</param>
+/// <param name="XHigh">High X value for this plane</param>
+/// <param name="YLow">Low Y value for this plane</param>
+/// <param name="YHigh">High Y value for this plane</param>
+/// <param name="Z">Z value the plane is positioned at</param>
+/// <param name="AABBPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
+public record XYPlane(float XLow, float XHigh, float YLow, float YHigh, float Z, float AABBPadding = 0.001f) : Hittable
 {
-	private readonly Vector3 centre;
-
-	public XYPlane(float xLow, float xHigh, float yLow, float yHigh, float z, float aabbPadding = 0.001f)
-	{
-		if (aabbPadding <= 0)
-			throw new ArgumentOutOfRangeException(nameof(aabbPadding), aabbPadding, "Padding for the AABB must be > 0");
-		XLow        = Min(xLow, xHigh);
-		XHigh       = Max(xLow, xHigh);
-		YLow        = Min(yLow, yHigh);
-		YHigh       = Max(yLow, yHigh);
-		Z           = z;
-		AABBPadding = aabbPadding;
-		centre      = new Vector3((XLow + XHigh) / 2f, (YLow + YHigh) / 2f, Z); //Average high/low points
-	}
-
-	/// <summary>
-	///  Low X value for this plane
-	/// </summary>
-	public float XLow { get; }
-
-	/// <summary>
-	///  High X value for this plane
-	/// </summary>
-	public float XHigh { get; }
-
-	/// <summary>
-	///  Low Y value for this plane
-	/// </summary>
-	public float YLow { get; }
-
-	/// <summary>
-	///  High Y value for this plane
-	/// </summary>
-	public float YHigh { get; }
-
-	/// <summary>
-	///  Z value for this plane
-	/// </summary>
-	public float Z { get; }
-
-	/// <summary>
-	///  How much to pad the computed AABB by (since the plane is infinitely thin)
-	/// </summary>
-	public float AABBPadding { get; }
-
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
@@ -67,6 +29,7 @@ public class XYPlane : Hittable
 			return null;
 
 		//Calculate the local point (from the centre of the plane)
+		Vector3 centre     = new((XLow + XHigh) / 2f, (YLow + YHigh) / 2f, Z); //Average high/low points
 		Vector3 localPoint = worldPoint - centre;
 
 		Vector2 uv = new((x - XLow) / (XHigh - XLow), (y - YLow) / (YHigh - YLow));
