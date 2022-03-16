@@ -7,6 +7,16 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<DebugType>full</DebugType>
+		<DocumentationFile>bin\Debug\net6.0\RayTracer.Display.SpectreConsole.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DocumentationFile>bin\Release\net6.0\RayTracer.Display.SpectreConsole.xml</DocumentationFile>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Spectre.Console" Version="0.43.0"/>
 		<PackageReference Include="Spectre.Console.ImageSharp" Version="0.43.0"/>

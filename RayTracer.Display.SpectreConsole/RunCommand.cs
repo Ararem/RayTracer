@@ -97,7 +97,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	{
 		AnsiConsole.Clear();
 
-		const int interval = 1000; //How long between updates of the live display
+		const int interval = 5000; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
