@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
 using static System.Numerics.Vector3;
+using static System.Single;
 
 namespace RayTracer.Core.Scenes;
 
@@ -46,8 +47,8 @@ public static class BuiltinScenes
 	public static readonly Scene WithGround = new(
 			"With Ground", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere", new Sphere(new Vector3(0, 1f,     0), 1f), new StandardMaterial(Green,           Black, 1f)),
-					new("Ground", new Sphere(new Vector3(0, -1000f, 0), 1000f), new StandardMaterial(0.5f * White, Black, 1f))
+					new("Sphere", new Sphere(new Vector3(0, 1f, 0), 1f), new StandardMaterial(Green,                                                         Black, 1f)),
+					new("Ground", new XZPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(0.5f * White, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
