@@ -97,7 +97,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	{
 		AnsiConsole.Clear();
 
-		const int interval = 5000; //How long between updates of the live display
+		const int interval = 50; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
@@ -110,6 +110,10 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 				new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
 		);
 
+		//This allows us to restart the loop, resetting the console and fixing any size issues
+		bool restart = false;
+	loop:
+		AnsiConsole.Clear();
 		await AnsiConsole.Live(statsAndImageTable).StartAsync(
 				async ctx =>
 				{
@@ -118,9 +122,19 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 						UpdateLiveDisplay();
 						ctx.Refresh();
 						await Task.Delay(interval);
+						if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C))
+						{
+							restart = true;
+							return;
+						}
 					}
 				}
 		);
+		if (restart)
+		{
+			restart = false;
+			goto loop;
+		}
 
 		void UpdateLiveDisplay()
 		{
@@ -227,8 +241,9 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			renderStatsTable.AddRow("",                                        "");
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
 			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"Win: ({Console.WindowWidth}x{Console.WindowHeight})");
-			renderStatsTable.AddRow("",                                        $"Buf: ({Console.BufferWidth}x{Console.BufferHeight})");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
+			renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
+			renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 
 
 			static string FormatU(ulong val, ulong total)
