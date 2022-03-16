@@ -3,55 +3,17 @@ using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
 
-using static MathF;
-
-public class YZPlane : Hittable
+/// <summary>
+/// A plane that spans a region along the XY plane
+/// </summary>
+/// <param name="YLow">Low Y value for this plane</param>
+/// <param name="YHigh">High Y value for this plane</param>
+/// <param name="ZLow">Low Z value for this plane</param>
+/// <param name="ZHigh">High Z value for this plane</param>
+/// <param name="X">X value the plane is positioned at</param>
+/// <param name="AABBPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
+public sealed record YzPlane(float YLow, float YHigh, float ZLow, float ZHigh, float X, float AABBPadding = 0.001f) : Hittable
 {
-	private readonly Vector3 centre;
-
-	public YZPlane(float yLow, float yHigh, float zLow, float zHigh, float x, float aabbPadding = 0.001f)
-	{
-		if (aabbPadding <= 0)
-			throw new ArgumentOutOfRangeException(nameof(aabbPadding), aabbPadding, "Padding for the AABB must be > 0");
-		X           = x;
-		ZLow        = Min(zLow, zHigh);
-		ZHigh       = Max(zLow, zHigh);
-		YLow        = Min(yLow, yHigh);
-		YHigh       = Max(yLow, yHigh);
-		AABBPadding = aabbPadding;
-		centre      = new Vector3(X, (YLow + YHigh) / 2f, (ZLow + ZHigh) / 2f); //Average high/low points
-	}
-
-	/// <summary>
-	///  Low Y value for this plane
-	/// </summary>
-	public float YLow { get; }
-
-	/// <summary>
-	///  High Y value for this plane
-	/// </summary>
-	public float YHigh { get; }
-
-	/// <summary>
-	///  Low Z value for this plane
-	/// </summary>
-	public float ZLow { get; }
-
-	/// <summary>
-	///  High Z value for this plane
-	/// </summary>
-	public float ZHigh { get; }
-
-	/// <summary>
-	///  X value for this plane
-	/// </summary>
-	public float X { get; }
-
-	/// <summary>
-	///  How much to pad the computed AABB by (since the plane is infinitely thin)
-	/// </summary>
-	public float AABBPadding { get; }
-
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
@@ -65,6 +27,7 @@ public class YZPlane : Hittable
 		if ((y < YLow) || (y > YHigh) || (z < ZLow) || (z > ZHigh))
 			return null;
 
+		Vector3 centre     = new(X, (YLow + YHigh) / 2f, (ZLow + ZHigh) / 2f);
 		Vector3 localPoint = worldPoint - centre;
 
 		Vector2 uv = new((y - YLow) / (YHigh - YLow), (z - ZLow) / (ZHigh - ZLow));

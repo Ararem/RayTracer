@@ -42,13 +42,13 @@ public static class BuiltinScenes
 	);
 
 	/// <summary>
-	///  Simple scene with two spheres at (+-1, 0, 0)
+	///  Simple scene with a sphere at (+-1, 0, 0) and a ground plane
 	/// </summary>
 	public static readonly Scene WithGround = new(
 			"With Ground", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(new Vector3(0, 1f, 0), 1f), new StandardMaterial(Green,                                                         Black, 1f)),
-					new("Ground", new XZPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(0.5f * White, Black, 1f))
+					new("Ground", new XzPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(0.5f * White, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
