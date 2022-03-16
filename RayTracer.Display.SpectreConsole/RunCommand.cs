@@ -104,19 +104,20 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		Console.Title = Markup.Remove(appTitle);
 
 		//The outermost table that just splits the render stats from the image preview
-		Table statsAndImageTable = new() { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
-		statsAndImageTable.AddColumns(
-				new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-				new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-		);
+		Table statsAndImageTable;
 
 		//This allows us to restart the loop, resetting the console and fixing any size issues
 		bool restart = false;
 	loop:
 		AnsiConsole.Clear();
-		await AnsiConsole.Live(statsAndImageTable).StartAsync(
+		await AnsiConsole.Live(Text.Empty).StartAsync(
 				async ctx =>
 				{
+					statsAndImageTable = new() { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
+					statsAndImageTable.AddColumns(
+							new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+							new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+					);
 					while (!renderJob.RenderCompleted)
 					{
 						UpdateLiveDisplay();
