@@ -20,9 +20,9 @@ public static class BuiltinScenes
 	///  Simple scene with a single sphere at (0, 0, 0)
 	/// </summary>
 	public static readonly Scene Sphere = new(
-			"Sphere Scene", new Camera(new Vector3(0, 0, 2), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
+			"A lonely Sphere", new Camera(new Vector3(0, 0, 2), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere", new Sphere(Zero, .1f), new DiffuseMaterial(Red))
+					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
@@ -30,12 +30,12 @@ public static class BuiltinScenes
 	/// <summary>
 	///  Simple scene with two spheres at (+-1, 0, 0)
 	/// </summary>
-	public static readonly Scene ThreeSpheres = new(
-			"Three Spheres", new Camera(new Vector3(0, 1, 5), Zero, UnitY, 5, 16f / 9f), new SceneObject[]
+	public static readonly Scene RgbSpheres = new(
+			"RGB Spheres", new Camera(new Vector3(0, 1, 5), Zero, UnitY, 5, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new DiffuseMaterial(Lerp(Red,   White, 0.5f))),
-					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new DiffuseMaterial(Lerp(Green, White, 0.5f))),
-					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new DiffuseMaterial(Lerp(Blue,  White, 0.5f)))
+					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
+					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
@@ -46,8 +46,8 @@ public static class BuiltinScenes
 	public static readonly Scene WithGround = new(
 			"With Ground", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 20, 16f / 9f), new SceneObject[]
 			{
-					new("Sphere", new Sphere(new Vector3(0, 1f,     0), 1f), new DiffuseMaterial(Green)),
-					new("Ground", new Sphere(new Vector3(0, -1000f, 0), 1000f), new DiffuseMaterial(0.5f * White))
+					new("Sphere", new Sphere(new Vector3(0, 1f,     0), 1f), new StandardMaterial(Green,           Black, 1f)),
+					new("Ground", new Sphere(new Vector3(0, -1000f, 0), 1000f), new StandardMaterial(0.5f * White, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);

@@ -4,9 +4,9 @@ using RayTracer.Core.Hittables;
 namespace RayTracer.Core.Materials;
 
 /// <summary>
-///  A class that defines a material that a <see cref="HittableBase"/> can have
+///  A class that defines a material that a <see cref="Hittable"/> can have
 /// </summary>
-public abstract record MaterialBase
+public abstract record Material
 {
 	/// <summary>
 	///  Scatters an input ray, according to this material's properties
@@ -64,5 +64,6 @@ public abstract record MaterialBase
 	///  </code>
 	///  </para>
 	/// </example>
+	//TODO: Change `bounces` to be a struct with info about the path taken
 	public abstract void DoColourThings(ref Colour colour, HitRecord hit, int bounces);
 }

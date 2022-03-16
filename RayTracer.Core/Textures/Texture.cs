@@ -5,7 +5,7 @@ namespace RayTracer.Core.Textures;
 /// <summary>
 ///  Base class for a texture
 /// </summary>
-public abstract record TextureBase
+public abstract record Texture
 {
 	/// <summary>
 	///  Gets the colour value for a pixel
@@ -17,5 +17,5 @@ public abstract record TextureBase
 	/// <summary>
 	///  Implicit operator to convert a colour to a solid texture of that colour
 	/// </summary>
-	public static implicit operator TextureBase(Colour colour) => new SolidColourTexture(colour);
+	public static implicit operator Texture(Colour colour) => new SolidColourTexture(colour);
 }

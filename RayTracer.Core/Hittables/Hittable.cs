@@ -5,7 +5,7 @@ namespace RayTracer.Core.Hittables;
 /// <summary>
 ///  Base class for a hittable. Represents the surface/structure of a render-able object.
 /// </summary>
-public abstract record HittableBase
+public abstract record Hittable
 {
 	/// <summary>
 	///  Attempts to intersect the current hittable instance with a <see cref="Ray"/>

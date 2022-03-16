@@ -58,7 +58,7 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Ensures a given ray's direction has a correct magnitude (of 1)
 	/// </summary>
-	public static void CheckRayDirectionMagnitude(ref Ray r, MaterialBase source)
+	public static void CheckRayDirectionMagnitude(ref Ray r, Material source)
 	{
 		if (Math.Abs(r.Direction.LengthSquared() - 1f) > MagnitudeEqualityError)
 		{
@@ -82,7 +82,7 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Ensures a <see cref="HitRecord"/>'s <see cref="HitRecord.Normal"/> has a magnitude of 1
 	/// </summary>
-	public static void CheckNormalMagnitude(ref HitRecord hit, HittableBase source)
+	public static void CheckNormalMagnitude(ref HitRecord hit, Hittable source)
 	{
 		//Check that the normal magnitude is approx 1 unit
 		//Don't have to sqrt it because 1 squared is 1
@@ -99,7 +99,7 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Validates a <see cref="HitRecord"/>'s K value is in the correct range
 	/// </summary>
-	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, HittableBase source)
+	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, Hittable source)
 	{
 		if (hit.K < options.KMin)
 		{

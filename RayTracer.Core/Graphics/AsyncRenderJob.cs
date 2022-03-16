@@ -117,7 +117,7 @@ public sealed class AsyncRenderJob
 
 		//`CalculateRayColourRecursive` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects.
-		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? maybeMaterial))
+		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMaterial))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
 			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
@@ -198,7 +198,7 @@ public sealed class AsyncRenderJob
 		//TODO: Track how many times a given depth was reached
 		//Find the nearest hit along the ray
 		Increment(ref rayCount);
-		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out MaterialBase? material))
+		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
 			//See if the material scatters the ray
@@ -237,7 +237,7 @@ public sealed class AsyncRenderJob
 	}
 
 	[ContractAnnotation("=> true, maybeHit: notnull, material: notnull; => false, maybeHit: null, material:null")]
-	private bool TryFindClosestHit(Ray ray, out HitRecord? maybeHit, out MaterialBase? material)
+	private bool TryFindClosestHit(Ray ray, out HitRecord? maybeHit, out Material? material)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
