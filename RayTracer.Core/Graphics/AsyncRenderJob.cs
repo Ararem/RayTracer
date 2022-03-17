@@ -92,22 +92,28 @@ public sealed class AsyncRenderJob
 		Stopwatch.Stop();
 	}
 
+	/// <summary>
+	/// Renders a given pixel, then updates the render buffers using the newly rendered pixel's colour
+	/// </summary>
+	/// <param name="x">The X-coordinate of the pixel to be rendered</param>
+	/// <param name="y">The Y-coordinate of the pixel to be rendered</param>
+	/// <param name="p">The pass that the pixel is rendered as part of</param>
 	private void RenderAndUpdatePixel(int x, int y, int p)
 	{
-		Colour col = RenderPixel(x, y);
+		Colour col = RenderPixelWithVisualisations(x, y);
 		UpdateBuffers(x, y, col);
 		Increment(ref rawPixelsRendered);
 	}
 
 	/// <summary>
-	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>).
+	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>). If debug visualisations are enabled, will return the pixel rendered by the visualiser, rather than the object's colour
 	/// </summary>
 	/// <remarks>
 	///  <paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.
 	/// </remarks>
 	/// <param name="x">X coordinate of the pixel</param>
 	/// <param name="y">Y coordinate of the pixel</param>
-	private Colour RenderPixel(int x, int y)
+	private Colour RenderPixelWithVisualisations(int x, int y)
 	{
 		//Get the view ray from the camera
 		Ray ray = camera.GetRay((float)x / RenderOptions.Width, (float)y / RenderOptions.Height);
@@ -175,7 +181,7 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	///  Recursive function to calculate the given colour for a ray
+	///  Recursive function to calculate the given colour for a ray. Does not take into account debug visualisations.
 	/// </summary>
 	/// <param name="ray">The ray to calculate the colour from</param>
 	/// <param name="bounces">
