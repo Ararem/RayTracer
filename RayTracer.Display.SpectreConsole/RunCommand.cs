@@ -5,7 +5,7 @@ using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using SixLabors.ImageSharp.Processing;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Spectre.Console.Rendering;
@@ -191,7 +191,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			int                   maxHeight       = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 			float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 			int                   maxWidth        = (int)(maxHeight * aspect);
-			CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = CubicResampler.RobidouxSharp, MaxConsoleWidth = maxWidth };
+			CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth };
 
 		#endregion
 
