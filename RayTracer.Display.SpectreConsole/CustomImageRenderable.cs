@@ -53,18 +53,18 @@ public sealed class CustomImageRenderable : Renderable
 	}
 
 	/// <inheritdoc/>
-	protected override IEnumerable<Segment> Render(RenderContext context, int maxWidth)
+	protected override IEnumerable<Segment> Render(RenderContext context, int maxAllowedWidth)
 	{
 		Image<Rgb24>? image = Image;
 
 		//Start of with the largest possible width, then shrink to constraints later
-		int   conWidth = image.Width;
+		int   conWidth = image.Width        / 2;
 		float aspect   = (float)image.Width / image.Height;
 
 		// Got a max width?
 		if (MaxConsoleWidth != null) conWidth = MaxConsoleWidth.Value;
 		// Do we exceed the max width when we take pixel width into account?
-		if (conWidth > maxWidth) conWidth = maxWidth;
+		if (conWidth > maxAllowedWidth) conWidth = maxAllowedWidth;
 
 		//Find the height from the width and aspect ratio
 		int conHeight = (int)(conWidth / aspect);
