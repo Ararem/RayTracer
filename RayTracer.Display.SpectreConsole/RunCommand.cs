@@ -14,7 +14,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using static Spectre.Console.AnsiConsole;
 using Color = Spectre.Console.Color;
+using Console = System.Console;
+using Markup = Spectre.Console.Markup;
 
 #pragma warning disable CS8765
 
@@ -74,19 +77,19 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 			foreach (PropertyInfo propertyInfo in typeof(Settings).GetProperties())
 				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
-			AnsiConsole.Write(table);
+			Write(table);
 		}
 
 
 		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.Samples, settings.MaxBounces, settings.DebugVisualisation);
 		//Select scene
-		Scene scene = AnsiConsole.Prompt(
+		Scene scene = Prompt(
 				new SelectionPrompt<Scene>()
 						.Title($"[{TitleMarkup}]Please select which scene you wish to load:[/]")
 						.AddChoices(BuiltinScenes.GetAll())
 						.UseConverter(s => $"[{SceneMarkup}]{s}[/]")
 		);
-		AnsiConsole.MarkupLine($"Selected scene is [{SceneMarkup}]{scene}[/]");
+		MarkupLine($"Selected scene is [{SceneMarkup}]{scene}[/]");
 		return (scene, renderOptions);
 	}
 
@@ -95,74 +98,86 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static async Task DisplayProgress(AsyncRenderJob renderJob)
 	{
-		AnsiConsole.Clear();
-
+		StreamWriter log = File.CreateText("/home/rowan/Desktop/log.txt");
+		log.AutoFlush = true;
 		const int interval = 500; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
 		Console.Title = Markup.Remove(appTitle);
 
-		//The outermost table that just splits the render stats from the image preview
-		Table statsAndImageTable;
-
 		//The outer loop allows us to 'reset' the console, fixing any size issues
 		//We use a live display and an inner loop, as clearing and recreating the table causes really bad flickering
 		while (true)
 		{
+			log.WriteLine("Start Loop");
+			// Clear();
+			log.WriteLine("Clear Called");
 			(int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
-			AnsiConsole.Clear();
-			await AnsiConsole.Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(
-					async ctx =>
-					{
-						//Create a new table (reset)
-						statsAndImageTable = new Table { Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue), Title = new TableTitle(appTitle), Alignment = Justify.Center };
-						statsAndImageTable.AddColumns(
-								new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-								new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-						);
-						ctx.UpdateTarget(statsAndImageTable);
+			log.WriteLine("Dims Got");
 
-						//Inner loop doesn't flicker (gasp)
-						while (!renderJob.RenderCompleted)
-						{
-							//Automatically reset if dimensions changed
-							(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
-							if (prevDims != currDims) break;
-							UpdateLiveDisplay();
-							ctx.Refresh();
-							await Task.Delay(interval);
-							//Allow for a manual reset using the 'C' key
-							if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) break;
-						}
-					}
-			);
+			async Task LiveDisplayAsync(LiveDisplayContext ctx)
+			{
+				//Create a new table (reset)
+				Table statsAndImageTable = new()
+				{
+						Border      = new NoTableBorder(),
+						BorderStyle = new Style(Color.Blue),
+						Title       = new TableTitle(appTitle),
+						Alignment   = Justify.Center
+				};
+				statsAndImageTable.AddColumns(
+						new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+						new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+				);
+				//Tell the live display this is the new target to render
+				ctx.UpdateTarget(statsAndImageTable);
+
+				//Inner loop doesn't flicker (gasp)
+				while (!renderJob.RenderCompleted)
+				{
+					//Automatically reset if dimensions changed
+					(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
+					if (prevDims != currDims) break;
+					UpdateLiveDisplay(statsAndImageTable, renderJob);
+					ctx.Refresh();
+					await Task.Delay(interval);
+					//Allow for a manual reset using the 'C' key
+					if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) return;
+				}
+			}
+
+			await Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(LiveDisplayAsync);
+			log.WriteLine("Live End");
+			log.WriteLine((renderJob == null).ToString());
 			//Quit if the render is done
 			if (renderJob.RenderCompleted) break;
+			log.WriteLine("End");
 		}
+	}
 
-		void UpdateLiveDisplay()
+	private static void UpdateLiveDisplay(Table statsAndImageTable, AsyncRenderJob renderJob)
+	{
+		statsAndImageTable.Rows.Clear();
+
+	#region Rendering... animation
+
+		StringBuilder sb = new(100);
+		const double  f  = 2.5; //Total time per ellipsis cycle (s)
+		const double  a  = 5;   //Max ellipses per cycle
+
+		int    n;
+		double sec = renderJob.Stopwatch.Elapsed.TotalSeconds;
+		#if true
+		//Triangle wave, goes up and down
 		{
-			statsAndImageTable.Rows.Clear();
-
-		#region Rendering... animation
-
-			StringBuilder sb = new(100);
-			const double  f  = 2.5; //Total time per ellipsis cycle (s)
-			const double  a  = 5;   //Max ellipses per cycle
-
-			int    n;
-			double sec = renderJob.Stopwatch.Elapsed.TotalSeconds;
-			#if true
-			//Triangle wave, goes up and down
-			{
-				double sin    = Math.Sin((sec / f) * Math.PI);
-				double inv    = Math.Asin(sin);
-				double abs    = Math.Abs(inv);
-				double scaled = ((abs * a) / Math.PI) * 2;
-				n = (int)Math.Round(scaled);
-			}
-			#else
+			double sin    = Math.Sin((sec / f) * Math.PI);
+			double inv    = Math.Asin(sin);
+			double abs    = Math.Abs(inv);
+			double scaled = ((abs * a) / Math.PI) * 2;
+			n = (int)Math.Round(scaled);
+		}
+		#else
 			//Sawtooth wave
 			{
 				//Get fractional part of the
@@ -170,139 +185,138 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 				double scaled = frac      * (a + 1);
 				n = (int)Math.Floor(scaled);
 			}
-			#endif
-			sb.Clear();
-			sb.Append($"[{RenderingAnimationMarkup}]");
-			sb.Append(' ', n); //Pad/centre string
-			sb.Append("Rendering");
-			sb.Append('.', n);
-			sb.Append("[/]");
+		#endif
+		sb.Clear();
+		sb.Append($"[{RenderingAnimationMarkup}]");
+		sb.Append(' ', n); //Pad/centre string
+		sb.Append("Rendering");
+		sb.Append('.', n);
+		sb.Append("[/]");
 
-			statsAndImageTable.Caption = new TableTitle(sb.ToString());
+		statsAndImageTable.Caption = new TableTitle(sb.ToString());
 
-		#endregion
+	#endregion
 
-		#region Image buffer display
+	#region Image buffer display
 
-			//The image that shows the current render buffer
-			//Make sure we don't exceed the vertical space limit when trying to maximise the width
-			//TODO: These sizing thingies don't really work too well on some resolutions
-			int                   maxHeight       = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
-			float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
-			int                   maxWidth        = (int)(maxHeight * aspect);
-			CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth };
+		//The image that shows the current render buffer
+		//Make sure we don't exceed the vertical space limit when trying to maximise the width
+		//TODO: These sizing thingies don't really work too well on some resolutions
+		int                   maxHeight       = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
+		float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
+		int                   maxWidth        = (int)(maxHeight * aspect);
+		CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth };
 
-		#endregion
+	#endregion
 
-		#region Render stats table
+	#region Render stats table
 
-			Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
+		Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
 
-			int      totalTruePixels = renderJob.TotalTruePixels;
-			ulong    totalRawPix     = renderJob.TotalRawPixels;
-			ulong    rayCount        = renderJob.RayCount;
-			int      totalPasses     = renderJob.RenderOptions.Passes;
-			TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
+		int      totalTruePixels = renderJob.TotalTruePixels;
+		ulong    totalRawPix     = renderJob.TotalRawPixels;
+		ulong    rayCount        = renderJob.RayCount;
+		int      totalPasses     = renderJob.RenderOptions.Passes;
+		TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
 
-			float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
-			ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
-			int      passesRemaining    = totalPasses - renderJob.PassesRendered;
-			TimeSpan estimatedTotalTime = elapsed / percentageRendered;
+		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
+		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
+		int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+		TimeSpan estimatedTotalTime = elapsed / percentageRendered;
 
-			//TODO: Progress bars..
-			const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
-			const string percentFormat = "p1";          //Format string for percentages
-			const string numFormat     = "n0";
-			const int    numAlign      = 15;
-			const int    percentAlign  = 8;
+		//TODO: Progress bars..
+		const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
+		const string percentFormat = "p1";          //Format string for percentages
+		const string numFormat     = "n0";
+		const int    numAlign      = 15;
+		const int    percentAlign  = 8;
 
-			renderStatsTable.Rows.Clear();
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
-			renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
-			renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
-			renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
-			renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
-			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
-			renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
-			renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
-			renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
-			renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
-			renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
-			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
-			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
-			renderStatsTable.AddRow("",                                        "");
-			// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
-			// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
-			// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
-			//Because we'll probably have a crazy sized depth buffer, group the indices together
-			List<(Range range, ulong count)> depths = new();
-			BarChart                         chart  = new() { Width = 35, MaxValue = 1, ShowValues = !true };
-			//Group the raw buffer into our aggregated one
-			float grouping = 1; //How many depths to combine into a group
-			int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
-			while (true)
+		renderStatsTable.Rows.Clear();
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
+		renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
+		renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
+		renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
+		renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
+		renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
+		renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
+		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
+		renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
+		renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
+		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
+		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
+		renderStatsTable.AddRow("",                                        "");
+		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
+		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
+		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
+		//Because we'll probably have a crazy sized depth buffer, group the indices together
+		List<(Range range, ulong count)> depths = new();
+		BarChart                         chart  = new() { Width = 35, MaxValue = 1, ShowValues = !true };
+		//Group the raw buffer into our aggregated one
+		float grouping = 1; //How many depths to combine into a group
+		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
+		while (true)
+		{
+			int   start = rawIndex;
+			ulong count = 0;
+			for (int i = 0; i < grouping; i++)
 			{
-				int   start = rawIndex;
-				ulong count = 0;
-				for (int i = 0; i < grouping; i++)
-				{
-					if (rawIndex >= renderJob.RawRayDepthCounts.Count)
-						break;
-					count += renderJob.RawRayDepthCounts[rawIndex];
-					rawIndex++;
-				}
-
-				int end = rawIndex;
-
-				depths.Add((start..end, count));
-				grouping *= 2f;
 				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 					break;
+				count += renderJob.RawRayDepthCounts[rawIndex];
+				rawIndex++;
 			}
 
-			if (depths.Count == 0) chart.AddItem("[bold red]Error: No depth values[/]", 0, Color.Red);
-			// for (int i = 0; i < depths.Count; i++) chart.AddItem($"[[{depths[i].range}]]", (double)depths[i].count/rayCount , Color.White);
-			const double b = 0.0001;
-			double       m = rayCount;
-			for (int i = 0; i < depths.Count; i++)
-				chart.AddItem(
-						$"[[{depths[i].range}]]",
-						Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
-						Color.White
-				);
-			renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
+			int end = rawIndex;
 
-
-			static string FormatU(ulong val, ulong total)
-			{
-				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
-			}
-
-			static string FormatI(int val, int total)
-			{
-				return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
-			}
-
-		#endregion
-
-		#region Putting it all together
-
-			statsAndImageTable.AddRow(renderStatsTable /* */, imageRenderable /**/);
-
-		#endregion
+			depths.Add((start..end, count));
+			grouping *= 2f;
+			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
+				break;
 		}
+
+		if (depths.Count == 0) chart.AddItem("[bold red]Error: No depth values[/]", 0, Color.Red);
+		// for (int i = 0; i < depths.Count; i++) chart.AddItem($"[[{depths[i].range}]]", (double)depths[i].count/rayCount , Color.White);
+		const double b = 0.0001;
+		double       m = rayCount;
+		for (int i = 0; i < depths.Count; i++)
+			chart.AddItem(
+					$"[[{depths[i].range}]]",
+					Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
+					Color.White
+			);
+		renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
+
+
+		static string FormatU(ulong val, ulong total)
+		{
+			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+		}
+
+		static string FormatI(int val, int total)
+		{
+			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+		}
+
+	#endregion
+
+	#region Putting it all together
+
+		statsAndImageTable.AddRow(renderStatsTable /* */, imageRenderable /**/);
+
+	#endregion
 	}
 
 	/// <summary>
@@ -311,7 +325,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
 		Image<Rgb24> image = renderJob.GetAwaiter().GetResult();
-		AnsiConsole.MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
+		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors
 		if (!GraphicsValidator.Errors.IsEmpty)
@@ -377,12 +391,12 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 				table.AddRow(row);
 			}
 
-			AnsiConsole.Write(table);
+			Write(table);
 		}
 		else
 		{
 			//TODO: Separate style for this
-			AnsiConsole.MarkupLine($"[{FinishedRenderMarkup}]No errors occured during render[/]");
+			MarkupLine($"[{FinishedRenderMarkup}]No errors occured during render[/]");
 		}
 
 		return image;

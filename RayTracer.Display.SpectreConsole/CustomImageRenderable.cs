@@ -45,6 +45,10 @@ public sealed class CustomImageRenderable : Renderable
 	/// <inheritdoc/>
 	protected override Measurement Measure(RenderContext context, int maxWidth)
 	{
+		//This don't work :(
+		// (int w, int h) = CalcConSize(maxWidth);
+		// return new Measurement(w, h);
+
 		//Since the pixel resolution is 2x the console, account for it
 		int consoleWidth = MaxConsoleWidth ?? (Image.Width + 1) / 2; //+1 Because if the pixel count is odd we round up
 		if (consoleWidth > maxWidth) return new Measurement(maxWidth, maxWidth);
@@ -52,14 +56,12 @@ public sealed class CustomImageRenderable : Renderable
 		return new Measurement(consoleWidth * 2, consoleWidth * 2);
 	}
 
-	/// <inheritdoc/>
-	protected override IEnumerable<Segment> Render(RenderContext context, int maxAllowedWidth)
+	[Pure]
+	private (int width, int height) CalcConSize(int maxAllowedWidth)
 	{
-		Image<Rgb24>? image = Image;
-
 		//Start of with the largest possible width, then shrink to constraints later
-		int   conWidth = image.Width        / 2;
-		float aspect   = (float)image.Width / image.Height;
+		int   conWidth = (Image.Width + 1)  / 2;
+		float aspect   = (float)Image.Width / Image.Height;
 
 		// Got a max width?
 		if (MaxConsoleWidth != null) conWidth = Math.Min(conWidth, MaxConsoleWidth.Value);
@@ -67,14 +69,24 @@ public sealed class CustomImageRenderable : Renderable
 		conWidth = Math.Min(conWidth, maxAllowedWidth);
 
 		//Find the height from the width and aspect ratio
-		int conHeight = (int)(conWidth / aspect);
+		int conHeight = (int)Math.Floor(conWidth / aspect);
+
+		return (conWidth, conHeight);
+	}
+
+	/// <inheritdoc/>
+	protected override IEnumerable<Segment> Render(RenderContext context, int maxAllowedWidth)
+	{
+		Image<Rgb24>? image = Image;
+
+		(int conWidth, int conHeight) = CalcConSize(maxAllowedWidth);
 
 		// Need to rescale the pixel buffer?
 		if ((conWidth != image.Width) || (conHeight != image.Height))
 		{
 			IResampler resampler = Resampler ?? KnownResamplers.Bicubic;
 			image = image.Clone(); // Clone the original image
-			image.Mutate(i => i.Resize(conWidth * 2 - 1, conHeight * 2 - 1, resampler));
+			image.Mutate(i => i.Resize(conWidth * 2, conHeight * 2, resampler));
 		}
 
 		//Now loop over the resized image. Since we have 2x vertical resolution, we skip every 2nd row
