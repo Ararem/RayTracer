@@ -116,7 +116,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 					async ctx =>
 					{
 						//Create a new table (reset)
-						statsAndImageTable = new Table { Border = new NoTableBorder(), Title = new TableTitle(appTitle), Alignment = Justify.Center };
+						statsAndImageTable = new Table { Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue), Title = new TableTitle(appTitle), Alignment = Justify.Center };
 						statsAndImageTable.AddColumns(
 								new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
 								new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
@@ -131,7 +131,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 							if (prevDims != currDims) break;
 							UpdateLiveDisplay();
 							ctx.Refresh();
-							//await Task.Delay(interval);
+							await Task.Delay(interval);
 							//Allow for a manual reset using the 'C' key
 							if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) break;
 						}
@@ -173,8 +173,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			#endif
 			sb.Clear();
 			sb.Append($"[{RenderingAnimationMarkup}]");
-			//Pad/centre string
-			sb.Append(' ', n);
+			sb.Append(' ', n); //Pad/centre string
 			sb.Append("Rendering");
 			sb.Append('.', n);
 			sb.Append("[/]");
@@ -197,7 +196,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		#region Render stats table
 
-			Table renderStatsTable = new Table { Border = new DoubleTableBorder(), BorderStyle = new Style(Color.Blue) }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
+			Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
 
 			int      totalTruePixels = renderJob.TotalTruePixels;
 			ulong    totalRawPix     = renderJob.TotalRawPixels;
@@ -244,11 +243,46 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
 			renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
 			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Depth Buffer[/]", "[bold italic slowblink red]Coming soon...[/]");
-			renderStatsTable.AddRow("",                                        "");
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
-			renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
-			renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
+			// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
+			// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
+			// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
+			//Because we'll probably have a crazy sized depth buffer, group the indices together
+			List<(Range range, ulong count)> depths = new();
+			BarChart                         chart  = new() { Width = 35, MaxValue = 1, ShowValues = !true };
+			//Group the raw buffer into our aggregated one
+			float grouping = 1; //How many depths to combine into a group
+			int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
+			while (true)
+			{
+				int   start = rawIndex;
+				ulong count = 0;
+				for (int i = 0; i < grouping; i++)
+				{
+					if (rawIndex >= renderJob.RawRayDepthCounts.Count)
+						break;
+					count += renderJob.RawRayDepthCounts[rawIndex];
+					rawIndex++;
+				}
+
+				int end = rawIndex;
+
+				depths.Add((start..end, count));
+				grouping *= 2f;
+				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
+					break;
+			}
+
+			if (depths.Count == 0) chart.AddItem("[bold red]Error: No depth values[/]", 0, Color.Red);
+			// for (int i = 0; i < depths.Count; i++) chart.AddItem($"[[{depths[i].range}]]", (double)depths[i].count/rayCount , Color.White);
+			const double b = 0.0001;
+			double       m = rayCount;
+			for (int i = 0; i < depths.Count; i++)
+				chart.AddItem(
+						$"[[{depths[i].range}]]",
+						Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
+						Color.White
+				);
+			renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
 
 
 			static string FormatU(ulong val, ulong total)

@@ -46,6 +46,8 @@ public sealed class AsyncRenderJob
 		(_, camera, objects, skybox) = scene;
 		Scene                        = scene;
 		Stopwatch                    = new Stopwatch();
+		rawRayDepthCounts            = new ulong[renderOptions.MaxBounces + 1]; //+1 because we can also have 0 bounces
+
 		Task.Run(RenderInternal);
 	}
 
@@ -78,9 +80,7 @@ public sealed class AsyncRenderJob
 				//This way, we render each row from left to right
 				//Rows are rendered bottom to top (on the image)
 				//And each pass is rendered one at a time
-				int x = i % RenderOptions.Width;
-				int y = i / RenderOptions.Width;
-
+				(int x, int y) = Decompress2DIndex(i, RenderOptions);
 				RenderAndUpdatePixel(x, y, p);
 			}
 
@@ -201,6 +201,12 @@ public sealed class AsyncRenderJob
 			return Colour.Black;
 		}
 
+		//Increment the current depth
+		Increment(ref rawRayDepthCounts[bounces]);
+		//And decrement the previous depth. This ensures only the final depth is counted
+		if (bounces != 0)
+			Decrement(ref rawRayDepthCounts[bounces - 1]);
+
 		//TODO: Track how many times a given depth was reached
 		//Find the nearest hit along the ray
 		Increment(ref rayCount);
@@ -312,7 +318,7 @@ public sealed class AsyncRenderJob
 		//Lock to prevent other threads from changing our pixel
 		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
 		bufferLock.EnterWriteLock();
-		int i = Compress2DIndex(x, y, RenderOptions.Width, RenderOptions.Height);
+		int i = Compress2DIndex(x, y, RenderOptions);
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
@@ -421,6 +427,13 @@ public sealed class AsyncRenderJob
 	///  Stopwatch used to time how long has elapsed since the rendering started
 	/// </summary>
 	public Stopwatch Stopwatch { get; }
+
+	private ulong[] rawRayDepthCounts;
+
+	/// <summary>
+	/// A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1 bounce, etc.
+	/// </summary>
+	public IReadOnlyList<ulong> RawRayDepthCounts => rawRayDepthCounts;
 
 #endregion
 
