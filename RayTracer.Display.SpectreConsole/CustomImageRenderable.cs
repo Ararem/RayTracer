@@ -46,7 +46,7 @@ public sealed class CustomImageRenderable : Renderable
 	protected override Measurement Measure(RenderContext context, int maxWidth)
 	{
 		//Since the pixel resolution is 2x the console, account for it
-		int consoleWidth = MaxConsoleWidth ?? (Image.Width + 1) / 2;
+		int consoleWidth = MaxConsoleWidth ?? (Image.Width + 1) / 2; //+1 Because if the pixel count is odd we round up
 		if (consoleWidth > maxWidth) return new Measurement(maxWidth, maxWidth);
 
 		return new Measurement(consoleWidth * 2, consoleWidth * 2);
@@ -62,9 +62,9 @@ public sealed class CustomImageRenderable : Renderable
 		float aspect   = (float)image.Width / image.Height;
 
 		// Got a max width?
-		if (MaxConsoleWidth != null) conWidth = MaxConsoleWidth.Value;
+		if (MaxConsoleWidth != null) conWidth = Math.Min(conWidth, MaxConsoleWidth.Value);
 		// Do we exceed the max width when we take pixel width into account?
-		if (conWidth > maxAllowedWidth) conWidth = maxAllowedWidth;
+		conWidth = Math.Min(conWidth, maxAllowedWidth);
 
 		//Find the height from the width and aspect ratio
 		int conHeight = (int)(conWidth / aspect);
@@ -74,7 +74,7 @@ public sealed class CustomImageRenderable : Renderable
 		{
 			IResampler resampler = Resampler ?? KnownResamplers.Bicubic;
 			image = image.Clone(); // Clone the original image
-			image.Mutate(i => i.Resize(conWidth * 2, conHeight * 2, resampler));
+			image.Mutate(i => i.Resize(conWidth * 2 - 1, conHeight * 2 - 1, resampler));
 		}
 
 		//Now loop over the resized image. Since we have 2x vertical resolution, we skip every 2nd row
@@ -82,7 +82,7 @@ public sealed class CustomImageRenderable : Renderable
 		{
 			for (int x = 0; x < image.Width; x++)
 				yield return new Segment(
-						#if !false //You can change if you use the upper or lower blocks, because sometimes one looks better than the other
+						#if false //You can change if you use the upper or lower blocks, because sometimes one looks better than the other
 						"▀",
 						new Style(
 								new Color(image[x, y].R,     image[x, y].G,     image[x, y].B),
