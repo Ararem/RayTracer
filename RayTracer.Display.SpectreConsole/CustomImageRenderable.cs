@@ -49,7 +49,7 @@ public sealed class CustomImageRenderable : Renderable
 		int consoleWidth = MaxConsoleWidth ?? (Image.Width + 1) / 2;
 		if (consoleWidth > maxWidth) return new Measurement(maxWidth, maxWidth);
 
-		return new Measurement(consoleWidth, consoleWidth);
+		return new Measurement(consoleWidth * 2, consoleWidth * 2);
 	}
 
 	/// <inheritdoc/>
@@ -82,7 +82,7 @@ public sealed class CustomImageRenderable : Renderable
 		{
 			for (int x = 0; x < image.Width; x++)
 				yield return new Segment(
-						#if false //You can change if you use the upper or lower blocks, because sometimes one looks better than the other
+						#if !false //You can change if you use the upper or lower blocks, because sometimes one looks better than the other
 						"▀",
 						new Style(
 								new Color(image[x, y].R,     image[x, y].G,     image[x, y].B),
