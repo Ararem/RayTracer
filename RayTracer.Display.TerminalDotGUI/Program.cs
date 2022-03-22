@@ -10,8 +10,6 @@ using Terminal.Gui;
 //Init the application so it's ready to run
 Application.Init();
 
-Toplevel top = Application.Top;
-
 //First we have to confirm which render settings we have
 SettingsConfirmerApp confirmerApp = new();
 Application.UseSystemConsole = true; //BUG: Problem with linux (unix?) console, clicks itself
