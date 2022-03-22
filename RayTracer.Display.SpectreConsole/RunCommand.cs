@@ -98,61 +98,56 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static async Task DisplayProgress(AsyncRenderJob renderJob)
 	{
-		StreamWriter log = File.CreateText("/home/rowan/Desktop/log.txt");
-		log.AutoFlush = true;
 		const int interval = 500; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
 		Console.Title = Markup.Remove(appTitle);
 
-		//The outer loop allows us to 'reset' the console, fixing any size issues
-		//We use a live display and an inner loop, as clearing and recreating the table causes really bad flickering
-		while (true)
+
+		//Keep re-calling the display method until the render is completed
+		//This way, we can reset the display if anything goes funky
+		while (!renderJob.RenderCompleted)
+			await Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(new LiveDisplayClosure(appTitle, renderJob, interval).LiveDisplayAsync);
+	}
+
+	private sealed record LiveDisplayClosure(string appTitle, AsyncRenderJob renderJob, int interval)
+	{
+		private readonly (int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
+
+		//NOTE: if this method returns and the render job isn't completed, a new closure is created and the method is called again
+		//This allows us to 'reset' the state of everything
+		//TODO: Could i just use a `goto` to reset instead?
+		internal async Task LiveDisplayAsync(LiveDisplayContext ctx)
 		{
-			log.WriteLine("Start Loop");
-			// Clear();
-			log.WriteLine("Clear Called");
-			(int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
-			log.WriteLine("Dims Got");
-
-			async Task LiveDisplayAsync(LiveDisplayContext ctx)
+			//Clear and create a new table (reset)
+			Clear();
+			Table statsAndImageTable = new()
 			{
-				//Create a new table (reset)
-				Table statsAndImageTable = new()
-				{
-						Border      = new NoTableBorder(),
-						BorderStyle = new Style(Color.Blue),
-						Title       = new TableTitle(appTitle),
-						Alignment   = Justify.Center
-				};
-				statsAndImageTable.AddColumns(
-						new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
-						new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
-				);
-				//Tell the live display this is the new target to render
-				ctx.UpdateTarget(statsAndImageTable);
+					Border      = new DoubleTableBorder(),
+					BorderStyle = new Style(Color.Blue),
+					Title       = new TableTitle(appTitle),
+					Alignment   = Justify.Center
+			};
+			statsAndImageTable.AddColumns(
+					new TableColumn($"[{HeadingMarkup}]Render Statistics[/]\n").Centered(),
+					new TableColumn($"[{HeadingMarkup}]Image Preview[/]\n").Centered()
+			);
+			//Tell the live display this is the new target to render
+			ctx.UpdateTarget(statsAndImageTable);
 
-				//Inner loop doesn't flicker (gasp)
-				while (!renderJob.RenderCompleted)
-				{
-					//Automatically reset if dimensions changed
-					(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
-					if (prevDims != currDims) break;
-					UpdateLiveDisplay(statsAndImageTable, renderJob);
-					ctx.Refresh();
-					await Task.Delay(interval);
-					//Allow for a manual reset using the 'C' key
-					if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) return;
-				}
+			//Inner loop doesn't flicker (gasp)
+			while (!renderJob.RenderCompleted)
+			{
+				//Automatically reset if dimensions changed
+				(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
+				if (prevDims != currDims) return;
+				UpdateLiveDisplay(statsAndImageTable, renderJob);
+				ctx.Refresh();
+				await Task.Delay(interval);
+				//Allow for a manual reset using the 'C' key
+				if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) return;
 			}
-
-			await Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(LiveDisplayAsync);
-			log.WriteLine("Live End");
-			log.WriteLine((renderJob == null).ToString());
-			//Quit if the render is done
-			if (renderJob.RenderCompleted) break;
-			log.WriteLine("End");
 		}
 	}
 
@@ -202,10 +197,10 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		//The image that shows the current render buffer
 		//Make sure we don't exceed the vertical space limit when trying to maximise the width
 		//TODO: These sizing thingies don't really work too well on some resolutions
-		int                   maxHeight       = Console.WindowHeight - 5; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
+		int                   maxHeight       = Console.WindowHeight - 6; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 		float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 		int                   maxWidth        = (int)(maxHeight * aspect);
-		CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth };
+		CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth - 6 };
 
 	#endregion
 
