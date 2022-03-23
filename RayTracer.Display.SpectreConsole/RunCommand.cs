@@ -65,7 +65,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// <returns>The confirmed scene and render options, to use for render execution</returns>
 	private static (Scene Scene, RenderOptions Options) ConfirmSettings(CommandContext context, Settings settings)
 	{
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.ThreadBatching, settings.Samples, settings.MaxBounces, settings.DebugVisualisation);
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.ThreadBatching, settings.Concurrency, settings.Passes, settings.MaxDepth, settings.DebugVisualisation);
 		//Print settings to console
 		{
 			Table table = new()
@@ -200,7 +200,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		//The image that shows the current render buffer
 		//Make sure we don't exceed the vertical space limit when trying to maximise the width
-		//TODO: These sizing thingies don't really work too well on some resolutions
+		//FIXME: These sizing thingies don't really work too well on some resolutions
 		int                   maxHeight       = Console.WindowHeight - 6; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 		float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 		int                   maxWidth        = (int)(maxHeight * aspect);
@@ -232,7 +232,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			estimatedTotalTime = TimeSpan.MaxValue;
 		}
 
-		//TODO: Progress bars..
 		const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
 		const string percentFormat = "p1";          //Format string for percentages
 		const string numFormat     = "n0";
@@ -405,7 +404,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		}
 		else
 		{
-			//TODO: Separate style for this
 			MarkupLine($"[{FinishedRenderMarkup}]No errors occured during render[/]");
 		}
 
@@ -473,30 +471,29 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		[DefaultValue("./image.png")]
 		public string OutputFile { get; init; } = null!;
 
-		//TODO: Make this an int to change how many threads at a time, maybe even modifiable on the fly
-		[Description("Flag for enabling multithreaded rendering")]
-		[CommandOption("-m|--multi-threaded|--multithreaded")]
-		[DefaultValue(false)]
-		public bool Threaded { get; init; }
-
-		[Description("Changes how many pixels are batched at a time when multithreading")]
-		[CommandOption("-t|--thread-batching")]
-		[DefaultValue(65536)]
-		public int ThreadBatching { get; init; }
-
-		[Description("How many times to sample each pixel")]
-		[CommandOption("-s|--samples")]
+		[Description("How many render passes to average (gives less noisy results)")]
+		[CommandOption("-p|--passes")]
 		[DefaultValue(100)]
-		public int Samples { get; init; }
-
-		[Description("Maximum number of times a ray can bounce")]
-		[CommandOption("-b|--bounces")]
-		[DefaultValue(100)]
-		public int MaxBounces { get; init; }
+		public int Passes { get; init; }
 
 		[Description("Flag for enabling debugging visualisations, such as surface normals")]
 		[CommandOption("--debug|--visualise")]
 		[DefaultValue(GraphicsDebugVisualisation.None)]
 		public GraphicsDebugVisualisation DebugVisualisation { get; init; }
+
+		[Description("Changes how many pixels are batched at a time when multithreading")]
+		[CommandOption("-b|--thread-batching|--batching")]
+		[DefaultValue(65536)]
+		public int ThreadBatching { get; init; }
+
+		[Description("Changes the maximum number of threads that can run at a time")]
+		[CommandOption("-c|--threads|--concurrency")]
+		[DefaultValue(-1)]
+		public int Concurrency { get; init; }
+
+		[Description("Maximum number of times a ray can bounce (max depth it can reach)")]
+		[CommandOption("-d|--depth|--max-depth")]
+		[DefaultValue(100)]
+		public int MaxDepth { get; init; }
 	}
 }

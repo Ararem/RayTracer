@@ -12,7 +12,6 @@ namespace RayTracer.Core.Hittables;
 /// <param name="YHigh">High Y value for this plane</param>
 /// <param name="Z">Z value the plane is positioned at</param>
 /// <param name="AABBPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
-// TODO: Somehow implement min/max checking here
 public sealed record XyPlane(float XLow, float XHigh, float YLow, float YHigh, float Z, float AABBPadding = 0.001f) : Hittable
 {
 	/// <inheritdoc/>

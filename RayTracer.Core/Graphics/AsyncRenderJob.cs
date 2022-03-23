@@ -46,7 +46,7 @@ public sealed class AsyncRenderJob
 		(_, camera, objects, skybox) = scene;
 		Scene                        = scene;
 		Stopwatch                    = new Stopwatch();
-		rawRayDepthCounts            = new ulong[renderOptions.MaxBounces + 1]; //+1 because we can also have 0 bounces
+		rawRayDepthCounts            = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
 
 		Task.Run(RenderInternal);
 	}
@@ -78,55 +78,41 @@ public sealed class AsyncRenderJob
 			//This way, we render each row from left to right
 			//Rows are rendered bottom to top (on the image)
 			//And each pass is rendered one at a time
-			if (RenderOptions.Threaded)
-			{
-				(int batches, int remainder) = Math.DivRem(TotalTruePixels, RenderOptions.ThreadBatching);
-				//Render in batches
-				Parallel.For(
-						0, batches, new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
-						() => this, //Gives us the state tracking the `this` reference and which pass we're in
-						static (batch, _, state) =>
+			(int batches, int remainder) = Math.DivRem(TotalTruePixels, RenderOptions.ThreadBatching);
+			//Render in batches
+			Parallel.For(
+					0, batches, new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+					() => this, //Gives us the state tracking the `this` reference and which pass we're in
+					static (batch, _, state) =>
+					{
+						Increment(ref state.threadsRunning);
+						for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
 						{
-							Increment(ref state.threadsRunning);
-							for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
-							{
-								int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
-								(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions);
-								state.RenderAndUpdatePixel(x, y);
-							}
-
-							Decrement(ref state.threadsRunning);
-							return state;
-						},
-						static _ => { }
-				);
-				//Now do the remainder of the pixels
-				Parallel.For(
-						RenderOptions.ThreadBatching * batches, (RenderOptions.ThreadBatching * batches) + remainder,
-						new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
-						() => this, //Gives us the state tracking the `this` reference and which pass we're in
-						static (i, _, state) =>
-						{
-							Increment(ref state.threadsRunning);
-							(int x, int y) = Decompress2DIndex(i, state.RenderOptions);
+							int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
+							(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions);
 							state.RenderAndUpdatePixel(x, y);
-							Decrement(ref state.threadsRunning);
-							return state;
-						},
-						static _ => { }
-				);
-			}
-			else //Sync, single threaded
-			{
-				threadsRunning = 1;
-				for (int i = 0; i < TotalTruePixels; i++)
-				{
-					(int x, int y) = Decompress2DIndex(i, RenderOptions);
-					RenderAndUpdatePixel(x, y);
-				}
+						}
 
-				threadsRunning = 0;
-			}
+						Decrement(ref state.threadsRunning);
+						return state;
+					},
+					static _ => { }
+			);
+			//Now do the remainder of the pixels
+			Parallel.For(
+					RenderOptions.ThreadBatching * batches, (RenderOptions.ThreadBatching * batches) + remainder,
+					new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+					() => this, //Gives us the state tracking the `this` reference and which pass we're in
+					static (i, _, state) =>
+					{
+						Increment(ref state.threadsRunning);
+						(int x, int y) = Decompress2DIndex(i, state.RenderOptions);
+						state.RenderAndUpdatePixel(x, y);
+						Decrement(ref state.threadsRunning);
+						return state;
+					},
+					static _ => { }
+			);
 
 			Increment(ref passesRendered);
 		}
@@ -239,7 +225,7 @@ public sealed class AsyncRenderJob
 		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
 
 		//Ensure we don't go too deep
-		if (bounces > RenderOptions.MaxBounces)
+		if (bounces > RenderOptions.MaxDepth)
 		{
 			Increment(ref bounceLimitExceeded);
 			return Colour.Black;
@@ -455,7 +441,7 @@ public sealed class AsyncRenderJob
 
 	/// <summary>
 	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
-	///  <see cref="RayTracer.Core.Graphics.RenderOptions.MaxBounces"/>
+	///  <see cref="Graphics.RenderOptions.MaxDepth"/>
 	/// </summary>
 	public ulong BounceLimitExceeded => bounceLimitExceeded;
 
