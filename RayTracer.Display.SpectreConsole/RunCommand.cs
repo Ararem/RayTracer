@@ -100,7 +100,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static async Task DisplayProgress(AsyncRenderJob renderJob)
 	{
-		const int interval = 500; //How long between updates of the live display
+		const int interval = 100; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
@@ -113,7 +113,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			await Live(new Markup("[bold red slowblink]Live Display Starting...[/]")).StartAsync(new LiveDisplayClosure(appTitle, renderJob, interval).LiveDisplayAsync);
 	}
 
-	private sealed record LiveDisplayClosure(string appTitle, AsyncRenderJob renderJob, int interval)
+	private sealed record LiveDisplayClosure(string AppTitle, AsyncRenderJob RenderJob, int Interval)
 	{
 		private readonly (int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
 
@@ -130,7 +130,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			{
 					Border      = new DoubleTableBorder(),
 					BorderStyle = new Style(Color.Blue),
-					Title       = new TableTitle(appTitle),
+					Title       = new TableTitle(AppTitle),
 					Alignment   = Justify.Center
 			};
 			statsAndImageTable.AddColumns(
@@ -141,14 +141,14 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			ctx.UpdateTarget(statsAndImageTable);
 
 			//Inner loop doesn't flicker (gasp)
-			while (!renderJob.RenderCompleted)
+			while (!RenderJob.RenderCompleted)
 			{
 				//Automatically reset if dimensions changed
 				(int W, int H) currDims = (Console.WindowWidth, Console.WindowHeight);
 				if (prevDims != currDims) return;
-				UpdateLiveDisplay(statsAndImageTable, renderJob);
+				UpdateLiveDisplay(statsAndImageTable, RenderJob);
 				ctx.Refresh();
-				await Task.Delay(interval);
+				await Task.Delay(Interval);
 				//Allow for a manual reset using the 'C' key
 				if (Console.KeyAvailable && (Console.ReadKey(true).Key == ConsoleKey.C)) return;
 			}
