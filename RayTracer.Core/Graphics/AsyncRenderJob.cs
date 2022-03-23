@@ -102,7 +102,7 @@ public sealed class AsyncRenderJob
 				);
 				//Now do the remainder of the pixels
 				Parallel.For(
-						RenderOptions.ThreadBatching * batches, /*Same as * (RenderOptions.ThreadBatching * batches) + remainder*/TotalTruePixels,
+						RenderOptions.ThreadBatching * batches, (RenderOptions.ThreadBatching * batches) + remainder,
 						new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
 						() => this, //Gives us the state tracking the `this` reference and which pass we're in
 						static (i, _, state) =>
@@ -362,24 +362,10 @@ public sealed class AsyncRenderJob
 		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
 		//In previous profiles, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
-
-		//Lock to prevent other threads from changing our pixel
-		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
-		if (bufferLock.TryEnterWriteLock(0))
-		{
-			Increment(ref instantBufferLocks);
-		}
-		else
-		{
-			bufferLock.EnterWriteLock();
-			Increment(ref delayedBufferLocks);
-		}
-
 		int i = Compress2DIndex(x, y, RenderOptions);
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
-		bufferLock.ExitWriteLock();
 	}
 
 #region Internal state
@@ -499,20 +485,6 @@ public sealed class AsyncRenderJob
 	public int ThreadsRunning => threadsRunning;
 
 	private int threadsRunning;
-
-	/// <summary>
-	/// How many times we managed to instantly lock to gain access to the buffers
-	/// </summary>
-	public ulong InstantBufferLocks => instantBufferLocks;
-
-	private ulong instantBufferLocks = 0;
-
-	/// <summary>
-	/// How many times we had to wait when locking access to the buffers
-	/// </summary>
-	public ulong DelayedBufferLocks => delayedBufferLocks;
-
-	private ulong delayedBufferLocks = 0;
 
 #endregion
 

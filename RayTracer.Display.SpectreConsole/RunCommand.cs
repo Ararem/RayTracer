@@ -217,7 +217,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		ulong    rayCount        = renderJob.RayCount;
 		int      totalPasses     = renderJob.RenderOptions.Passes;
 		TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
-		ulong    totalLocks      = renderJob.DelayedBufferLocks + renderJob.InstantBufferLocks;
 
 		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
 		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
@@ -268,8 +267,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, Environment.ProcessorCount)} threads");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.InstantBufferLocks, totalLocks)} instant locks");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.DelayedBufferLocks, totalLocks)} delayed locks");
 		renderStatsTable.AddRow("",                                        "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
