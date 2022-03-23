@@ -9,7 +9,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static RayTracer.Core.Graphics.GraphicsHelper;
+using static RayTracer.Core.MathHelper;
 using static System.Threading.Interlocked;
 
 namespace RayTracer.Core.Graphics;
@@ -89,9 +89,13 @@ public sealed class AsyncRenderJob
 						for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
 						{
 							int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
-							(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions);
-							state.RenderAndUpdatePixel(x, y);
+							(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions.Width);
+							Colour col = state.RenderPixelWithVisualisations(x, y);
+							state.UpdateBuffers(x, y, col);
+							// Increment(ref state.rawPixelsRendered);
 						}
+						//Not sure how fast `Increment` is but to be safe i'll batch the adding as well
+						Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
 
 						Decrement(ref state.threadsRunning);
 						return state;
@@ -106,8 +110,10 @@ public sealed class AsyncRenderJob
 					static (i, _, state) =>
 					{
 						Increment(ref state.threadsRunning);
-						(int x, int y) = Decompress2DIndex(i, state.RenderOptions);
-						state.RenderAndUpdatePixel(x, y);
+						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
+						Colour col = state.RenderPixelWithVisualisations(x, y);
+						state.UpdateBuffers(x, y, col);
+						Increment(ref state.rawPixelsRendered);
 						Decrement(ref state.threadsRunning);
 						return state;
 					},
@@ -120,18 +126,6 @@ public sealed class AsyncRenderJob
 		//Notify that the render is complete
 		taskCompletionSource.SetResult(ImageBuffer);
 		Stopwatch.Stop();
-	}
-
-	/// <summary>
-	///  Renders a given pixel, then updates the render buffers using the newly rendered pixel's colour
-	/// </summary>
-	/// <param name="x">The X-coordinate of the pixel to be rendered</param>
-	/// <param name="y">The Y-coordinate of the pixel to be rendered</param>
-	private void RenderAndUpdatePixel(int x, int y)
-	{
-		Colour col = RenderPixelWithVisualisations(x, y);
-		UpdateBuffers(x, y, col);
-		Increment(ref rawPixelsRendered);
 	}
 
 	/// <summary>
@@ -348,7 +342,7 @@ public sealed class AsyncRenderJob
 		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
 		//In previous profiles, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
-		int i = Compress2DIndex(x, y, RenderOptions);
+		int i = Compress2DIndex(x, y, RenderOptions.Width);
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);

@@ -1,3 +1,5 @@
+using RayTracer.Core.Graphics;
+
 namespace RayTracer.Core;
 
 public class MathHelper
@@ -26,4 +28,14 @@ public class MathHelper
 	/// <returns></returns>
 	public static float Remap(float iMin, float iMax, float oMin, float oMax, float val)
 		=> Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
+
+	public static int Compress2DIndex(int x, int y, int width) => x + (y * width);
+
+	public static (int X, int Y) Decompress2DIndex(int i, int width)
+	{
+		(int y, int x) = Math.DivRem(i, width);
+		// int x = i % width;
+		// int y = i / width;
+		return (x, y);
+	}
 }
