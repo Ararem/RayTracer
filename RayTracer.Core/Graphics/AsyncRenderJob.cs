@@ -81,7 +81,7 @@ public sealed class AsyncRenderJob
 			(int batches, int remainder) = Math.DivRem(TotalTruePixels, RenderOptions.ThreadBatching);
 			//Render in batches
 			Parallel.For(
-					0, batches, new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+					0, batches, new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel },
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (batch, _, state) =>
 					{

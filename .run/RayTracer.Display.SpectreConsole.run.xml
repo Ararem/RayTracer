@@ -2,7 +2,7 @@
 	<configuration default="false" name="RayTracer.Display.SpectreConsole" type="DotNetProject" factoryName=".NET Project"
 				   activateToolWindowBeforeRun="false">
 		<option name="EXE_PATH" value="$PROJECT_DIR$/RayTracer.Display.SpectreConsole/bin/Debug/net6.0/RayTracer.Display.SpectreConsole"/>
-		<option name="PROGRAM_PARAMETERS" value="-c 64 -b 1"/>
+		<option name="PROGRAM_PARAMETERS" value="-c 32 -p 1000"/>
 		<option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/RayTracer.Display.SpectreConsole/bin/Debug/net6.0"/>
 		<option name="PASS_PARENT_ENVS" value="1"/>
 		<envs>
