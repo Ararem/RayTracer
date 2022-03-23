@@ -19,6 +19,7 @@ namespace RayTracer.Core.Graphics;
 /// </param>
 /// <param name="DebugVisualisation">Flag for enabling debugging related options, such as showing surface normals</param>
 /// <param name="Threaded">Flag for enabling multi-threaded rendering</param>
+/// <param name="ThreadBatching"></param>
 /// <param name="Passes">How many samples to average, to create a less noisy image</param>
 /// <param name="MaxBounces">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
 public sealed record RenderOptions(
@@ -26,7 +27,8 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Height,
 		[NonNegativeValue] float   KMin,
 		[NonNegativeValue] float   KMax,
-		bool                       Threaded, //TODO: Implement threading/customisable concurrency level
+		bool                       Threaded, //TODO: Implement customisable concurrency level
+		[NonNegativeValue] int     ThreadBatching,
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxBounces,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
@@ -35,5 +37,5 @@ public sealed record RenderOptions(
 	/// <summary>
 	///  Default render options
 	/// </summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, true, 100, 100);
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, true, 65536, 100, 100);
 }

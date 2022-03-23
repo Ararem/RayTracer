@@ -65,6 +65,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// <returns>The confirmed scene and render options, to use for render execution</returns>
 	private static (Scene Scene, RenderOptions Options) ConfirmSettings(CommandContext context, Settings settings)
 	{
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.ThreadBatching, settings.Samples, settings.MaxBounces, settings.DebugVisualisation);
 		//Print settings to console
 		{
 			Table table = new()
@@ -75,13 +76,14 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			table.AddColumn($"[{HeadingMarkup}]Option[/]");
 			table.AddColumn($"[{HeadingMarkup}]Value[/]");
 
-			foreach (PropertyInfo propertyInfo in typeof(Settings).GetProperties())
-				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
+			// foreach (PropertyInfo propertyInfo in typeof(Settings).GetProperties())
+			//		table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(settings)?.ToString() ?? "<null>"}[/]");
+			foreach (PropertyInfo propertyInfo in typeof(RenderOptions).GetProperties())
+				table.AddRow(propertyInfo.Name, $"[italic]{propertyInfo.GetValue(renderOptions)?.ToString() ?? "<null>"}[/]");
 			Write(table);
 		}
 
 
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Threaded, settings.Samples, settings.MaxBounces, settings.DebugVisualisation);
 		//Select scene
 		Scene scene = Prompt(
 				new SelectionPrompt<Scene>()
@@ -115,9 +117,11 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	{
 		private readonly (int W, int H) prevDims = (Console.WindowWidth, Console.WindowHeight);
 
-		//NOTE: if this method returns and the render job isn't completed, a new closure is created and the method is called again
-		//This allows us to 'reset' the state of everything
-		//TODO: Could i just use a `goto` to reset instead?
+		/*
+		 * NOTE: If this method returns and the render job isn't completed, a new closure is created and the method is called again
+		 * This allows us to 'reset' the state of everything
+		 * I could also just use a `goto` at the start of the method call, but this would render hot reload useless for the method
+		 */
 		internal async Task LiveDisplayAsync(LiveDisplayContext ctx)
 		{
 			//Clear and create a new table (reset)
@@ -213,11 +217,21 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		ulong    rayCount        = renderJob.RayCount;
 		int      totalPasses     = renderJob.RenderOptions.Passes;
 		TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
+		ulong    totalLocks      = renderJob.DelayedBufferLocks + renderJob.InstantBufferLocks;
 
 		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
 		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
 		int      passesRemaining    = totalPasses - renderJob.PassesRendered;
-		TimeSpan estimatedTotalTime = elapsed / percentageRendered;
+		TimeSpan estimatedTotalTime;
+		//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws
+		try
+		{
+			estimatedTotalTime = elapsed / percentageRendered;
+		}
+		catch (OverflowException)
+		{
+			estimatedTotalTime = TimeSpan.MaxValue;
+		}
 
 		//TODO: Progress bars..
 		const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
@@ -252,6 +266,10 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
+		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, Environment.ProcessorCount)} threads");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.InstantBufferLocks, totalLocks)} instant locks");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.DelayedBufferLocks, totalLocks)} delayed locks");
 		renderStatsTable.AddRow("",                                        "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
@@ -460,9 +478,14 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		//TODO: Make this an int to change how many threads at a time, maybe even modifiable on the fly
 		[Description("Flag for enabling multithreaded rendering")]
-		[CommandOption("-t|--threaded")]
+		[CommandOption("-m|--multi-threaded|--multithreaded")]
 		[DefaultValue(false)]
 		public bool Threaded { get; init; }
+
+		[Description("Changes how many pixels are batched at a time when multithreading")]
+		[CommandOption("-t|--thread-batching")]
+		[DefaultValue(65536)]
+		public int ThreadBatching { get; init; }
 
 		[Description("How many times to sample each pixel")]
 		[CommandOption("-s|--samples")]

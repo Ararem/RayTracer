@@ -18,12 +18,12 @@ try
 	return app.Run(args);
 	#if DEBUG
 }
-catch (NullReferenceException e)
+catch (Exception e)
 {
 	Debugger.Launch();
 	AnsiConsole.WriteException(e);
 	Console.WriteLine(e);
-	Console.ReadKey();
+	Console.ReadLine();
 	return -1;
 }
 #endif

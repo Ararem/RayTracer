@@ -73,15 +73,59 @@ public sealed class AsyncRenderJob
 		//Same comment from above applies, just different order
 		//Values are also compressed into a single number, then unpacked after
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
-		for (int p = 0; p < RenderOptions.Passes; p++)
+		for (int pass = 0; pass < RenderOptions.Passes; pass++)
 		{
-			for (int i = 0; i < TotalTruePixels; i++)
+			//This way, we render each row from left to right
+			//Rows are rendered bottom to top (on the image)
+			//And each pass is rendered one at a time
+			if (RenderOptions.Threaded)
 			{
-				//This way, we render each row from left to right
-				//Rows are rendered bottom to top (on the image)
-				//And each pass is rendered one at a time
-				(int x, int y) = Decompress2DIndex(i, RenderOptions);
-				RenderAndUpdatePixel(x, y, p);
+				(int batches, int remainder) = Math.DivRem(TotalTruePixels, RenderOptions.ThreadBatching);
+				//Render in batches
+				Parallel.For(
+						0, batches, new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+						() => this, //Gives us the state tracking the `this` reference and which pass we're in
+						static (batch, _, state) =>
+						{
+							Increment(ref state.threadsRunning);
+							for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
+							{
+								int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
+								(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions);
+								state.RenderAndUpdatePixel(x, y);
+							}
+
+							Decrement(ref state.threadsRunning);
+							return state;
+						},
+						static _ => { }
+				);
+				//Now do the remainder of the pixels
+				Parallel.For(
+						RenderOptions.ThreadBatching * batches, /*Same as * (RenderOptions.ThreadBatching * batches) + remainder*/TotalTruePixels,
+						new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+						() => this, //Gives us the state tracking the `this` reference and which pass we're in
+						static (i, _, state) =>
+						{
+							Increment(ref state.threadsRunning);
+							(int x, int y) = Decompress2DIndex(i, state.RenderOptions);
+							state.RenderAndUpdatePixel(x, y);
+							Decrement(ref state.threadsRunning);
+							return state;
+						},
+						static _ => { }
+				);
+			}
+			else //Sync, single threaded
+			{
+				threadsRunning = 1;
+				for (int i = 0; i < TotalTruePixels; i++)
+				{
+					(int x, int y) = Decompress2DIndex(i, RenderOptions);
+					RenderAndUpdatePixel(x, y);
+				}
+
+				threadsRunning = 0;
 			}
 
 			Increment(ref passesRendered);
@@ -93,12 +137,11 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	/// Renders a given pixel, then updates the render buffers using the newly rendered pixel's colour
+	///  Renders a given pixel, then updates the render buffers using the newly rendered pixel's colour
 	/// </summary>
 	/// <param name="x">The X-coordinate of the pixel to be rendered</param>
 	/// <param name="y">The Y-coordinate of the pixel to be rendered</param>
-	/// <param name="p">The pass that the pixel is rendered as part of</param>
-	private void RenderAndUpdatePixel(int x, int y, int p)
+	private void RenderAndUpdatePixel(int x, int y)
 	{
 		Colour col = RenderPixelWithVisualisations(x, y);
 		UpdateBuffers(x, y, col);
@@ -106,7 +149,8 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>). If debug visualisations are enabled, will return the pixel rendered by the visualiser, rather than the object's colour
+	///  Renders a single pixel with the coordinates (<paramref name="x"/>, <paramref name="y"/>). If debug visualisations are enabled, will return the pixel
+	///  rendered by the visualiser, rather than the object's colour
 	/// </summary>
 	/// <remarks>
 	///  <paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.
@@ -309,15 +353,28 @@ public sealed class AsyncRenderJob
 	/// <param name="colour">Colour that the pixel was just rendered as</param>
 	private void UpdateBuffers(int x, int y, Colour colour)
 	{
-		//TODO: If we remove the `readonly` restriction on `Colour`, we can use `Interlocked` to update the values atomically, no locking required
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
 		//The (X,Y) we're given is camera coords
 		y = RenderOptions.Height - y - 1;
 
+		//NOTE: Although this may not be 'thread-safe' at first glance, we don't actually need to lock to safely access and change to array
+		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
+		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
+		//In previous profiles, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
+
 		//Lock to prevent other threads from changing our pixel
 		//TODO: Maybe track how many times we failed to instantly lock? Maybe timeout of 0 and then retry if fail timeout 0
-		bufferLock.EnterWriteLock();
+		if (bufferLock.TryEnterWriteLock(0))
+		{
+			Increment(ref instantBufferLocks);
+		}
+		else
+		{
+			bufferLock.EnterWriteLock();
+			Increment(ref delayedBufferLocks);
+		}
+
 		int i = Compress2DIndex(x, y, RenderOptions);
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
@@ -431,9 +488,31 @@ public sealed class AsyncRenderJob
 	private ulong[] rawRayDepthCounts;
 
 	/// <summary>
-	/// A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1 bounce, etc.
+	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
+	///  bounce, etc.
 	/// </summary>
 	public IReadOnlyList<ulong> RawRayDepthCounts => rawRayDepthCounts;
+
+	/// <summary>
+	///  How many threads are currently rendering pixels
+	/// </summary>
+	public int ThreadsRunning => threadsRunning;
+
+	private int threadsRunning;
+
+	/// <summary>
+	/// How many times we managed to instantly lock to gain access to the buffers
+	/// </summary>
+	public ulong InstantBufferLocks => instantBufferLocks;
+
+	private ulong instantBufferLocks = 0;
+
+	/// <summary>
+	/// How many times we had to wait when locking access to the buffers
+	/// </summary>
+	public ulong DelayedBufferLocks => delayedBufferLocks;
+
+	private ulong delayedBufferLocks = 0;
 
 #endregion
 
