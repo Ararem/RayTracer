@@ -359,9 +359,6 @@ public sealed class AsyncRenderJob
 	/// </summary>
 	public RenderOptions RenderOptions { get; }
 
-	//TODO: Make a better locking system than locking the entire array
-	private readonly ReaderWriterLockSlim bufferLock = new();
-
 	/// <summary>
 	///  Raw buffer containing denormalized colour values ([0..SampleCount])
 	/// </summary>
