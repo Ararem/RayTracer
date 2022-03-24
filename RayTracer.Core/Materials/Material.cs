@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 
@@ -6,6 +7,7 @@ namespace RayTracer.Core.Materials;
 /// <summary>
 ///  A class that defines a material that a <see cref="Hittable"/> can have
 /// </summary>
+[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
 public abstract record Material
 {
 	/// <summary>
@@ -29,7 +31,6 @@ public abstract record Material
 	///  colour-wise/lighting-wise
 	/// </param>
 	/// <param name="hit">Information such as where the ray hit, surface normals etc</param>
-	/// <param name="bounces">How 'deep' the mesh is (how many previous meshes were hit before the initial ray from the camera reached this object)</param>
 	/// <remarks>
 	///  Use the <paramref name="hit"/> to evaluation world information, such as where on a texture map the point corresponds to, and make changes to the
 	///  <paramref name="colour"/> using that information
@@ -64,6 +65,5 @@ public abstract record Material
 	///  </code>
 	///  </para>
 	/// </example>
-	//TODO: Change `bounces` to be a struct with info about the path taken
-	public abstract void DoColourThings(ref Colour colour, HitRecord hit, int bounces);
+	public abstract void DoColourThings(ref Colour colour, HitRecord hit);
 }

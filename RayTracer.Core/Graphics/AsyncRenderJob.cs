@@ -212,7 +212,6 @@ public sealed class AsyncRenderJob
 	///  The number of times the ray has bounced. If this is 0, then the ray has never bounced, and so we can assume it's the initial
 	///  ray from the camera
 	/// </param>
-	//TODO: Try figure out if it's possible to make this non-recursive somehow. Perhaps a `while` loop or something?
 	private Colour CalculateRayColourRecursive(Ray ray, int bounces)
 	{
 		//Check ray magnitude is 1
@@ -231,7 +230,6 @@ public sealed class AsyncRenderJob
 		if (bounces != 0)
 			Decrement(ref rawRayDepthCounts[bounces - 1]);
 
-		//TODO: Track how many times a given depth was reached
 		//Find the nearest hit along the ray
 		Increment(ref rayCount);
 		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
@@ -261,7 +259,7 @@ public sealed class AsyncRenderJob
 			//So we can have materials that emit light, ones that amplify light, ones that change the colour of the light, anything really
 			//So we pass in the colour that we obtained from the future bounces, and let the material directly modify it to get the resulting colour
 			Colour colour = futureBounces;
-			material.DoColourThings(ref colour, hit, bounces);
+			material.DoColourThings(ref colour, hit);
 			return colour;
 		}
 		//No object was hit (at least not in the range), so return the skybox colour
