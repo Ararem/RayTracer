@@ -74,7 +74,7 @@ public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : M
 	}
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit)
+	public override void DoColourThings(ref Colour colour, HitRecord hit, int bounces)
 	{
 		colour *= Tint.GetColour(hit);
 	}
