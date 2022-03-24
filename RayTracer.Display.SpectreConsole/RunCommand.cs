@@ -100,7 +100,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static async Task DisplayProgress(AsyncRenderJob renderJob)
 	{
-		const int interval = 100; //How long between updates of the live display
+		const int interval = 1000; //How long between updates of the live display
 
 		//First thing is the title
 		string appTitle = $"[{AppTitleMarkup}]RayTracer v{typeof(Scene).Assembly.GetName().Version} - [{SceneMarkup}]{renderJob.Scene.Name}[/][/]";
@@ -272,7 +272,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 		//Because we'll probably have a crazy sized depth buffer, group the indices together
 		List<(Range range, ulong count)> depths = new();
-		BarChart                         chart  = new() { Width = 35, MaxValue = 1, ShowValues = !true };
+		BarChart                         chart  = new() { Width = 45, MaxValue = 1, ShowValues = !true };
 		//Group the raw buffer into our aggregated one
 		float grouping = 1; //How many depths to combine into a group
 		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
@@ -291,7 +291,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			int end = rawIndex;
 
 			depths.Add((start..end, count));
-			grouping *= 2f;
+			grouping *= 1.3f;
 			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 				break;
 		}
@@ -367,7 +367,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			{
 				//Fill the array with error messages so that I can tell when i mess up, also saves the app from crashing if that happens (because the default is null)
 				Array.Fill(row, new Markup("[bold red underline rapidblink]INTERNAL ERROR[/]"));
-				row[0] = new Markup(obj.ToString()!); //First item is the object's name
+				row[0] = new Markup(Markup.Escape(obj.ToString()!)); //First item is the object's name
 				//Calculate all the columns (error count values) for the current object. Important that the loop is shifted +1 so that i=0 is the object name
 				for (int i = 1; i <= allErrorTypes.Length; i++)
 				{

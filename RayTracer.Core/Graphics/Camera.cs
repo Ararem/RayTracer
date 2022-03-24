@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Scenes;
 using System.Numerics;
 using static System.Numerics.Vector3;
@@ -11,6 +12,7 @@ namespace RayTracer.Core.Graphics;
 /// <remarks>
 ///  This class handles the creation of view rays for each pixel, which renderers then use to create the scene image
 /// </remarks>
+[PublicAPI]
 public sealed class Camera
 {
 	/// <summary>
@@ -22,6 +24,16 @@ public sealed class Camera
 	///  The vertical field-of-view angle (in degrees)
 	/// </summary>
 	public readonly float VerticalFov;
+
+	/// <summary>
+	/// Radius of the simulated lens
+	/// </summary>
+	public readonly float LensRadius;
+
+	/// <summary>
+	/// Focus distance of the simulated lens
+	/// </summary>
+	public readonly float FocusDistance;
 
 	/// <summary>
 	///  Constructor for creating a camera
@@ -40,7 +52,7 @@ public sealed class Camera
 	///  <paramref name="upVector"/> points in a different direction to the direction of <paramref name="lookFrom"/> -> <paramref name="lookTowards"/>.
 	///  So ensure that <c>Cross(UpVector, LookFrom - LookTowards) != Zero</c> before calling this constructor
 	/// </exception>
-	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio)
+	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio, float lensRadius, float focusDistance)
 	{
 		//Have to ensure it's normalized because this is a direction-type vector
 		upVector      = Normalize(upVector);
@@ -49,6 +61,8 @@ public sealed class Camera
 		UpVector      = upVector;
 		VerticalFov   = verticalFov;
 		HorizontalFov = verticalFov / aspectRatio;
+		FocusDistance = focusDistance;
+		LensRadius      = lensRadius;
 
 		float theta          = VerticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
@@ -62,9 +76,9 @@ public sealed class Camera
 		U = Normalize(Cross(UpVector, W));
 		V = Cross(W, U);
 
-		Horizontal      = viewportWidth  * U;
-		Vertical        = viewportHeight * V;
-		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - W;
+		Horizontal      = viewportWidth  * U * FocusDistance;
+		Vertical        = viewportHeight * V * FocusDistance;
+		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - (FocusDistance *W);
 	}
 
 	/// <summary>
@@ -80,12 +94,11 @@ public sealed class Camera
 		if (v is < 0 or > 1)
 			throw new ArgumentOutOfRangeException(nameof(v), v, "UV coordinates are only accepted in the range [0..1]");
 
-		//TODO: Complete this blur/focus code
-		Vector2 rand    = Rand.RandomInUnitCircle();
-		Vector3 offset  = (U * rand.X) + (V * rand.Y);
-		Vector3 origin  = LookFrom;
-		Vector3 towards = LowerLeftCorner + (u * Horizontal) + (v * Vertical);
-		return Ray.FromPoints(origin, towards);
+		Vector2 rand      = Rand.RandomInUnitCircle() * LensRadius;
+		Vector3 offset    = (U * rand.X)                                          + (V * rand.Y);
+		Vector3 origin    = LookFrom                                              + offset;
+		Vector3 direction = (LowerLeftCorner + (u * Horizontal) + (v * Vertical)) - origin;
+		return new Ray(origin, Normalize(direction));
 	}
 
 #region Internal View-Ray Vectors
