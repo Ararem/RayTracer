@@ -211,7 +211,7 @@ public sealed class AsyncRenderJob
 	/// <summary>
 	///  Recursive function to calculate the given colour for a ray. Does not take into account debug visualisations.
 	/// </summary>
-	/// <param name="ray">The ray to calculate the colour from</param>
+	/// <param name="initialRay">The initial ray to calculate the colour for</param>
 	//TODO: Try figure out if it's possible to make this non-recursive somehow. Perhaps a `while` loop or something?
 	private Colour TraceRayAndColour(Ray initialRay)
 	{
@@ -236,7 +236,12 @@ public sealed class AsyncRenderJob
 			GraphicsValidator.CheckRayDirectionMagnitude(ref initialRay, camera);
 			//Find the nearest hit along the ray
 			bool wasHit = TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMat);
-			if (!wasHit) break; //Exit loop if we hit nothing
+			if (!wasHit)
+			{
+				//Yes i'm not assigning values, but this is just used for the sky so it doesn't matter
+				states[depthReached] = new RayRecurseState(ray, default!, default!);
+				break; //Exit loop if we hit nothing
+			}
 
 			//Store our state
 			HitRecord       hit          = (HitRecord)maybeHit!;
@@ -272,7 +277,7 @@ public sealed class AsyncRenderJob
 		}
 		else
 		{
-			colours[^1] = skybox.GetSkyColour(states[^1].Ray);
+			colours[^1] = skybox.GetSkyColour(states[depthReached].Ray);
 			Increment(ref skyRays);
 		}
 		for (int i = depthReached; i > 0; i--) //Loop from the end to the start and do the colour things
@@ -282,6 +287,7 @@ public sealed class AsyncRenderJob
 			colours[i - 1] = temp;
 		}
 
+		ArrayPool<RayRecurseState>.Shared.Return(states, true);
 		return colours[0]; //Last should be the one the camera sees
 	}
 
