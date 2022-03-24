@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using JetBrains.Annotations;
 
+//ReSharper disable all
 namespace RayTracer.Benchmarks;
 
 [SimpleJob]

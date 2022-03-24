@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
@@ -10,9 +11,18 @@ namespace RayTracer.Core.Materials;
 
 //TODO: Emission?
 
+/// <summary>
+/// A material (such as glass) that refracts light rays going through it
+/// </summary>
+/// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
+/// <param name="Tint">Texture to tint the rays by</param>
 public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
 {
-	public static readonly float AirIndex = 1f, GlassIndex = 1.5f, DiamondIndex = 2.4f;
+	/// <summary>
+	/// Refractive index of a common material
+	/// </summary>
+	[PublicAPI]
+	public const float AirIndex = 1f, GlassIndex = 1.5f, DiamondIndex = 2.4f;
 
 #region Overrides of Material
 

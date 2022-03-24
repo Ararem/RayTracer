@@ -1,8 +1,9 @@
-using RayTracer.Core.Graphics;
-
 namespace RayTracer.Core;
 
-public class MathHelper
+/// <summary>
+/// Helper class for math related functions
+/// </summary>
+public static class MathHelper
 {
 	/// <summary>
 	///  Blends between two values
@@ -29,8 +30,14 @@ public class MathHelper
 	public static float Remap(float iMin, float iMax, float oMin, float oMax, float val)
 		=> Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
 
+	/// <summary>
+	/// Compresses a 2d index into a 1d index. Useful for un-nesting loops
+	/// </summary>
 	public static int Compress2DIndex(int x, int y, int width) => x + (y * width);
 
+	/// <summary>
+	/// Decompresses an index made by (<see cref="Compress2DIndex"/>)
+	/// </summary>
 	public static (int X, int Y) Decompress2DIndex(int i, int width)
 	{
 		(int y, int x) = Math.DivRem(i, width);

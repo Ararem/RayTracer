@@ -1,13 +1,17 @@
 using BenchmarkDotNet.Attributes;
 using JetBrains.Annotations;
 using RayTracer.Core;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.MathF;
+// ReSharper disable all
+
 
 namespace RayTracer.Benchmarks;
 
 [SimpleJob]
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+[SuppressMessage("Performance", "CA1822:Mark members as static")]
 public class RandomUnitCircleBenchmarks
 {
 	[Benchmark]
