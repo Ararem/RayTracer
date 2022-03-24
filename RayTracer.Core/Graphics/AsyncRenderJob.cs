@@ -6,6 +6,7 @@ using RayTracer.Core.Materials;
 using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Buffers;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -94,6 +95,7 @@ public sealed class AsyncRenderJob
 							state.UpdateBuffers(x, y, col);
 							// Increment(ref state.rawPixelsRendered);
 						}
+
 						//Not sure how fast `Increment` is but to be safe i'll batch the adding as well
 						Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
 
@@ -143,7 +145,8 @@ public sealed class AsyncRenderJob
 		Ray ray = camera.GetRay((float)x / RenderOptions.Width, (float)y / RenderOptions.Height);
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
-		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
+		//We don't put it in the switch lower down because then we have and extra call to `TryFindClosestHit` that we don't use
+		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return TraceRayAndColour(ray);
 
 		//`CalculateRayColourRecursive` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects.
@@ -193,6 +196,7 @@ public sealed class AsyncRenderJob
 						Vector3 n    = (scat + Vector3.One) / 2f;
 						return (Colour)n;
 					}
+					//Object didn't scatter, return black
 					else
 					{
 						return Colour.Black;
@@ -208,68 +212,77 @@ public sealed class AsyncRenderJob
 	///  Recursive function to calculate the given colour for a ray. Does not take into account debug visualisations.
 	/// </summary>
 	/// <param name="ray">The ray to calculate the colour from</param>
-	/// <param name="bounces">
-	///  The number of times the ray has bounced. If this is 0, then the ray has never bounced, and so we can assume it's the initial
-	///  ray from the camera
-	/// </param>
 	//TODO: Try figure out if it's possible to make this non-recursive somehow. Perhaps a `while` loop or something?
-	private Colour CalculateRayColourRecursive(Ray ray, int bounces)
+	private Colour TraceRayAndColour(Ray initialRay)
 	{
-		//Check ray magnitude is 1
-		GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
+		RayRecurseState[] states = ArrayPool<RayRecurseState>.Shared.Rent(RenderOptions.MaxDepth + 1);
 
-		//Ensure we don't go too deep
-		if (bounces > RenderOptions.MaxDepth)
+		//First pass - just trace the ray's path
+		int  depthReached = 0;
+		Ray  ray          = initialRay;
+		bool exceeded     = false;
+		for (;; depthReached++)
 		{
-			Increment(ref bounceLimitExceeded);
-			return Colour.Black;
-		}
-
-		//Increment the current depth
-		Increment(ref rawRayDepthCounts[bounces]);
-		//And decrement the previous depth. This ensures only the final depth is counted
-		if (bounces != 0)
-			Decrement(ref rawRayDepthCounts[bounces - 1]);
-
-		//TODO: Track how many times a given depth was reached
-		//Find the nearest hit along the ray
-		Increment(ref rayCount);
-		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
-		{
-			HitRecord hit = (HitRecord)maybeHit!;
-			//See if the material scatters the ray
-			Ray?   maybeNewRay = material!.Scatter(hit);
-			Colour futureBounces;
-
-			if (maybeNewRay is null)
+			//Ensure we don't go too deep
+			if (depthReached > RenderOptions.MaxDepth)
 			{
-				//If the new ray is null, the material did not scatter (completely absorbed the light)
-				//So it's impossible to have any future bounces, so we know that they must be black
+				exceeded = true;
+				break;
+			}
+
+			Increment(ref rayCount);
+
+			//Check ray magnitude is 1
+			GraphicsValidator.CheckRayDirectionMagnitude(ref initialRay, camera);
+			//Find the nearest hit along the ray
+			bool wasHit = TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMat);
+			if (!wasHit) break; //Exit loop if we hit nothing
+
+			//Store our state
+			HitRecord       hit          = (HitRecord)maybeHit!;
+			Material        mat          = maybeMat!;
+			RayRecurseState recurseState = new(ray, hit, mat);
+			states[depthReached] = recurseState;
+
+			//Calculate where the next pass should trace the ray
+			Ray? maybeScatter = mat.Scatter(hit);
+			if (maybeScatter is null) //Doesn't bounce, can't keep looping
+			{
 				Increment(ref raysAbsorbed);
-				futureBounces = Colour.Black;
+				break;
 			}
 			else
 			{
-				//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 				Increment(ref raysScattered);
-				GraphicsValidator.CheckRayDirectionMagnitude(ref ray, material);
-				futureBounces = CalculateRayColourRecursive((Ray)maybeNewRay, bounces + 1);
+				GraphicsValidator.CheckRayDirectionMagnitude(ref ray, mat);
+				ray = (Ray)maybeScatter;
 			}
-
-			//Tell the material to do it's lighting stuff
-			//By doing it this way, we can essentially do anything, and we don't have to do much in the camera itself
-			//So we can have materials that emit light, ones that amplify light, ones that change the colour of the light, anything really
-			//So we pass in the colour that we obtained from the future bounces, and let the material directly modify it to get the resulting colour
-			Colour colour = futureBounces;
-			material.DoColourThings(ref colour, hit, bounces);
-			return colour;
 		}
-		//No object was hit (at least not in the range), so return the skybox colour
+
+		//Increment the depth we reached
+		Increment(ref rawRayDepthCounts[depthReached]);
+
+
+		//Second pass - calculate all the colour info, using pass 1
+		Span<Colour> colours = stackalloc Colour[depthReached + 1];
+		if (exceeded) //Set the initial colour depending on whether we hit the skybox, or ran out of bounces
+		{
+			colours[^1] = Colour.Black;
+			Increment(ref bounceLimitExceeded);
+		}
 		else
 		{
+			colours[^1] = skybox.GetSkyColour(states[^1].Ray);
 			Increment(ref skyRays);
-			return skybox.GetSkyColour(ray);
 		}
+		for (int i = depthReached; i > 0; i--) //Loop from the end to the start and do the colour things
+		{
+			Colour temp = colours[i];
+			states[i].Material.DoColourThings(ref temp, states[i].Hit);
+			colours[i - 1] = temp;
+		}
+
+		return colours[0]; //Last should be the one the camera sees
 	}
 
 	[ContractAnnotation("=> true, maybeHit: notnull, material: notnull; => false, maybeHit: null, material:null")]
@@ -347,6 +360,8 @@ public sealed class AsyncRenderJob
 		rawColourBuffer[i] += colour;
 		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
 	}
+
+	private sealed record RayRecurseState(Ray Ray, HitRecord Hit, Material Material);
 
 #region Internal state
 
