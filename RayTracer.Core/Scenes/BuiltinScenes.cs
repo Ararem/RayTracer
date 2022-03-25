@@ -82,13 +82,13 @@ public static class BuiltinScenes
 						if (chooseMat < 0.6)
 						{
 							// diffuse
-							Colour albedo = RandomColour() * RandomColour();
+							Colour albedo = RandomColour(Red, White);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1f);
 						}
 						else if (chooseMat < 0.75)
 						{
 							// metal
-							Colour albedo = RandomColour(HalfGrey, White);
+							Colour albedo = RandomColour(Green, White);
 							float  fuzz   = RandomFloat(0f, 0.5f);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1 - fuzz);
 						}
@@ -106,7 +106,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White)));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0.1f, 10f), objects.ToArray(), new DefaultSkyBox());
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), new DefaultSkyBox());
 		}
 	}
 

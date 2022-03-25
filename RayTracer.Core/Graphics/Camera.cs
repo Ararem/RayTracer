@@ -16,7 +16,7 @@ namespace RayTracer.Core.Graphics;
 public sealed class Camera
 {
 	/// <summary>
-	///  Focus distance of the simulated lens
+	///  Focus distance of the simulated lens (how far away rays will be perfectly in focus)
 	/// </summary>
 	public readonly float FocusDistance;
 
@@ -26,7 +26,7 @@ public sealed class Camera
 	public readonly float HorizontalFov;
 
 	/// <summary>
-	///  Radius of the simulated lens
+	///  Radius of the simulated lens. Larger values increase blur
 	/// </summary>
 	public readonly float LensRadius;
 
@@ -46,6 +46,8 @@ public sealed class Camera
 	/// </param>
 	/// <param name="verticalFov">Angle in degrees for the vertical field of view</param>
 	/// <param name="aspectRatio">Aspect ratio of the camera (width/height)</param>
+	/// <param name="lensRadius">Radius of the simulated lens. Larger values increase blur</param>
+	/// <param name="focusDistance">Distance from the camera at which rays are perfectly in focus</param>
 	/// <exception cref="ArithmeticException">
 	///  Thrown when vector arithmetic returns invalid results because the camera's <paramref name="upVector"/> has the same direction as the forward vector.
 	///  To fix this, simply modify the <paramref name="lookFrom"/>, <paramref name="lookTowards"/> or <paramref name="upVector"/> so that the

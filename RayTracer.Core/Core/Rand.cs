@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using SixLabors.ImageSharp.Processing;
 using System.Numerics;
 using static RayTracer.Core.MathHelper;
 using static System.MathF;

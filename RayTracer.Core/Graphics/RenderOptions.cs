@@ -34,7 +34,7 @@ public sealed record RenderOptions(
 		[NonNegativeValue] float   KMin,
 		[NonNegativeValue] float   KMax,
 		[NonNegativeValue] int     ThreadBatching,
-		[NonNegativeValue] int     ConcurrencyLevel,
+		int     ConcurrencyLevel,
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None

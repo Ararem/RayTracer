@@ -212,11 +212,12 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
 
-		int      totalTruePixels = renderJob.TotalTruePixels;
-		ulong    totalRawPix     = renderJob.TotalRawPixels;
-		ulong    rayCount        = renderJob.RayCount;
-		int      totalPasses     = renderJob.RenderOptions.Passes;
-		TimeSpan elapsed         = renderJob.Stopwatch.Elapsed;
+		int           totalTruePixels = renderJob.TotalTruePixels;
+		ulong         totalRawPix     = renderJob.TotalRawPixels;
+		ulong         rayCount        = renderJob.RayCount;
+		RenderOptions options         = renderJob.RenderOptions;
+		int           totalPasses     = options.Passes;
+		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
 
 		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
 		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
@@ -250,8 +251,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
-		renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Width.ToString(numFormat),numAlign}          pixels wide");
-		renderStatsTable.AddRow("",                                        $"{renderJob.ImageBuffer.Height.ToString(numFormat),numAlign}          pixels high");
+		renderStatsTable.AddRow("",                                        $"{options.Width.ToString(numFormat),numAlign}          pixels wide");
+		renderStatsTable.AddRow("",                                        $"{options.Height.ToString(numFormat),numAlign}          pixels high");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
 		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
@@ -267,28 +268,33 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.Camera}");
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, Environment.ProcessorCount)} threads");
+		// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+		if(options.ConcurrencyLevel != -1) //Don't want to divide by a negative
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, options.ConcurrencyLevel)} threads");
+		else
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{renderJob.ThreadsRunning.ToString(numFormat),numAlign} threads");
+		renderStatsTable.AddRow("",                                        $"{options.ThreadBatching.ToString(numFormat),numAlign} px/batch");
 		renderStatsTable.AddRow("",                                        "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 		//Because we'll probably have a crazy sized depth buffer, group the indices together
 		List<(Range range, ulong count)> depths = new();
-		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = !true };
+		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
 		//Group the raw buffer into our aggregated one
-		float  grouping = 1; //How many depths to combine into a group
-		int    rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
+		float grouping = 1; //How many depths to combine into a group
+		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
 		while (true)
 		{
 			int   start = rawIndex;
-			int   end = start;
+			int   end   = start;
 			ulong count = 0;
 			for (int i = 0; i < grouping; i++)
 			{
 				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 					break;
 				count += renderJob.RawRayDepthCounts[rawIndex];
-				end = rawIndex++;
+				end   =  rawIndex++;
 			}
 
 			depths.Add((start..end, count));
@@ -299,16 +305,23 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		}
 
 		if (depths.Count == 0) chart.AddItem("[bold red]Error: No depth values[/]", 0, Color.Red);
-		// for (int i = 0; i < depths.Count; i++) chart.AddItem($"[[{depths[i].range}]]", (double)depths[i].count/rayCount , Color.White);
-		const double b = 0.0001;
+		#if !true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
+		const double b = 0.000003;
 		double       m = rayCount;
 		for (int i = 0; i < depths.Count; i++)
 			chart.AddItem(
 					$"[[{depths[i].range}]]",
-					// Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
-					depths[i].count /renderJob.RawRayDepthCounts.Sum(u => (double)u), //https://www.desmos.com/calculator/erite0if8u
+					Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
 					Color.White
 			);
+		#else
+		for (int i = 0; i < depths.Count; i++)
+			chart.AddItem(
+					$"[[{depths[i].range}]]",
+					depths[i].count / renderJob.RawRayDepthCounts.Sum(u => (double)u), //https://www.desmos.com/calculator/erite0if8u
+					Color.White
+			);
+		#endif
 		renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
 
 
