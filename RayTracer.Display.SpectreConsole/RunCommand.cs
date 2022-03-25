@@ -278,24 +278,22 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		//Group the raw buffer into our aggregated one
 		float  grouping = 1; //How many depths to combine into a group
 		int    rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
-		double sum      = 0;
 		while (true)
 		{
 			int   start = rawIndex;
+			int   end = start;
 			ulong count = 0;
 			for (int i = 0; i < grouping; i++)
 			{
 				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 					break;
 				count += renderJob.RawRayDepthCounts[rawIndex];
-				sum   += renderJob.RawRayDepthCounts[rawIndex];
-				rawIndex++;
+				end = rawIndex++;
 			}
 
-			int end = rawIndex;
-
 			depths.Add((start..end, count));
-			grouping *= 1.3f;
+			// grouping *= 1.3f;
+			grouping += 0f;
 			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 				break;
 		}
@@ -307,8 +305,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		for (int i = 0; i < depths.Count; i++)
 			chart.AddItem(
 					$"[[{depths[i].range}]]",
-					Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
-					// (double)depths[i].count /sum, //https://www.desmos.com/calculator/erite0if8u
+					// Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
+					depths[i].count /renderJob.RawRayDepthCounts.Sum(u => (double)u), //https://www.desmos.com/calculator/erite0if8u
 					Color.White
 			);
 		renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);

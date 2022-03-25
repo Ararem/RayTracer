@@ -79,23 +79,23 @@ public static class BuiltinScenes
 					{
 						Material sphereMaterial;
 
-						if (chooseMat < 0.8)
+						if (chooseMat < 0.6)
 						{
 							// diffuse
-							Colour albedo = new(RandomFloat());
+							Colour albedo = RandomColour() * RandomColour();
 							sphereMaterial = new StandardMaterial(albedo, Black, 1f);
 						}
-						else if (chooseMat < 0.95)
+						else if (chooseMat < 0.75)
 						{
 							// metal
-							Colour albedo = new(RandomFloat(0.5f, 1f));
+							Colour albedo = RandomColour(HalfGrey, White);
 							float  fuzz   = RandomFloat(0f, 0.5f);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1 - fuzz);
 						}
 						else
 						{
 							// glass
-							sphereMaterial = new RefractiveMaterial(RandomFloat(0.00001f, 50f), Lerp(White, Blue, 0.2f));
+							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat()));
 						}
 
 						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f), sphereMaterial));

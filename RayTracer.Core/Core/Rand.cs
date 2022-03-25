@@ -1,5 +1,7 @@
 using JetBrains.Annotations;
+using SixLabors.ImageSharp.Processing;
 using System.Numerics;
+using static RayTracer.Core.MathHelper;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
@@ -66,4 +68,21 @@ public static class Rand
 		(float x, float y) = SinCos(theta);
 		return new Vector2(r * x, r * y);
 	}
+
+	/// <summary>
+	/// Returns a random colour, where the output colour has RGB values in the range [0...1]
+	/// </summary>
+	public static Colour RandomColour() => RandomColour(Colour.Black, Colour.White);
+
+	/// <summary>
+	/// Returns a random colour, where the output colour is somewhere between the RGB values of the <paramref name="min"/> and <paramref name="max"/> values
+	/// </summary>
+	/// <param name="min">Lowest RGB values allowed</param>
+	/// <param name="max">Highest RGB values allowed</param>
+	public static Colour RandomColour(Colour min, Colour max) =>
+			new(
+					Lerp(min.R, max.R, RandomFloat()),
+					Lerp(min.G, max.G, RandomFloat()),
+					Lerp(min.B, max.B, RandomFloat())
+			);
 }
