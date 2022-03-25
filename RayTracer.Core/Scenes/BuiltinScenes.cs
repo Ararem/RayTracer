@@ -55,7 +55,10 @@ public static class BuiltinScenes
 			new DefaultSkyBox()
 	);
 
-	public static readonly Scene RtInAWeekendCover;
+	/// <summary>
+	/// Cover for RayTracing in a weekend, chapter one
+	/// </summary>
+	public static readonly Scene RtInAWeekendCover1;
 
 	static BuiltinScenes()
 	{
@@ -63,7 +66,8 @@ public static class BuiltinScenes
 		{
 			List<SceneObject> objects = new()
 			{
-					new SceneObject("Ground", new YzPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(new Colour(0.5f), Black, 1f))
+					new SceneObject("Ground", new XzPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, -1f), new StandardMaterial(new Colour(0.5f), Black, 1f))
+					// new SceneObject("Ground", new Sphere(new Vector3(0,-1001f, 0), 1000f), new StandardMaterial(new Colour(0.5f), Black, 1f))
 			};
 			for (int a = -11; a < 11; a++)
 			{
@@ -102,7 +106,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,1,0), 1), new RefractiveMaterial(1.5f, White)));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4,1,0), 1), new StandardMaterial(new Colour(.4f,.2f,.1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,1,0), 1), new StandardMaterial(new Colour(.7f,.6f,.5f), Black, 0f)));
-			RtInAWeekendCover = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13,2,3), Zero, UnitY, 20, 16f/9f, 0.1f, 10f), objects.ToArray(), new DefaultSkyBox());
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13,2,3), Zero, UnitY, 20, 16f/9f, 0.1f, 10f), objects.ToArray(), new DefaultSkyBox());
 		}
 	}
 
