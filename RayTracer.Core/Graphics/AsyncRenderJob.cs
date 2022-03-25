@@ -94,6 +94,7 @@ public sealed class AsyncRenderJob
 							state.UpdateBuffers(x, y, col);
 							// Increment(ref state.rawPixelsRendered);
 						}
+
 						//Not sure how fast `Increment` is but to be safe i'll batch the adding as well
 						Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
 

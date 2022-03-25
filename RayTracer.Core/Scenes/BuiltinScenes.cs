@@ -3,7 +3,6 @@ using RayTracer.Core.Environment;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
-using RayTracer.Core.Textures;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
@@ -23,7 +22,7 @@ public static class BuiltinScenes
 	///  Simple scene with a single sphere at (0, 0, 0)
 	/// </summary>
 	public static readonly Scene Sphere = new(
-			"A lonely Sphere", new Camera(new Vector3(0, 0, 2), new Vector3(0.1f, 0f,0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
+			"A lonely Sphere", new Camera(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 1f))
 			},
@@ -56,7 +55,7 @@ public static class BuiltinScenes
 	);
 
 	/// <summary>
-	/// Cover for RayTracing in a weekend, chapter one
+	///  Cover for RayTracing in a weekend, chapter one
 	/// </summary>
 	public static readonly Scene RtInAWeekendCover1;
 
@@ -103,10 +102,11 @@ public static class BuiltinScenes
 					}
 				}
 			}
-			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,1,0), 1), new RefractiveMaterial(1.5f, White)));
-			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4,1,0), 1), new StandardMaterial(new Colour(.4f,.2f,.1f), Black, 1f)));
-			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,1,0), 1), new StandardMaterial(new Colour(.7f,.6f,.5f), Black, 0f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13,2,3), Zero, UnitY, 20, 16f/9f, 0.1f, 10f), objects.ToArray(), new DefaultSkyBox());
+
+			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White)));
+			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
+			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0.1f, 10f), objects.ToArray(), new DefaultSkyBox());
 		}
 	}
 

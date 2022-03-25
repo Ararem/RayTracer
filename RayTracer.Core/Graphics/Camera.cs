@@ -16,24 +16,24 @@ namespace RayTracer.Core.Graphics;
 public sealed class Camera
 {
 	/// <summary>
+	///  Focus distance of the simulated lens
+	/// </summary>
+	public readonly float FocusDistance;
+
+	/// <summary>
 	///  The horizontal field-of-view angle (in degrees)
 	/// </summary>
 	public readonly float HorizontalFov;
 
 	/// <summary>
-	///  The vertical field-of-view angle (in degrees)
-	/// </summary>
-	public readonly float VerticalFov;
-
-	/// <summary>
-	/// Radius of the simulated lens
+	///  Radius of the simulated lens
 	/// </summary>
 	public readonly float LensRadius;
 
 	/// <summary>
-	/// Focus distance of the simulated lens
+	///  The vertical field-of-view angle (in degrees)
 	/// </summary>
-	public readonly float FocusDistance;
+	public readonly float VerticalFov;
 
 	/// <summary>
 	///  Constructor for creating a camera
@@ -62,7 +62,7 @@ public sealed class Camera
 		VerticalFov   = verticalFov;
 		HorizontalFov = verticalFov / aspectRatio;
 		FocusDistance = focusDistance;
-		LensRadius      = lensRadius;
+		LensRadius    = lensRadius;
 
 		float theta          = VerticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
@@ -78,7 +78,7 @@ public sealed class Camera
 
 		Horizontal      = viewportWidth  * U * FocusDistance;
 		Vertical        = viewportHeight * V * FocusDistance;
-		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - (FocusDistance *W);
+		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - (FocusDistance * W);
 	}
 
 	/// <summary>

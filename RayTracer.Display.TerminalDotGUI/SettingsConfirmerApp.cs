@@ -37,7 +37,7 @@ internal sealed class SettingsConfirmerApp : Toplevel
 		{
 			string name = propInfo.Name;
 			Type   type = propInfo.PropertyType;
-			var containerView = new View
+			View containerView = new View
 			{
 					X      = 0,
 					Y      = prevContainer is null ? 0 : Pos.Bottom(prevContainer), //Try place below the previous property layout

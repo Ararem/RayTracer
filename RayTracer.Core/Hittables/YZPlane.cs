@@ -4,7 +4,7 @@ using System.Numerics;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-/// A plane that spans a region along the XY plane
+///  A plane that spans a region along the XY plane
 /// </summary>
 /// <param name="YLow">Low Y value for this plane</param>
 /// <param name="YHigh">High Y value for this plane</param>
