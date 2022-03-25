@@ -49,7 +49,7 @@ public static class BuiltinScenes
 			"With Ground", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 20, 16f / 9f, 2f, 7f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(new Vector3(0, 1f, 0), 1f), new StandardMaterial(Green,                                                         Black, 1f)),
-					new("Ground", new XzPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(0.5f * White, Black, 1f))
+					new("Ground", new XZPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, 0), new StandardMaterial(0.5f * White, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
@@ -65,7 +65,7 @@ public static class BuiltinScenes
 		{
 			List<SceneObject> objects = new()
 			{
-					new SceneObject("Ground", new XzPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, -1f), new StandardMaterial(new Colour(0.5f), Black, 1f))
+					new SceneObject("Ground", new XZPlane(NegativeInfinity, PositiveInfinity, NegativeInfinity, PositiveInfinity, -1f), new StandardMaterial(new Colour(0.5f), Black, 1f))
 					// new SceneObject("Ground", new Sphere(new Vector3(0,-1001f, 0), 1000f), new StandardMaterial(new Colour(0.5f), Black, 1f))
 			};
 			for (int a = -11; a < 11; a++)
