@@ -229,19 +229,21 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		}
 		catch (OverflowException)
 		{
-			estimatedTotalTime = TimeSpan.MaxValue;
+			estimatedTotalTime = TimeSpan.FromDays(69.420); //If something's broke at least let me have some fun
 		}
 
-		const string timeFormat    = "h\\:mm\\:ss"; //Format string for timespan
-		const string percentFormat = "p1";          //Format string for percentages
-		const string numFormat     = "n0";
-		const int    numAlign      = 15;
-		const int    percentAlign  = 8;
+		const string timeFormat     = "h\\:mm\\:ss"; //Format string for Timespan
+		const string dateTimeFormat = "G";           //Format string for DateTime
+		const string percentFormat  = "p1";          //Format string for percentages
+		const string numFormat      = "n0";
+		const int    numAlign       = 15;
+		const int    percentAlign   = 8;
 
 		renderStatsTable.Rows.Clear();
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Time[/]",         $"{elapsed.ToString(timeFormat)} elapsed");
 		renderStatsTable.AddRow("",                                        $"{(estimatedTotalTime - elapsed).ToString(timeFormat)} remaining");
 		renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
+		renderStatsTable.AddRow("",                                        $"{(DateTime.Now + (estimatedTotalTime - elapsed)).ToString(dateTimeFormat)} ETC");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
 		renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
@@ -272,10 +274,11 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 		//Because we'll probably have a crazy sized depth buffer, group the indices together
 		List<(Range range, ulong count)> depths = new();
-		BarChart                         chart  = new() { Width = 45, MaxValue = 1, ShowValues = !true };
+		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = !true };
 		//Group the raw buffer into our aggregated one
 		float grouping = 1; //How many depths to combine into a group
 		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
+		double sum      = 0;
 		while (true)
 		{
 			int   start = rawIndex;
@@ -285,6 +288,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 					break;
 				count += renderJob.RawRayDepthCounts[rawIndex];
+				sum += renderJob.RawRayDepthCounts[rawIndex];
 				rawIndex++;
 			}
 
@@ -304,6 +308,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			chart.AddItem(
 					$"[[{depths[i].range}]]",
 					Math.Log((b * depths[i].count) + 1, m) / Math.Log((b * m) + 1, m), //https://www.desmos.com/calculator/erite0if8u
+					// (double)depths[i].count /sum, //https://www.desmos.com/calculator/erite0if8u
 					Color.White
 			);
 		renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
