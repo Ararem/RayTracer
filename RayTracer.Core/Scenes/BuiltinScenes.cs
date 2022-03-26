@@ -57,6 +57,18 @@ public static class BuiltinScenes
 	);
 
 	/// <summary>
+	///  Testing scene
+	/// </summary>
+	public static readonly Scene Testing = new(
+			"Testing", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			{
+					new("Sphere", new Sphere(new Vector3(0, 2f, 0), 2f), new StandardMaterial(Green*.5f, Black, 1f)),
+					new("Ground", new Disk(Zero, UnitY, 4f), new StandardMaterial(White*0.5f, Black, 1f))
+			},
+			new DefaultSkyBox()
+	);
+
+	/// <summary>
 	///  Cover for RayTracing in a weekend, chapter one
 	/// </summary>
 	public static readonly Scene RtInAWeekendCover1;
