@@ -18,10 +18,6 @@ namespace RayTracer.Core.Graphics;
 ///  high (e.g. <see cref="float.PositiveInfinity"/>)
 /// </param>
 /// <param name="DebugVisualisation">Flag for enabling debugging related options, such as showing surface normals</param>
-/// <param name="ThreadBatching">
-///  How many pixels should be 'batched' together when rendering. Low values (less than a few thousand) introduce overhead. Try to keep this a factor of
-///  the (<paramref name="Width"/>*<paramref name="Height"/>)
-/// </param>
 /// <param name="ConcurrencyLevel">
 ///  Maximum number of threads that can run at a time. Set to `-1` for no limit, or any other positive integer for that
 ///  many threads (0 is invalid)
@@ -33,7 +29,6 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Height,
 		[NonNegativeValue] float   KMin,
 		[NonNegativeValue] float   KMax,
-		[NonNegativeValue] int     ThreadBatching,
 		int     ConcurrencyLevel,
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
@@ -43,5 +38,5 @@ public sealed record RenderOptions(
 	/// <summary>
 	///  Default render options
 	/// </summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, 65536, -1, 100, 100);
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, -1, 100, 100);
 }

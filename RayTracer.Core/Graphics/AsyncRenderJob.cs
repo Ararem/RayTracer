@@ -74,38 +74,9 @@ public sealed class AsyncRenderJob
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
 		for (int pass = 0; pass < RenderOptions.Passes; pass++)
 		{
-			//This way, we render each row from left to right
-			//Rows are rendered bottom to top (on the image)
-			//And each pass is rendered one at a time
-			(int batches, int remainder) = Math.DivRem(TotalTruePixels, RenderOptions.ThreadBatching);
-			//Render in batches
 			Parallel.For(
-					0, batches, new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel },
-					() => this, //Gives us the state tracking the `this` reference and which pass we're in
-					static (batch, _, state) =>
-					{
-						Interlocked.Increment(ref state.threadsRunning);
-						for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
-						{
-							int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
-							(int x, int y) = Decompress2DIndex(pixel, state.RenderOptions.Width);
-							Colour col = state.RenderPixelWithVisualisations(x, y);
-							state.UpdateBuffers(x, y, col);
-							// Increment(ref state.rawPixelsRendered);
-						}
-
-						//Not sure how fast `Increment` is but to be safe i'll batch the adding as well
-						Interlocked.Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
-
-						Interlocked.Decrement(ref state.threadsRunning);
-						return state;
-					},
-					static _ => { }
-			);
-			//Now do the remainder of the pixels
-			Parallel.For(
-					RenderOptions.ThreadBatching * batches, (RenderOptions.ThreadBatching * batches) + remainder,
-					new ParallelOptions { MaxDegreeOfParallelism = System.Environment.ProcessorCount },
+					0, TotalTruePixels,
+					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel },
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (i, _, state) =>
 					{

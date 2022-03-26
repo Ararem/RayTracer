@@ -65,7 +65,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// <returns>The confirmed scene and render options, to use for render execution</returns>
 	private static (Scene Scene, RenderOptions Options) ConfirmSettings(CommandContext context, Settings settings)
 	{
-		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.ThreadBatching, settings.Concurrency, settings.Passes, settings.MaxDepth, settings.DebugVisualisation);
+		RenderOptions renderOptions = new(settings.Width, settings.Height, settings.KMin, settings.KMax, settings.Concurrency, settings.Passes, settings.MaxDepth, settings.DebugVisualisation);
 		//Print settings to console
 		{
 			Table table = new()
@@ -273,7 +273,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, options.ConcurrencyLevel)} threads");
 		else
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{renderJob.ThreadsRunning.ToString(numFormat),numAlign} threads");
-		renderStatsTable.AddRow("",                                        $"{options.ThreadBatching.ToString(numFormat),numAlign} px/batch");
 		renderStatsTable.AddRow("",                                        "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
@@ -497,11 +496,6 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		[CommandOption("--debug|--visualise")]
 		[DefaultValue(GraphicsDebugVisualisation.None)]
 		public GraphicsDebugVisualisation DebugVisualisation { get; init; }
-
-		[Description("Changes how many pixels are batched at a time when multithreading")]
-		[CommandOption("-b|--thread-batching|--batching")]
-		[DefaultValue(65536)]
-		public int ThreadBatching { get; init; }
 
 		[Description("Changes the maximum number of threads that can run at a time")]
 		[CommandOption("-c|--threads|--concurrency")]
