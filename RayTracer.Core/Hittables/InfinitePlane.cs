@@ -5,8 +5,14 @@ using static System.MathF;
 
 namespace RayTracer.Core.Hittables;
 
-//TODO: Constraints/Bounds for planes
-public sealed record Plane(Vector3 Point, Vector3 Normal) : Hittable
+//TODO: Non-infinite version of this, with UV coords
+/// <summary>
+/// A 2D Plane in 3D space.
+/// </summary>
+/// <param name="Point"></param>
+/// <param name="Normal"></param>
+/// <remarks>Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/></remarks>
+public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 {
 	/// <inheritdoc />
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

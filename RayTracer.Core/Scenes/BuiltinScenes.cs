@@ -8,7 +8,6 @@ using System.Reflection;
 using static RayTracer.Core.Colour;
 using static RayTracer.Core.Rand;
 using static System.Numerics.Vector3;
-using Plane = RayTracer.Core.Hittables.Plane;
 
 namespace RayTracer.Core.Scenes;
 
@@ -38,7 +37,7 @@ public static class BuiltinScenes
 					new("Sphere 1", new Sphere(new Vector3(0.1f),  .15f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
 					new("Sphere 2", new Sphere(new Vector3(0),     .15f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
 					new("Sphere 3", new Sphere(new Vector3(-0.1f), .15f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f)),
-					new("Plane", new Plane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f))
+					new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f))
 			},
 			new DefaultSkyBox()
 	);
@@ -115,7 +114,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White)));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
-			objects.Add(new SceneObject("Ground",   new Plane(Zero, UnitY),             new StandardMaterial(new Colour(0.5f),          Black, 1f)));
+			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),             new StandardMaterial(new Colour(0.5f),          Black, 1f)));
 			// objects.Add(new SceneObject("Ground",   new Sphere(-1000*UnitY, 1000),             new StandardMaterial(new Colour(0.5f),          Black, 1f)));
 			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), new DefaultSkyBox());
 		}

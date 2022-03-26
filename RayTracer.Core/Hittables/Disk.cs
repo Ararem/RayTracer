@@ -6,7 +6,13 @@ using static System.MathF;
 namespace RayTracer.Core.Hittables;
 
 //TODO: Constraints/Bounds for planes
-public sealed record Disk(Vector3 Point, Vector3 Normal, float Radius) : Hittable
+/// <summary>
+/// A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
+/// </summary>
+/// <param name="Centre">The centre of the disk in 3D space</param>
+/// <param name="Normal">Normal direction of the disk</param>
+/// <param name="Radius">How large the radius of the disk is</param>
+public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittable
 {
 	private Lazy<float> radiusSqr = new(() => Radius * Radius);
 	/// <inheritdoc />
@@ -24,7 +30,7 @@ public sealed record Disk(Vector3 Point, Vector3 Normal, float Radius) : Hittabl
 		else
 		{
 			//Find intersection normally
-			float d = -Dot(Point, Normal);
+			float d = -Dot(Centre, Normal);
 			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
 		}
 
@@ -34,9 +40,9 @@ public sealed record Disk(Vector3 Point, Vector3 Normal, float Radius) : Hittabl
 		Vector3 worldPoint = ray.PointAt(t);
 
 		//Now assert radius
-		if (DistanceSquared(Point, worldPoint) > radiusSqr.Value) return null;
+		if (DistanceSquared(Centre, worldPoint) > radiusSqr.Value) return null;
 
-		Vector3 localPoint = worldPoint - Point;
+		Vector3 localPoint = worldPoint - Centre;
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
