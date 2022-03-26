@@ -91,11 +91,6 @@ public sealed class Camera
 	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
 	public Ray GetRay(float u, float v)
 	{
-		if (u is < 0 or > 1)
-			throw new ArgumentOutOfRangeException(nameof(u), u, "UV coordinates are only accepted in the range [0..1]");
-		if (v is < 0 or > 1)
-			throw new ArgumentOutOfRangeException(nameof(v), v, "UV coordinates are only accepted in the range [0..1]");
-
 		Vector2 rand      = Rand.RandomInUnitCircle() * LensRadius;
 		Vector3 offset    = (U * rand.X)                                          + (V * rand.Y);
 		Vector3 origin    = LookFrom                                              + offset;

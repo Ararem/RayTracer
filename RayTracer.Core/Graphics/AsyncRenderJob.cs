@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static RayTracer.Core.MathHelper;
-using static System.Threading.Interlocked;
 
 namespace RayTracer.Core.Graphics;
 
@@ -85,7 +84,7 @@ public sealed class AsyncRenderJob
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (batch, _, state) =>
 					{
-						Increment(ref state.threadsRunning);
+						Interlocked.Increment(ref state.threadsRunning);
 						for (int j = 0; j < state.RenderOptions.ThreadBatching; j++)
 						{
 							int pixel = (batch * state.RenderOptions.ThreadBatching) + j;
@@ -96,9 +95,9 @@ public sealed class AsyncRenderJob
 						}
 
 						//Not sure how fast `Increment` is but to be safe i'll batch the adding as well
-						Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
+						Interlocked.Add(ref state.rawPixelsRendered, (ulong)state.RenderOptions.ThreadBatching);
 
-						Decrement(ref state.threadsRunning);
+						Interlocked.Decrement(ref state.threadsRunning);
 						return state;
 					},
 					static _ => { }
@@ -110,18 +109,18 @@ public sealed class AsyncRenderJob
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (i, _, state) =>
 					{
-						Increment(ref state.threadsRunning);
+						Interlocked.Increment(ref state.threadsRunning);
 						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
 						Colour col = state.RenderPixelWithVisualisations(x, y);
 						state.UpdateBuffers(x, y, col);
-						Increment(ref state.rawPixelsRendered);
-						Decrement(ref state.threadsRunning);
+						Interlocked.Increment(ref state.rawPixelsRendered);
+						Interlocked.Decrement(ref state.threadsRunning);
 						return state;
 					},
 					static _ => { }
 			);
 
-			Increment(ref passesRendered);
+			Interlocked.Increment(ref passesRendered);
 		}
 
 		//Notify that the render is complete
@@ -141,7 +140,18 @@ public sealed class AsyncRenderJob
 	private Colour RenderPixelWithVisualisations(int x, int y)
 	{
 		//Get the view ray from the camera
-		Ray ray = camera.GetRay((float)x / RenderOptions.Width, (float)y / RenderOptions.Height);
+		Ray ray;
+		{
+			//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
+			float s = x, t = y;
+			//Add up to 1 pixel of offset randomness to the coords
+			const float ssaaRadius = 1f;
+			s += Rand.RandomPlusMinusOne() * ssaaRadius;
+			t += Rand.RandomPlusMinusOne() * ssaaRadius;
+			//Account for the fact that we want uv coords not pixel coords
+			ray = camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
+		}
+
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
 		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
@@ -221,18 +231,17 @@ public sealed class AsyncRenderJob
 		//Ensure we don't go too deep
 		if (bounces > RenderOptions.MaxDepth)
 		{
-			Increment(ref bounceLimitExceeded);
+			Interlocked.Increment(ref bounceLimitExceeded);
 			return Colour.Black;
 		}
 
 		//Increment the current depth
-		Increment(ref rawRayDepthCounts[bounces]);
+		Interlocked.Increment(ref rawRayDepthCounts[bounces]);
 		//And decrement the previous depth. This ensures only the final depth is counted
-		if (bounces != 0)
-			Decrement(ref rawRayDepthCounts[bounces - 1]);
+		if (bounces != 0) Interlocked.Decrement(ref rawRayDepthCounts[bounces - 1]);
 
 		//Find the nearest hit along the ray
-		Increment(ref rayCount);
+		Interlocked.Increment(ref rayCount);
 		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
@@ -244,13 +253,13 @@ public sealed class AsyncRenderJob
 			{
 				//If the new ray is null, the material did not scatter (completely absorbed the light)
 				//So it's impossible to have any future bounces, so we know that they must be black
-				Increment(ref raysAbsorbed);
+				Interlocked.Increment(ref raysAbsorbed);
 				futureBounces = Colour.Black;
 			}
 			else
 			{
 				//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
-				Increment(ref raysScattered);
+				Interlocked.Increment(ref raysScattered);
 				GraphicsValidator.CheckRayDirectionMagnitude(ref ray, material);
 				futureBounces = CalculateRayColourRecursive((Ray)maybeNewRay, bounces + 1);
 			}
@@ -266,7 +275,7 @@ public sealed class AsyncRenderJob
 		//No object was hit (at least not in the range), so return the skybox colour
 		else
 		{
-			Increment(ref skyRays);
+			Interlocked.Increment(ref skyRays);
 			return skybox.GetSkyColour(ray);
 		}
 	}
