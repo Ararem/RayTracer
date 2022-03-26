@@ -282,7 +282,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		List<(Range range, ulong count)> depths = new();
 		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
 		//Group the raw buffer into our aggregated one
-		float grouping = 1; //How many depths to combine into a group
+		float grouping = 0.5f; //How many depths to combine into a group
 		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
 		while (true)
 		{
@@ -294,12 +294,13 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 					break;
 				count += renderJob.RawRayDepthCounts[rawIndex];
-				end   =  rawIndex++;
+				rawIndex++;
+				end   =  rawIndex;
 			}
 
 			depths.Add((start..end, count));
-			// grouping *= 1.3f;
-			grouping += 0f;
+			grouping = (grouping * 1.5f) +.1f;
+			// grouping += 0f;
 			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 				break;
 		}
