@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 
 namespace RayTracer.Core.Environment;
@@ -9,6 +10,7 @@ namespace RayTracer.Core.Environment;
 ///  We essentially treat the skybox as an infinitely far away object (behind everything), and uses it to calculate sky lighting. The colour returned by
 ///  <see cref="GetSkyColour"/> is interpreted as the emissive colour of a material.
 /// </remarks>
+[PublicAPI]
 public abstract record SkyBox
 {
 	/// <summary>
