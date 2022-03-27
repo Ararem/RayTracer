@@ -12,7 +12,8 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
-		Vector4? maybeHitVec = null;
+		//XYZ are XYZ of normal, W is k value along ray of intersection
+		Vector4 kNor;
 
 		Vector3 ba = P2         - P1;
 		Vector3 oc = ray.Origin - P1;
@@ -28,7 +29,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		float h = (k1 * k1) - (k2 * k0);
 		if (h < 0.0)
 		{
-			maybeHitVec = null;
+			return null;
 		}
 		else
 		{
@@ -39,25 +40,23 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			float y = baoc + (t * bard);
 			if ((y > 0.0) && (y < baba))
 			{
-				maybeHitVec = new Vector4(((oc + (t * ray.Direction)) - ((ba * y) / baba)) / Radius, t);
+				kNor = new Vector4(((oc + (t * ray.Direction)) - ((ba * y) / baba)) / Radius, t);
 			}
 			// caps
 			else
 			{
 				t = ((y < 0.0f ? 0.0f : baba) - baoc) / bard;
-				if (Abs(k1 + (k2 * t)) < h) maybeHitVec = new Vector4((ba * Sign(y)) / baba, t);
+				if (Abs(k1 + (k2 * t)) < h) kNor = new Vector4((ba * Sign(y)) / baba, t);
 				else
-					maybeHitVec = null;
+					return null;
 			}
 		}
 
-		if (maybeHitVec is null) return null;
-		Vector4 hitVec = maybeHitVec.Value;
-		float   k      = hitVec.W;
+		float   k      = kNor.W;
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
 		if ((k != -1f) && (k >= kMin) && (k <= kMax))
 			return null;
-		Vector3 normal   = new(hitVec.X, hitVec.Y, hitVec.Z);
+		Vector3 normal   = new(kNor.X, kNor.Y, kNor.Z);
 		Vector3 worldPos = ray.PointAt(k);
 		Vector3 localPos = worldPos - centre.Value;
 		bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
