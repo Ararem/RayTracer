@@ -50,7 +50,8 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 
 		//If we didn't hit anything `k` will still have it's value of -1, indicating nothing was hit
 		//Not sure if it is also somehow set to negative values elsewhere when it's invalid, but I'm assuming it's fine
-		if (k > 0f)
+		// ReSharper disable once CompareOfFloatsByEqualityOperator
+		if ((k != -1f) && (k >=kMin) && (k <=kMax) )
 		{
 			Vector3 worldPos = ray.PointAt(k);
 			Vector3 localPos = worldPos - centre.Value;
