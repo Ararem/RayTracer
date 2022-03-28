@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Numerics;
 
 namespace RayTracer.Core.Graphics;
@@ -10,6 +11,7 @@ namespace RayTracer.Core.Graphics;
 /// <remarks>
 ///  Although it is assumed that the <see cref="Direction"/> is normalised, this may not be the case, so be sure to call <c>Vector3.Normalize()</c>
 /// </remarks>
+[PublicAPI]
 public readonly record struct Ray(Vector3 Origin, Vector3 Direction)
 {
 	/// <summary>

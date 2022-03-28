@@ -17,37 +17,37 @@ public static class Rand
 	///  Returns a float in the range [0..1]
 	/// </summary>
 	/// <returns></returns>
-	public static float RandomFloat() => Random.Shared.NextSingle();
+	[MustUseReturnValue]public static float RandomFloat() => Random.Shared.NextSingle();
 
 	/// <summary>
 	///  Returns a random float in the specified range
 	/// </summary>
-	public static float RandomFloat(float min, float max) => min + ((max - min) * Random.Shared.NextSingle());
+	[MustUseReturnValue]public static float RandomFloat(float min, float max) => min + ((max - min) * Random.Shared.NextSingle());
 
 	/// <summary>
 	///  Returns a random integer in the specified range
 	/// </summary>
-	public static int RandomInt(int min, int max) => Random.Shared.Next(min, max);
+	[MustUseReturnValue]public static int RandomInt(int min, int max) => Random.Shared.Next(min, max);
 
 	/// <summary>
 	///  Returns a float in the range [-1..1]
 	/// </summary>
-	public static float RandomPlusMinusOne() => (Random.Shared.NextSingle() * 2) - 1;
+	[MustUseReturnValue]public static float RandomPlusMinusOne() => (Random.Shared.NextSingle() * 2) - 1;
 
 	/// <summary>
 	///  Returns a vector within a unit cube
 	/// </summary>
-	public static Vector3 RandomInUnitCube() => new(RandomPlusMinusOne(), RandomPlusMinusOne(), RandomPlusMinusOne());
+	[MustUseReturnValue]public static Vector3 RandomInUnitCube() => new(RandomPlusMinusOne(), RandomPlusMinusOne(), RandomPlusMinusOne());
 
 	/// <summary>
 	///  Returns a vector on the surface of a unit sphere
 	/// </summary>
-	public static Vector3 RandomOnUnitSphere() => Normalize(RandomInUnitCube());
+	[MustUseReturnValue]public static Vector3 RandomOnUnitSphere() => Normalize(RandomInUnitCube());
 
 	/// <summary>
 	///  Returns a vector inside a unit sphere
 	/// </summary>
-	public static Vector3 RandomInUnitSphere()
+	[MustUseReturnValue]public static Vector3 RandomInUnitSphere()
 	{
 		while (true)
 		{
@@ -60,7 +60,7 @@ public static class Rand
 	/// <summary>
 	///  Returns a vector that has (X,Y) such that X and Y are within a circle of radius 1
 	/// </summary>
-	public static Vector2 RandomInUnitCircle()
+	[MustUseReturnValue]public static Vector2 RandomInUnitCircle()
 	{
 		float theta = RandomFloat(0, 2 * PI);
 		float r     = Sqrt(RandomFloat());
@@ -71,14 +71,14 @@ public static class Rand
 	/// <summary>
 	/// Returns a random colour, where the output colour has RGB values in the range [0...1]
 	/// </summary>
-	public static Colour RandomColour() => RandomColour(Colour.Black, Colour.White);
+	[MustUseReturnValue]public static Colour RandomColour() => RandomColour(Colour.Black, Colour.White);
 
 	/// <summary>
 	/// Returns a random colour, where the output colour is somewhere between the RGB values of the <paramref name="min"/> and <paramref name="max"/> values
 	/// </summary>
 	/// <param name="min">Lowest RGB values allowed</param>
 	/// <param name="max">Highest RGB values allowed</param>
-	public static Colour RandomColour(Colour min, Colour max) =>
+	[MustUseReturnValue]public static Colour RandomColour(Colour min, Colour max) =>
 			new(
 					Lerp(min.R, max.R, RandomFloat()),
 					Lerp(min.G, max.G, RandomFloat()),

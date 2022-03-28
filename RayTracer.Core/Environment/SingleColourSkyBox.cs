@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
 
 namespace RayTracer.Core.Environment;
@@ -6,6 +7,7 @@ namespace RayTracer.Core.Environment;
 /// A skybox that is a single colour
 /// </summary>
 /// <param name="Colour">The colour of the sky</param>
+[PublicAPI]
 public record SingleColourSkyBox(Colour Colour) : SkyBox
 {
 	/// <inheritdoc />

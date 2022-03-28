@@ -88,6 +88,7 @@ public readonly struct Colour : IFormattable
 	/// </summary>
 	/// <param name="format">The format passed to each of the RGB components</param>
 	/// <param name="formatProvider">Format provider for each component</param>
+	[Pure]
 	public string ToString(string? format, IFormatProvider? formatProvider)
 	{
 		StringBuilder stringBuilder        = new();
@@ -105,9 +106,11 @@ public readonly struct Colour : IFormattable
 	}
 
 	///<inheritdoc cref="Vector3.ToString(string, IFormatProvider)"/>
+	[Pure]
 	public override string ToString() => ToString("G", CultureInfo.CurrentCulture);
 
 	///<inheritdoc cref="Vector3.ToString(string)"/>
+	[Pure]
 	public string ToString(string? format) => ToString(format, CultureInfo.CurrentCulture);
 
 #region Operators
@@ -116,82 +119,96 @@ public readonly struct Colour : IFormattable
 	///  Adds the components of two colours together
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator +(Colour left, Colour right) => new(left.R + right.R, left.G + right.G, left.B + right.B);
 
 	/// <summary>
 	///  Divides one colour's components by an other's
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator /(Colour left, Colour right) => new(left.R / right.R, left.G / right.G, left.B / right.B);
 
 	/// <summary>
 	///  Divides a colour's components by a number
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator /(Colour value1, float value2) => value1 / new Colour(value2);
 
 	/// <summary>
 	///  Multiplies the components of two colours together
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator *(Colour left, Colour right) => new(left.R * right.R, left.G * right.G, left.B * right.B);
 
 	/// <summary>
 	///  Multiplies the components of a colour by a number
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator *(Colour left, float right) => left * new Colour(right);
 
 	/// <summary>
 	///  Multiplies the components of a colour by a number
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator *(float left, Colour right) => right * left;
 
 	/// <summary>
 	///  Subtracts the components of two colours together
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator -(Colour left, Colour right) => new(left.R - right.R, left.G - right.G, left.B - right.B);
 
 	/// <summary>
 	///  Inverts a colour
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour operator -(Colour value) => Black - value;
 
 	/// <summary>
 	///  Returns a colour with all it's components made positive
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour Abs(Colour value) => new(MathF.Abs(value.R), MathF.Abs(value.G), MathF.Abs(value.B));
 
 	/// <summary>
 	///  Clamps a colour's components between the range specified by the range of the other two colours
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour Clamp(Colour value1, Colour min, Colour max) => Min(Max(value1, min), max);
 
 	/// <summary>
 	///  Linearly interpolates between two colours
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour Lerp(Colour value1, Colour value2, float amount) => (value1 * (1f - amount)) + (value2 * amount);
 
 	/// <summary>
 	///  Returns the maximum components of two colours
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
 	public static Colour Max(Colour value1, Colour value2) => new(value1.R > (double)value2.R ? value1.R : value2.R, value1.G > (double)value2.G ? value1.G : value2.G, value1.B > (double)value2.B ? value1.B : value2.B);
 
 	/// <summary>
 	///  Returns the minimum components of two colours
 	/// </summary>
+	[Pure]
 	public static Colour Min(Colour value1, Colour value2) => new(value1.R < (double)value2.R ? value1.R : value2.R, value1.G < (double)value2.G ? value1.G : value2.G, value1.B < (double)value2.B ? value1.B : value2.B);
 
 	/// <summary>
 	///  Converts a vector into a colour
 	/// </summary>
+	[Pure]
 	public static explicit operator Colour(Vector3 v) => new(v.X, v.Y, v.Z);
 
 	/// <summary>
@@ -199,6 +216,7 @@ public readonly struct Colour : IFormattable
 	/// </summary>
 	/// <param name="c"></param>
 	/// <returns></returns>
+	[Pure]
 	public static explicit operator Rgb24(Colour c) =>
 			new(
 					(byte)(byte.MaxValue * c.R),
