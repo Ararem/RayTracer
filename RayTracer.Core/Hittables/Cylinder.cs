@@ -47,20 +47,24 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			{
 				t = ((y < 0.0f ? 0.0f : baba) - baoc) / bard;
 				if (Abs(k1 + (k2 * t)) < h) kNor = new Vector4((ba * Sign(y)) / baba, t);
-				else
-					return null;
+				else return null;
 			}
 		}
 
-		float   k      = kNor.W;
+		float k = kNor.W;
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
 		if ((k != -1f) && (k >= kMin) && (k <= kMax))
-			return null;
-		Vector3 normal   = new(kNor.X, kNor.Y, kNor.Z);
-		Vector3 worldPos = ray.PointAt(k);
-		Vector3 localPos = worldPos - centre.Value;
-		bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
+		{
+			Vector3 normal   = new(kNor.X, kNor.Y, kNor.Z);
+			Vector3 worldPos = ray.PointAt(k);
+			Vector3 localPos = worldPos - centre.Value;
+			bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
 
-		return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero); //TODO: UV coords
+			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero); //TODO: UV coords
+		}
+		else
+		{
+			return null;
+		}
 	}
 }

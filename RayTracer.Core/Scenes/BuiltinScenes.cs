@@ -60,7 +60,7 @@ public static class BuiltinScenes
 	public static readonly Scene Testing = new(
 			"Testing", new Camera(new Vector3(0, 1, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					new("Capsule", new Capsule(-One, One, 1f), new StandardMaterial(White             * 0.5f, Black, .1f))
+					new("Object", new Cylinder(-One, One, 1f), new StandardMaterial(White             * 0.5f, Black, .1f))
 			},
 			new DefaultSkyBox()
 	);
