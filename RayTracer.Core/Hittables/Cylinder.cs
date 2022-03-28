@@ -5,6 +5,12 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Hittables;
 
+/// <summary>
+/// A cylinder, defined by two points and a radius around the line segments of those points
+/// </summary>
+/// <param name="P1">The point defining one of the ends of the cylinder</param>
+/// <param name="P2">The point defining one of the ends of the cylinder</param>
+/// <param name="Radius">The radius of the cylinder</param>
 public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 {
 	private readonly Lazy<Vector3> centre = new(() => Lerp(P1, P2, 0.5f)); //Halfway between P1 and P2

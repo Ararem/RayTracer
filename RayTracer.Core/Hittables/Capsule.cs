@@ -6,6 +6,12 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Hittables;
 
+/// <summary>
+/// A capsule shape, defined by two points, and a radius
+/// </summary>
+/// <param name="P1">The first point that makes up the capsule</param>
+/// <param name="P2">The seconds point that makes up the capsule</param>
+/// <param name="Radius">The radius of the capsule</param>
 public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 {
 	private readonly Lazy<Vector3> centre = new(() => Lerp(P1, P2, 0.5f)); //Halfway between P1 and P2
@@ -14,6 +20,10 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
+		/*
+		 * I'm not sure how this code actually works, but I believe that it works by finding the distance between the line defined by the ray,
+		 * and the line of the points P1 & P2. Then I would assume it solves the quadratic for when the distance == radius, and returns that as K.
+		 */
 		float k = -1f;
 		Vector3 ba = P2         - P1;
 		Vector3 oa = ray.Origin - P1;

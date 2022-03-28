@@ -440,19 +440,26 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		Image<Rgb24> image = FinalizeRenderJob(renderJob);
 
 		//Save and open the image for viewing
-		await image.SaveAsync(File.OpenWrite(settings.OutputFile), new PngEncoder());
-		await Process.Start(
-				new ProcessStartInfo
-				{
-						FileName  = "eog",
-						Arguments = $"\"{settings.OutputFile}\"",
-						//These flags stop the image display program's console from attaching to ours (because that's yuck!)
-						UseShellExecute        = false,
-						RedirectStandardError  = true,
-						RedirectStandardInput  = true,
-						RedirectStandardOutput = true
-				}
-		)!.WaitForExitAsync();
+		await image.SaveAsync(File.OpenWrite(settings.OutputFile), new PngEncoder())!;
+		try
+		{
+			await Process.Start(
+					new ProcessStartInfo
+					{
+							FileName  = "eog",
+							Arguments = $"\"{settings.OutputFile}\"",
+							//These flags stop the image display program's console from attaching to ours (because that's yuck!)
+							UseShellExecute        = false,
+							RedirectStandardError  = true,
+							RedirectStandardInput  = true,
+							RedirectStandardOutput = true
+					}
+			)!.WaitForExitAsync();
+		}
+		catch (Exception)
+		{
+			WriteLine("Could not start image viewer program");
+		}
 		return 0;
 	}
 

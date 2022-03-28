@@ -5,8 +5,15 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Hittables;
 
+/// <summary>
+/// A simple 3D box
+/// </summary>
+/// <remarks>Made up of 6 planes, hence the name</remarks>
 public record HexPlaneBox : Hittable
 {
+	/// <summary>
+	/// Creates a new box from two bounding points
+	/// </summary>
 	public HexPlaneBox(Vector3 min, Vector3 max)
 	{
 		Min = Min(min, max);
