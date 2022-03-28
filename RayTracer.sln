@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Core", "RayTracer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Benchmarks", "RayTracer.Benchmarks\RayTracer.Benchmarks.csproj", "{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.TerminalDotGUI", "RayTracer.Display.TerminalDotGUI\RayTracer.Display.TerminalDotGUI.csproj", "{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +24,5 @@ Global
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Release|Any CPU.Build.0 = Release|Any CPU
-		{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{763B2A51-2E34-4FAA-88DE-3DED2B44A4F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
