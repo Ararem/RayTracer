@@ -1,56 +1,54 @@
 using Eto.Drawing;
 using Eto.Forms;
 
-namespace RayTracer.Display.EtoForms
+namespace RayTracer.Display.EtoForms;
+
+public sealed class MainForm : Form
 {
-	public class MainForm : Form
+	public MainForm()
 	{
-		public MainForm()
+		Title       = $"RayTracer v{typeof(Core.Scenes.Scene).Assembly.GetName().Version} - Render Selector - Eto.Forms";
+		MinimumSize = new Size(200,  200);
+		Size        = new Size(1280, 720);
+
+		Content = new StackLayout
 		{
-			Title       = "My Eto Form";
-			MinimumSize = new Size(200, 200);
+				Padding = 0,
+				Items =
+				{
+						new Label{Text = "I'ma text box"},
+						"Hello World!",
+						"Testing"
+						// add more controls here
+				}
+		}; 
 
-			Content = new StackLayout
-			{
-					Padding = 10,
-					Items =
-					{
-							"Hello World!"
-							// add more controls here
-					}
-			};
+		// create a few commands that can be used for the menu and toolbar
+		Command quitCommand = new() { MenuText = "Quit", Shortcut = Application.Instance!.CommonModifier | Keys.Q };
+		quitCommand.Executed += (sender, e) => Application.Instance.Quit();
 
-			// create a few commands that can be used for the menu and toolbar
-			Command clickMe = new Command { MenuText = "Click Me!", ToolBarText = "Click Me!" };
-			clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
+		Command aboutCommand = new() { MenuText = "About" };
+		aboutCommand.Executed += (sender, e) => new AboutDialog().ShowDialog(this);
 
-			Command quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
-			quitCommand.Executed += (sender, e) => Application.Instance.Quit();
+		// create menu
+		Menu = new MenuBar
+		{
+				Items =
+				{
+						// File submenu
+						// new SubMenuItem { Text = "&File", Items = {  } },
+						// new SubMenuItem { Text = "&Edit", Items = { /* commands/items */ } },
+						// new SubMenuItem { Text = "&View", Items = { /* commands/items */ } },
+				},
+				ApplicationItems =
+				{
+						// application (OS X) or file menu (others)
+						// new ButtonMenuItem { Text = "&Preferences..." }
+				},
+				QuitItem  = quitCommand,
+				AboutItem = aboutCommand
+		};
 
-			Command aboutCommand = new Command { MenuText = "About..." };
-			aboutCommand.Executed += (sender, e) => new AboutDialog().ShowDialog(this);
-
-			// create menu
-			Menu = new MenuBar
-			{
-					Items =
-					{
-							// File submenu
-							new SubMenuItem { Text = "&File", Items = { clickMe } }
-							// new SubMenuItem { Text = "&Edit", Items = { /* commands/items */ } },
-							// new SubMenuItem { Text = "&View", Items = { /* commands/items */ } },
-					},
-					ApplicationItems =
-					{
-							// application (OS X) or file menu (others)
-							new ButtonMenuItem { Text = "&Preferences..." }
-					},
-					QuitItem  = quitCommand,
-					AboutItem = aboutCommand
-			};
-
-			// create toolbar			
-			ToolBar = new ToolBar { Items = { clickMe } };
-		}
+		ToolBar = new ToolBar { Items = {  } };
 	}
 }
