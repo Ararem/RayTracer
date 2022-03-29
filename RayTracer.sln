@@ -6,6 +6,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Core", "RayTracer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Benchmarks", "RayTracer.Benchmarks\RayTracer.Benchmarks.csproj", "{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms", "RayTracer.Display.Eto\RayTracer.Display.EtoForms\RayTracer.Display.EtoForms.csproj", "{B235FF90-9118-497A-A6EF-677B83C79003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms.Mac", "RayTracer.Display.Eto\RayTracer.Display.EtoForms.Mac\RayTracer.Display.EtoForms.Mac.csproj", "{D771306D-C6D0-4049-AF5F-E177309B93B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms.Gtk", "RayTracer.Display.Eto\RayTracer.Display.EtoForms.Gtk\RayTracer.Display.EtoForms.Gtk.csproj", "{CD9C1731-2EF0-4AD5-A187-8FF409A8166A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms.Wpf", "RayTracer.Display.Eto\RayTracer.Display.EtoForms.Wpf\RayTracer.Display.EtoForms.Wpf.csproj", "{77044320-4C36-4518-AC9C-C18BDB54D14A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +32,21 @@ Global
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FB2EBD7-F182-444F-A2FC-BA29B0BE2546}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B235FF90-9118-497A-A6EF-677B83C79003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B235FF90-9118-497A-A6EF-677B83C79003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B235FF90-9118-497A-A6EF-677B83C79003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B235FF90-9118-497A-A6EF-677B83C79003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D771306D-C6D0-4049-AF5F-E177309B93B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D771306D-C6D0-4049-AF5F-E177309B93B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D771306D-C6D0-4049-AF5F-E177309B93B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D771306D-C6D0-4049-AF5F-E177309B93B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD9C1731-2EF0-4AD5-A187-8FF409A8166A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD9C1731-2EF0-4AD5-A187-8FF409A8166A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD9C1731-2EF0-4AD5-A187-8FF409A8166A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD9C1731-2EF0-4AD5-A187-8FF409A8166A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77044320-4C36-4518-AC9C-C18BDB54D14A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77044320-4C36-4518-AC9C-C18BDB54D14A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77044320-4C36-4518-AC9C-C18BDB54D14A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77044320-4C36-4518-AC9C-C18BDB54D14A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
