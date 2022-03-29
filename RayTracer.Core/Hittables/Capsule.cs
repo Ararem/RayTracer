@@ -7,7 +7,7 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-/// A capsule shape, defined by two points, and a radius
+///  A capsule shape, defined by two points, and a radius
 /// </summary>
 /// <param name="P1">The first point that makes up the capsule</param>
 /// <param name="P2">The seconds point that makes up the capsule</param>
@@ -24,7 +24,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		 * I'm not sure how this code actually works, but I believe that it works by finding the distance between the line defined by the ray,
 		 * and the line of the points P1 & P2. Then I would assume it solves the quadratic for when the distance == radius, and returns that as K.
 		 */
-		float k = -1f;
+		float   k  = -1f;
 		Vector3 ba = P2         - P1;
 		Vector3 oa = ray.Origin - P1;
 
@@ -61,13 +61,13 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		//If we didn't hit anything `k` will still have it's value of -1, indicating nothing was hit
 		//Not sure if it is also somehow set to negative values elsewhere when it's invalid, but I'm assuming it's fine
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
-		if ((k != -1f) && (k >=kMin) && (k <=kMax) )
+		if ((k != -1f) && (k >= kMin) && (k <= kMax))
 		{
-			Vector3 worldPos = ray.PointAt(k);
-			Vector3 localPos = worldPos - centre.Value;
-			Vector3 outNormal      = CapNormal(worldPos, P1, P2, Radius);
-			Vector2 uv       = UV(worldPos);
-			bool    inside   = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
+			Vector3 worldPos  = ray.PointAt(k);
+			Vector3 localPos  = worldPos - centre.Value;
+			Vector3 outNormal = CapNormal(worldPos, P1, P2, Radius);
+			Vector2 uv        = UV(worldPos);
+			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
 			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
 		}

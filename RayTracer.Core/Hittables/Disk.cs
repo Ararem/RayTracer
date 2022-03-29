@@ -7,15 +7,16 @@ namespace RayTracer.Core.Hittables;
 
 //TODO: Constraints/Bounds for planes
 /// <summary>
-/// A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
+///  A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
 /// </summary>
 /// <param name="Centre">The centre of the disk in 3D space</param>
 /// <param name="Normal">Normal direction of the disk</param>
 /// <param name="Radius">How large the radius of the disk is</param>
 public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittable
 {
-	private Lazy<float> radiusSqr = new(() => Radius * Radius);
-	/// <inheritdoc />
+	private readonly Lazy<float> radiusSqr = new(() => Radius * Radius);
+
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Code copied from `Plane.cs`, with a distance checker added

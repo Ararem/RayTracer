@@ -6,13 +6,15 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-/// A simple 3D box
+///  A simple 3D box
 /// </summary>
 /// <remarks>Made up of 6 planes, hence the name</remarks>
 public record HexPlaneBox : Hittable
 {
+	private readonly Hittable[] sides;
+
 	/// <summary>
-	/// Creates a new box from two bounding points
+	///  Creates a new box from two bounding points
 	/// </summary>
 	public HexPlaneBox(Vector3 min, Vector3 max)
 	{
@@ -33,20 +35,18 @@ public record HexPlaneBox : Hittable
 	}
 
 	/// <summary>
-	/// Min XYZ values for the box
+	///  Min XYZ values for the box
 	/// </summary>
-	public Vector3 Min { get;}
+	public Vector3 Min { get; }
 
 	/// <summary>
-	/// Max XYZ values for the box
+	///  Max XYZ values for the box
 	/// </summary>
-	public Vector3 Max { get;}
-
-	private readonly Hittable[] sides;
+	public Vector3 Max { get; }
 
 
 	/// <summary>
-	/// Record method implementation
+	///  Record method implementation
 	/// </summary>
 	/// <param name="Min"></param>
 	/// <param name="Max"></param>
@@ -58,14 +58,14 @@ public record HexPlaneBox : Hittable
 		Max = this.Max;
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		HitRecord? closest = null;
 		for (int i = 0; i < sides.Length; i++)
 		{
-			HitRecord? hit =sides[i].TryHit(ray, kMin, kMax);
-			if(hit is null) continue;
+			HitRecord? hit = sides[i].TryHit(ray, kMin, kMax);
+			if (hit is null) continue;
 			//First hit is always the closest
 			closest ??= hit;
 			//Assign if closer

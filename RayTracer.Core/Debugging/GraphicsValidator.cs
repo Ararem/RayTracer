@@ -12,7 +12,6 @@ namespace RayTracer.Core.Debugging;
 /// </summary>
 public static class GraphicsValidator
 {
-
 	//WARN: I've had some bugs due to this just fixing the errors, probably better to just return true/false and let the programmer record the error/fix as they want
 	private const float MagnitudeEqualityError = 0.01f;
 

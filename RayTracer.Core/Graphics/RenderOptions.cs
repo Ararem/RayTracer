@@ -29,7 +29,7 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Height,
 		[NonNegativeValue] float   KMin,
 		[NonNegativeValue] float   KMax,
-		int     ConcurrencyLevel,
+		int                        ConcurrencyLevel,
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None

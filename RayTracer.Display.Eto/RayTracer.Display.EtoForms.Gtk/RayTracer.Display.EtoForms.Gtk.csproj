@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\RayTracer.Display.EtoForms\RayTracer.Display.EtoForms.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.6.1" />
-  </ItemGroup>
-	
+	<ItemGroup>
+		<ProjectReference Include="..\RayTracer.Display.EtoForms\RayTracer.Display.EtoForms.csproj"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Eto.Platform.Gtk" Version="2.6.1"/>
+	</ItemGroup>
+
 </Project>

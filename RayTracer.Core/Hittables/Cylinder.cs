@@ -6,7 +6,7 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-/// A cylinder, defined by two points and a radius around the line segments of those points
+///  A cylinder, defined by two points and a radius around the line segments of those points
 /// </summary>
 /// <param name="P1">The point defining one of the ends of the cylinder</param>
 /// <param name="P2">The point defining one of the ends of the cylinder</param>

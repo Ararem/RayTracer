@@ -269,11 +269,11 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{renderJob.Scene.SkyBox}");
 		renderStatsTable.AddRow("",                                        "");
 		// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
-		if(options.ConcurrencyLevel != -1) //Don't want to divide by a negative
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]",     $"{FormatI(renderJob.ThreadsRunning, options.ConcurrencyLevel)} threads");
+		if (options.ConcurrencyLevel != -1) //Don't want to divide by a negative
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{FormatI(renderJob.ThreadsRunning, options.ConcurrencyLevel)} threads");
 		else
 			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{renderJob.ThreadsRunning.ToString(numFormat),numAlign} threads");
-		renderStatsTable.AddRow("",                                        "");
+		renderStatsTable.AddRow("", "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
@@ -282,7 +282,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
 		//Group the raw buffer into our aggregated one
 		float grouping = 0.5f; //How many depths to combine into a group
-		int   rawIndex = 0; //Where we are in the raw (ungrouped) index buffer
+		int   rawIndex = 0;    //Where we are in the raw (ungrouped) index buffer
 		while (true)
 		{
 			int   start = rawIndex;
@@ -294,11 +294,11 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 					break;
 				count += renderJob.RawRayDepthCounts[rawIndex];
 				rawIndex++;
-				end   =  rawIndex;
+				end = rawIndex;
 			}
 
 			depths.Add((start..end, count));
-			grouping = (grouping * 1.5f) +.1f;
+			grouping = (grouping * 1.5f) + .1f;
 			// grouping += 0f;
 			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
 				break;
@@ -460,6 +460,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		{
 			WriteLine("Could not start image viewer program");
 		}
+
 		return 0;
 	}
 

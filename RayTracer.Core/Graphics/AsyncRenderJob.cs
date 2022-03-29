@@ -426,7 +426,7 @@ public sealed class AsyncRenderJob
 	/// </summary>
 	public Stopwatch Stopwatch { get; }
 
-	private ulong[] rawRayDepthCounts;
+	private readonly ulong[] rawRayDepthCounts;
 
 	/// <summary>
 	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
