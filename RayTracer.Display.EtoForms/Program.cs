@@ -1,5 +1,15 @@
-﻿using Eto;
+﻿using System;
 using Eto.Forms;
-using RayTracer.Display.EtoForms;
+using Eto.Drawing;
 
-new Application(Platform.Detect).Run(new MainForm());
+namespace RayTracer.Display.EtoForms
+{
+	class Program
+	{
+		[STAThread]
+		static void Main(string[] args)
+		{
+			new Application(Eto.Platform.Detect).Run(new MainForm());
+		}
+	}
+}
