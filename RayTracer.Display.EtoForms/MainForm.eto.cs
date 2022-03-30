@@ -1,28 +1,30 @@
 using Eto.Drawing;
 using Eto.Forms;
+using RayTracer.Display.EtoForms.Appearance;
+using System.Reflection;
 
 namespace RayTracer.Display.EtoForms;
 
 sealed partial class MainForm
 {
+	private RenderOptionSelector selector;
+
 	private void InitializeComponent()
 	{
-		Title       = "My Eto Form";
+		string title = $"RayTracer.Display - v{Assembly.GetEntryAssembly()!.GetName().Version}";
+		Title       = title;
 		MinimumSize = new Size(200, 200);
 		Padding     = 10;
 
+		selector = new RenderOptionSelector();
 		Content = new StackLayout
 		{
 				Items =
 				{
-						"Hello World!"
-						// add more controls here
+						new StackLayoutItem(new Label { Text       = title, Style = KnownStyles.TitleText }, HorizontalAlignment.Center),
+						new StackLayoutItem(new GroupBox { Content = selector },                             HorizontalAlignment.Stretch, true)
 				}
 		};
-
-		// create a few commands that can be used for the menu and toolbar
-		Command clickMe = new() { MenuText = "Click Me!", ToolBarText = "Click Me!" };
-		clickMe.Executed += (sender, e) => MessageBox.Show(this, "I was clicked!");
 
 		Command quitCommand = new() { MenuText = "Quit", Shortcut = Application.Instance!.CommonModifier | Keys.Q };
 		quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -48,8 +50,7 @@ sealed partial class MainForm
 				QuitItem  = quitCommand,
 				AboutItem = aboutCommand
 		};
-
-		// create toolbar			
-		ToolBar = new ToolBar { Items = { clickMe } };
+		Icon    = Icon.FromResource("RayTracer.Display.EtoForms.Appearance.icon.png");
+		ToolBar = null; //new ToolBar { Items = { clickMe } };
 	}
 }

@@ -8,7 +8,19 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-
+<ApplicationIcon>Appearance/icon.ico</ApplicationIcon>
+<Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Appearance\icon.png" />
+    <EmbeddedResource Include="Appearance\icon.png" />
+    <None Remove="Appearance\icon.ico" />
+    <EmbeddedResource Include="Appearance\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+  </ItemGroup>
 
 </Project>
