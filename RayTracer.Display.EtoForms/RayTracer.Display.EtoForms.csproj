@@ -23,4 +23,9 @@
     <ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+  </ItemGroup>
+
 </Project>

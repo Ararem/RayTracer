@@ -1,14 +1,23 @@
-﻿using System;
+﻿using Eto;
 using Eto.Forms;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+using System;
 
-namespace RayTracer.Display.EtoForms
+namespace RayTracer.Display.EtoForms;
+
+internal class Program
 {
-	class Program
+	[STAThread]
+	private static void Main(string[] args)
 	{
-		[STAThread]
-		static void Main(string[] args)
-		{
-			new Application(Eto.Platform.Detect!).Run(new MainForm());
-		}
+		// ReSharper disable AssignNullToNotNullAttribute
+		Log.Logger = new LoggerConfiguration()
+					.WriteTo.Console(applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
+					.CreateLogger();
+		Log.Information("Logger Initialized");
+		// ReSharper restore AssignNullToNotNullAttribute
+
+		new Application(Platform.Detect!).Run(new MainForm());
 	}
 }
