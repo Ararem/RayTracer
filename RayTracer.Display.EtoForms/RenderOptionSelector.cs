@@ -1,3 +1,4 @@
+using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
@@ -10,20 +11,24 @@ using System.Runtime.CompilerServices;
 
 namespace RayTracer.Display.EtoForms;
 
-internal class RenderOptionSelector : Panel, INotifyPropertyChanged
+/// <summary>
+/// Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance
+/// </summary>
+internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
 {
 	public RenderOptionSelector()
 	{
 		Options = RenderOptions.Default;
 		//Update the sub views whenever someone changes the properties of our render options
 		PropertyChanged += (_, _) => UpdateSubViews();
-		TableLayout tableLayout = new();
+		TableLayout tableLayout = new(){Padding = 10, Spacing = new Size(10, 5)};
 		Content = tableLayout;
 		//Loop over each property in RenderOptions and create an editor for it
+		//TODO: Perhaps tooltips or something similar
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView view;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name };
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name,  };
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -162,7 +167,7 @@ internal class RenderOptionSelector : Panel, INotifyPropertyChanged
 	public event PropertyChangedEventHandler? PropertyChanged;
 
 	[NotifyPropertyChangedInvocator]
-	protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+	public void OnPropertyChanged([CallerMemberName] string? propertyName = null)
 	{
 		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}

@@ -1,6 +1,5 @@
 using Eto.Drawing;
 using Eto.Forms;
-using RayTracer.Display.EtoForms.Appearance;
 using System.Reflection;
 
 namespace RayTracer.Display.EtoForms;
@@ -21,9 +20,10 @@ sealed partial class MainForm
 		{
 				Items =
 				{
-						new StackLayoutItem(new Label { Text       = title, Style = KnownStyles.TitleText }, HorizontalAlignment.Center),
-						new StackLayoutItem(new GroupBox { Content = selector },                             HorizontalAlignment.Stretch, true)
-				}
+						new StackLayoutItem(new Label { Text       = title, Font = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) }, HorizontalAlignment.Center),
+						new StackLayoutItem(new GroupBox { Content = selector },                                                        HorizontalAlignment.Stretch, true)
+				},
+				Spacing = 10
 		};
 
 		Command quitCommand = new() { MenuText = "Quit", Shortcut = Application.Instance!.CommonModifier | Keys.Q };
