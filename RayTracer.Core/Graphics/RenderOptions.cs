@@ -25,13 +25,13 @@ namespace RayTracer.Core.Graphics;
 /// <param name="Passes">How many samples to average, to create a less noisy image</param>
 /// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
 public sealed record RenderOptions(
-		[NonNegativeValue] int     Width,
-		[NonNegativeValue] int     Height,
-		[NonNegativeValue] float   KMin,
-		[NonNegativeValue] float   KMax,
+		[property:NonNegativeValue] int     Width,
+		[property:NonNegativeValue] int     Height,
+		[property:NonNegativeValue] float   KMin,
+		[property:NonNegativeValue] float   KMax,
 		int                        ConcurrencyLevel,
-		[NonNegativeValue] int     Passes,
-		[NonNegativeValue] int     MaxDepth,
+		[property:NonNegativeValue] int     Passes,
+		[property:NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
 )
 {

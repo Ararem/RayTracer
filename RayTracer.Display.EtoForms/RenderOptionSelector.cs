@@ -16,23 +16,29 @@ internal class RenderOptionSelector : Panel, INotifyPropertyChanged
 		Options = RenderOptions.Default;
 		//Update the sub views whenever someone changes the properties of our render options
 		PropertyChanged += (_, _) => UpdateSubViews();
-		StackLayout stackLayout = new();
-		Content = stackLayout;
-		Collection<StackLayoutItem> stack = stackLayout.Items!;
+		TableLayout tableLayout = new();
+		Content = tableLayout;
 		//Loop over each property in RenderOptions and create an editor for it
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView view;
+			Label              label = new() {ID = $"{prop.Name} label", Text = prop.Name };
 
-			//Create the UI element container that will hold the controls, and add it to the list
-			StackLayoutItem item = new();
-			stack.Add(item);
+			TableCell labelCell  = new(label);
+			TableCell editorCell = new();
+			tableLayout.Rows!.Add(new TableRow(labelCell, editorCell));
 
 			//Switch to create the editor
 			if (prop.PropertyType == typeof(int))
-				view = new IntEditor(this, prop, item);
+			{
+				view = new IntEditor(this, prop, editorCell);
+			}
 			else
+			{
+				editorCell.Control = new Label { Text = $"{prop.PropertyType} not yet supported sorry!" };
 				continue;
+			}
+
 			propertyEditors.Add(view);
 		}
 
@@ -44,25 +50,24 @@ internal class RenderOptionSelector : Panel, INotifyPropertyChanged
 	private sealed class IntEditor : PropertyEditorView
 	{
 		private readonly NumericStepper stepper;
-		private readonly Label          label;
 
 		/// <inheritdoc/>
-		public IntEditor(RenderOptionSelector target, PropertyInfo prop, StackLayoutItem layoutItem) : base(target, prop, layoutItem)
+		public IntEditor(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
 			int min = int.MinValue;
 			int max = int.MaxValue;
-			if (prop.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
+			if (Prop.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
 				min = 0;
 
-			label              = new Label {ID                       = $"{prop.Name} label", Text        = prop.Name };
-			stepper            = new NumericStepper { ID             = $"{prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max};
-			layoutItem.Control = new StackLayout(label, stepper) {ID = $"{prop.Name} container",  Orientation = Orientation.Horizontal };
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max};
+			stepper.ValueChanged += (sender, _) => Prop.SetValue(Target.Options, (int)((NumericStepper)sender!).Value);
+			TableCell.Control    =  stepper;
 		}
 
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
 		{
-			stepper.Value = (double)((int)Prop.GetValue(Target.Options)!);
+			stepper.Value = (int)Prop.GetValue(Target.Options)!;
 		}
 	}
 
@@ -75,16 +80,16 @@ internal class RenderOptionSelector : Panel, INotifyPropertyChanged
 
 	private abstract class PropertyEditorView
 	{
-		protected PropertyEditorView(RenderOptionSelector target, PropertyInfo prop, StackLayoutItem layoutItem)
+		protected PropertyEditorView(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell)
 		{
 			Target          = target;
 			Prop            = prop;
-			LayoutItem = layoutItem;
+			TableCell = tableCell;
 		}
 
-		public RenderOptionSelector Target     { get; }
-		public PropertyInfo         Prop       { get; }
-		public StackLayoutItem      LayoutItem { get; }
+		protected RenderOptionSelector Target    { get; }
+		protected PropertyInfo         Prop      { get; }
+		protected TableCell            TableCell { get; }
 
 		internal abstract void UpdateDisplayedFromTarget();
 	}
