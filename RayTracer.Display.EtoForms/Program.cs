@@ -9,7 +9,7 @@ namespace RayTracer.Display.EtoForms;
 internal class Program
 {
 	[STAThread]
-	private static void Main(string[] args)
+	private static int Main(string[] args)
 	{
 		// ReSharper disable AssignNullToNotNullAttribute
 		Log.Logger = new LoggerConfiguration()
@@ -19,5 +19,6 @@ internal class Program
 		// ReSharper restore AssignNullToNotNullAttribute
 
 		new Application(Platform.Detect!).Run(new MainForm());
+		return 0;
 	}
 }
