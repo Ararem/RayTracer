@@ -5,62 +5,67 @@ using System;
 using static Serilog.Log;
 using Logger = RayTracer.Core.Logger;
 
+#if EXPLICIT_MAIN_FUNCTION
 internal static class Program
 {
 	private static int Main(string[] args)
 	{
-		Logger.Init();
-		Information("Commandline args: {Args}", args);
+#endif
 
-		Platform platform;
-		try
-		{
-			platform = Platform.Detect!;
-		}
-		catch (Exception e)
-		{
-			Fatal(e, "Could not initialise Eto.Forms platform");
-			return -1;
-		}
+Logger.Init();
+Information("Commandline args: {Args}", args);
 
-		Verbose("Platform is {Platform}", platform);
+Platform platform;
+try
+{
+	platform = Platform.Detect!;
+}
+catch (Exception e)
+{
+	Fatal(e, "Could not initialise Eto.Forms platform");
+	return -1;
+}
 
-		Application application;
-		try
-		{
-			application = new Application(platform);
-		}
-		catch (Exception e)
-		{
-			Fatal(e, "Could not initialise Eto.Forms application");
-			return -1;
-		}
+Verbose("Platform is {Platform}", platform);
 
-		Verbose("Application is {Application}", application);
+Application application;
+try
+{
+	application = new Application(platform);
+}
+catch (Exception e)
+{
+	Fatal(e, "Could not initialise Eto.Forms application");
+	return -1;
+}
 
-		MainForm form;
-		try
-		{
-			form = new MainForm();
-		}
-		catch (Exception e)
-		{
-			Fatal(e, "Could not initialise MainForm");
-			return -1;
-		}
+Verbose("Application is {Application}", application);
 
-		Verbose("MainForm is {MainForm}", form);
+MainForm form;
+try
+{
+	form = new MainForm();
+}
+catch (Exception e)
+{
+	Fatal(e, "Could not initialise MainForm");
+	return -1;
+}
 
-		try
-		{
-			Information("Running App");
-			application.Run(form);
-			return 0;
-		}
-		catch (Exception e)
-		{
-			Fatal(e, "App threw exception");
-			return -1;
-		}
+Verbose("MainForm is {MainForm}", form);
+
+try
+{
+	Information("Running App");
+	application.Run(form);
+	return 0;
+}
+catch (Exception e)
+{
+	Fatal(e, "App threw exception");
+	return -1;
+}
+#if EXPLICIT_MAIN_FUNCTION
 	}
 }
+#endif
