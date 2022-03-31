@@ -1,23 +1,48 @@
 ﻿using Eto;
 using Eto.Forms;
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
+using RayTracer.Display.EtoForms;
 using System;
-
-namespace RayTracer.Display.EtoForms;
+using static Serilog.Log;
+using Logger = RayTracer.Core.Logger;
 
 internal class Program
 {
 	[STAThread]
-	private static void Main(string[] args)
+	private static int Main(string[] args)
 	{
-		// ReSharper disable AssignNullToNotNullAttribute
-		Log.Logger = new LoggerConfiguration()
-					.WriteTo.Console(applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-					.CreateLogger();
-		Log.Information("Logger Initialized");
-		// ReSharper restore AssignNullToNotNullAttribute
+		Logger.Init();
+		Information("Commandline args: {Args}", args);
 
-		new Application(Platform.Detect!).Run(new MainForm());
+		Platform platform;
+		try
+		{
+			Verbose("Getting platform");
+			platform = Platform.Detect!;
+			Verbose("Got Platform");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise Eto.Forms platform");
+			return -1;
+		}
+		// Verbose("Platform is {Platform}", platform);
+		MainForm form;
+		try
+		{
+			Verbose("Creating MainForm");
+			form = new MainForm();
+			Verbose("Created MainForm");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise MainForm");
+			return -1;
+		}
+		// Verbose("MainForm is {MainForm}", form);
+
+
+		Information("Running App with ");
+		new Application(platform).Run(form);
+		return 0;
 	}
 }
