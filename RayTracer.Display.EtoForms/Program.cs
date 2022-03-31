@@ -26,7 +26,7 @@ catch (Exception e)
 	return -1;
 }
 
-Verbose("Platform is {Platform}", platform);
+Debug("Platform is {Platform}", platform);
 
 Application application;
 try
@@ -39,7 +39,7 @@ catch (Exception e)
 	return -1;
 }
 
-Verbose("Application is {Application}", application);
+Debug("Application is {Application}", application);
 
 MainForm form;
 try
@@ -52,7 +52,7 @@ catch (Exception e)
 	return -1;
 }
 
-Verbose("MainForm is {MainForm}", form);
+Debug("MainForm is {MainForm}", form);
 
 try
 {
