@@ -5,15 +5,20 @@ namespace RayTracer.Core;
 
 internal static class Logger
 {
-	private const string template = "[{Timestamp:HH:mm:ss} {ThreadName}@{Level:u3}] {Message:lj}{NewLine}{Exception}";
+	private const string Template = "[{Timestamp:HH:mm:ss} {ThreadName}@{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
 	internal static void Init()
 	{
+		Thread.CurrentThread.Name ??= "Main Thread";
+		// ReSharper disable PossibleNullReferenceException
 		Log.Logger = new LoggerConfiguration()
-					.WriteTo!.Console(outputTemplate:template,applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-					.Enrich.WithThreadId()!
+					.MinimumLevel.Verbose()
+					.WriteTo.Console(outputTemplate:Template,applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
+					.Enrich.WithThreadId()
 					.Enrich.WithThreadName()!
 					.CreateLogger();
+		// ReSharper restore PossibleNullReferenceException
+
 		Log.Information("Logger Initialized");
 	}
 }
