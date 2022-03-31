@@ -1,50 +1,66 @@
 ﻿using Eto;
 using Eto.Forms;
 using RayTracer.Display.EtoForms;
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using static Serilog.Log;
 using Logger = RayTracer.Core.Logger;
 
-Logger.Init();
-Information("Commandline args: {Args}", args);
+internal static class Program
+{
+	private static int Main(string[] args)
+	{
+		Logger.Init();
+		Information("Commandline args: {Args}", args);
 
-Platform platform;
-try
-{
-	Verbose("Getting platform");
-	platform = Platform.Detect!;
-	Verbose("Got Platform");
-}
-catch (Exception e)
-{
-	Fatal(e, "Could not initialise Eto.Forms platform");
-	return -1;
-}
+		Platform platform;
+		try
+		{
+			platform = Platform.Detect!;
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise Eto.Forms platform");
+			return -1;
+		}
 
-Verbose("Platform is {Platform}", platform);
-Application application = new(platform);
-MainForm    form;
-try
-{
-	// ReSharper disable AssignNullToNotNullAttribute
-	Log.Logger = new LoggerConfiguration()
-				.WriteTo.Console(applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-				.CreateLogger();
-	Information("Logger Initialized");
-	// ReSharper restore AssignNullToNotNullAttribute
-	Verbose("Creating MainForm");
-	form = new MainForm();
-	Verbose("Created MainForm");
-}
-catch (Exception e)
-{
-	Fatal(e, "Could not initialise MainForm");
-	return -1;
-}
-// Verbose("MainForm is {MainForm}", form);
+		Verbose("Platform is {Platform}", platform);
 
-Information("Running App with ");
-application.Run(form);
-return 0;
+		Application application;
+		try
+		{
+			application = new Application(platform);
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise Eto.Forms application");
+			return -1;
+		}
+
+		Verbose("Application is {Application}", application);
+
+		MainForm form;
+		try
+		{
+			form = new MainForm();
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise MainForm");
+			return -1;
+		}
+
+		Verbose("MainForm is {MainForm}", form);
+
+		try
+		{
+			Information("Running App");
+			application.Run(form);
+			return 0;
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "App threw exception");
+			return -1;
+		}
+	}
+}
