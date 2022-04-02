@@ -1,6 +1,5 @@
 using Eto.Drawing;
 using Eto.Forms;
-using System;
 using System.Reflection;
 using static Serilog.Log;
 
@@ -20,10 +19,10 @@ public sealed class MainForm : Form
 		Verbose("Title is {Title}", Title);
 		MinimumSize = new Size(200, 200);
 		Verbose("Minimum app size set to {MinSize}", MinimumSize);
-		Padding     = 10;
+		Padding = 10;
 
 		Verbose("Creating UI elements");
-		displayedWindowItem = new StackLayoutItem{HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true};
+		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem = new(new Label { Text = title, Font = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) }, HorizontalAlignment.Center);
 		Content = new StackLayout
 		{
@@ -34,10 +33,10 @@ public sealed class MainForm : Form
 
 		Verbose("Generating commands");
 		Command quitCommand = new() { MenuText = "Quit", Shortcut = Application.Instance!.CommonModifier | Keys.Q };
-		quitCommand.Executed += (sender, e) => Application.Instance.Quit();
+		quitCommand.Executed += (_, _) => Application.Instance.Quit();
 
 		Command aboutCommand = new() { MenuText = "About..." };
-		aboutCommand.Executed += (sender, e) => new AboutDialog().ShowDialog(this);
+		aboutCommand.Executed += (_, _) => new AboutDialog().ShowDialog(this);
 
 		// create menu
 		Verbose("Creating menubar");
@@ -60,11 +59,12 @@ public sealed class MainForm : Form
 		};
 		const string iconPath = "RayTracer.Display.EtoForms.Appearance.icon.png";
 		Verbose("Loading and setting icon from {IconPath}", iconPath);
-		Icon    = Icon.FromResource(iconPath);
+		Icon = Icon.FromResource(iconPath);
 
 		Verbose("Toolbar disabled");
 		ToolBar = null; //new ToolBar { Items = { clickMe } };
 
+		//We start off with an options selection panel, then once the user clicks the 'continue' button, we start the render and change it to the render progress panel
 		Verbose("Initializing render options selector subview");
 		selectorPanel               = new RenderOptionSelectorPanel();
 		displayedWindowItem.Control = selectorPanel;

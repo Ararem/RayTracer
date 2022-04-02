@@ -77,14 +77,14 @@ public sealed class CustomImageRenderable : Renderable
 	/// <inheritdoc/>
 	protected override IEnumerable<Segment> Render(RenderContext context, int maxAllowedWidth)
 	{
-		Image<Rgb24>? image = Image;
+		Image<Rgb24> image = Image;
 
 		(int conWidth, int conHeight) = CalcConSize(maxAllowedWidth);
 
 		// Need to rescale the pixel buffer?
 		if ((conWidth != image.Width) || (conHeight != image.Height))
 		{
-			IResampler resampler = Resampler ?? KnownResamplers.Bicubic;
+			IResampler resampler = Resampler ?? KnownResamplers.Bicubic!;
 			image = image.Clone(); // Clone the original image
 			image.Mutate(i => i.Resize(conWidth * 2, conHeight * 2, resampler));
 		}

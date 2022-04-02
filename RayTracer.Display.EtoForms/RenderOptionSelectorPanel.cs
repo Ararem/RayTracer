@@ -28,8 +28,7 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 	/// </param>
 	public RenderOptionSelectorPanel(RenderOptions? options = null)
 	{
-		renderOptions = options;
-		if (renderOptions == null)
+		if (options == null)
 		{
 			Verbose("No options supplied, using default value {DefaultValue}", RenderOptions.Default);
 			renderOptions = RenderOptions.Default;
@@ -37,17 +36,22 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 		else
 		{
 			Verbose("Custom render options supplied: {RenderOptions}", options);
+			renderOptions = options;
 		}
 
 		//Update the sub views whenever someone changes the properties of our render options
+		Verbose("Adding PropertyChanged  view updater event");
 		PropertyChanged += (_, _) => UpdateEditorsFromVariable();
+
+		Verbose("Creating new table layout");
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
-		Content = tableLayout;
+
 		//Loop over each property in RenderOptions and create an editor for it
 		//TODO: Perhaps tooltips or something similar
+		Verbose("Creating property editors");
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
-			PropertyEditorView view;
+			PropertyEditorView editorView;
 			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name };
 
 			TableCell labelCell  = new(label);
@@ -57,16 +61,16 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			//Switch to create the editor
 			if (prop.PropertyType == typeof(int))
 			{
-				view = new IntEditor(this, prop, editorCell);
+				editorView = new IntEditor(this, prop, editorCell);
 			}
 			else if (prop.PropertyType == typeof(float))
 			{
-				view = new FloatEditor(this, prop, editorCell);
+				editorView = new FloatEditor(this, prop, editorCell);
 			}
 			else if (prop.PropertyType.IsEnum)
 			{
 				//Hey it's a little funky but it works
-				view = (PropertyEditorView)Activator.CreateInstance(typeof(EnumEditor<>).MakeGenericType(prop.PropertyType), this, prop, editorCell)!;
+				editorView = (PropertyEditorView)Activator.CreateInstance(typeof(EnumEditor<>).MakeGenericType(prop.PropertyType), this, prop, editorCell)!;
 			}
 			else
 			{
@@ -74,10 +78,21 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 				continue;
 			}
 
-			propertyEditors.Add(view);
+			Verbose("Created editor for property {Property}: {Editor}", prop, editorView);
+			propertyEditors.Add(editorView);
 		}
 
 		tableLayout.Rows!.Add(new TableRow()); //Add empty row so that scaling looks nice (last row sizes to fil gap)
+
+		Verbose("Creating start render button");
+		Button startRenderButton = new();
+
+		Verbose("Creating StackPanelLayout for content");
+		Content = new StackLayout
+		{
+				Items   = { tableLayout, startRenderButton },
+				Spacing = 10
+		};
 
 		UpdateEditorsFromVariable();
 	}
@@ -96,6 +111,8 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
 				min = 0;
 
+			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
+
 			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max };
 			stepper.ValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, (int)((NumericStepper)sender!).Value);
 			TableCell.Control    =  stepper;
@@ -108,13 +125,15 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 		}
 	}
 
-	private sealed class EnumEditor<T> : PropertyEditorView
+	private sealed class EnumEditor<T> : PropertyEditorView where T: struct, Enum
 	{
 		private readonly EnumDropDown<T> dropDown;
 
 		/// <inheritdoc/>
 		public EnumEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
+			Verbose("{Property}: Possible enum values are {Values}", prop, Enum.GetValues<T>());
+
 			dropDown                      =  new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
 			dropDown.SelectedValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, ((EnumDropDown<T>)sender!).SelectedValue);
 			TableCell.Control             =  dropDown;
@@ -144,6 +163,8 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
 				min = 0f;
 
+			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
+
 			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MinValue = min, MaxValue = max };
 			stepper.ValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, (float)((NumericStepper)sender!).Value);
 			TableCell.Control    =  stepper;
@@ -172,16 +193,21 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			TableCell = tableCell;
 		}
 
-		protected RenderOptionSelectorPanel Target    { get; }
-		protected PropertyInfo              Prop      { get; }
-		protected TableCell                 TableCell { get; }
+		protected internal RenderOptionSelectorPanel Target    { get; }
+		protected internal PropertyInfo              Prop      { get; }
+		protected internal TableCell                 TableCell { get; }
 
 		internal abstract void UpdateDisplayedFromTarget();
 	}
 
 	private void UpdateEditorsFromVariable()
 	{
-		foreach (PropertyEditorView propertyEditorView in propertyEditors) propertyEditorView.UpdateDisplayedFromTarget();
+		Debug("Updating editor views from variables");
+		foreach (PropertyEditorView propertyEditorView in propertyEditors)
+		{
+			Verbose("Updating property view for property {Property}", propertyEditorView.Prop);
+			propertyEditorView.UpdateDisplayedFromTarget();
+		}
 	}
 
 	private RenderOptions renderOptions;

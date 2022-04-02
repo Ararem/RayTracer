@@ -50,7 +50,7 @@ public sealed class AsyncRenderJob
 		rawRayDepthCounts            = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
 
 		Log.Debug("Camera: {Camera}", camera);
-		Log.Debug("Scene: {Scene}", scene);
+		Log.Debug("Scene: {Scene}",   scene);
 		Log.Debug("SkyBox: {SkyBox}", skybox);
 		Task.Run(RenderInternal);
 	}
