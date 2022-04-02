@@ -28,4 +28,8 @@
 		<PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\LibEternal\LibEternal\LibEternal\LibEternal.csproj" />
+	</ItemGroup>
+
 </Project>

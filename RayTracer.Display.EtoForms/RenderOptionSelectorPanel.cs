@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
 
@@ -16,14 +17,28 @@ namespace RayTracer.Display.EtoForms;
 ///  Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance
 /// </summary>
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable")] //Don't think it applies and I dont care
-internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
-{/// <summary>
- /// Creates a new <see cref="RenderOptionSelector"/> panel
- /// </summary>
- /// <param name="options">Optional initial value for the render options. If <see langword="null"/>, will be set to <see cref="Core.Graphics.RenderOptions.Default"/></param>
-	public RenderOptionSelector(RenderOptions? options = null)
+internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
+{
+	/// <summary>
+	///  Creates a new <see cref="RenderOptionSelectorPanel"/> panel
+	/// </summary>
+	/// <param name="options">
+	///  Optional initial value for the render options. If <see langword="null"/>, will be set to
+	///  <see cref="Core.Graphics.RenderOptions.Default"/>
+	/// </param>
+	public RenderOptionSelectorPanel(RenderOptions? options = null)
 	{
-		renderOptions = options ?? RenderOptions.Default;
+		renderOptions = options;
+		if (renderOptions == null)
+		{
+			Verbose("No options supplied, using default value {DefaultValue}", RenderOptions.Default);
+			renderOptions = RenderOptions.Default;
+		}
+		else
+		{
+			Verbose("Custom render options supplied: {RenderOptions}", options);
+		}
+
 		//Update the sub views whenever someone changes the properties of our render options
 		PropertyChanged += (_, _) => UpdateEditorsFromVariable();
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
@@ -74,7 +89,7 @@ internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
 		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
-		public IntEditor(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
+		public IntEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
 			int min = int.MinValue;
 			int max = int.MaxValue;
@@ -98,7 +113,7 @@ internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
 		private readonly EnumDropDown<T> dropDown;
 
 		/// <inheritdoc/>
-		public EnumEditor(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
+		public EnumEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
 			dropDown                      =  new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
 			dropDown.SelectedValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, ((EnumDropDown<T>)sender!).SelectedValue);
@@ -117,7 +132,7 @@ internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
 		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
-		public FloatEditor(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
+		public FloatEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
 			float min = float.MinValue;
 			float max = float.MaxValue;
@@ -150,16 +165,16 @@ internal sealed class RenderOptionSelector : Panel, INotifyPropertyChanged
 
 	private abstract class PropertyEditorView
 	{
-		protected PropertyEditorView(RenderOptionSelector target, PropertyInfo prop, TableCell tableCell)
+		protected PropertyEditorView(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell)
 		{
 			Target    = target;
 			Prop      = prop;
 			TableCell = tableCell;
 		}
 
-		protected RenderOptionSelector Target    { get; }
-		protected PropertyInfo         Prop      { get; }
-		protected TableCell            TableCell { get; }
+		protected RenderOptionSelectorPanel Target    { get; }
+		protected PropertyInfo              Prop      { get; }
+		protected TableCell                 TableCell { get; }
 
 		internal abstract void UpdateDisplayedFromTarget();
 	}

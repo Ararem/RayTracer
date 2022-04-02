@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Benchmarks", "Ray
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms", "RayTracer.Display.EtoForms\RayTracer.Display.EtoForms.csproj", "{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibEternal", "..\LibEternal\LibEternal\LibEternal\LibEternal.csproj", "{9086C0A5-1831-4CBC-955C-2D0CB6701BED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9086C0A5-1831-4CBC-955C-2D0CB6701BED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9086C0A5-1831-4CBC-955C-2D0CB6701BED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9086C0A5-1831-4CBC-955C-2D0CB6701BED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9086C0A5-1831-4CBC-955C-2D0CB6701BED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

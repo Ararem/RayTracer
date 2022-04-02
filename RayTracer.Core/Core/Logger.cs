@@ -1,21 +1,39 @@
+using LibEternal.Logging.Destructurers;
+using LibEternal.Logging.Enrichers;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using static LibEternal.Logging.Enrichers.CallerContextEnricher;
+using static LibEternal.Logging.Enrichers.EventLevelIndentEnricher;
+using static LibEternal.Logging.Enrichers.ThreadInfoEnricher;
 
 namespace RayTracer.Core;
 
 internal static class Logger
 {
-	private const string Template = "[{Timestamp:HH:mm:ss} {ThreadName}@{Level:u3}] {Message:lj}{NewLine}{Exception}";
-
 	internal static void Init()
 	{
+		#if DEBUG_LOG
+		const PerfMode perfMode = PerfMode.FullTraceSlow;
+		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-10}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},10}}::{{{CallingMethodNameProp},-10}}]:\t{{Message:l}}{{NewLine}}{{Exception}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
+		#else
+		const PerfMode perfMode = PerfMode.SingleFrameFast;
+		const string   template = $"[{{Timestamp:HH:mm:ss}} | {{Level:t3}} | {{{ThreadNameProp},-10}} {{{ThreadIdProp},3:'#'##}} | {{{CallingTypeNameProp},10}}::{{{CallingMethodNameProp},-10}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}";
+		#endif
+
 		Thread.CurrentThread.Name ??= "Main Thread";
 		// ReSharper disable PossibleNullReferenceException
 		Log.Logger = new LoggerConfiguration()
 					.MinimumLevel.Verbose()
-					.WriteTo.Console(outputTemplate:Template,applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
+					.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 					.Enrich.WithThreadId()
-					.Enrich.WithThreadName()!
+					.Enrich.WithThreadName()
+					.Enrich.FromLogContext()
+					.Enrich.With<DemystifiedExceptionsEnricher>()
+					.Enrich.With<ThreadInfoEnricher>()
+					.Enrich.With<EventLevelIndentEnricher>()
+					.Enrich.With<LogEventNumberEnricher>()
+					.Enrich.With(new CallerContextEnricher(perfMode))
+					.Destructure.With<DelegateDestructurer>()
 					.CreateLogger();
 		// ReSharper restore PossibleNullReferenceException
 

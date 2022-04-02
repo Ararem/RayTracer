@@ -18,7 +18,9 @@ Information("Commandline args: {Args}", args);
 Platform platform;
 try
 {
+	Verbose("Getting platform (Detect Mode)");
 	platform = Platform.Detect!;
+	Verbose("Got platform");
 }
 catch (Exception e)
 {
@@ -31,7 +33,9 @@ Debug("Platform is {Platform}", platform);
 Application application;
 try
 {
+	Verbose("Creating new application object");
 	application = new Application(platform);
+	Verbose("Created new application object");
 }
 catch (Exception e)
 {
@@ -44,7 +48,9 @@ Debug("Application is {Application}", application);
 MainForm form;
 try
 {
+	Verbose("Creating new MainForm");
 	form = new MainForm();
+	Verbose("Created new MainForm");
 }
 catch (Exception e)
 {
@@ -58,6 +64,7 @@ try
 {
 	Information("Running App");
 	application.Run(form);
+	Information("App ran to completion");
 	return 0;
 }
 catch (Exception e)

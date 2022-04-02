@@ -4,6 +4,7 @@ using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
 using RayTracer.Core.Scenes;
+using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Diagnostics;
@@ -34,6 +35,8 @@ public sealed class AsyncRenderJob
 	{
 		ArgumentNullException.ThrowIfNull(scene);
 		ArgumentNullException.ThrowIfNull(renderOptions);
+		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
+
 		ImageBuffer                  = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
 		RenderOptions                = renderOptions;
 		rawColourBuffer              = new Colour[renderOptions.Width * renderOptions.Height];
@@ -46,11 +49,15 @@ public sealed class AsyncRenderJob
 		Stopwatch                    = new Stopwatch();
 		rawRayDepthCounts            = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
 
+		Log.Debug("Camera: {Camera}", camera);
+		Log.Debug("Scene: {Scene}", scene);
+		Log.Debug("SkyBox: {SkyBox}", skybox);
 		Task.Run(RenderInternal);
 	}
 
 	private void RenderInternal()
 	{
+		Log.Debug("Rendering start");
 		Stopwatch.Start();
 		/*
 		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in
@@ -91,11 +98,13 @@ public sealed class AsyncRenderJob
 			);
 
 			Interlocked.Increment(ref passesRendered);
+			Log.Verbose("Finished pass {Pass}", pass);
 		}
 
 		//Notify that the render is complete
 		taskCompletionSource.SetResult(ImageBuffer);
 		Stopwatch.Stop();
+		Log.Information("Rendering end");
 	}
 
 	/// <summary>
