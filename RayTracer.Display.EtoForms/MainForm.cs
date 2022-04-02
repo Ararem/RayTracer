@@ -1,5 +1,8 @@
 using Eto.Drawing;
 using Eto.Forms;
+using RayTracer.Core.Graphics;
+using RayTracer.Core.Scenes;
+using System;
 using System.Reflection;
 using static Serilog.Log;
 
@@ -8,7 +11,8 @@ namespace RayTracer.Display.EtoForms;
 public sealed class MainForm : Form
 {
 	private readonly StackLayoutItem            displayedWindowItem;
-	private readonly RenderOptionSelectorPanel? selectorPanel;
+	private          AsyncRenderJob?            renderJob     = null;
+	private readonly RenderOptionSelectorPanel? selectorPanel = null;
 
 	public MainForm()
 	{
@@ -39,7 +43,7 @@ public sealed class MainForm : Form
 		aboutCommand.Executed += (_, _) => new AboutDialog().ShowDialog(this);
 
 		// create menu
-		Verbose("Creating menubar");
+		Verbose("Creating menu bar");
 		Menu = new MenuBar
 		{
 				Items =
@@ -66,7 +70,26 @@ public sealed class MainForm : Form
 
 		//We start off with an options selection panel, then once the user clicks the 'continue' button, we start the render and change it to the render progress panel
 		Verbose("Initializing render options selector subview");
-		selectorPanel               = new RenderOptionSelectorPanel();
+		selectorPanel               = new RenderOptionSelectorPanel(StartRenderButtonClicked);
 		displayedWindowItem.Control = selectorPanel;
+	}
+
+	//
+	private void StartRenderButtonClicked(object? sender, EventArgs e)
+	{
+		//Assume that the sender is the same selector panel we have stored
+		//Might be bad practice but hey who cares it's easier
+		RenderOptions options = selectorPanel!.RenderOptions;
+		Scene         scene   = selectorPanel.Scene;
+
+		Information("Render start button clicked");
+		Debug("Scene is {Scene}, Options are {Options}", scene, options);
+
+		Debug("Starting render job");
+		renderJob = new AsyncRenderJob(scene, options);
+
+		//Create the display panel
+		Verbose("Creating render progress display panel");
+		displayedWindowItem.Control = new RenderProgressDisplayPanel(renderJob);
 	}
 }

@@ -2,13 +2,12 @@ using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
 using RayTracer.Core.Graphics;
+using RayTracer.Core.Scenes;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
@@ -17,31 +16,28 @@ namespace RayTracer.Display.EtoForms;
 ///  Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance
 /// </summary>
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable")] //Don't think it applies and I dont care
-internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
+internal sealed class RenderOptionSelectorPanel : Panel
 {
 	/// <summary>
 	///  Creates a new <see cref="RenderOptionSelectorPanel"/> panel
 	/// </summary>
+	/// <param name="click"></param>
 	/// <param name="options">
 	///  Optional initial value for the render options. If <see langword="null"/>, will be set to
 	///  <see cref="Core.Graphics.RenderOptions.Default"/>
 	/// </param>
-	public RenderOptionSelectorPanel(RenderOptions? options = null)
+	public RenderOptionSelectorPanel(EventHandler<EventArgs> click, RenderOptions? options = null)
 	{
 		if (options == null)
 		{
 			Verbose("No options supplied, using default value {DefaultValue}", RenderOptions.Default);
-			renderOptions = RenderOptions.Default;
+			RenderOptions = RenderOptions.Default;
 		}
 		else
 		{
 			Verbose("Custom render options supplied: {RenderOptions}", options);
-			renderOptions = options;
+			RenderOptions = options;
 		}
-
-		//Update the sub views whenever someone changes the properties of our render options
-		Verbose("Adding PropertyChanged  view updater event");
-		PropertyChanged += (_, _) => UpdateEditorsFromVariable();
 
 		Verbose("Creating new table layout");
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
@@ -79,22 +75,37 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			}
 
 			Verbose("Created editor for property {Property}: {Editor}", prop, editorView);
-			propertyEditors.Add(editorView);
+			renderOptionsPropertyEditors.Add(editorView);
 		}
 
 		tableLayout.Rows!.Add(new TableRow()); //Add empty row so that scaling looks nice (last row sizes to fil gap)
 
 		Verbose("Creating start render button");
-		Button startRenderButton = new();
+		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options" };
+
+		Verbose("Creating scene selection dropdown");
+		Scene[] scenes = BuiltinScenes.GetAll().ToArray();
+		Verbose("Builtin scenes are: {BuiltinScenes}", scenes);
+		sceneSelectDropdown = new DropDown
+		{
+				DataStore = scenes, ToolTip = "Select a scene to be rendered"
+		};
+		//Select the first scene by default
+		sceneSelectDropdown.SelectedValue        =  Scene = scenes[0];
+		sceneSelectDropdown.SelectedValueChanged += (_, _) =>
+		{
+			Scene = (Scene)sceneSelectDropdown.SelectedValue;
+			Verbose("Scene property changed to {Value}", Scene);
+		};
 
 		Verbose("Creating StackPanelLayout for content");
 		Content = new StackLayout
 		{
-				Items   = { tableLayout, startRenderButton },
+				Items   = { tableLayout, sceneSelectDropdown, startRenderButton },
 				Spacing = 10
 		};
 
-		UpdateEditorsFromVariable();
+		UpdateRenderOptionEditorsFromVariable();
 	}
 
 #region Property Editors
@@ -113,8 +124,13 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max };
-			stepper.ValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, (int)((NumericStepper)sender!).Value);
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
+			stepper.ValueChanged += (sender, _) =>
+			{
+				int value = (int)((NumericStepper)sender!).Value;
+				Verbose("Property {Property} changed to {Value}", Prop, value);
+				Prop.SetValue(Target.RenderOptions, value);
+			};
 			TableCell.Control    =  stepper;
 		}
 
@@ -125,7 +141,7 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 		}
 	}
 
-	private sealed class EnumEditor<T> : PropertyEditorView where T: struct, Enum
+	private sealed class EnumEditor<T> : PropertyEditorView where T : struct, Enum
 	{
 		private readonly EnumDropDown<T> dropDown;
 
@@ -135,7 +151,12 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 			Verbose("{Property}: Possible enum values are {Values}", prop, Enum.GetValues<T>());
 
 			dropDown                      =  new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
-			dropDown.SelectedValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, ((EnumDropDown<T>)sender!).SelectedValue);
+			dropDown.SelectedValueChanged += (sender, _) =>
+			{
+				T value = ((EnumDropDown<T>)sender!).SelectedValue;
+				Verbose("Property {Property} changed to {Value}", Prop, value);
+				Prop.SetValue(Target.RenderOptions, value);
+			};
 			TableCell.Control             =  dropDown;
 		}
 
@@ -165,8 +186,13 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MinValue = min, MaxValue = max };
-			stepper.ValueChanged += (sender, _) => Prop.SetValue(Target.RenderOptions, (float)((NumericStepper)sender!).Value);
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
+			stepper.ValueChanged += (sender, _) =>
+			{
+				float value = (float)((NumericStepper)sender!).Value;
+				Verbose("Property {Property} changed to {Value}", Prop, value);
+				Prop.SetValue(Target.RenderOptions, value);
+			};
 			TableCell.Control    =  stepper;
 		}
 
@@ -182,10 +208,19 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 
 #region Boilerplate
 
-	private readonly List<PropertyEditorView> propertyEditors = new();
+	private readonly DropDown sceneSelectDropdown;
 
+	/// <summary>
+	///  List of all the property editors for the <see cref="RenderOptions"/>
+	/// </summary>
+	private readonly List<PropertyEditorView> renderOptionsPropertyEditors = new();
+
+	/// <summary>
+	///  Base class for an editor view for editing a property of a <see cref="RenderOptions"/> instance
+	/// </summary>
 	private abstract class PropertyEditorView
 	{
+		//We use a panel instead of RenderOptions as a target since the options being selected can change
 		protected PropertyEditorView(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell)
 		{
 			Target    = target;
@@ -200,39 +235,26 @@ internal sealed class RenderOptionSelectorPanel : Panel, INotifyPropertyChanged
 		internal abstract void UpdateDisplayedFromTarget();
 	}
 
-	private void UpdateEditorsFromVariable()
+	private void UpdateRenderOptionEditorsFromVariable()
 	{
 		Debug("Updating editor views from variables");
-		foreach (PropertyEditorView propertyEditorView in propertyEditors)
+		foreach (PropertyEditorView propertyEditorView in renderOptionsPropertyEditors)
 		{
 			Verbose("Updating property view for property {Property}", propertyEditorView.Prop);
 			propertyEditorView.UpdateDisplayedFromTarget();
 		}
 	}
 
-	private RenderOptions renderOptions;
+	/// <summary>
+	///  The render options displayed by this instance
+	/// </summary>
+	public RenderOptions RenderOptions { get; }
 
 	/// <summary>
-	///  Gets the render options displayed by this instance
+	///  The scene displayed by this instance
 	/// </summary>
-	public RenderOptions RenderOptions
-	{
-		get => renderOptions;
-		set
-		{
-			renderOptions = value;
-			OnPropertyChanged();
-		}
-	}
+	public Scene Scene { get; private set; }
 
-	public event PropertyChangedEventHandler? PropertyChanged;
-
-	[NotifyPropertyChangedInvocator]
-	// ReSharper disable once MemberCanBePrivate.Global
-	public void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-	{
-		PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-	}
 
 #endregion
 }
