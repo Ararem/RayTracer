@@ -10,9 +10,9 @@ namespace RayTracer.Display.EtoForms;
 
 public sealed class MainForm : Form
 {
-	private readonly StackLayoutItem            displayedWindowItem;
 	private          AsyncRenderJob?            renderJob     = null;
 	private readonly RenderOptionSelectorPanel? selectorPanel = null;
+	private readonly Label                      titleLabel;
 
 	public MainForm()
 	{
@@ -26,8 +26,9 @@ public sealed class MainForm : Form
 		Padding = 10;
 
 		Verbose("Creating UI elements");
-		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
-		StackLayoutItem titleItem = new(new Label { Text = title, Font = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) }, HorizontalAlignment.Center);
+		titleLabel          = new Label { Text                          = title, Font                         = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
+		StackLayoutItem displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
+		StackLayoutItem titleItem           = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
 		{
 				Items   = { titleItem, displayedWindowItem },
@@ -89,7 +90,15 @@ public sealed class MainForm : Form
 		renderJob = new AsyncRenderJob(scene, options);
 
 		//Create the display panel
+		//TODO: Honestly this is a really bad way to do it and I don't like it, but for some reason removing the children from the stack panel
+		// does not work (some weird logical child not equal behaviour) so i gotta create a new layout instead :(
 		Verbose("Creating render progress display panel");
-		displayedWindowItem.Control = new RenderProgressDisplayPanel(renderJob);
+		RenderProgressDisplayPanel displayPanel = new(renderJob);
+		StackLayoutItem            titleItem    = new(titleLabel, HorizontalAlignment.Center);
+		Content = new StackLayout
+		{
+				Items   = { titleItem, displayPanel },
+				Spacing = 10
+		};
 	}
 }
