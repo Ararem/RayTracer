@@ -98,7 +98,7 @@ public sealed class AsyncRenderJob
 			);
 
 			Interlocked.Increment(ref passesRendered);
-			Log.Verbose("Finished pass {Pass}", pass);
+			Log.Debug("Finished pass {Pass}", pass);
 		}
 
 		//Notify that the render is complete

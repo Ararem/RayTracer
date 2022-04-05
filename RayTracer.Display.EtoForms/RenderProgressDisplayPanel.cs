@@ -7,27 +7,32 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using static Serilog.Log;
+using Size = Eto.Drawing.Size;
 
 namespace RayTracer.Display.EtoForms;
 
 internal sealed class RenderProgressDisplayPanel : Panel
 {
-	private readonly TableLayout    statsTable;
-	private readonly Bitmap         imageWidget;
+	private readonly GroupBox       imageContainer;
+	private readonly ImageView      imageView;
+	private readonly Bitmap         previewImage;
 	private readonly AsyncRenderJob renderJob;
+	private readonly GroupBox       statsContainer;
+	private readonly TableLayout    statsTable;
 
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
 		//TODO
 		this.renderJob = renderJob;
 		Verbose("Creating StackPanelLayout for content");
-		statsTable = new TableLayout { };
-		GroupBox statsGroupBox = new() { Text = "Statistics", Content = statsTable};
-		imageWidget = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb);
-		GroupBox previewGroupBox = new() { Text = "Preview", Content = new ImageView { Image = imageWidget } };
+		statsTable     = new TableLayout();
+		statsContainer = new GroupBox { Text = "Statistics", Content = statsTable };
+		previewImage   = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb);
+		imageView      = new ImageView { Image = previewImage, Size = new Size(192,108)};
+		imageContainer = new GroupBox { Text   = "Preview", Content = imageView};
 		Content = new StackLayout
 		{
-				Items       = { statsGroupBox, previewGroupBox },
+				Items       = { statsContainer, imageContainer },
 				Orientation = Orientation.Horizontal,
 				Spacing     = 10
 		};
@@ -41,6 +46,17 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			UpdateImagePreview();
 			UpdateStatsTable();
+
+			//Mark this object as requiring a redraw
+			//BUG: Calling Invalidate() requires we be on the main thread, but since we're async that don't work proper
+			//So we gotta do a little bypass. I think the real problem is that the errors get thrown but since there's no await the thing just gets ignored and crashes the app
+			#if true
+			await Application.Instance.InvokeAsync(Invalidate);
+			#else
+			Invalidate();
+#endif
+			Verbose("Invalidated for redraw");
+
 			await Task.Delay(1000);
 		}
 
@@ -50,9 +66,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateImagePreview()
 	{
-		using BitmapData data         = imageWidget.Lock();
+		using BitmapData data         = previewImage.Lock();
 		Stopwatch        stop         = Stopwatch.StartNew();
-		int              xSize        = imageWidget.Width, ySize = imageWidget.Height;
+		int              xSize        = previewImage.Width, ySize = previewImage.Height;
 		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
 		Verbose("Updating image");
 		IntPtr offset = data.Data;
@@ -67,9 +83,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				offset += data.ScanWidth;
 			}
 
-		//Mark this object as requiring a redraw
-		Invalidate();
-
 		Verbose("Finished updating image in {Elapsed}", stop.Elapsed);
 	}
 
@@ -81,6 +94,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		const string numFormat      = "n0";
 		const int    numAlign       = 15;
 		const int    percentAlign   = 8;
+
+		Verbose("Updating stats table");
+		Stopwatch stop = Stopwatch.StartNew();
+
+		int row = 0;
+
+
+		statsTable.Rows.Add(new TableRow("Test", "Test 2"));
+
+		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);
 
 		static string FormatU(ulong val, ulong total)
 		{
