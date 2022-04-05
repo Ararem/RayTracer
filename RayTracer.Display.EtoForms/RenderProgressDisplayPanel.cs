@@ -28,7 +28,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable     = new TableLayout();
 		statsContainer = new GroupBox { Text = "Statistics", Content = statsTable };
 		previewImage   = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb);
-		imageView      = new ImageView { Image = previewImage, Size = new Size(192, 108) };
+		imageView      = new ImageView { Image = previewImage};
 		imageContainer = new GroupBox { Text   = "Preview", Content = imageView };
 		Content = new StackLayout
 		{
@@ -63,6 +63,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateImagePreview()
 	{
+		imageContainer.MinimumSize = new Size(160, 90);
+		imageContainer.Size        = new Size(500,  200);
+		imageView.Size             = new Size(-1,  -1);
+
 		using BitmapData data         = previewImage.Lock();
 		Stopwatch        stop         = Stopwatch.StartNew();
 		int              xSize        = previewImage.Width, ySize = previewImage.Height;
