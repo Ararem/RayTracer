@@ -10,6 +10,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ApplicationIcon>Appearance/icon.ico</ApplicationIcon>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>

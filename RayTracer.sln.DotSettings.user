@@ -1,6 +1,11 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:Boolean x:Key="/Default/CodeInspection/HotReload/RuntimeHotReloadEnabled/@EntryValue">True</s:Boolean>
-	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer /&gt;</s:String>
+	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
+  &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.ComponentModel.TypeConverter.dll" /&gt;
+  &lt;Assembly Path="/home/rowan/.nuget/packages/eto.forms/2.6.1/lib/netstandard2.0/Eto.dll" /&gt;
+  &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Private.CoreLib.dll" /&gt;
+  &lt;Assembly Path="/home/rowan/.nuget/packages/sixlabors.imagesharp/1.0.4/lib/netcoreapp3.1/SixLabors.ImageSharp.dll" /&gt;
+&lt;/AssemblyExplorer&gt;</s:String>
 	
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=9fb2ebd7_002Df182_002D444f_002Da2fc_002Dba29b0be2546_0023RayTracer_002EBenchmarks/@EntryIndexedValue">True</s:Boolean>
 	
