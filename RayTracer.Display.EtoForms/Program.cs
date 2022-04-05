@@ -1,13 +1,17 @@
 ﻿using Eto;
 using Eto.Forms;
 using RayTracer.Display.EtoForms;
+using Serilog;
 using System;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using static Serilog.Log;
 using Logger = RayTracer.Core.Logger;
 
 #if EXPLICIT_MAIN_FUNCTION
 internal static class Program
 {
+
 	private static int Main(string[] args)
 	{
 #endif
@@ -59,6 +63,9 @@ catch (Exception e)
 }
 
 Debug("MainForm is {MainForm}", form);
+
+Debug("Starting task watcher");
+Task.Run(TaskWatcher.WatchTasksWorker);
 
 try
 {

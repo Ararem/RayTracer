@@ -23,7 +23,7 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		// ReSharper disable PossibleNullReferenceException
 		Log.Logger = new LoggerConfiguration()
-					.MinimumLevel.Debug()
+					.MinimumLevel.Verbose()
 					.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 					.Enrich.WithThreadId()
 					.Enrich.WithThreadName()

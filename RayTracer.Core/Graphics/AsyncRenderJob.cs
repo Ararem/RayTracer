@@ -52,7 +52,31 @@ public sealed class AsyncRenderJob
 		Log.Debug("Camera: {Camera}", camera);
 		Log.Debug("Scene: {Scene}",   scene);
 		Log.Debug("SkyBox: {SkyBox}", skybox);
-		Task.Run(RenderInternal);
+	}
+
+	/// <summary>
+	/// Flag for if render has been started yet
+	/// </summary>
+	private object? started = null;
+
+	/// <summary>
+	/// Tries to start the render job asynchronously
+	/// </summary>
+	/// <returns><see langword="true"/> if the render job was started, otherwise <see langowrd="false"/>. A false return value indicates that the render was already started when the call to <see cref="TryStartAsync"/> was made</returns>
+	public async Task<bool> TryStartAsync()
+	{
+		//Threadsafe way of only allowing this to be called once
+		if (Interlocked.Exchange(ref started, this) == null)
+		{
+			await Task.Run(RenderInternal);
+			return true;
+		}
+		else
+		{
+			Log.Warning("Render already started");
+			await Task.CompletedTask;
+			return false;
+		}
 	}
 
 	private void RenderInternal()

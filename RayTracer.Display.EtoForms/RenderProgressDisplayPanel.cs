@@ -28,8 +28,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable     = new TableLayout();
 		statsContainer = new GroupBox { Text = "Statistics", Content = statsTable };
 		previewImage   = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb);
-		imageView      = new ImageView { Image = previewImage, Size = new Size(192,108)};
-		imageContainer = new GroupBox { Text   = "Preview", Content = imageView};
+		imageView      = new ImageView { Image = previewImage, Size = new Size(192, 108) };
+		imageContainer = new GroupBox { Text   = "Preview", Content = imageView };
 		Content = new StackLayout
 		{
 				Items       = { statsContainer, imageContainer },
@@ -37,31 +37,28 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Spacing     = 10
 		};
 
-		Task.Run(UpdatePreviewWorker);
+		TaskWatcher.Watch(Task.Run(UpdatePreviewWorker), false);
 	}
 
 	private async Task UpdatePreviewWorker()
 	{
 		while (!renderJob.RenderCompleted)
 		{
-			UpdateImagePreview();
-			UpdateStatsTable();
-
-			//Mark this object as requiring a redraw
-			//BUG: Calling Invalidate() requires we be on the main thread, but since we're async that don't work proper
-			//So we gotta do a little bypass. I think the real problem is that the errors get thrown but since there's no await the thing just gets ignored and crashes the app
-			#if true
-			await Application.Instance.InvokeAsync(Invalidate);
-			#else
-			Invalidate();
-#endif
-			Verbose("Invalidated for redraw");
-
+			await Application.Instance.InvokeAsync(Update);
 			await Task.Delay(1000);
 		}
 
-		UpdateImagePreview(); //Do final run to ensure image isn't half updated (if render completed partway through update)
-		UpdateStatsTable();
+		//Do final run to ensure image isn't half updated (if render completed partway through update)
+		await Application.Instance.InvokeAsync(Update);
+
+		void Update()
+		{
+			UpdateImagePreview();
+			UpdateStatsTable();
+
+			Invalidate();
+			Verbose("Invalidated for redraw");
+		}
 	}
 
 	private void UpdateImagePreview()

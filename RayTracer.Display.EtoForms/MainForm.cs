@@ -4,15 +4,16 @@ using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
 
 public sealed class MainForm : Form
 {
-	private          AsyncRenderJob?            renderJob     = null;
 	private readonly RenderOptionSelectorPanel? selectorPanel = null;
 	private readonly Label                      titleLabel;
+	private          AsyncRenderJob?            renderJob = null;
 
 	public MainForm()
 	{
@@ -26,8 +27,8 @@ public sealed class MainForm : Form
 		Padding = 10;
 
 		Verbose("Creating UI elements");
-		titleLabel          = new Label { Text                          = title, Font                         = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
-		StackLayoutItem displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
+		titleLabel = new Label { Text = title, Font = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
+		StackLayoutItem displayedWindowItem = new() { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem           = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
 		{
@@ -71,12 +72,12 @@ public sealed class MainForm : Form
 
 		//We start off with an options selection panel, then once the user clicks the 'continue' button, we start the render and change it to the render progress panel
 		Verbose("Initializing render options selector subview");
-		selectorPanel               = new RenderOptionSelectorPanel(StartRenderButtonClicked);
+		selectorPanel               = new RenderOptionSelectorPanel((_, _) =>  StartRenderButtonClicked());
 		displayedWindowItem.Control = selectorPanel;
 	}
 
 	//
-	private void StartRenderButtonClicked(object? sender, EventArgs e)
+	private void StartRenderButtonClicked()
 	{
 		//Assume that the sender is the same selector panel we have stored
 		//Might be bad practice but hey who cares it's easier
@@ -86,8 +87,11 @@ public sealed class MainForm : Form
 		Information("Render start button clicked");
 		Debug("Scene is {Scene}, Options are {Options}", scene, options);
 
-		Debug("Starting render job");
+		Debug("Creating render job");
 		renderJob = new AsyncRenderJob(scene, options);
+		Debug("Starting render job");
+		Task renderTask = renderJob.TryStartAsync();
+		TaskWatcher.Watch(renderTask, true);
 
 		//Create the display panel
 		//TODO: Honestly this is a really bad way to do it and I don't like it, but for some reason removing the children from the stack panel
