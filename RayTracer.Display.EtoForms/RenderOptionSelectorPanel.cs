@@ -70,7 +70,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			}
 			else
 			{
-				editorCell.Control = new Label { Text = $"{prop.PropertyType} not yet supported sorry!" };
+				editorCell.Control = new Label { Text = $"{prop.PropertyType} not yet supported sorry!", ID = $"{prop.Name} error message"};
 				continue;
 			}
 
@@ -81,14 +81,14 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		tableLayout.Rows!.Add(new TableRow()); //Add empty row so that scaling looks nice (last row sizes to fil gap)
 
 		Verbose("Creating start render button");
-		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options" };
+		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options", ID = "Start render button"};
 
 		Verbose("Creating scene selection dropdown");
 		Scene[] scenes = BuiltinScenes.GetAll().ToArray();
 		Verbose("Builtin scenes are: {BuiltinScenes}", scenes);
 		sceneSelectDropdown = new DropDown
 		{
-				DataStore = scenes, ToolTip = "Select a scene to be rendered"
+				DataStore = scenes, ToolTip = "Select a scene to be rendered", ID = "Scene select dropdown"
 		};
 		//Select the first scene by default
 		sceneSelectDropdown.SelectedValue        =  Scene = scenes[0];
@@ -102,7 +102,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		Content = new StackLayout
 		{
 				Items   = { tableLayout, sceneSelectDropdown, startRenderButton },
-				Spacing = 10
+				Spacing = 10,
+				ID = "Main Content StackLayout"
 		};
 
 		UpdateRenderOptionEditorsFromVariable();
