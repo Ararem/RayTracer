@@ -48,17 +48,22 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		//TODO
 		this.renderJob = renderJob;
 		Verbose("Creating StackPanelLayout for content");
-		statsTable     = new TableLayout { ID                                                                                       = "Stats Table" };
-		statsContainer = new GroupBox { Text                                                                                        = "Statistics", Content = statsTable, ID = "Stats Container" };
-		previewImage   = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb) { ID = "Preview Image" };
-		imageView      = new ImageView { Image                                                                                      = previewImage, ID   = "Image View" };
-		imageContainer = new GroupBox { Text                                                                                        = "Preview", Content = imageView, ID = "Image Container" };
+		statsTable = new TableLayout
+				{ ID = "Stats Table" };
+		statsContainer = new GroupBox
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable };
+		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
+				{ ID = "Preview Image" };
+		imageView = new ImageView
+				{ ID = "Image View", Image = previewImage };
+		imageContainer = new GroupBox
+				{ Text = "Preview", Content = imageView, ID = "Image Container" };
 		Content = new StackLayout
 		{
 				Items       = { statsContainer, imageContainer },
 				Orientation = Orientation.Horizontal,
 				Spacing     = 10,
-				ID = "Main Content StackLayout"
+				ID          = "Main Content StackLayout"
 		};
 
 		TaskWatcher.Watch(Task.Run(UpdatePreviewWorker), false);
@@ -89,9 +94,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	{
 		MinimumSize                = new Size(160, 90);
 		imageContainer.MinimumSize = new Size(160, 90);
-		imageContainer.Size        = new Size(-1,  -1);
-		imageContainer.ClientSize  = new Size(-1,  -1);
 		imageView.Size             = new Size(-1,  -1);
+		Verbose("{Size}", imageContainer.ClientSize);
+		Verbose("{Size}", imageView.Size);
+		Verbose("{Size}", imageView.GetPreferredSize());
 
 		using BitmapData data         = previewImage.Lock();
 		Stopwatch        stop         = Stopwatch.StartNew();
