@@ -2,7 +2,6 @@ using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
-using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using static Serilog.Log;
@@ -13,6 +12,7 @@ public sealed class MainForm : Form
 {
 	private readonly RenderOptionSelectorPanel? selectorPanel = null;
 	private readonly Label                      titleLabel;
+	private          StackLayoutItem            displayedWindowItem;
 	private          AsyncRenderJob?            renderJob = null;
 
 	public MainForm()
@@ -27,13 +27,14 @@ public sealed class MainForm : Form
 		Padding = 10;
 
 		Verbose("Creating UI elements");
-		titleLabel = new Label { Text = title, Font = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
-		StackLayoutItem displayedWindowItem = new() { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
-		StackLayoutItem titleItem           = new(titleLabel, HorizontalAlignment.Center);
+		titleLabel          = new Label { Text                          = title, Font                         = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
+		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
+		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
 		{
-				Items   = { titleItem, displayedWindowItem },
-				Spacing = 10
+				Items       = { titleItem, displayedWindowItem },
+				Orientation = Orientation.Vertical,
+				Spacing     = 10
 		};
 
 
@@ -72,11 +73,10 @@ public sealed class MainForm : Form
 
 		//We start off with an options selection panel, then once the user clicks the 'continue' button, we start the render and change it to the render progress panel
 		Verbose("Initializing render options selector subview");
-		selectorPanel               = new RenderOptionSelectorPanel((_, _) =>  StartRenderButtonClicked());
+		selectorPanel               = new RenderOptionSelectorPanel((_, _) => StartRenderButtonClicked());
 		displayedWindowItem.Control = selectorPanel;
 	}
 
-	//
 	private void StartRenderButtonClicked()
 	{
 		//Assume that the sender is the same selector panel we have stored
@@ -94,14 +94,15 @@ public sealed class MainForm : Form
 		TaskWatcher.Watch(renderTask, true);
 
 		//Create the display panel
-		//TODO: Honestly this is a really bad way to do it and I don't like it, but for some reason removing the children from the stack panel
+		//HACK: Honestly this is a really bad way to do it and I don't like it, but for some reason removing the children from the stack panel
 		// does not work (some weird logical child not equal behaviour) so i gotta create a new layout instead :(
 		Verbose("Creating render progress display panel");
 		RenderProgressDisplayPanel displayPanel = new(renderJob);
-		StackLayoutItem            titleItem    = new(titleLabel, HorizontalAlignment.Center);
+		displayedWindowItem = new StackLayoutItem(displayPanel, HorizontalAlignment.Stretch, true);
+		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
 		{
-				Items   = { titleItem, displayPanel },
+				Items   = { titleItem, displayedWindowItem },
 				Spacing = 10
 		};
 	}
