@@ -48,17 +48,18 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	{
 		//TODO
 		this.renderJob = renderJob;
-		Verbose("Creating StackPanelLayout for content");
+		Verbose("Creating StackPanelLayout with content");
 		statsTable = new TableLayout
-				{ ID = "Stats Table" };
+				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, MinimumSize = new Size(0,0) };
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0) };
+
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Image" };
 		imageView = new ImageView
 				{ ID = "Image View", Image = previewImage, Size = new Size(0,0) };
 		imageContainer = new GroupBox
-				{ Text = "Preview", Content = imageView, ID = "Image Container", MinimumSize = new Size(0,0) };
+				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0) };
 		Content = new StackLayout
 		{
 				Items =
@@ -203,18 +204,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Due to how the table is implemented, I can't rescale it later
 		//So if the size doesn't match our array, we need to recreate it
-		if (statsTable.Dimensions.Height != stats.Length) statsTable = new TableLayout(stats.Length, 2) { ID = "Stats Table" };
+		if (statsTable.Dimensions.Height != stats.Length)
+		{
+			statsTable             = new TableLayout(2, stats.Length) { ID = "Stats Table" };
+			statsContainer.Content = statsTable;
+		}
 
 		for (int i = 0; i < stats.Length; i++)
 		{
 			(string? title, string[]? strings) = stats[i];
 			string values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
-			Debug("\n**{Category}:**\n{Values}", title, values);
-			statsTable.Add(title,  i, 0);
-			statsTable.Add(values, i, 1);
+			statsTable.Add(title,  0, i);
+			statsTable.Add(values, 1, i);
 		}
-
-		statsTable.Size = new Size(100, 500);
 
 		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);
 
