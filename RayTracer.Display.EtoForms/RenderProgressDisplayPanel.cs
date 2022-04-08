@@ -52,14 +52,15 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable = new TableLayout
 				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0) };
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0), MinimumSize = new Size(1,1)};
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Image" };
 		imageView = new ImageView
 				{ ID = "Image View", Image = previewImage, Size = new Size(0,0) };
 		imageContainer = new GroupBox
-				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0) };
+				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0), MinimumSize = new Size(1,1)};
+
 		Content = new StackLayout
 		{
 				Items =
@@ -204,9 +205,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Due to how the table is implemented, I can't rescale it later
 		//So if the size doesn't match our array, we need to recreate it
-		if (statsTable.Dimensions.Height != stats.Length)
+		if (statsTable.Dimensions != new Size(2,stats.Length))
 		{
-			statsTable             = new TableLayout(2, stats.Length) { ID = "Stats Table" };
+			Debug("Old table dims {Dims} do not match stats array, resizing", statsTable.Dimensions);
+			statsTable             = new TableLayout(2, stats.Length) { ID = "Stats Table", Spacing = new Size(10,10), Padding = 10, Size = new Size(0,0)};
 			statsContainer.Content = statsTable;
 		}
 
@@ -214,8 +216,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			(string? title, string[]? strings) = stats[i];
 			string values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
-			statsTable.Add(title,  0, i);
-			statsTable.Add(values, 1, i);
+			statsTable.Add(new Label{Text = title, ID = $"{title} stats title"}, 0, i);
+			statsTable.Add(new Label{Text = values, ID = $"{title} stats values"}, 1, i);
 		}
 
 		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);

@@ -15,7 +15,6 @@ namespace RayTracer.Display.EtoForms;
 /// <summary>
 ///  Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance
 /// </summary>
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable")] //Don't think it applies and I dont care
 internal sealed class RenderOptionSelectorPanel : Panel
 {
 	/// <summary>
@@ -112,7 +111,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 #region Property Editors
 
 	private sealed class IntEditor : PropertyEditorView
-	{
+    {
 		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
@@ -140,7 +139,12 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		{
 			stepper.Value = (int)Prop.GetValue(Target.RenderOptions)!;
 		}
-	}
+
+        public override void Dispose()
+        {
+          stepper.Dispose();
+        }
+    }
 
 	private sealed class EnumEditor<T> : PropertyEditorView where T : struct, Enum
 	{
@@ -165,6 +169,12 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		internal override void UpdateDisplayedFromTarget()
 		{
 			dropDown.SelectedValue = (T)Prop.GetValue(Target.RenderOptions)!;
+		}
+
+		/// <inheritdoc />
+		public override void Dispose()
+		{
+			dropDown.Dispose();
 		}
 	}
 
@@ -202,6 +212,12 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		{
 			stepper.Value = (float)Prop.GetValue(Target.RenderOptions)!;
 		}
+
+		/// <inheritdoc />
+		public override void Dispose()
+		{
+			stepper.Dispose();
+		}
 	}
 
 #endregion
@@ -219,7 +235,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	/// <summary>
 	///  Base class for an editor view for editing a property of a <see cref="RenderOptions"/> instance
 	/// </summary>
-	private abstract class PropertyEditorView
+	private abstract class PropertyEditorView : IDisposable
 	{
 		//We use a panel instead of RenderOptions as a target since the options being selected can change
 		protected PropertyEditorView(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell)
@@ -234,6 +250,9 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		protected internal TableCell                 TableCell { get; }
 
 		internal abstract void UpdateDisplayedFromTarget();
+
+		/// <inheritdoc />
+		public abstract void Dispose();
 	}
 
 	private void UpdateRenderOptionEditorsFromVariable()
@@ -256,6 +275,12 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	/// </summary>
 	public Scene Scene { get; private set; }
 
+	/// <inheritdoc />
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		renderOptionsPropertyEditors.ForEach(v => v.Dispose());
+	}
 
 #endregion
 }

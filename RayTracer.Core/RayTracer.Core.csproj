@@ -21,7 +21,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Eto.HtmlRenderer.ImageSharp" Version="0.3.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
 		<PackageReference Include="Serilog" Version="2.10.0" />
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
