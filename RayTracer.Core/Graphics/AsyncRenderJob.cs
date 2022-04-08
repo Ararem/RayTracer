@@ -22,6 +22,11 @@ namespace RayTracer.Core.Graphics;
 /// </remarks>
 public sealed class AsyncRenderJob
 {
+	/// <summary>
+	///  Flag for if render has been started yet
+	/// </summary>
+	private object? started = null;
+
 	//TODO: Allow cancelling of the render job partway through
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
@@ -55,14 +60,12 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	/// Flag for if render has been started yet
+	///  Tries to start the render job asynchronously
 	/// </summary>
-	private object? started = null;
-
-	/// <summary>
-	/// Tries to start the render job asynchronously
-	/// </summary>
-	/// <returns><see langword="true"/> if the render job was started, otherwise <see langowrd="false"/>. A false return value indicates that the render was already started when the call to <see cref="TryStartAsync"/> was made</returns>
+	/// <returns>
+	///  <see langword="true"/> if the render job was started, otherwise <see langowrd="false"/>. A false return value indicates that the render was already
+	///  started when the call to <see cref="TryStartAsync"/> was made
+	/// </returns>
 	public async Task<bool> TryStartAsync()
 	{
 		//Threadsafe way of only allowing this to be called once
@@ -157,7 +160,9 @@ public sealed class AsyncRenderJob
 
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
-		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None) return CalculateRayColourRecursive(ray, 0);
+		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None)
+				// return CalculateRayColourRecursive(ray, 0);
+			return CalculateRayColourLooped(ray);
 
 		//`CalculateRayColourRecursive` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects.
@@ -216,6 +221,53 @@ public sealed class AsyncRenderJob
 
 		//No object was intersected with, return black
 		return Colour.Black;
+	}
+
+	private Colour CalculateRayColourLooped(Ray initialRay)
+	{
+		Ray                                       ray           = initialRay;
+		Stack<(Material Material, HitRecord Hit)> materialStack = new();
+		Colour finalColour = Colour.Black;
+		//Loop for a max number of times equal to the depth
+		//And map out the ray path (don't do any colours yet)
+		int depth;
+		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
+			if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
+			{
+				HitRecord hit = (HitRecord)maybeHit!;
+				//See if the material scatters the ray
+				Ray? maybeNewRay = material!.Scatter(hit);
+
+				if (maybeNewRay is null)
+				{
+					//If the new ray is null, the material did not scatter (completely absorbed the light)
+					//So it's impossible to have any future bounces, so quit the loop
+					Interlocked.Increment(ref raysAbsorbed);
+					finalColour = Colour.Black;
+					break;
+				}
+				else
+				{
+					//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
+					ray = (Ray)maybeNewRay;
+					Interlocked.Increment(ref raysScattered);
+					GraphicsValidator.CheckRayDirectionMagnitude(ref ray, material);
+					materialStack.Push((material, hit));
+				}
+			}
+			//No object was hit (at least not in the range), so return the skybox colour
+			else
+			{
+				Interlocked.Increment(ref skyRays);
+				finalColour = skybox.GetSkyColour(ray);
+				break;
+			}
+		Interlocked.Increment(ref rawRayDepthCounts[depth]);
+
+		//Now do the colour pass
+		while (materialStack.TryPop(out (Material Material, HitRecord Hit) result)) result.Material.DoColourThings(ref finalColour, result.Hit);
+
+		return finalColour;
 	}
 
 	/// <summary>
