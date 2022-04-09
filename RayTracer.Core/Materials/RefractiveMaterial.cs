@@ -9,21 +9,17 @@ using static System.MathF;
 
 namespace RayTracer.Core.Materials;
 
-//TODO: Emission?
-
 /// <summary>
 ///  A material (such as glass) that refracts light rays going through it
 /// </summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
-public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
+public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint, Texture Emission) : Material
 {
 	/// <summary>
 	///  Refractive index of a common material
 	/// </summary>
 	[PublicAPI] public const float AirIndex = 1f, GlassIndex = 1.5f, DiamondIndex = 2.4f;
-
-#region Overrides of Material
 
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)
@@ -86,7 +82,6 @@ public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : M
 	public override void DoColourThings(ref Colour colour, HitRecord hit)
 	{
 		colour *= Tint.GetColour(hit);
+		colour += Emission.GetColour(hit);
 	}
-
-#endregion
 }

@@ -37,7 +37,7 @@ public static class BuiltinScenes
 					new("Sphere 1", new Sphere(new Vector3(0.1f),  .15f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
 					new("Sphere 2", new Sphere(new Vector3(0),     .15f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
 					new("Sphere 3", new Sphere(new Vector3(-0.1f), .15f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f)),
-					new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f))
+					new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
 			new DefaultSkyBox()
 	);
@@ -102,7 +102,7 @@ public static class BuiltinScenes
 						else
 						{
 							// glass
-							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat()));
+							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat()), Black);
 						}
 
 						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f), sphereMaterial));
@@ -110,7 +110,7 @@ public static class BuiltinScenes
 				}
 			}
 
-			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White)));
+			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White, Black)));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
