@@ -233,6 +233,8 @@ public sealed class AsyncRenderJob
 		//And map out the ray path (don't do any colours yet)
 		int depth;
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
+		{
+			Interlocked.Increment(ref rayCount);
 			if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
 			{
 				HitRecord hit = (HitRecord)maybeHit!;
@@ -263,7 +265,9 @@ public sealed class AsyncRenderJob
 				finalColour = skybox.GetSkyColour(ray);
 				break;
 			}
+		}
 
+		if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref bounceLimitExceeded);
 		Interlocked.Increment(ref rawRayDepthCounts[depth]);
 
 		//Now do the colour pass
@@ -510,12 +514,16 @@ public sealed class AsyncRenderJob
 	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
 	///  <see cref="Graphics.RenderOptions.MaxDepth"/>
 	/// </summary>
-	public ulong BounceLimitExceeded { get; } = 0;
+	public ulong BounceLimitExceeded => bounceLimitExceeded;
+
+	private ulong bounceLimitExceeded = 0;
 
 	/// <summary>
 	///  How many rays were rendered so far (scattered, absorbed, etc)
 	/// </summary>
-	public ulong RayCount { get; } = 0;
+	public ulong RayCount => rayCount;
+
+	private ulong rayCount = 0;
 
 	/// <summary>
 	///  Stopwatch used to time how long has elapsed since the rendering started
