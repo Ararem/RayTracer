@@ -42,12 +42,11 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
 
 		//Loop over each property in RenderOptions and create an editor for it
-		//TODO: Perhaps tooltips or something similar
 		Verbose("Creating property editors");
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView editorView;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name };
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name, ToolTip = $"Edit the {prop.Name} of the render"};
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -225,6 +224,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 #region Boilerplate
 
+	// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 	private readonly DropDown sceneSelectDropdown;
 
 	/// <summary>
@@ -245,9 +245,9 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			TableCell = tableCell;
 		}
 
-		protected internal RenderOptionSelectorPanel Target    { get; }
+		protected          RenderOptionSelectorPanel Target    { get; }
 		protected internal PropertyInfo              Prop      { get; }
-		protected internal TableCell                 TableCell { get; }
+		protected          TableCell                 TableCell { get; }
 
 		internal abstract void UpdateDisplayedFromTarget();
 

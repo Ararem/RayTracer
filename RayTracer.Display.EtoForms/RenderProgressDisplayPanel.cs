@@ -46,20 +46,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
-		//TODO
 		this.renderJob = renderJob;
 		Verbose("Creating StackPanelLayout with content");
 		statsTable = new TableLayout
 				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0), MinimumSize = new Size(1,1)};
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0), MinimumSize = new Size(1,1), ToolTip = "Statistics about the current render job"};
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Image" };
 		imageView = new ImageView
-				{ ID = "Image View", Image = previewImage, Size = new Size(0,0) };
+				{ ID = "Image View", Image = previewImage, Size = new Size(0,0)};
 		imageContainer = new GroupBox
-				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0), MinimumSize = new Size(1,1)};
+				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0), MinimumSize = new Size(1,1), ToolTip = "Preview of what the render looks like so far"};
 
 		Content = new StackLayout
 		{
@@ -220,6 +219,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			statsTable.Add(new Label{Text = values, ID = $"{title} stats values"}, 1, i);
 		}
 
+		//TODO: Depth buffer?
 		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);
 
 		static string FormatU(ulong val, ulong total)
