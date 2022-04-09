@@ -23,6 +23,8 @@ namespace RayTracer.Core.Graphics;
 /// </remarks>
 public sealed class AsyncRenderJob
 {
+	private CancellationToken cancellationToken = CancellationToken.None;
+
 	/// <summary>
 	///  Flag for if render has been started yet
 	/// </summary>
@@ -67,18 +69,19 @@ public sealed class AsyncRenderJob
 	///  <see langword="true"/> if the render job was started, otherwise <see langowrd="false"/>. A false return value indicates that the render was already
 	///  started when the call to <see cref="TryStartAsync"/> was made
 	/// </returns>
-	public async Task<bool> TryStartAsync()
+	public async Task<bool> TryStartAsync(CancellationToken? maybeCancellationToken = null)
 	{
 		//Threadsafe way of only allowing this to be called once
 		if (Interlocked.Exchange(ref started, this) == null)
 		{
-			await Task.Run(RenderInternal);
+			if (maybeCancellationToken is not null)
+				cancellationToken = (CancellationToken)maybeCancellationToken;
+			await Task.Run(RenderInternal, cancellationToken);
 			return true;
 		}
 		else
 		{
 			Log.Warning("Render already started");
-			await Task.CompletedTask;
 			return false;
 		}
 	}
@@ -110,7 +113,7 @@ public sealed class AsyncRenderJob
 		{
 			Parallel.For(
 					0, TotalTruePixels,
-					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel },
+					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (i, _, state) =>
 					{
@@ -227,7 +230,7 @@ public sealed class AsyncRenderJob
 	private Colour CalculateRayColourLooped(Ray ray)
 	{
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
-		(Material Material, HitRecord Hit)[] materialHitArray = ArrayPool<(Material Material, HitRecord Hit)>.Shared.Rent(RenderOptions.MaxDepth+1);
+		(Material Material, HitRecord Hit)[] materialHitArray = ArrayPool<(Material Material, HitRecord Hit)>.Shared.Rent(RenderOptions.MaxDepth + 1);
 		Colour                               finalColour      = Colour.Black;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)

@@ -3,6 +3,7 @@ using Eto.Forms;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using static Serilog.Log;
 

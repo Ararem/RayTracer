@@ -14,20 +14,34 @@ namespace RayTracer.Display.EtoForms;
 
 internal sealed class RenderProgressDisplayPanel : Panel
 {
+	private const int DepthImageWidth = 100;
+
+	/// <summary>
+	///  Image used for the depth buffer
+	/// </summary>
+	private readonly Bitmap depthBufferBitmap;
+
+	/// <summary>
+	///  Graphics used for the depth buffer
+	/// </summary>
+	private readonly Graphics depthBufferGraphics;
+
+	private readonly ImageView depthBufferImageView;
+
 	/// <summary>
 	///  Container that draws a border and title around the preview image
 	/// </summary>
 	private readonly GroupBox imageContainer;
 
 	/// <summary>
-	///  The control that holds the preview image
-	/// </summary>
-	private readonly ImageView imageView;
-
-	/// <summary>
 	///  The actual preview image buffer
 	/// </summary>
 	private readonly Bitmap previewImage;
+
+	/// <summary>
+	///  The control that holds the preview image
+	/// </summary>
+	private readonly ImageView previewImageView;
 
 	/// <summary>
 	///  Render job we are displaying the progress for
@@ -51,25 +65,32 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable = new TableLayout
 				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0,0), MinimumSize = new Size(1,1), ToolTip = "Statistics about the current render job"};
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1), ToolTip = "Statistics about the current render job" };
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
-				{ ID = "Preview Image" };
-		imageView = new ImageView
-				{ ID = "Image View", Image = previewImage, Size = new Size(0,0)};
+				{ ID = "Preview Bitmap" };
+		previewImageView = new ImageView
+				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0) };
 		imageContainer = new GroupBox
-				{ ID = "Image Container",Text = "Preview", Content = imageView, Size = new Size(0, 0), MinimumSize = new Size(1,1), ToolTip = "Preview of what the render looks like so far"};
+				{ ID = "Preview Image Container", Text = "Preview", Content = previewImageView, Size = new Size(0, 0), MinimumSize = new Size(1, 1), ToolTip = "Preview of what the render looks like so far" };
+
+		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxDepth, PixelFormat.Format32bppRgba)
+				{ ID = "Depth Buffer Bitmap" };
+		depthBufferImageView = new ImageView
+				{ ID = "Image View", Image = depthBufferBitmap, Size = new Size(100, 100) };
+		depthBufferGraphics = new Graphics(depthBufferBitmap)
+				{ ID = "Depth Buffer Graphics" };
 
 		Content = new StackLayout
 		{
 				Items =
 				{
-						new StackLayoutItem(statsContainer, VerticalAlignment.Stretch, false),
-						new StackLayoutItem(imageContainer, VerticalAlignment.Stretch,       true)
+						new StackLayoutItem(statsContainer, VerticalAlignment.Stretch),
+						new StackLayoutItem(imageContainer, VerticalAlignment.Stretch, true)
 				},
 				Orientation = Orientation.Horizontal,
 				Spacing     = 10,
-				Padding = 10,
+				Padding     = 10,
 				ID          = "Main Content StackLayout"
 		};
 
@@ -85,7 +106,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				#endif
 		{
 			await Application.Instance.InvokeAsync(Update);
-			await Task.Delay(1000);
+			await Task.Delay(100);
 		}
 
 		#if !DEBUG
@@ -158,7 +179,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		Verbose("Updating stats table");
 		Stopwatch stop = Stopwatch.StartNew();
 
-		(string Title, string[] Values)[] stats =
+		(string Title, string[] Values)[] stringStats =
 		{
 				("Time", new[]
 				{
@@ -199,24 +220,55 @@ internal sealed class RenderProgressDisplayPanel : Panel
 						$"Obj Count:	{renderJob.Scene.Objects.Length}",
 						$"Camera:		{renderJob.Scene.Camera}",
 						$"SkyBox:		{renderJob.Scene.SkyBox}"
+				}),
+				("Renderer", new[]
+				{
+						$"{renderJob.ThreadsRunning} {(renderJob.ThreadsRunning == 1 ? "thread" : "threads")}"
 				})
 		};
 
 		//Due to how the table is implemented, I can't rescale it later
 		//So if the size doesn't match our array, we need to recreate it
-		if (statsTable.Dimensions != new Size(2,stats.Length))
+		Size correctDims = new(2, stringStats.Length + 1);
+		if (statsTable.Dimensions != correctDims)
 		{
-			Debug("Old table dims {Dims} do not match stats array, resizing", statsTable.Dimensions);
-			statsTable             = new TableLayout(2, stats.Length) { ID = "Stats Table", Spacing = new Size(10,10), Padding = 10, Size = new Size(0,0)};
+			Debug("Old table dims {Dims} do not match stats array, resizing to {NewDims}", statsTable.Dimensions, correctDims);
+			statsTable             = new TableLayout(correctDims) { ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0) };
 			statsContainer.Content = statsTable;
 		}
 
-		for (int i = 0; i < stats.Length; i++)
+		Verbose("Updating stats strings");
+		for (int i = 0; i < stringStats.Length; i++)
 		{
-			(string? title, string[]? strings) = stats[i];
+			(string? title, string[]? strings) = stringStats[i];
 			string values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
-			statsTable.Add(new Label{Text = title, ID = $"{title} stats title"}, 0, i);
-			statsTable.Add(new Label{Text = values, ID = $"{title} stats values"}, 1, i);
+			statsTable.Add(new Label { Text = title, ID  = $"{title} stats title" },  0, i);
+			statsTable.Add(new Label { Text = values, ID = $"{title} stats values" }, 1, i);
+		}
+
+		{
+			int maxDepth = renderJob.RenderOptions.MaxDepth;
+			Verbose("Updating depth buffer graphics");
+			statsTable.Add("Depth Buffer",       0, statsTable.Dimensions.Height - 1); //Last row
+			statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
+			depthBufferGraphics.Clear();
+			for (int i = 0; i < maxDepth; i++)
+			{
+				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
+				const double b        = 1;
+				double       m        = rayCount;
+				double       fraction = Math.Log((b * renderJob.RawRayDepthCounts[i]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
+				#else
+				double fraction = renderJob.RawRayDepthCounts[i] / System.Linq.Enumerable.Sum(renderJob.RawRayDepthCounts,u => (double)u); //https://www.desmos.com/calculator/erite0if8u
+				#endif
+
+				int endX = (int)Math.Floor(fraction * DepthImageWidth);
+				depthBufferGraphics.DrawLine(Colors.Gray, 0, i, endX, i);
+			}
+
+			depthBufferImageView.Size = new Size(-1, -1);
+
+			depthBufferGraphics.Flush();
 		}
 
 		//TODO: Depth buffer?
