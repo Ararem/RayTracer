@@ -196,7 +196,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				float value = (float)((NumericStepper)sender!).Value;
