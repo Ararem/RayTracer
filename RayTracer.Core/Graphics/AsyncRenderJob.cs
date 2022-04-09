@@ -227,7 +227,7 @@ public sealed class AsyncRenderJob
 	private Colour CalculateRayColourLooped(Ray ray)
 	{
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
-		(Material Material, HitRecord Hit)[] materialHitArray = ArrayPool<(Material Material, HitRecord Hit)>.Shared.Rent(RenderOptions.MaxDepth);
+		(Material Material, HitRecord Hit)[] materialHitArray = ArrayPool<(Material Material, HitRecord Hit)>.Shared.Rent(RenderOptions.MaxDepth+1);
 		Colour                               finalColour      = Colour.Black;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)
@@ -267,7 +267,8 @@ public sealed class AsyncRenderJob
 		Interlocked.Increment(ref rawRayDepthCounts[depth]);
 
 		//Now do the colour pass
-		for(depth --; depth >= 0; depth--)
+		//Have to decrement depth here or we get index out of bounds
+		for (depth--; depth >= 0; depth--)
 		{
 			(Material material, HitRecord hit) = materialHitArray[depth];
 			material.DoColourThings(ref finalColour, hit);
