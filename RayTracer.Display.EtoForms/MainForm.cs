@@ -1,7 +1,14 @@
 using Eto.Drawing;
 using Eto.Forms;
+using RayTracer.Core.Debugging;
 using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
+using Serilog;
+using SixLabors.ImageSharp.Formats.Png;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,5 +113,33 @@ public sealed class MainForm : Form
 				Items   = { titleItem, displayedWindowItem },
 				Spacing = 10
 		};
+
+		//Once the render job is complete, save the image and open it up
+		renderJob.GetAwaiter().OnCompleted(() =>
+		{
+			string path = Path.GetFullPath("./image.png");
+			renderJob.GetAwaiter().GetResult().Save(File.OpenWrite(path), new PngEncoder());
+			Process.Start(
+					new ProcessStartInfo
+					{
+							FileName  = "eog",
+							Arguments = $"\"{path}\"",
+							//These flags stop the image display program's console from attaching to ours (because that's yuck!)
+							UseShellExecute        = false,
+							RedirectStandardError  = true,
+							RedirectStandardInput  = true,
+							RedirectStandardOutput = true
+					}
+			);
+
+			foreach ((GraphicsErrorType errorType, ConcurrentDictionary<object, ulong>? dict) in GraphicsValidator.Errors)
+			{
+				Error("{ErrorType}:", errorType);
+				foreach ((object? obj, ulong count) in dict)
+					Warning("\t{Object} = {Count}", obj, count);
+			}
+			if(GraphicsValidator.Errors.Count == 0)
+				Information("No Errors");
+		});
 	}
 }
