@@ -434,6 +434,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		//Start the render job and display the progress while we wait
 		AsyncRenderJob renderJob = new(scene, renderOptions);
+		renderJob.TryStartAsync();
 		await DisplayProgress(renderJob);
 
 		//Finalize everything

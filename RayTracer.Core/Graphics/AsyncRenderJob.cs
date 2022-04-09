@@ -71,6 +71,8 @@ public sealed class AsyncRenderJob
 	/// </returns>
 	public async Task<bool> TryStartAsync(CancellationToken? maybeCancellationToken = null)
 	{
+		//TODO: This async stuff is done really badly at its super confusing (and wrong)
+		//WARN: NEEDS A REDO ASAP
 		//Threadsafe way of only allowing this to be called once
 		if (Interlocked.Exchange(ref started, this) == null)
 		{
