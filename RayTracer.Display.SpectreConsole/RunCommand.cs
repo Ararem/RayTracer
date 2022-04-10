@@ -347,7 +347,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
-		Image<Rgb24> image = renderJob.GetAwaiter().GetResult();
+		Image<Rgb24> image = renderJob.ImageBuffer;
 		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors
@@ -432,8 +432,9 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		//Start the render job and display the progress while we wait
 		AsyncRenderJob renderJob = new(scene, renderOptions);
-		renderJob.TryStartAsync();
+		Task renderTask = renderJob.StartOrGetRenderAsync();
 		await DisplayProgress(renderJob);
+		await renderTask; //Just in case DisplayProgress returned early
 
 		//Finalize everything
 		Image<Rgb24> image = FinalizeRenderJob(renderJob);

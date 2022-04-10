@@ -94,7 +94,7 @@ public sealed class MainForm : Form
 		Debug("Creating render job");
 		renderJob = new AsyncRenderJob(scene, options);
 		Debug("Starting render job");
-		Task renderTask = renderJob.TryStartAsync();
+		Task renderTask = renderJob.StartOrGetRenderAsync();
 		TaskWatcher.Watch(renderTask, true);
 
 		//Create the display panel
@@ -115,7 +115,7 @@ public sealed class MainForm : Form
 				() =>
 				{
 					string path = Path.GetFullPath("./image.png");
-					renderJob.GetAwaiter().GetResult().Save(File.OpenWrite(path), new PngEncoder());
+					renderJob.ImageBuffer.Save(File.OpenWrite(path), new PngEncoder());
 					Process.Start(
 							new ProcessStartInfo
 							{

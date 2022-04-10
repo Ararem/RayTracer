@@ -22,13 +22,6 @@ namespace RayTracer.Core;
 /// </remarks>
 public sealed class AsyncRenderJob
 {
-	private CancellationToken cancellationToken = CancellationToken.None;
-
-	/// <summary>
-	///  Flag for if render has been started yet
-	/// </summary>
-	private object? started = null;
-
 	//TODO: Allow cancelling of the render job partway through
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
@@ -48,7 +41,6 @@ public sealed class AsyncRenderJob
 		RenderOptions                = renderOptions;
 		rawColourBuffer              = new Colour[renderOptions.Width * renderOptions.Height];
 		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
-		taskCompletionSource         = new TaskCompletionSource<Image<Rgb24>>(this);
 		TotalRawPixels               = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
 		TotalTruePixels              = RenderOptions.Width        * RenderOptions.Height;
 		(_, camera, objects, skybox) = scene;
@@ -59,32 +51,8 @@ public sealed class AsyncRenderJob
 		Log.Debug("Camera: {Camera}", camera);
 		Log.Debug("Scene: {Scene}",   scene);
 		Log.Debug("SkyBox: {SkyBox}", skybox);
-	}
 
-	/// <summary>
-	///  Tries to start the render job asynchronously
-	/// </summary>
-	/// <returns>
-	///  <see langword="true"/> if the render job was started, otherwise <see langowrd="false"/>. A false return value indicates that the render was already
-	///  started when the call to <see cref="TryStartAsync"/> was made
-	/// </returns>
-	public async Task<bool> TryStartAsync(CancellationToken? maybeCancellationToken = null)
-	{
-		//TODO: This async stuff is done really badly at its super confusing (and wrong)
-		//WARN: NEEDS A REDO ASAP
-		//Threadsafe way of only allowing this to be called once
-		if (Interlocked.Exchange(ref started, this) == null)
-		{
-			if (maybeCancellationToken is not null)
-				cancellationToken = (CancellationToken)maybeCancellationToken;
-			await Task.Run(RenderInternal, cancellationToken);
-			return true;
-		}
-		else
-		{
-			Log.Warning("Render already started");
-			return false;
-		}
+		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}
 
 	private void RenderInternal()
@@ -134,8 +102,6 @@ public sealed class AsyncRenderJob
 			Log.Debug("Finished pass {Pass}", pass);
 		}
 
-		//Notify that the render is complete
-		taskCompletionSource.SetResult(ImageBuffer);
 		Stopwatch.Stop();
 		Log.Information("Rendering end");
 	}
@@ -649,22 +615,55 @@ public sealed class AsyncRenderJob
 
 #endregion
 
-#region Task-like awaitable implementation
+#region Async and Task-like awaitable implementation
 
 	/// <summary>
 	///  Whether this render job has completed rendering
 	/// </summary>
-	public bool RenderCompleted => taskCompletionSource.Task.IsCompleted;
+	public bool RenderCompleted => RenderTask.IsCompleted;
 
 	/// <summary>
-	///  Internal object used for task-like awaiting
+	///  A <see cref="Task"/> that can be used to <see langword="await"/> the render job.
 	/// </summary>
-	private readonly TaskCompletionSource<Image<Rgb24>> taskCompletionSource;
+	public readonly Task RenderTask;
 
 	/// <summary>
 	///  Gets the task awaiter for this instance
 	/// </summary>
-	public TaskAwaiter<Image<Rgb24>> GetAwaiter() => taskCompletionSource.Task.GetAwaiter();
+	public TaskAwaiter GetAwaiter() => RenderTask.GetAwaiter();
+
+	/// <summary>
+	/// Starts the render asynchronously and returns the task that can be used to await it.
+	/// </summary>
+	/// <param name="maybeCancellationToken">A <see cref="cancellationToken"/> that can be used to cancel the render operation, if required</param>
+	/// <returns>A <see cref="Task"/> that represents the render operation</returns>
+	/// <remarks>If the render has already been started, a new render is not started, and the existing render task is returned instead.</remarks>
+	public Task StartOrGetRenderAsync(CancellationToken? maybeCancellationToken = null)
+	{
+		//Threadsafe way of only allowing this to be called once
+		if (Interlocked.Exchange(ref started, this) == null)
+		{
+			if (maybeCancellationToken is not null)
+				cancellationToken = (CancellationToken)maybeCancellationToken;
+			RenderTask.Start();
+		}
+		else
+		{
+			Log.Warning("Render already started");
+		}
+
+		return RenderTask;
+	}
+
+	/// <summary>
+	/// Cancellation token used to cancel the render job
+	/// </summary>
+	private CancellationToken cancellationToken = CancellationToken.None;
+
+	/// <summary>
+	///  Special fancy threadsafe flag for if render has been started yet
+	/// </summary>
+	private object? started = null;
 
 #endregion
 }
