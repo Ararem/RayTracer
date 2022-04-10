@@ -46,7 +46,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView editorView;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name, ToolTip = $"Edit the {prop.Name} of the render"};
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name};
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -123,7 +123,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				int value = (int)((NumericStepper)sender!).Value;
@@ -196,7 +196,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Modifies the {prop.Name} option. Valid range is [{min}...{max}]" };
+			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				float value = (float)((NumericStepper)sender!).Value;

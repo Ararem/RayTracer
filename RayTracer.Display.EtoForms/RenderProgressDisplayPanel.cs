@@ -65,14 +65,14 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable = new TableLayout
 				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1), ToolTip = "Statistics about the current render job" };
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1)};
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Bitmap" };
 		previewImageView = new ImageView
 				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0) };
 		imageContainer = new GroupBox
-				{ ID = "Preview Image Container", Text = "Preview", Content = previewImageView, Size = new Size(0, 0), MinimumSize = new Size(1, 1), ToolTip = "Preview of what the render looks like so far" };
+				{ ID = "Preview Image Container", Text = "Preview", Content = previewImageView, Size = new Size(0, 0), MinimumSize = new Size(1, 1) };
 
 		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxDepth, PixelFormat.Format32bppRgba)
 				{ ID = "Depth Buffer Bitmap" };
@@ -255,7 +255,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			for (int i = 0; i < maxDepth; i++)
 			{
 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
-				const double b        = 1;
+				const double b        = 0.00003;
 				double       m        = rayCount;
 				double       fraction = Math.Log((b * renderJob.RawRayDepthCounts[i]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
 				#else
