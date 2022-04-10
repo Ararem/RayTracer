@@ -1,9 +1,7 @@
-using RayTracer.Core.Graphics;
+using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
-using RayTracer.Core.Materials;
 using System.Collections.Concurrent;
 using System.Numerics;
-using static RayTracer.Core.Debugging.GraphicsErrorType;
 
 namespace RayTracer.Core.Debugging;
 
@@ -12,8 +10,6 @@ namespace RayTracer.Core.Debugging;
 /// </summary>
 public static class GraphicsValidator
 {
-	//WARN: I've had some bugs due to this just fixing the errors, probably better to just return true/false and let the programmer record the error/fix as they want
-	//TODO: Logging?
 	private const float MagnitudeEqualityError = 0.01f;
 
 #region Storing errors
@@ -44,6 +40,7 @@ public static class GraphicsValidator
 	/// <param name="erroringObject"></param>
 	public static void RecordError(GraphicsErrorType error, object erroringObject)
 	{
+		ArgumentNullException.ThrowIfNull(erroringObject);
 		//Get the dictionary that stores how many times the error has occurred per object, for the current error type
 		ConcurrentDictionary<object, ulong> objectCountMap = Errors.GetOrAdd(error, _ => new ConcurrentDictionary<object, ulong>());
 
@@ -58,62 +55,33 @@ public static class GraphicsValidator
 #region Validation Methods
 
 	/// <summary>
-	///  Ensures a given ray's direction has a correct magnitude (of 1)
+	///  Checks a given direction vector has a correct magnitude (of 1)
 	/// </summary>
-	public static void CheckRayDirectionMagnitude(ref Ray r, Material source)
-	{
-		if (Math.Abs(r.Direction.LengthSquared() - 1f) > MagnitudeEqualityError)
-		{
-			RecordError(RayDirectionWrongMagnitude, source);
-			r = r with { Direction = Vector3.Normalize(r.Direction) };
-		}
-	}
+	/// <returns>
+	///  <see langword="true"/> if the vector had a correct magnitude, else <see langword="false"/>. If false is returned, the vector needs to be
+	///  normalized
+	/// </returns>
+	[Pure]
+	public static bool CheckDirectionVectorMagnitude(Vector3 direction) =>
+			//Check that the magnitude is approx 1 unit
+			//Don't have to sqrt it because 1 squared is 1
+			!(Math.Abs(direction.LengthSquared() - 1f) > MagnitudeEqualityError);
 
 	/// <summary>
-	///  Ensures a given ray's direction has a correct magnitude (of 1)
+	///  Checks a given UV coordinate is valid
 	/// </summary>
-	public static void CheckRayDirectionMagnitude(ref Ray r, Camera source)
-	{
-		if (Math.Abs(r.Direction.LengthSquared() - 1f) > MagnitudeEqualityError)
-		{
-			RecordError(RayDirectionWrongMagnitude, source);
-			r = r with { Direction = Vector3.Normalize(r.Direction) };
-		}
-	}
+	/// <returns>
+	///  <see langword="true"/> if the UV was valid, else <see langword="false"/>. If false is returned, the UV coordinate needs to be
+	///  corrected
+	/// </returns>
+	[Pure]
+	public static bool CheckUVCoordValid(Vector2 uv) => CheckValueRange(uv.X, 0, 1) && CheckValueRange(uv.Y, 0, 1);
 
 	/// <summary>
-	///  Ensures a <see cref="HitRecord"/>'s <see cref="HitRecord.Normal"/> has a magnitude of 1
+	///  Checks a value is in the correct range
 	/// </summary>
-	public static void CheckNormalMagnitude(ref HitRecord hit, Hittable source)
-	{
-		//Check that the normal magnitude is approx 1 unit
-		//Don't have to sqrt it because 1 squared is 1
-		if (Math.Abs(hit.Normal.LengthSquared() - 1f) > MagnitudeEqualityError)
-		{
-			RecordError(NormalsWrongMagnitude, source);
-			hit = hit with
-			{
-					Normal = Vector3.Normalize(hit.Normal)
-			};
-		}
-	}
-
-	/// <summary>
-	///  Validates a <see cref="HitRecord"/>'s K value is in the correct range
-	/// </summary>
-	public static void CheckKValueRange(ref HitRecord hit, RenderOptions options, Hittable source)
-	{
-		if (hit.K < options.KMin)
-		{
-			RecordError(KValueNotInRange, source);
-			hit = hit with { K = options.KMin };
-		}
-		else if (hit.K > options.KMax)
-		{
-			RecordError(KValueNotInRange, source);
-			hit = hit with { K = options.KMax };
-		}
-	}
+	[Pure]
+	public static bool CheckValueRange(float k, float kMin, float kMax) => (k >= kMin) && (k <= kMax);
 
 #endregion
 }

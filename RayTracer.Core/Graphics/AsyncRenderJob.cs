@@ -119,6 +119,7 @@ public sealed class AsyncRenderJob
 					() => this, //Gives us the state tracking the `this` reference and which pass we're in
 					static (i, _, state) =>
 					{
+						//TODO: Move ThreadsRunning into localInit/Finally?
 						Interlocked.Increment(ref state.threadsRunning);
 						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
 						Colour col = state.RenderPixelWithVisualisations(x, y);
@@ -152,27 +153,39 @@ public sealed class AsyncRenderJob
 	private Colour RenderPixelWithVisualisations(int x, int y)
 	{
 		//Get the view ray from the camera
-		Ray ray;
+		Ray viewRay;
+		//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
+		float s = x, t = y;
+		//Add up to 1 pixel of offset randomness to the coords
+		const float ssaaRadius = 1f;
+		s += Rand.RandomPlusMinusOne() * ssaaRadius;
+		t += Rand.RandomPlusMinusOne() * ssaaRadius;
+		//Account for the fact that we want uv coords not pixel coords
+		viewRay = camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
+
+		if(!GraphicsValidator.CheckDirectionVectorMagnitude(viewRay.Direction))
 		{
-			//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
-			float s = x, t = y;
-			//Add up to 1 pixel of offset randomness to the coords
-			const float ssaaRadius = 1f;
-			s += Rand.RandomPlusMinusOne() * ssaaRadius;
-			t += Rand.RandomPlusMinusOne() * ssaaRadius;
-			//Account for the fact that we want uv coords not pixel coords
-			ray = camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
+			Vector3 wrongDir = viewRay.Direction;
+			float   wrongMag        = wrongDir.Length();
+
+			viewRay = viewRay.WithNormalizedDirection();
+
+			Vector3 correctDir = viewRay.Direction;
+			float   correctMag = correctDir.Length();
+
+			Log.Warning("Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Coords: {UvCoords} ({PixelCoords}). Camera: {@Camera}",
+					wrongDir, wrongMag, correctDir, correctMag, (s,t), (x,y), camera);
 		}
 
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
 		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None)
 				// return CalculateRayColourRecursive(ray, 0);
-			return CalculateRayColourLooped(ray);
+			return CalculateRayColourLooped(viewRay);
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? maybeMaterial))
+		if (TryFindClosestHit(viewRay, out HitRecord? maybeHit, out Material? maybeMaterial))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
 			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
@@ -197,15 +210,15 @@ public sealed class AsyncRenderJob
 					//Have to ensure it's >0 or else all functions return 1
 					const float a = .200f;
 					// ReSharper disable once JoinDeclarationAndInitializer
-					float t;
+					float val;
 					float z = hit.K - RenderOptions.KMin;
 
 					// t   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
 					// t   = MathF.Pow(MathF.E, -a * z);                    //Exponential
 					// t   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
 					// t   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
-					t = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
-					return new Colour(t);
+					val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
+					return new Colour(val);
 				}
 				//Debug texture based on X/Y pixel coordinates
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
@@ -259,7 +272,21 @@ public sealed class AsyncRenderJob
 					//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 					ray = (Ray)maybeNewRay;
 					Interlocked.Increment(ref raysScattered);
-					GraphicsValidator.CheckRayDirectionMagnitude(ref ray, material);
+
+					if(!GraphicsValidator.CheckDirectionVectorMagnitude(ray.Direction))
+					{
+						Vector3 wrongDir = ray.Direction;
+						float   wrongMag = wrongDir.Length();
+
+						Vector3 correctDir = Vector3.Normalize(ray.Direction);
+						float   correctMag = correctDir.Length();
+
+						Log.Warning("Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} HitRecord: {HitRecord}. Material: {@Material}",
+								wrongDir, wrongMag, correctDir, correctMag, ray, hit, material);
+
+						ray = ray with {Direction = correctDir};
+					}
+
 					materialHitArray[depth] = (material, hit);
 				}
 			}
@@ -283,7 +310,7 @@ public sealed class AsyncRenderJob
 			material.DoColourThings(ref finalColour, hit);
 		}
 
-		ArrayPool<(Material Material, HitRecord Hit)>.Shared.Return(materialHitArray, true);
+		ArrayPool<(Material Material, HitRecord Hit)>.Shared.Return(materialHitArray);
 
 		return finalColour;
 
@@ -374,8 +401,26 @@ public sealed class AsyncRenderJob
 			//No point continuing if there was no hit
 			if (maybeHit is not { } hit) continue;
 
-			GraphicsValidator.CheckNormalMagnitude(ref hit, obj.Hittable);
-			GraphicsValidator.CheckKValueRange(ref hit, RenderOptions, obj.Hittable);
+			if(!GraphicsValidator.CheckDirectionVectorMagnitude(hit.Normal))
+			{
+				Vector3 wrongNormal = hit.Normal;
+				float   wrongMag = wrongNormal.Length();
+
+				ray = ray.WithNormalizedDirection();
+
+				Vector3 correctNormal = ray.Direction;
+				float   correctMag = correctNormal.Length();
+
+				Log.Warning("Hittable normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
+						wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable);
+			}
+			if(!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
+			{
+				Log.Warning("Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
+						hit.K, kMin, kMax, hit, obj.Hittable);
+				continue; //Skip because we can't consider it valid
+			}
+
 			//If it's the first hit, or it's closer, update the variable
 			if (maybeClosest is not var (oldObj, oldHit)) //Check first hit (because it's null)
 			{
