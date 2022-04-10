@@ -9,7 +9,7 @@ namespace RayTracer.Core.Debugging;
 /// </summary>
 public static class GraphicsValidator
 {
-	private const float MagnitudeEqualityError = 0.001f;
+	private const float MagnitudeEqualityError = 0.01f;
 
 #region Storing errors
 

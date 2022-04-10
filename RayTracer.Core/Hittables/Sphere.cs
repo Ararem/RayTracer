@@ -37,7 +37,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		float   k             = root;                            //How far along the ray we had to go to hit the sphere
 		Vector3 worldPoint    = ray.PointAt(k);                  //Closest point on the surface of the sphere that we hit (world space)
 		Vector3 localPoint    = worldPoint - Centre;             //Same as above but from the centre of this sphere
-		Vector3 outwardNormal = localPoint / Radius;             //Normal direction at the point. Will always face outwards
+		Vector3 outwardNormal = Normalize(localPoint);             //Normal direction at the point. Will always face outwards
 		bool    inside        = Dot(rayDir, outwardNormal) > 0f; //If the ray is 'inside' the sphere
 
 		//This flips the normal if the ray is inside the sphere

@@ -8,12 +8,14 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
 
 namespace RayTracer.Display.EtoForms;
 
+[SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const int DepthImageWidth = 100;
@@ -102,6 +104,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		TaskWatcher.Watch(Task.Run(UpdatePreviewWorker), false);
 	}
 
+	// ReSharper disable once FunctionNeverReturns
 	private async Task UpdatePreviewWorker()
 	{
 		#if DEBUG //Never stop refreshing when in debug mode, so I can use Hot Reload to change things
@@ -281,8 +284,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				int    endX      = (int)Math.Min(corrected * DepthImageWidth, DepthImageWidth);
 				depthBufferGraphics.DrawLine(Colors.Gray, 0, i, endX, i);
 			}
-
-			depthBufferImageView.Size = true ? new Size(-1, -1) : new Size(DepthImageWidth, maxDepth);
 
 			//Flush the image or it might not be drawn
 			depthBufferGraphics.Flush();
