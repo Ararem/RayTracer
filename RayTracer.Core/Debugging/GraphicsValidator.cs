@@ -10,7 +10,7 @@ namespace RayTracer.Core.Debugging;
 /// </summary>
 public static class GraphicsValidator
 {
-	private const float MagnitudeEqualityError = 0.01f;
+	private const float MagnitudeEqualityError = 0.001f;
 
 #region Storing errors
 
@@ -35,9 +35,8 @@ public static class GraphicsValidator
 	// }
 
 	/// <summary>
+	/// Records that a certain type of <paramref name="error"/> occurred on an <paramref name="erroringObject"/>
 	/// </summary>
-	/// <param name="error"></param>
-	/// <param name="erroringObject"></param>
 	public static void RecordError(GraphicsErrorType error, object erroringObject)
 	{
 		ArgumentNullException.ThrowIfNull(erroringObject);

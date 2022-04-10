@@ -152,8 +152,6 @@ public sealed class AsyncRenderJob
 	/// <param name="y">Y coordinate of the pixel</param>
 	private Colour RenderPixelWithVisualisations(int x, int y)
 	{
-		//Get the view ray from the camera
-		Ray viewRay;
 		//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
 		float s = x, t = y;
 		//Add up to 1 pixel of offset randomness to the coords
@@ -161,7 +159,7 @@ public sealed class AsyncRenderJob
 		s += Rand.RandomPlusMinusOne() * ssaaRadius;
 		t += Rand.RandomPlusMinusOne() * ssaaRadius;
 		//Account for the fact that we want uv coords not pixel coords
-		viewRay = camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
+		Ray viewRay = camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
 
 		if(!GraphicsValidator.CheckDirectionVectorMagnitude(viewRay.Direction))
 		{
@@ -175,6 +173,7 @@ public sealed class AsyncRenderJob
 
 			Log.Warning("Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Coords: {UvCoords} ({PixelCoords}). Camera: {@Camera}",
 					wrongDir, wrongMag, correctDir, correctMag, (s,t), (x,y), camera);
+			GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, camera);
 		}
 
 		//Switch depending on how we want to view the scene
@@ -283,6 +282,7 @@ public sealed class AsyncRenderJob
 
 						Log.Warning("Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} HitRecord: {HitRecord}. Material: {@Material}",
 								wrongDir, wrongMag, correctDir, correctMag, ray, hit, material);
+GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, material);
 
 						ray = ray with {Direction = correctDir};
 					}
@@ -413,11 +413,13 @@ public sealed class AsyncRenderJob
 
 				Log.Warning("Hittable normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
 						wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable);
+				GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj.Hittable);
 			}
 			if(!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
 			{
 				Log.Warning("Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
 						hit.K, kMin, kMax, hit, obj.Hittable);
+				GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
 				continue; //Skip because we can't consider it valid
 			}
 
@@ -438,7 +440,11 @@ public sealed class AsyncRenderJob
 			//(this would happen when several objects overlap exactly at a certain point)
 			//Also due to the control flow, we know that the 'old' object is stored as `closest.obj`, and the 'current' is `obj`
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			else if (currentK == newK) GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
+			else if (currentK == newK)
+			{
+				Log.Warning("Found Z-Fighting when calculating closest hit. Objects: {@Obj1}, {@Obj2}. Hits: {@Hit1}, {@Hit2}", oldObj, obj, oldHit, hit);
+				GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
+			}
 		}
 
 		//If we hit anything, set the variables, otherwise make them null

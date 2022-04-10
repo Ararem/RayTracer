@@ -23,7 +23,7 @@ public static class BuiltinScenes
 	public static readonly Scene Sphere = new(
 			"A lonely Sphere", new Camera(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
-					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 0f))
+					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 1f))
 			},
 			new DefaultSkyBox()
 	);
