@@ -8,7 +8,7 @@ using static RayTracer.Core.Colour;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Scenes;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Static class that contains a list of pre-made scenes

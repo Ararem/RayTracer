@@ -1,7 +1,5 @@
 using JetBrains.Annotations;
-using RayTracer.Core;
 using RayTracer.Core.Debugging;
-using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;

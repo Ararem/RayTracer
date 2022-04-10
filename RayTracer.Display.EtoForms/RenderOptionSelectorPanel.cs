@@ -2,7 +2,6 @@ using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
 using RayTracer.Core;
-using RayTracer.Core.Scenes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
