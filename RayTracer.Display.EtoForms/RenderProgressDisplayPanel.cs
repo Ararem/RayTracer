@@ -1,3 +1,4 @@
+using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
 using LibEternal.ObjectPools;
@@ -30,19 +31,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private readonly ImageView depthBufferImageView;
 
 	/// <summary>
-	///  Container that draws a border and title around the preview image
-	/// </summary>
-	private readonly GroupBox imageContainer;
-
-	/// <summary>
 	///  The actual preview image buffer
 	/// </summary>
 	private readonly Bitmap previewImage;
 
 	/// <summary>
+	///  Container that draws a border and title around the preview image
+	/// </summary>
+	private readonly GroupBox previewImageContainer;
+
+	/// <summary>
 	///  The control that holds the preview image
 	/// </summary>
-	private readonly ImageView previewImageView;
+	private readonly DragZoomImageView previewImageView;
 
 	/// <summary>
 	///  Render job we are displaying the progress for
@@ -70,10 +71,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Bitmap" };
-		previewImageView = new ImageView
-				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0) };
-		imageContainer = new GroupBox
-				{ ID = "Preview Image Container", Text = "Preview", Content = previewImageView, Size = new Size(0, 0), MinimumSize = new Size(1, 1) };
+		previewImageView = new DragZoomImageView
+				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0), ZoomButton = MouseButtons.Middle };
+		previewImageContainer = new GroupBox
+		{
+				ID   = "Preview Image Container", Text = "Preview", Content      = previewImageView,
+				Size = new Size(0, 0), MinimumSize     = new Size(1, 1), Padding = 10
+		};
 
 		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxDepth, PixelFormat.Format32bppRgba)
 				{ ID = "Depth Buffer Bitmap" };
@@ -86,8 +90,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 				Items =
 				{
-						new StackLayoutItem(statsContainer, VerticalAlignment.Stretch),
-						new StackLayoutItem(imageContainer, VerticalAlignment.Stretch, true)
+						new StackLayoutItem(statsContainer,        VerticalAlignment.Stretch),
+						new StackLayoutItem(previewImageContainer, VerticalAlignment.Stretch, true)
 				},
 				Orientation = Orientation.Horizontal,
 				Spacing     = 10,
