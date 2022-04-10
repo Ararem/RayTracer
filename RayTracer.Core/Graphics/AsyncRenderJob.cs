@@ -179,7 +179,6 @@ public sealed class AsyncRenderJob
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
 		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None)
-				// return CalculateRayColourRecursive(ray, 0);
 			return CalculateRayColourLooped(viewRay);
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
@@ -295,6 +294,14 @@ GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, mate
 			{
 				Interlocked.Increment(ref skyRays);
 				finalColour = skybox.GetSkyColour(ray);
+				if(!GraphicsValidator.CheckColourValid(finalColour))
+				{
+					Colour correctColour = Colour.Clamp(finalColour, Colour.Black, Colour.White);
+
+					Log.Warning("Skybox colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. Ray: {Ray}. SkyBox: {SkyBox}",
+							finalColour, correctColour, ray, skybox);
+					GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, skybox);
+				}
 				break;
 			}
 		}
@@ -306,8 +313,19 @@ GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, mate
 		//Have to decrement depth here or we get index out of bounds
 		for (depth--; depth >= 0; depth--)
 		{
+			Colour colour = finalColour;
 			(Material material, HitRecord hit) = materialHitArray[depth];
-			material.DoColourThings(ref finalColour, hit);
+			material.DoColourThings(ref colour, hit);
+			if(!GraphicsValidator.CheckColourValid(colour))
+			{
+				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
+
+				Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}",
+						finalColour, colour, hit, material);
+				colour = correctColour;
+				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, skybox);
+			}
+			finalColour = colour;
 		}
 
 		ArrayPool<(Material Material, HitRecord Hit)>.Shared.Return(materialHitArray);
@@ -414,6 +432,15 @@ GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, mate
 				Log.Warning("Hittable normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
 						wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable);
 				GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj.Hittable);
+			}
+			if(!GraphicsValidator.CheckUVCoordValid(hit.UV))
+			{
+				Vector2 wrongUv     = hit.UV;
+				Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
+
+				Log.Warning("Hittable UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
+						wrongUv, correctedUv, hit, obj.Hittable);
+				GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj.Hittable);
 			}
 			if(!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
 			{

@@ -77,6 +77,16 @@ public static class GraphicsValidator
 	public static bool CheckUVCoordValid(Vector2 uv) => CheckValueRange(uv.X, 0, 1) && CheckValueRange(uv.Y, 0, 1);
 
 	/// <summary>
+	///  Checks a given RGB colour value is valid
+	/// </summary>
+	/// <returns>
+	///  <see langword="true"/> if the colour was valid, else <see langword="false"/>. If false is returned, the colour coordinate needs to be
+	///  corrected (clamped)
+	/// </returns>
+	[Pure]
+	public static bool CheckColourValid(Colour col) => CheckValueRange(col.R, 0, 1) && CheckValueRange(col.G, 0, 1) && CheckValueRange(col.B, 0, 1);
+
+	/// <summary>
 	///  Checks a value is in the correct range
 	/// </summary>
 	[Pure]
