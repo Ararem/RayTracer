@@ -1,9 +1,8 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
 using System.Numerics;
-using static RayTracer.Core.Rand;
+using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 using static System.MathF;
 
@@ -57,7 +56,7 @@ public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint, Tex
 			float r0 = (eta - etaPrime) / (eta + etaPrime);
 			r0 *= r0;
 			float reflectance = r0 + ((1 - r0) * Pow(1 - cosTheta, 5));
-			if (reflectance > RandomFloat())
+			if (reflectance > RandomFloat01())
 				cannotRefract = true;
 		}
 

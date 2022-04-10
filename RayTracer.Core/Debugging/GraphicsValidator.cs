@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Hittables;
 using System.Collections.Concurrent;
 using System.Numerics;
 
@@ -35,7 +34,7 @@ public static class GraphicsValidator
 	// }
 
 	/// <summary>
-	/// Records that a certain type of <paramref name="error"/> occurred on an <paramref name="erroringObject"/>
+	///  Records that a certain type of <paramref name="error"/> occurred on an <paramref name="erroringObject"/>
 	/// </summary>
 	public static void RecordError(GraphicsErrorType error, object erroringObject)
 	{

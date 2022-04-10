@@ -1,8 +1,7 @@
-using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
 using System.Numerics;
-using static RayTracer.Core.Rand;
+using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Materials;

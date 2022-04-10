@@ -2,7 +2,7 @@ using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
 using LibEternal.ObjectPools;
-using RayTracer.Core.Graphics;
+using RayTracer.Core;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;

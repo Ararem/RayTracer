@@ -1,4 +1,3 @@
-using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Debugging;
@@ -24,8 +23,8 @@ public enum GraphicsErrorType
 	RayDirectionWrongMagnitude,
 
 	/// <summary>
-/// Given UV coordinates were not valid
-/// </summary>
+	///  Given UV coordinates were not valid
+	/// </summary>
 	UVInvalid,
 
 	/// <summary>
@@ -46,7 +45,7 @@ public enum GraphicsErrorType
 
 	//TODO: Colour not clamped/out of range?
 	/// <summary>
-	/// One (or more) of a given <see cref="Colour"/>'s channels (RGB) is out of the valid range (i.e. not [0..1])
+	///  One (or more) of a given <see cref="Colour"/>'s channels (RGB) is out of the valid range (i.e. not [0..1])
 	/// </summary>
-	ColourChannelOutOfRange,
+	ColourChannelOutOfRange
 }

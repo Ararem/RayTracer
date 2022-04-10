@@ -17,6 +17,8 @@ namespace RayTracer.Core;
 [SuppressMessage("Usage", "CA2225", MessageId = "Operator overloads have named alternates")]
 public readonly struct Colour : IFormattable
 {
+#region Fields and Ctors
+
 	/// <summary>
 	///  Red component
 	/// </summary>
@@ -50,6 +52,63 @@ public readonly struct Colour : IFormattable
 	public Colour(float value) : this(value, value, value)
 	{
 	}
+
+#endregion
+
+#region Known Colours
+
+	/// <summary>
+	///  White (1, 1, 1)
+	/// </summary>
+	public static readonly Colour White = new(1, 1, 1);
+
+	/// <summary>
+	///  Black (0, 0, 0)
+	/// </summary>
+	public static readonly Colour Black = new(0, 0, 0);
+
+	/// <summary>
+	///  Red (1, 0, 0)
+	/// </summary>
+	public static readonly Colour Red = new(1, 0, 0);
+
+	/// <summary> Green (0,1,0) </summary>
+	public static readonly Colour Green = new(0, 1, 0);
+
+	/// <summary>
+	///  Blue (0, 0, 1)
+	/// </summary>
+	public static readonly Colour Blue = new(0, 0, 1);
+
+	/// <summary>
+	///  Grey (0.5, 0.5, 0.5)
+	/// </summary>
+	public static readonly Colour HalfGrey = new(0.5f);
+
+
+	/// <summary>
+	///  Purple (1, 0, 1)
+	/// </summary>
+	public static readonly Colour Purple = new(1, 0, 1);
+
+	/// <summary>
+	///  Yellow (1, 1, 0)
+	/// </summary>
+	public static readonly Colour Yellow = new(1, 1, 0);
+
+	/// <summary>
+	///  Orange (1, .5, 0)
+	/// </summary>
+	public static readonly Colour Orange = new(1, .5f, 0);
+
+	/// <summary>
+	///  Aqua (0, 1, 1)
+	/// </summary>
+	public static readonly Colour Aqua = new(0, 1, 1);
+
+#endregion
+
+#region Overrides
 
 	// [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	// public void CopyTo(float[] array) => CopyTo(array, 0);
@@ -112,6 +171,8 @@ public readonly struct Colour : IFormattable
 	///<inheritdoc cref="Vector3.ToString(string)"/>
 	[Pure]
 	public string ToString(string? format) => ToString(format, CultureInfo.CurrentCulture);
+
+#endregion
 
 #region Operators
 
@@ -223,38 +284,6 @@ public readonly struct Colour : IFormattable
 					(byte)(byte.MaxValue * c.G),
 					(byte)(byte.MaxValue * c.B)
 			);
-
-#endregion
-
-#region Colours
-
-	/// <summary>
-	///  White (1,1,1)
-	/// </summary>
-	public static Colour White => new(1, 1, 1);
-
-	/// <summary>
-	///  Black (0,0,0)
-	/// </summary>
-	public static Colour Black => new(0, 0, 0);
-
-	/// <summary>
-	///  Red (1,0,0)
-	/// </summary>
-	public static Colour Red => new(1, 0, 0);
-
-	/// <summary> Green (0,1,0) </summary>
-	public static Colour Green => new(0, 1, 0);
-
-	/// <summary>
-	///  Blue (0,0,1)
-	/// </summary>
-	public static Colour Blue => new(0, 0, 1);
-
-	/// <summary>
-	///  Grey (0.5,0.5,0.5)
-	/// </summary>
-	public static Colour HalfGrey => new(0.5f);
 
 #endregion
 }

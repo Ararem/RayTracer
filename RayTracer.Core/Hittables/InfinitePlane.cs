@@ -1,4 +1,3 @@
-using RayTracer.Core.Graphics;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;

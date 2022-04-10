@@ -1,4 +1,3 @@
-using RayTracer.Core.Graphics;
 using System.Numerics;
 
 namespace RayTracer.Core.Hittables;

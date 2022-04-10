@@ -1,10 +1,9 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Scenes;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
 
-namespace RayTracer.Core.Graphics;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Represents a camera that is used to render a <see cref="Scene"/>
@@ -91,7 +90,7 @@ public sealed class Camera
 	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
 	public Ray GetRay(float u, float v)
 	{
-		Vector2 rand      = Rand.RandomInUnitCircle() * LensRadius;
+		Vector2 rand      = RandUtils.RandomInUnitCircle() * LensRadius;
 		Vector3 offset    = (U * rand.X)                                          + (V * rand.Y);
 		Vector3 origin    = LookFrom                                              + offset;
 		Vector3 direction = (LowerLeftCorner + (u * Horizontal) + (v * Vertical)) - origin;

@@ -1,7 +1,7 @@
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
 
-namespace RayTracer.Core.Scenes;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  An object that is present in a <see cref="Scene"/>.

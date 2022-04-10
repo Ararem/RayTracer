@@ -1,8 +1,7 @@
 using Eto.Drawing;
 using Eto.Forms;
+using RayTracer.Core;
 using RayTracer.Core.Debugging;
-using RayTracer.Core.Graphics;
-using RayTracer.Core.Scenes;
 using SixLabors.ImageSharp.Formats.Png;
 using System.Collections.Concurrent;
 using System.Diagnostics;

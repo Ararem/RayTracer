@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 using System.Numerics;
-using static RayTracer.Core.MathHelper;
+using static RayTracer.Core.MathUtils;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
@@ -11,14 +11,14 @@ namespace RayTracer.Core;
 /// </summary>
 /// <remarks>Internally simply wraps a <see cref="Random"/></remarks>
 [PublicAPI]
-public static class Rand
+public static class RandUtils
 {
 	/// <summary>
 	///  Returns a float in the range [0..1]
 	/// </summary>
 	/// <returns></returns>
 	[MustUseReturnValue]
-	public static float RandomFloat() => Random.Shared.NextSingle();
+	public static float RandomFloat01() => Random.Shared.NextSingle();
 
 	/// <summary>
 	///  Returns a random float in the specified range
@@ -71,7 +71,7 @@ public static class Rand
 	public static Vector2 RandomInUnitCircle()
 	{
 		float theta = RandomFloat(0, 2 * PI);
-		float r     = Sqrt(RandomFloat());
+		float r     = Sqrt(RandomFloat01());
 		(float x, float y) = SinCos(theta);
 		return new Vector2(r * x, r * y);
 	}
@@ -90,8 +90,8 @@ public static class Rand
 	[MustUseReturnValue]
 	public static Colour RandomColour(Colour min, Colour max) =>
 			new(
-					Lerp(min.R, max.R, RandomFloat()),
-					Lerp(min.G, max.G, RandomFloat()),
-					Lerp(min.B, max.B, RandomFloat())
+					Lerp(min.R, max.R, RandomFloat01()),
+					Lerp(min.G, max.G, RandomFloat01()),
+					Lerp(min.B, max.B, RandomFloat01())
 			);
 }

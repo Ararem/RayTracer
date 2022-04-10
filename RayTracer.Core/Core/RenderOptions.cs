@@ -1,9 +1,9 @@
 using JetBrains.Annotations;
 
-namespace RayTracer.Core.Graphics;
+namespace RayTracer.Core;
 
 /// <summary>
-///  Record used to configure how a renderer renders a <see cref="Scenes.Scene"/>
+///  Record used to configure how a renderer renders a <see cref="Scene"/>
 /// </summary>
 /// <param name="Width">How many pixels wide the image should be</param>
 /// <param name="Height">How many pixels high the image should be</param>

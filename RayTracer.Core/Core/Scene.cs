@@ -1,7 +1,6 @@
 using RayTracer.Core.Environment;
-using RayTracer.Core.Graphics;
 
-namespace RayTracer.Core.Scenes;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  A scene that contains objects, which can be rendered by a <see cref="Camera"/>

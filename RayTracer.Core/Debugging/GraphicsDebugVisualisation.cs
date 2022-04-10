@@ -1,4 +1,4 @@
-namespace RayTracer.Core.Graphics;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Enum for enabling graphical visualisations for debugging purposes

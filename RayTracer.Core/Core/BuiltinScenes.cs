@@ -1,12 +1,11 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Environment;
-using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
-using static RayTracer.Core.Rand;
+using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Scenes;
@@ -79,8 +78,8 @@ public static class BuiltinScenes
 			{
 				for (int b = -11; b < 11; b++)
 				{
-					float   chooseMat = RandomFloat();
-					Vector3 center    = new(a + (0.9f * RandomFloat()), 0.2f, b + (0.9f * RandomFloat()));
+					float   chooseMat = RandomFloat01();
+					Vector3 center    = new(a + (0.9f * RandomFloat01()), 0.2f, b + (0.9f * RandomFloat01()));
 
 					if ((center - new Vector3(4f, 0.2f, 0f)).Length() > 0.9)
 					{
@@ -102,7 +101,7 @@ public static class BuiltinScenes
 						else
 						{
 							// glass
-							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat()), Black);
+							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat01()), Black);
 						}
 
 						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f), sphereMaterial));

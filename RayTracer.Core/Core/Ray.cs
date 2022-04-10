@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using System.Numerics;
 
-namespace RayTracer.Core.Graphics;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  A 3-dimensional ray, starting at the <see cref="Origin"/> and going in a certain <see cref="Direction"/>

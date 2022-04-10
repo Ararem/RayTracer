@@ -6,7 +6,7 @@ namespace RayTracer.Core;
 ///  Helper class for math related functions
 /// </summary>
 [PublicAPI]
-public static class MathHelper
+public static class MathUtils
 {
 	/// <summary>
 	///  Blends between two values

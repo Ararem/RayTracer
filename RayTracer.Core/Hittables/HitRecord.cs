@@ -1,10 +1,9 @@
-using RayTracer.Core.Graphics;
 using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Record containing information about when a <see cref="Graphics.Ray"/> intersects with a <see cref="Hittable"/>
+///  Record containing information about when a <see cref="Core.Ray"/> intersects with a <see cref="Hittable"/>
 /// </summary>
 /// <param name="Ray">The ray that intersected with the <see cref="Hittable"/></param>
 /// <param name="LocalPoint">The point on the surface of the object where the intersection occured (relative to the object's centre, so object-space)</param>

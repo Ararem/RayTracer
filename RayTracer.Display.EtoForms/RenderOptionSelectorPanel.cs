@@ -1,7 +1,7 @@
 using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
-using RayTracer.Core.Graphics;
+using RayTracer.Core;
 using RayTracer.Core.Scenes;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	/// <param name="click"></param>
 	/// <param name="options">
 	///  Optional initial value for the render options. If <see langword="null"/>, will be set to
-	///  <see cref="Core.Graphics.RenderOptions.Default"/>
+	///  <see cref="Core.RenderOptions.Default"/>
 	/// </param>
 	public RenderOptionSelectorPanel(EventHandler<EventArgs> click, RenderOptions? options = null)
 	{

@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Graphics;
 using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Materials;
