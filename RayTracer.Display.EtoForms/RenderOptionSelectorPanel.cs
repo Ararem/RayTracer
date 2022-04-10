@@ -5,7 +5,6 @@ using RayTracer.Core.Graphics;
 using RayTracer.Core.Scenes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
@@ -46,7 +45,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView editorView;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name};
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name };
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -68,7 +67,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			}
 			else
 			{
-				editorCell.Control = new Label { Text = $"{prop.PropertyType} not yet supported sorry!", ID = $"{prop.Name} error message"};
+				editorCell.Control = new Label { Text = $"{prop.PropertyType} not yet supported sorry!", ID = $"{prop.Name} error message" };
 				continue;
 			}
 
@@ -79,7 +78,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		tableLayout.Rows!.Add(new TableRow()); //Add empty row so that scaling looks nice (last row sizes to fil gap)
 
 		Verbose("Creating start render button");
-		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options", ID = "Start render button"};
+		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options", ID = "Start render button" };
 
 		Verbose("Creating scene selection dropdown");
 		Scene[] scenes = BuiltinScenes.GetAll().ToArray();
@@ -89,7 +88,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 				DataStore = scenes, ToolTip = "Select a scene to be rendered", ID = "Scene select dropdown"
 		};
 		//Select the first scene by default
-		sceneSelectDropdown.SelectedValue        =  Scene = scenes[0];
+		sceneSelectDropdown.SelectedValue = Scene = scenes[0];
 		sceneSelectDropdown.SelectedValueChanged += (_, _) =>
 		{
 			Scene = (Scene)sceneSelectDropdown.SelectedValue;
@@ -101,7 +100,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		{
 				Items   = { tableLayout, sceneSelectDropdown, startRenderButton },
 				Spacing = 10,
-				ID = "Main Content StackLayout"
+				ID      = "Main Content StackLayout"
 		};
 
 		UpdateRenderOptionEditorsFromVariable();
@@ -110,7 +109,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 #region Property Editors
 
 	private sealed class IntEditor : PropertyEditorView
-    {
+	{
 		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
@@ -123,14 +122,14 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
+			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				int value = (int)((NumericStepper)sender!).Value;
 				Verbose("Property {Property} changed to {Value}", Prop, value);
 				Prop.SetValue(Target.RenderOptions, value);
 			};
-			TableCell.Control    =  stepper;
+			TableCell.Control = stepper;
 		}
 
 		/// <inheritdoc/>
@@ -139,11 +138,11 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			stepper.Value = (int)Prop.GetValue(Target.RenderOptions)!;
 		}
 
-        public override void Dispose()
-        {
-          stepper.Dispose();
-        }
-    }
+		public override void Dispose()
+		{
+			stepper.Dispose();
+		}
+	}
 
 	private sealed class EnumEditor<T> : PropertyEditorView where T : struct, Enum
 	{
@@ -154,14 +153,14 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		{
 			Verbose("{Property}: Possible enum values are {Values}", prop, Enum.GetValues<T>());
 
-			dropDown                      =  new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
+			dropDown = new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
 			dropDown.SelectedValueChanged += (sender, _) =>
 			{
 				T value = ((EnumDropDown<T>)sender!).SelectedValue;
 				Verbose("Property {Property} changed to {Value}", Prop, value);
 				Prop.SetValue(Target.RenderOptions, value);
 			};
-			TableCell.Control             =  dropDown;
+			TableCell.Control = dropDown;
 		}
 
 		/// <inheritdoc/>
@@ -170,7 +169,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			dropDown.SelectedValue = (T)Prop.GetValue(Target.RenderOptions)!;
 		}
 
-		/// <inheritdoc />
+		/// <inheritdoc/>
 		public override void Dispose()
 		{
 			dropDown.Dispose();
@@ -196,14 +195,14 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper              =  new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
+			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				float value = (float)((NumericStepper)sender!).Value;
 				Verbose("Property {Property} changed to {Value}", Prop, value);
 				Prop.SetValue(Target.RenderOptions, value);
 			};
-			TableCell.Control    =  stepper;
+			TableCell.Control = stepper;
 		}
 
 		/// <inheritdoc/>
@@ -212,7 +211,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			stepper.Value = (float)Prop.GetValue(Target.RenderOptions)!;
 		}
 
-		/// <inheritdoc />
+		/// <inheritdoc/>
 		public override void Dispose()
 		{
 			stepper.Dispose();
@@ -249,10 +248,10 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		protected internal PropertyInfo              Prop      { get; }
 		protected          TableCell                 TableCell { get; }
 
-		internal abstract void UpdateDisplayedFromTarget();
-
-		/// <inheritdoc />
+		/// <inheritdoc/>
 		public abstract void Dispose();
+
+		internal abstract void UpdateDisplayedFromTarget();
 	}
 
 	private void UpdateRenderOptionEditorsFromVariable()
@@ -275,7 +274,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	/// </summary>
 	public Scene Scene { get; private set; }
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	protected override void Dispose(bool disposing)
 	{
 		base.Dispose(disposing);

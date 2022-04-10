@@ -1,10 +1,7 @@
 ﻿using Eto;
 using GLib;
-using Gtk;
 using RayTracer.Display.EtoForms;
-using Serilog;
 using System;
-using System.Collections.Concurrent;
 using System.Reflection;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
@@ -90,12 +87,12 @@ catch (Exception e)
 static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args)
 {
 	//Stupid GLib bug keeps printing these exceptions, nothing I can do about it afaik
-	if(args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException {TargetSite.Name: "HandleSizeAllocated" }}) return;
+	if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
 	Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
 }
 
 static void GLibUnhandledException(UnhandledExceptionArgs args)
 {
-	if(args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException {TargetSite.Name: "HandleSizeAllocated" }}) return;
+	if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
 	Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
 }

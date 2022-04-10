@@ -14,19 +14,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="Appearance\icon.png" />
-		<EmbeddedResource Include="Appearance\icon.png" />
-		<None Remove="Appearance\icon.ico" />
-		<EmbeddedResource Include="Appearance\icon.ico" />
+		<None Remove="Appearance\icon.png"/>
+		<EmbeddedResource Include="Appearance\icon.png"/>
+		<None Remove="Appearance\icon.ico"/>
+		<EmbeddedResource Include="Appearance\icon.ico"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Serilog" Version="2.10.0" />
-		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+		<PackageReference Include="Serilog" Version="2.10.0"/>
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
 	</ItemGroup>
 
 </Project>

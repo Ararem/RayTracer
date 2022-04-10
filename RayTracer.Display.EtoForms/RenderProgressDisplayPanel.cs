@@ -5,6 +5,7 @@ using RayTracer.Core.Graphics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using static Serilog.Log;
@@ -65,7 +66,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsTable = new TableLayout
 				{ ID = "Stats Table", Size = new Size(0, 0) };
 		statsContainer = new GroupBox
-				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1)};
+				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1) };
 
 		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Bitmap" };
@@ -77,7 +78,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxDepth, PixelFormat.Format32bppRgba)
 				{ ID = "Depth Buffer Bitmap" };
 		depthBufferImageView = new ImageView
-				{ ID = "Image View", Image = depthBufferBitmap, Size = new Size(100, 100) };
+				{ ID = "Image View", Image = depthBufferBitmap, Size = new Size(-1, -1) };
 		depthBufferGraphics = new Graphics(depthBufferBitmap)
 				{ ID = "Depth Buffer Graphics" };
 
@@ -106,7 +107,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				#endif
 		{
 			await Application.Instance.InvokeAsync(Update);
-			await Task.Delay(100);
+			await Task.Delay(1000);
 		}
 
 		#if !DEBUG
@@ -252,7 +253,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			statsTable.Add("Depth Buffer",       0, statsTable.Dimensions.Height - 1); //Last row
 			statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
 			depthBufferGraphics.Clear();
-			for (int i = 0; i < maxDepth; i++)
+
+			//What I'm doing here is adjusting the depth values so that the largest one reaches the end of the graph (scaling up to fill the image)
+			double[] doubleDepths = ArrayPool<double>.Shared.Rent(maxDepth);
+			double   max          = 0;
+			for (int i = 0; i < maxDepth; i++) //Calculate the fractions and the max
 			{
 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
 				const double b        = 0.00003;
@@ -262,12 +267,20 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				double fraction = renderJob.RawRayDepthCounts[i] / System.Linq.Enumerable.Sum(renderJob.RawRayDepthCounts,u => (double)u); //https://www.desmos.com/calculator/erite0if8u
 				#endif
 
-				int endX = (int)Math.Floor(fraction * DepthImageWidth);
+				doubleDepths[i] = fraction;
+				max             = Math.Max(max, fraction);
+			}
+
+			for (int i = 0; i < maxDepth; i++)
+			{
+				double corrected = doubleDepths[i] / max; //Adjust so the max == 1
+				int    endX      = (int)Math.Min(corrected * DepthImageWidth, DepthImageWidth);
 				depthBufferGraphics.DrawLine(Colors.Gray, 0, i, endX, i);
 			}
 
-			depthBufferImageView.Size = new Size(-1, -1);
+			depthBufferImageView.Size = true ? new Size(-1, -1) : new Size(DepthImageWidth, maxDepth);
 
+			//Flush the image or it might not be drawn
 			depthBufferGraphics.Flush();
 		}
 
