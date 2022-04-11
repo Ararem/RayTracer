@@ -43,7 +43,6 @@ public enum GraphicsErrorType
 	/// <footer>See <a href="https://en.wikipedia.org/wiki/Z-fighting">Z-Fighting</a></footer>
 	ZFighting,
 
-	//TODO: Colour not clamped/out of range?
 	/// <summary>
 	///  One (or more) of a given <see cref="Colour"/>'s channels (RGB) is out of the valid range (i.e. not [0..1])
 	/// </summary>

@@ -289,7 +289,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			depthBufferGraphics.Flush();
 		}
 
-		//TODO: Depth buffer?
 		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);
 
 		static string FormatU(ulong val, ulong total)

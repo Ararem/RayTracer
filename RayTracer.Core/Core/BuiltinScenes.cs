@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
+using RayTracer.Core.Textures;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
@@ -31,14 +32,31 @@ public static class BuiltinScenes
 	///  Simple scene with two spheres at (+-1, 0, 0)
 	/// </summary>
 	public static readonly Scene RgbSpheres = new(
-			"RGB Spheres", new Camera(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, 2f, 5f), new SceneObject[]
+			"RGB Spheres", new Camera(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, .00002f, 5f), new SceneObject[]
 			{
-					new("Sphere 1", new Sphere(new Vector3(0.1f),  .15f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
-					new("Sphere 2", new Sphere(new Vector3(0),     .15f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
-					new("Sphere 3", new Sphere(new Vector3(-0.1f), .15f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f)),
-					new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
+					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
+					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f)),
+					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
 			new DefaultSkyBox()
+	);
+
+	public static readonly Scene CornellBox = new(
+			"Cornell Box", new Camera(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 16 / 9f, 0f, 1f), new SceneObject[]
+			{
+					new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.12f,    0.45f, 0.15f), Black, 1f)),
+					new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.65f,  0.05f, 0.05f), Black, 1f)),
+					new("Back", new XYPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
+					new("Top", new XZPlane(0,    555, 0, 555, 555), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+					new("Bottom", new XZPlane(0, 555, 0, 555, 0), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
+
+					new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, new Colour(0.73f, 0.73f, 0.73f), 1f)),
+
+					new("Big Box", new Box(new Vector3(130,   0, 65),  new Vector3(295, 165, 230), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f,    0.73f, 0.73f)), Black,1f)),
+					new("Small Box", new Box(new Vector3(265, 0, 295), new Vector3(430, 330, 460), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f, 0.73f, 0.73f)),Black, 1f))
+			},
+			new SingleColourSkyBox(Black)
 	);
 
 	/// <summary>

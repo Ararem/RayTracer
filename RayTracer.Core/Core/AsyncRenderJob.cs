@@ -1,4 +1,4 @@
-#define DEBUG_IGNORE_BUFFER_PREVIOUS
+// #define DEBUG_IGNORE_BUFFER_PREVIOUS
 using JetBrains.Annotations;
 using RayTracer.Core.Debugging;
 using RayTracer.Core.Environment;
@@ -23,7 +23,6 @@ namespace RayTracer.Core;
 /// </remarks>
 public sealed class AsyncRenderJob
 {
-	//TODO: Allow cancelling of the render job partway through
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
 	/// </summary>
@@ -84,19 +83,21 @@ public sealed class AsyncRenderJob
 			Parallel.For(
 					0, TotalTruePixels,
 					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
-					() => this, //Gives us the state tracking the `this` reference and which pass we're in
+					() =>
+					{
+						Interlocked.Increment(ref threadsRunning);
+						return this;
+					}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
 					static (i, _, state) =>
 					{
-						//TODO: Move ThreadsRunning into localInit/Finally?
-						Interlocked.Increment(ref state.threadsRunning);
 						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
 						Colour col = state.RenderPixelWithVisualisations(x, y);
 						state.UpdateBuffers(x, y, col);
 						Interlocked.Increment(ref state.rawPixelsRendered);
-						Interlocked.Decrement(ref state.threadsRunning);
+
 						return state;
 					},
-					static _ => { }
+					static state => {Interlocked.Decrement(ref state.threadsRunning); }
 			);
 
 			Interlocked.Increment(ref passesRendered);
@@ -298,10 +299,7 @@ public sealed class AsyncRenderJob
 			{
 				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
 
-				Log.Warning(
-						"Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}",
-						finalColour, colour, hit, material
-				);
+				Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, material);
 				colour = correctColour;
 				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, skybox);
 			}
@@ -411,7 +409,7 @@ public sealed class AsyncRenderJob
 				float   correctMag    = correctNormal.Length();
 
 				Log.Warning(
-						"Hittable normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
+						"HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
 						wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable
 				);
 				GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj.Hittable);
@@ -422,10 +420,10 @@ public sealed class AsyncRenderJob
 				Vector2 wrongUv     = hit.UV;
 				Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
 
-				// Log.Warning(
-				// 		"Hittable UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
-				// 		wrongUv, correctedUv, hit, obj.Hittable
-				// );
+				Log.Warning(
+						"HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
+						wrongUv, correctedUv, hit, obj.Hittable
+				);
 				GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj.Hittable);
 			}
 
@@ -458,11 +456,11 @@ public sealed class AsyncRenderJob
 			//(this would happen when several objects overlap exactly at a certain point)
 			//Also due to the control flow, we know that the 'old' object is stored as `closest.obj`, and the 'current' is `obj`
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			else if (currentK == newK)
-			{
-				Log.Warning("Found Z-Fighting when calculating closest hit. Objects: {@Obj1}, {@Obj2}. Hits: {@Hit1}, {@Hit2}", oldObj, obj, oldHit, hit);
-				GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
-			}
+			// else if (currentK == newK)
+			// {
+				// Log.Warning("Found Z-Fighting when calculating closest hit. Objects: {@Obj1}, {@Obj2}. Hits: {@Hit1}, {@Hit2}", oldObj, obj, oldHit, hit);
+				// GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
+			// }
 		}
 
 		//If we hit anything, set the variables, otherwise make them null
