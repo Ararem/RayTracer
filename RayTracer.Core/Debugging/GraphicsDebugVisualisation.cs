@@ -30,6 +30,11 @@ public enum GraphicsDebugVisualisation
 	Depth,
 
 	/// <summary>
+	/// UV coordinate output by the object's intersection code
+	/// </summary>
+	UVCoords,
+
+	/// <summary>
 	///  Whenever a ray hits an object, display a debug texture (useful for seeing if objects are visible in the scene)
 	/// </summary>
 	/// <remarks>

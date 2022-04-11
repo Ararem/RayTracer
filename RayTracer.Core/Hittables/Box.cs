@@ -5,6 +5,8 @@ namespace RayTracer.Core.Hittables;
 
 public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hittable
 {
+	private static Vector2 minUV = Vector2.Zero, maxUV = Vector2.Zero;
+
 	private readonly Lazy<Matrix4x4> boxToWorldTransform = new(
 			() =>
 			{
@@ -104,11 +106,14 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		Vector3 worldPoint = ray.PointAt(k);
 		Vector3 localPoint = worldPoint - centre.Value;
 
-		//
+		//Will implement these later
 		_ = uv;
 		_ = faceIndex;
 
-		//TODO: UV's, outside face
+		//TODO: UV's
+		//Side note: UV's are completely messed up
+		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
+		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
 		return new HitRecord(ray, worldPoint, localPoint, normal, k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
 }

@@ -1,3 +1,4 @@
+#define DEBUG_IGNORE_BUFFER_PREVIOUS
 using JetBrains.Annotations;
 using RayTracer.Core.Debugging;
 using RayTracer.Core.Environment;
@@ -153,7 +154,6 @@ public sealed class AsyncRenderJob
 		if (TryFindClosestHit(viewRay, out HitRecord? maybeHit, out Material? maybeMaterial))
 		{
 			HitRecord hit = (HitRecord)maybeHit!;
-			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
 			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -200,6 +200,12 @@ public sealed class AsyncRenderJob
 					{
 						return Colour.Black;
 					}
+				case GraphicsDebugVisualisation.None:
+					break; //Shouldn't get to here
+				case GraphicsDebugVisualisation.UVCoords:
+					return new Colour(hit.UV.X, hit.UV.Y, 1);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value");
 			}
 		}
 
@@ -416,10 +422,10 @@ public sealed class AsyncRenderJob
 				Vector2 wrongUv     = hit.UV;
 				Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
 
-				Log.Warning(
-						"Hittable UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
-						wrongUv, correctedUv, hit, obj.Hittable
-				);
+				// Log.Warning(
+				// 		"Hittable UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
+				// 		wrongUv, correctedUv, hit, obj.Hittable
+				// );
 				GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj.Hittable);
 			}
 
@@ -493,9 +499,15 @@ public sealed class AsyncRenderJob
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
 		//In previous profiles, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
 		int i = Compress2DIndex(x, y, RenderOptions.Width);
+		#if DEBUG_IGNORE_BUFFER_PREVIOUS
+		sampleCountBuffer[i] = 1;
+		rawColourBuffer[i]   = colour;
+		ImageBuffer[x, y]    = (Rgb24)colour;
+		#else
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
-		ImageBuffer[x, y]  =  (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
+		ImageBuffer[x, y] = (Rgb24)(rawColourBuffer[i] / sampleCountBuffer[i]);
+		#endif
 	}
 
 #region Internal state
@@ -633,7 +645,7 @@ public sealed class AsyncRenderJob
 	public TaskAwaiter GetAwaiter() => RenderTask.GetAwaiter();
 
 	/// <summary>
-	/// Starts the render asynchronously and returns the task that can be used to await it.
+	///  Starts the render asynchronously and returns the task that can be used to await it.
 	/// </summary>
 	/// <param name="maybeCancellationToken">A <see cref="cancellationToken"/> that can be used to cancel the render operation, if required</param>
 	/// <returns>A <see cref="Task"/> that represents the render operation</returns>
@@ -656,7 +668,7 @@ public sealed class AsyncRenderJob
 	}
 
 	/// <summary>
-	/// Cancellation token used to cancel the render job
+	///  Cancellation token used to cancel the render job
 	/// </summary>
 	private CancellationToken cancellationToken = CancellationToken.None;
 
