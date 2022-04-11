@@ -12,9 +12,9 @@ namespace RayTracer.Core.Materials;
 /// <param name="Albedo">
 ///  The albedo (colour) texture of this material
 /// </param>
-/// <param name="Emissive">The texture used for the light this material emits</param>
-/// <param name="Emissive">How 'diffuse' (random) the reflected rays are. Settings this to 0 means perfect reflections, 1 means completely diffuse</param>
-public sealed record StandardMaterial(Texture Albedo, Texture Emissive, float Diffusion) : Material
+/// <param name="Emission">The texture used for the light this material emits</param>
+/// <param name="Diffusion">How 'diffuse' (random) the reflected rays are. Settings this to 0 means perfect reflections, 1 means completely diffuse</param>
+public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Diffusion) : Material
 {
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)
@@ -34,5 +34,5 @@ public sealed record StandardMaterial(Texture Albedo, Texture Emissive, float Di
 	}
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit) => colour = (colour * Albedo.GetColour(hit)) + Emissive.GetColour(hit);
+	public override void DoColourThings(ref Colour colour, HitRecord hit) => colour = (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
 }

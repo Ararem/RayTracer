@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Textures;
@@ -5,6 +6,7 @@ namespace RayTracer.Core.Textures;
 /// <summary>
 ///  Base class for a texture
 /// </summary>
+[PublicAPI]
 public abstract record Texture
 {
 	/// <summary>
