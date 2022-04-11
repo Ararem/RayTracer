@@ -40,7 +40,7 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		Vector3 ro = new(temp4.X, temp4.Y, temp4.Z);
 
 		// ray-box intersection in box space
-		Vector3 m = new Vector3(1f) / rd;
+		Vector3 m = new Vector3(1f) / rd; //NAN?
 		Vector3 s = new(
 				rd.X < 0f ? 1f : -1f,
 				rd.Y < 0f ? 1f : -1f,
@@ -60,6 +60,8 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 			k = kFar;
 			if ((k < kMin) || (kMax < k)) return null;
 		}
+
+		if (float.IsNaN(k)) return null;
 
 		// compute normal (in world space), face and UV
 		Vector3 normal;
