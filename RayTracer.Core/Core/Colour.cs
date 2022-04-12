@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
@@ -245,6 +246,13 @@ public readonly struct Colour : IFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[Pure]
 	public static Colour Clamp(Colour value1, Colour min, Colour max) => Min(Max(value1, min), max);
+
+	/// <summary>
+	/// Clamps a colour's components in the range [0...1]
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[Pure]
+	public static Colour Clamp01(Colour colour) => Clamp(colour, Black, White);
 
 	/// <summary>
 	///  Linearly interpolates between two colours

@@ -2,6 +2,7 @@
 using GLib;
 using RayTracer.Display.EtoForms;
 using System;
+using System.Numerics;
 using System.Reflection;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;

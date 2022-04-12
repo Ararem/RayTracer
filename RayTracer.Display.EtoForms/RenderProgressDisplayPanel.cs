@@ -267,7 +267,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			for (int i = 0; i < maxDepth; i++) //Calculate the fractions and the max
 			{
 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
-				const double b        = 0.00003;
+				const double b        = 0.000001;
 				double       m        = rayCount;
 				double       fraction = Math.Log((b * renderJob.RawRayDepthCounts[i]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
 				#else

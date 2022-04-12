@@ -58,9 +58,9 @@ public static class GraphicsValidator
 	/// <returns>
 	///  <see langword="true"/> if the vector had a correct magnitude, else <see langword="false"/>. If false is returned, the vector needs to be
 	///  normalized
-	/// </returns>
+	/// </returns>s
 	[Pure]
-	public static bool CheckDirectionVectorMagnitude(Vector3 direction) =>
+	public static bool CheckVectorNormalized(Vector3 direction) =>
 			//Check that the magnitude is approx 1 unit
 			//Don't have to sqrt it because 1 squared is 1
 			!(Math.Abs(direction.LengthSquared() - 1f) > MagnitudeEqualityError);

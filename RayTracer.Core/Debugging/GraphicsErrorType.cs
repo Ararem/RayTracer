@@ -37,11 +37,12 @@ public enum GraphicsErrorType
 	/// </remarks>
 	KValueNotInRange,
 
-	/// <summary>
-	///  The <see cref="HitRecord.K"/> value for two ray-object intersections (same ray, unique objects) are <b>exactly</b> the same.
-	/// </summary>
-	/// <footer>See <a href="https://en.wikipedia.org/wiki/Z-fighting">Z-Fighting</a></footer>
-	ZFighting,
+	//
+	// /// <summary>
+	// ///  The <see cref="HitRecord.K"/> value for two ray-object intersections (same ray, unique objects) are <b>exactly</b> the same.
+	// /// </summary>
+	// /// <footer>See <a href="https://en.wikipedia.org/wiki/Z-fighting">Z-Fighting</a></footer>
+	// ZFighting,
 
 	/// <summary>
 	///  One (or more) of a given <see cref="Colour"/>'s channels (RGB) is out of the valid range (i.e. not [0..1])

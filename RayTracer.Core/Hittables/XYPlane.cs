@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
@@ -21,6 +22,11 @@ public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, f
 		if ((k < kMin) || (k > kMax)) //Out of range for our near/far plane
 			return null;
 
+		//The above code doesn't work when `ray.Direction.Z == 0`, since the ray is essentially going along/parallel to the plane
+		//So we have to do a sanity check here, otherwise `k` will be NaN, and that messes up everything else
+		//Since the ray is inside the plane, just set `k` to `kMin` so that the nearest possible intersection in the valid range will be used
+		if ((ray.Direction.Z == 0f) || float.IsNaN(k)) k = kMin;
+
 		Vector3 worldPoint = ray.PointAt(k);
 		float   x          = worldPoint.X, y = worldPoint.Y;
 		//Assert our X/Y bounds
@@ -35,7 +41,7 @@ public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, f
 		Vector3 outwardNormal =
 				/*
 				 * This just ensures that the normal points against the ray, as usual
-				 * 
+				 *
 				 * Explanation:
 				 * Lets take the example below, with the ray starting at Z=0, towards +ve Z, and the plane is at Z=1
 				 *  		=========>>	[==]	  P
@@ -62,6 +68,7 @@ public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, f
 						: new Vector3(0, 0, 1);
 
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
+		if(float.IsNaN(k)) Debugger.Break();
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
 }

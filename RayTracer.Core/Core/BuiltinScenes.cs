@@ -2,7 +2,6 @@ using JetBrains.Annotations;
 using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
-using RayTracer.Core.Textures;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
@@ -36,7 +35,7 @@ public static class BuiltinScenes
 			{
 					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
 					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
-					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f)),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f))
 					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
 			new DefaultSkyBox()
@@ -51,12 +50,22 @@ public static class BuiltinScenes
 					new("Top", new XZPlane(0,    555, 0, 555, 555), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
 					new("Bottom", new XZPlane(0, 555, 0, 555, 0), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
 
-					new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, new Colour(0.73f, 0.73f, 0.73f), 1f)),
+					new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, White * 15f, 1f)),
 
-					new("Big Box", new Box(new Vector3(130,   0, 65),  new Vector3(295, 165, 230), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f,    0.73f, 0.73f)), Black,1f)),
-					new("Small Box", new Box(new Vector3(265, 0, 295), new Vector3(430, 330, 460), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f, 0.73f, 0.73f)),Black, 1f))
+					// new("Big Box", new HexPlaneBox(new Vector3(130,   0, 65),  new Vector3(295, 165, 230)), new StandardMaterial((new Colour(0.73f,    0.73f, 0.73f)), Black, 1f)),
+					// new("Small Box", new Box(new Vector3(265, 0, 295), new Vector3(430, 330, 460), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f, 0.73f, 0.73f)), Black, 1f))
+
+					new(
+							"Big Box", new Box(
+									Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)
+									// * Matrix4x4.CreateFromYawPitchRoll(0, 0, 0)
+									* Matrix4x4.CreateScale(165, 165, 165)
+							),
+							new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Blue * 50f, 1f)
+					)
+					// new("Small Box", new Box(new Vector3(265, 0, 295), new Vector3(430, 330, 460), Matrix4x4.Identity), new StandardMaterial((new Colour(0.73f, 0.73f, 0.73f)), Black, 1f))
 			},
-			new SingleColourSkyBox(Black)
+			new SingleColourSkyBox(White*1f)
 	);
 
 	/// <summary>
@@ -77,13 +86,13 @@ public static class BuiltinScenes
 	public static readonly Scene Testing = new(
 			"Testing", new Camera(new Vector3(0, 0, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					// new("Object", new Cylinder(-One, One, 1f), new StandardMaterial(White * 0.5f, Black, .1f))
-					// new ("HexBox", new HexPlaneBox(Zero, new Vector3(1,.2f, 1)), new StandardMaterial(HalfGrey, Black, 1f))
 					new(
 							"Box",
 							new Box(
-									-One, One,
-									Matrix4x4.CreateFromYawPitchRoll(0 *(MathF.PI /180f), 0 *(MathF.PI /180f), 0 *(MathF.PI /180f))
+									Matrix4x4.Identity
+									* Matrix4x4.CreateScale(5, 2, 1)
+									* Matrix4x4.CreateFromYawPitchRoll(30 * (MathF.PI / 180f), 420 * (MathF.PI / 180f), 69 * (MathF.PI / 180f))
+									* Matrix4x4.CreateTranslation(0, 1f, 0)
 							),
 							new StandardMaterial(HalfGrey, Black, 1f)
 					)

@@ -3,24 +3,47 @@ using static System.MathF;
 
 namespace RayTracer.Core.Hittables;
 
-public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hittable
+/// <summary>
+///  Represents a 3-dimensional box.
+/// </summary>
+/// <remarks>
+///  This box is unusual in the sense that it has a <see cref="Matrix4x4"/> to contain rotation, translation and scaling, instead of separate parameters
+///  for each. In order to position a <see cref="Box"/>, use the <see cref="Matrix4x4"/><c>.CreateXXX</c> methods (like
+///  <see cref="Matrix4x4.CreateScale(System.Numerics.Vector3)"/>). When combining these matrices, make sure to multiply them in the order
+///  <c>Translate * Rotate * Scale</c>, or you may get unintended results (see
+///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a>
+///  )
+/// </remarks>
+public record Box : Hittable
 {
-	private static Vector2 minUV = Vector2.Zero, maxUV = Vector2.Zero;
+	/// <summary>
+	///
+	/// </summary>
+	/// <param name="boxToWorldTransform"></param>
+	/// <exception cref="ArgumentOutOfRangeException"></exception>
+	public Box(Matrix4x4 boxToWorldTransform)
+	{
+		BoxToWorldTransform = boxToWorldTransform;
+		if (!Matrix4x4.Invert(boxToWorldTransform, out Matrix4x4 worldToBoxTransform)) throw new ArgumentOutOfRangeException(nameof(boxToWorldTransform), boxToWorldTransform, "Matrix not invertible");
+		WorldToBoxTransform = worldToBoxTransform;
+	}
 
-	private readonly Lazy<Matrix4x4> boxToWorldTransform = new(
-			() =>
-			{
-				Matrix4x4.Invert(WorldToBoxTransform, out Matrix4x4 result);
-				return result;
-			}
-	);
-
-	private readonly Lazy<Vector3> centre     = new(() => (Min + Max)          / 2f);
-	private readonly Lazy<float>   halfLength = new(() => (Max - Min).Length() / 2f);
+	public Matrix4x4 WorldToBoxTransform { get; }
+	public Matrix4x4 BoxToWorldTransform { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
+		/*
+		 * Modified version of IQ's code here, many thanks!!
+		 * Some notes on what I did:
+		 * 1. Changed the names to be a lot more clear for the inputs and outputs
+		 * 2. Refactored it a bit to match what I needed to return and take in
+		 * 3. A few changes because OpenGL has features C# doesn't
+		 * 4. Add some NaN and range checks, since my raytracer doesn't like those very much
+		 * 5. (Important) I've combined everything into one input matrix, meaning the `rad`/`halfLengths` vector no longer exists, as it's contained in the matrix transform now
+		 */
+
 		// Calcs intersection and exit distances, normal, face and UVs
 		// row is the ray origin in world space
 		// rdw is the ray direction in world space
@@ -35,7 +58,6 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		// oF contains the index if the intersected face [0..5]
 
 		// convert from world to box space
-
 		Vector4 temp4 = Vector4.Transform(new Vector4(ray.Direction, 0f), WorldToBoxTransform);
 		Vector3 rd    = new(temp4.X, temp4.Y, temp4.Z);
 		temp4 = Vector4.Transform(new Vector4(ray.Origin, 1f), WorldToBoxTransform);
@@ -48,8 +70,8 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 				rd.Y < 0f ? 1f : -1f,
 				rd.Z < 0f ? 1f : -1f
 		);
-		Vector3 t1 = m * (-ro + (s * halfLength.Value));
-		Vector3 t2 = m * (-ro - (s * halfLength.Value));
+		Vector3 t1 = m * (-ro + s);
+		Vector3 t2 = m * (-ro - s);
 
 		float kNear = Max(Max(t1.X, t1.Y), t1.Z);
 		float kFar  = Min(Min(t2.X, t2.Y), t2.Z);
@@ -72,9 +94,9 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		if ((t1.X > t1.Y) && (t1.X > t1.Z))
 		{
 			Vector3 v = new(
-					boxToWorldTransform.Value.M11,
-					boxToWorldTransform.Value.M12,
-					boxToWorldTransform.Value.M13
+					BoxToWorldTransform.M11,
+					BoxToWorldTransform.M12,
+					BoxToWorldTransform.M13
 			);
 			normal    = v * s.X;
 			uv        = new Vector2(ro.Y, ro.Z) + (new Vector2(rd.Y, rd.Z) * t1.X);
@@ -83,9 +105,9 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		else if (t1.Y > t1.Z)
 		{
 			Vector3 v = new(
-					boxToWorldTransform.Value.M21,
-					boxToWorldTransform.Value.M22,
-					boxToWorldTransform.Value.M23
+					BoxToWorldTransform.M21,
+					BoxToWorldTransform.M22,
+					BoxToWorldTransform.M23
 			);
 			normal    = v * s.Y;
 			uv        = new Vector2(ro.Z, ro.Z) + (new Vector2(rd.Z, rd.X) * t1.Y);
@@ -94,9 +116,9 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		else
 		{
 			Vector3 v = new(
-					boxToWorldTransform.Value.M31,
-					boxToWorldTransform.Value.M32,
-					boxToWorldTransform.Value.M33
+					BoxToWorldTransform.M31,
+					BoxToWorldTransform.M32,
+					BoxToWorldTransform.M33
 			);
 			normal    = v * s.Z;
 			uv        = new Vector2(ro.X, ro.Y) + (new Vector2(rd.X, rd.Y) * t1.Z);
@@ -104,7 +126,9 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		}
 
 		Vector3 worldPoint = ray.PointAt(k);
-		Vector3 localPoint = worldPoint - centre.Value;
+		//Transform the point from world space to box space to get the local point
+		temp4 = Vector4.Transform(worldPoint, WorldToBoxTransform);
+		Vector3 localPoint = new(temp4.X, temp4.Y, temp4.Z);
 
 		//Will implement these later
 		_ = uv;
@@ -114,6 +138,6 @@ public record Box(Vector3 Min, Vector3 Max, Matrix4x4 WorldToBoxTransform) : Hit
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, normal, k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, Vector3.Normalize(normal), k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
 }
