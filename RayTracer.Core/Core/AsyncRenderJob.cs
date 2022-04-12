@@ -1,10 +1,8 @@
 // #define DEBUG_IGNORE_BUFFER_PREVIOUS
 
-using JetBrains.Annotations;
 using RayTracer.Core.Debugging;
 using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
-using RayTracer.Core.Materials;
 using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -154,9 +152,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(viewRay, out HitRecord? maybeHit, out Material? maybeMaterial))
-		{
-			HitRecord hit = (HitRecord)maybeHit!;
+		if (TryFindClosestHit(viewRay) is var (sceneObject, hit))
 			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -192,17 +188,12 @@ public sealed class AsyncRenderJob : IDisposable
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
 					return MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Purple;
 				case GraphicsDebugVisualisation.ScatterDirection:
-					if (maybeMaterial is { } mat)
-					{
-						//Convert vector values [-1..1] to [0..1]
-						Vector3 scat = mat.Scatter((HitRecord)maybeHit)?.Direction ?? -Vector3.One;
-						Vector3 n    = (scat + Vector3.One) / 2f;
-						return (Colour)n;
-					}
-					else
-					{
-						return Colour.Black;
-					}
+				{
+					//Convert vector values [-1..1] to [0..1]
+					Vector3 scat = sceneObject.Material.Scatter(hit)?.Direction ?? -Vector3.One;
+					Vector3 n    = (scat + Vector3.One) / 2f;
+					return (Colour)n;
+				}
 				case GraphicsDebugVisualisation.None:
 					break; //Shouldn't get to here
 				case GraphicsDebugVisualisation.UVCoords:
@@ -210,7 +201,6 @@ public sealed class AsyncRenderJob : IDisposable
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value");
 			}
-		}
 
 		//No object was intersected with, return black
 		return Colour.Black;
@@ -219,7 +209,7 @@ public sealed class AsyncRenderJob : IDisposable
 	private Colour CalculateRayColourLooped(Ray ray)
 	{
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
-		(Material Material, HitRecord Hit)[] materialHitArray = ArrayPool<(Material Material, HitRecord Hit)>.Shared.Rent(RenderOptions.MaxDepth + 1);
+		(SceneObject Object, HitRecord Hit)[] materialHitArray = ArrayPool<(SceneObject, HitRecord)>.Shared.Rent(RenderOptions.MaxDepth + 1);
 		Colour                               finalColour      = Colour.Black;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)
@@ -227,11 +217,11 @@ public sealed class AsyncRenderJob : IDisposable
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
 			Interlocked.Increment(ref rayCount);
-			if (TryFindClosestHit(ray, out HitRecord? maybeHit, out Material? material))
+			if (TryFindClosestHit(ray) is var (sceneObject, maybeHit))
 			{
-				HitRecord hit = (HitRecord)maybeHit!;
+				HitRecord hit = maybeHit;
 				//See if the material scatters the ray
-				Ray? maybeNewRay = material!.Scatter(hit);
+				Ray? maybeNewRay = sceneObject.Material!.Scatter(hit);
 
 				if (maybeNewRay is null)
 				{
@@ -257,14 +247,14 @@ public sealed class AsyncRenderJob : IDisposable
 
 						Log.Warning(
 								"Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} HitRecord: {HitRecord}. Material: {@Material}",
-								wrongDir, wrongMag, correctDir, correctMag, ray, hit, material
+								wrongDir, wrongMag, correctDir, correctMag, ray, hit, sceneObject.Material
 						);
-						GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, material);
+						GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, sceneObject.Material);
 
 						ray = ray with { Direction = correctDir };
 					}
 
-					materialHitArray[depth] = (material, hit);
+					materialHitArray[depth] = (sceneObject, hit);
 				}
 			}
 			//No object was hit (at least not in the range), so return the skybox colour
@@ -295,21 +285,21 @@ public sealed class AsyncRenderJob : IDisposable
 		for (depth--; depth >= 0; depth--)
 		{
 			Colour colour = finalColour;
-			(Material material, HitRecord hit) = materialHitArray[depth];
-			material.DoColourThings(ref colour, hit);
+			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
+			sceneObject.Material.DoColourThings(ref colour, hit);
 			if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(colour))
 			{
 				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
 
-				Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, material);
+				Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, sceneObject);
 				colour = correctColour;
-				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, material);
+				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, sceneObject);
 			}
 
 			finalColour = colour;
 		}
 
-		ArrayPool<(Material Material, HitRecord Hit)>.Shared.Return(materialHitArray);
+		ArrayPool<(SceneObject, HitRecord)>.Shared.Return(materialHitArray);
 
 		return finalColour;
 
@@ -385,8 +375,7 @@ public sealed class AsyncRenderJob : IDisposable
 			*/
 	}
 
-	[ContractAnnotation("=> true, maybeHit: notnull, material: notnull; => false, maybeHit: null, material:null")]
-	private bool TryFindClosestHit(Ray ray, out HitRecord? maybeHit, out Material? material)
+	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
@@ -396,7 +385,7 @@ public sealed class AsyncRenderJob : IDisposable
 		foreach (SceneObject obj in objects)
 		{
 			//Try and hit the object
-			maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
+			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
 			//No point continuing if there was no hit
 			if (maybeHit is not { } hit) continue;
 
@@ -465,17 +454,9 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//If we hit anything, set the variables, otherwise make them null
 		if (maybeClosest is var (sceneObject, hitRecord))
-		{
-			maybeHit = hitRecord;
-			material = sceneObject.Material;
-			return true;
-		}
+			return (sceneObject, hitRecord);
 		else
-		{
-			material = null;
-			maybeHit = null;
-			return false;
-		}
+			return null;
 	}
 
 	/// <summary>
