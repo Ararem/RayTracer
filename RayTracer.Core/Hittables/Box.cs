@@ -70,8 +70,8 @@ public record Box : Hittable
 				rd.Y < 0f ? 1f : -1f,
 				rd.Z < 0f ? 1f : -1f
 		);
-		Vector3 t1 = m * (-ro + s);
-		Vector3 t2 = m * (-ro - s);
+		Vector3 t1 = m * (-ro + (s/2f));
+		Vector3 t2 = m * (-ro - (s/2f));
 
 		float kNear = Max(Max(t1.X, t1.Y), t1.Z);
 		float kFar  = Min(Min(t2.X, t2.Y), t2.Z);

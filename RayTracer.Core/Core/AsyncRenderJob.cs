@@ -123,8 +123,8 @@ public sealed class AsyncRenderJob : IDisposable
 	{
 		//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
 		float s = x, t = y;
-		//Add up to 1 pixel of offset randomness to the coords
-		const float ssaaRadius = 1f;
+		//Add up to half a pixel of offset randomness to the coords
+		const float ssaaRadius = .5f;
 		s += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		t += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		//Account for the fact that we want uv coords not pixel coords
@@ -501,12 +501,13 @@ public sealed class AsyncRenderJob : IDisposable
 		sampleCountBuffer[i] = 1;
 		rawColourBuffer[i] = colour;
 		//Have to clamp the colour here or we get funky things in the image later
-		ImageBuffer[x, y] = (Rgb24)Colour.Clamp01(colour);
+		//Sqrt for gamma=2 correction
+		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(colour));
 		#else
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		//Have to clamp the colour here or we get funky things in the image later
-		ImageBuffer[x, y]  =  (Rgb24)Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]);
+		ImageBuffer[x, y]  =  (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
 		#endif
 	}
 

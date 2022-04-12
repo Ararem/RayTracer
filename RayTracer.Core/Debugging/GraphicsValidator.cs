@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace RayTracer.Core.Debugging;
@@ -58,7 +59,7 @@ public static class GraphicsValidator
 	/// <returns>
 	///  <see langword="true"/> if the vector had a correct magnitude, else <see langword="false"/>. If false is returned, the vector needs to be
 	///  normalized
-	/// </returns>s
+	/// </returns>
 	[Pure]
 	public static bool CheckVectorNormalized(Vector3 direction) =>
 			//Check that the magnitude is approx 1 unit

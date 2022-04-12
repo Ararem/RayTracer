@@ -255,6 +255,11 @@ public readonly struct Colour : IFormattable
 	public static Colour Clamp01(Colour colour) => Clamp(colour, Black, White);
 
 	/// <summary>
+	/// Calculates the square root of a colour's channels
+	/// </summary>
+	public static Colour Sqrt(Colour colour) => new (MathF.Sqrt(colour.R), MathF.Sqrt(colour.G), MathF.Sqrt(colour.B));
+
+	/// <summary>
 	///  Linearly interpolates between two colours
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
