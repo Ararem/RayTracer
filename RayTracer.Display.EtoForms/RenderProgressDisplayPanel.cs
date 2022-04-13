@@ -114,7 +114,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				#endif
 		{
 			await Application.Instance.InvokeAsync(Update);
-			await Task.Delay(10);
+			await Task.Delay(10000);
 		}
 
 		#if !DEBUG
