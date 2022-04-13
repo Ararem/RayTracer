@@ -11,12 +11,10 @@ namespace RayTracer.Core.Environment;
 public sealed record InfinitePointLight(Vector3 Position, Colour Colour) : Light
 {
 	/// <inheritdoc />
-	public override Colour CalculateLight(HitRecord hit, Func<Ray, (SceneObject sceneObject, HitRecord hit)?> findClosestIntersection)
+	public override Colour CalculateLight(HitRecord hit, FastAnyIntersectCheck fastAnyIntersectCheck, SlowClosestIntersectCheck slowClosestIntersectCheck)
 	{
 		//See if there's anything in between us and the object
-		Ray                                       shadowRay    = Ray.FromPoints(hit.WorldPoint, Position);
-		(SceneObject sceneObject, HitRecord hit)? intersection = findClosestIntersection(shadowRay);
-		if (intersection is null || intersection.Value.hit.K <= Position.Length()) //Null if no intersection found, meaning unrestricted path
+		if (!CheckIntersection(hit, Position, fastAnyIntersectCheck, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour = Colour;
 			float  dot    = MathF.Abs(Vector3.Dot(shadowRay.Direction, hit.Normal));

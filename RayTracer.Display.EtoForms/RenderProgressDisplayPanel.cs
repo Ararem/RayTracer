@@ -249,6 +249,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		for (int i = 0; i < stringStats.Length; i++)
 		{
 			(string? title, string[]? strings) = stringStats[i];
+			//WARN: Apparently too many `new`'s may be causing the errors i'm getting from GTK
+			//Gotta reuse maybe
 			string values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
 			statsTable.Add(new Label { Text = title, ID  = $"{title} stats title" },  0, i);
 			statsTable.Add(new Label { Text = values, ID = $"{title} stats values" }, 1, i);

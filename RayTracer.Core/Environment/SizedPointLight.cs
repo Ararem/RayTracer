@@ -22,17 +22,15 @@ namespace RayTracer.Core.Environment;
 public record SizedPointLight(Vector3 Position, Colour Colour, float Radius, float DistanceScaleLimit = float.PositiveInfinity, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
 {
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, Func<Ray, (SceneObject sceneObject, HitRecord hit)?> findClosestIntersection)
+	public override Colour CalculateLight(HitRecord hit, FastAnyIntersectCheck fastAnyIntersectCheck, SlowClosestIntersectCheck slowClosestIntersectCheck)
 	{
 		//See if there's anything in between us and the object
-		Ray                                       shadowRay = Ray.FromPoints(hit.WorldPoint, Position);
-		(SceneObject sceneObject, HitRecord hit)? intersection         = findClosestIntersection(shadowRay);
-		if (intersection is null || intersection.Value.hit.K <= Position.Length()) //Null if no intersection found, meaning unrestricted path
+		if (!CheckIntersection(hit, Position, fastAnyIntersectCheck, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
 			if (dot < 0) dot = -dot;                                             //Skip if the surface normal is away from the light
-			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);        //Account for how much the surface points towards our light
+			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);  //Account for how much the surface points towards our light
 			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, Position); //Normally formula uses R^2, so don't bother rooting here to save performance
 			float distScale = (Radius * Radius) / distSqr;                       // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);

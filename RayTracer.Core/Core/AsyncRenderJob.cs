@@ -8,6 +8,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Buffers;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static RayTracer.Core.MathUtils;
@@ -22,6 +23,10 @@ namespace RayTracer.Core;
 /// </remarks>
 public sealed class AsyncRenderJob : IDisposable
 {
+	private readonly Light.FastAnyIntersectCheck fastAnyIntersectCheck;
+
+	private readonly Light.SlowClosestIntersectCheck slowClosestIntersectCheck;
+
 	//TODO: Bloom would be quite fun. Might need to be a post-process after rendering complete
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
@@ -31,26 +36,26 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Record containing options that affect how the resulting image is produced, such as resolution, multisample count or debug
 	///  visualisations
 	/// </param>
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: RayTracer.Core.Colour[]; size: 24MB")] //rawColourBuffer allocation
 	public AsyncRenderJob(Scene scene, RenderOptions renderOptions)
 	{
 		ArgumentNullException.ThrowIfNull(scene);
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
 
-		ImageBuffer                  = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
-		RenderOptions                = renderOptions;
-		rawColourBuffer              = new Colour[renderOptions.Width * renderOptions.Height];
-		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
-		TotalRawPixels               = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		TotalTruePixels              = RenderOptions.Width        * RenderOptions.Height;
+		ImageBuffer                          = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		RenderOptions                        = renderOptions;
+		rawColourBuffer                      = new Colour[renderOptions.Width * renderOptions.Height];
+		sampleCountBuffer                    = new int[renderOptions.Width    * renderOptions.Height];
+		TotalRawPixels                       = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
+		TotalTruePixels                      = RenderOptions.Width        * RenderOptions.Height;
 		(_, camera, objects, lights, skybox) = scene;
-		Scene                        = scene;
-		Stopwatch                    = new Stopwatch();
-		rawRayDepthCounts            = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
+		Scene                                = scene;
+		Stopwatch                            = new Stopwatch();
+		rawRayDepthCounts                    = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
 
-		Log.Debug("Camera: {Camera}", camera);
-		Log.Debug("Scene: {Scene}",   scene);
-		Log.Debug("SkyBox: {SkyBox}", skybox);
+		slowClosestIntersectCheck = TryFindClosestHit;
+		fastAnyIntersectCheck     = AnyIntersectionFast;
 
 		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}
@@ -152,7 +157,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(viewRay) is var (sceneObject, hit))
+		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, hit))
 			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -177,7 +182,7 @@ public sealed class AsyncRenderJob : IDisposable
 					float val;
 					float z = hit.K - RenderOptions.KMin;
 
-					val   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
+					val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
 					// val   = MathF.Pow(MathF.E, -a * z);                    //Exponential
 					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
 					// val   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
@@ -210,14 +215,14 @@ public sealed class AsyncRenderJob : IDisposable
 	{
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
 		(SceneObject Object, HitRecord Hit)[] materialHitArray = ArrayPool<(SceneObject, HitRecord)>.Shared.Rent(RenderOptions.MaxDepth + 1);
-		Colour                               finalColour      = Colour.Black;
+		Colour                                finalColour      = Colour.Black;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)
 		int depth;
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
 			Interlocked.Increment(ref rayCount);
-			if (TryFindClosestHit(ray) is var (sceneObject, maybeHit))
+			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
 			{
 				HitRecord hit = maybeHit;
 				//See if the material scatters the ray
@@ -287,7 +292,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//Make a copy of the final colour and let the lights and the material do their calculations
 			Colour colour = finalColour;
 			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
-			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, TryFindClosestHit);
+			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck);
 			sceneObject.Material.DoColourThings(ref colour, hit);
 
 			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)
@@ -379,13 +384,49 @@ public sealed class AsyncRenderJob : IDisposable
 			*/
 	}
 
-	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray)
+	private bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
+	{
+		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
+
+		// ReSharper disable once UseDeconstruction
+		foreach (SceneObject obj in objects)
+		{
+			//Try and hit the object
+			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
+
+			//Try next object if there was no hit
+			if (maybeHit is not { } hit) continue;
+
+			//Check the K value just in case
+			if (!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
+			{
+				Log.Warning(
+						"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
+						hit.K, kMin, kMax, hit, obj.Hittable
+				);
+				GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
+				continue; //Skip because we can't consider it valid
+			}
+
+			return true;
+		}
+
+		//Didn't manage to hit any of the scene objects along the ray
+		return false;
+	}
+
+	/// <summary>
+	///  Finds the closest intersection along a given <paramref name="ray"/>
+	/// </summary>
+	/// <param name="ray">The ray to check for intersections</param>
+	/// <param name="kMin">Lower bound for K along the ray</param>
+	/// <param name="kMax">Upper bound for K along the ray</param>
+	/// <returns></returns>
+	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
 		(SceneObject obj, HitRecord hit)? maybeClosest = null;
-		float                             kMin         = RenderOptions.KMin;
-		float                             kMax         = RenderOptions.KMax;
 		foreach (SceneObject obj in objects)
 		{
 			//Try and hit the object
@@ -484,7 +525,7 @@ public sealed class AsyncRenderJob : IDisposable
 		int i = Compress2DIndex(x, y, RenderOptions.Width);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
-		rawColourBuffer[i] = colour;
+		rawColourBuffer[i]   = colour;
 		//Have to clamp the colour here or we get funky things in the image later
 		//Sqrt for gamma=2 correction
 		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(colour));
@@ -492,7 +533,7 @@ public sealed class AsyncRenderJob : IDisposable
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
 		//Have to clamp the colour here or we get funky things in the image later
-		ImageBuffer[x, y]  =  (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
+		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
 		#endif
 	}
 
@@ -666,11 +707,11 @@ public sealed class AsyncRenderJob : IDisposable
 	private object? started = null;
 
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public void Dispose()
-    {
-        RenderTask.Dispose();
-    }
+	{
+		RenderTask.Dispose();
+	}
 
-    #endregion
+#endregion
 }

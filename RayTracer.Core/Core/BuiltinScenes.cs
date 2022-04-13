@@ -64,7 +64,7 @@ public static class BuiltinScenes
 			{
 					new InfinitePointLight(new Vector3(550f, 554f, 555 /2f), Red * .5f),
 					new InfinitePointLight(new Vector3(5f, 554f, 555/2f), Green * .5f),
-					new InfinitePointLight(new Vector3(555f/2, 554f, 555/2f), White * .5f),
+					// new InfinitePointLight(new Vector3(555f/2, 554f, 555/2f), White * .5f),
 			},
 			new SingleColourSkyBox(Black)
 	);

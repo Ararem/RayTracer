@@ -18,5 +18,5 @@ public readonly record struct HitRecord(
 		Vector3 Normal,
 		float   K,
 		bool    OutsideFace,
-		Vector2 UV
+		Vector2 UV //TODO: Add depth?
 );
