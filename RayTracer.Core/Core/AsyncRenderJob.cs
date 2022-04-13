@@ -1,4 +1,4 @@
-// #define DEBUG_IGNORE_BUFFER_PREVIOUS
+#define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using RayTracer.Core.Debugging;
 using RayTracer.Core.Environment;
@@ -43,7 +43,7 @@ public sealed class AsyncRenderJob : IDisposable
 		sampleCountBuffer            = new int[renderOptions.Width    * renderOptions.Height];
 		TotalRawPixels               = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
 		TotalTruePixels              = RenderOptions.Width        * RenderOptions.Height;
-		(_, camera, objects, skybox) = scene;
+		(_, camera, objects, lights, skybox) = scene;
 		Scene                        = scene;
 		Stopwatch                    = new Stopwatch();
 		rawRayDepthCounts            = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
@@ -177,11 +177,11 @@ public sealed class AsyncRenderJob : IDisposable
 					float val;
 					float z = hit.K - RenderOptions.KMin;
 
-					// t   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
-					// t   = MathF.Pow(MathF.E, -a * z);                    //Exponential
-					// t   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
-					// t   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
-					val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
+					val   = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity
+					// val   = MathF.Pow(MathF.E, -a * z);                    //Exponential
+					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
+					// val   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
+					// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
 					return new Colour(val);
 				}
 				//Debug texture based on X/Y pixel coordinates
@@ -221,7 +221,7 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				HitRecord hit = maybeHit;
 				//See if the material scatters the ray
-				Ray? maybeNewRay = sceneObject.Material!.Scatter(hit);
+				Ray? maybeNewRay = sceneObject.Material.Scatter(hit);
 
 				if (maybeNewRay is null)
 				{
@@ -284,9 +284,13 @@ public sealed class AsyncRenderJob : IDisposable
 		//Have to decrement depth here or we get index out of bounds
 		for (depth--; depth >= 0; depth--)
 		{
+			//Make a copy of the final colour and let the lights and the material do their calculations
 			Colour colour = finalColour;
 			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
+			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, TryFindClosestHit);
 			sceneObject.Material.DoColourThings(ref colour, hit);
+
+			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)
 			if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(colour))
 			{
 				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
@@ -497,6 +501,7 @@ public sealed class AsyncRenderJob : IDisposable
 	private readonly Camera        camera;
 	private readonly SkyBox        skybox;
 	private readonly SceneObject[] objects;
+	private readonly Light[]       lights;
 
 	/// <summary>
 	///  Options used to render

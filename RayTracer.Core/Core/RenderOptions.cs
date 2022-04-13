@@ -36,10 +36,11 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
 		bool HdrEnabled = true
+		//TODO: Max depth for calculating lighting?
 )
 {
 	/// <summary>
 	///  Default render options
 	/// </summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, 1, 100, 100);
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, 1, 100, 10);
 }

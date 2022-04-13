@@ -225,7 +225,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				("Scene", new[]
 				{
 						$"Name:		{renderJob.Scene.Name}",
-						$"Obj Count:	{renderJob.Scene.Objects.Length}",
+						$"Obj Count:	{renderJob.Scene.SceneObjects.Length}",
 						$"Camera:		{renderJob.Scene.Camera}",
 						$"SkyBox:		{renderJob.Scene.SkyBox}"
 				}),

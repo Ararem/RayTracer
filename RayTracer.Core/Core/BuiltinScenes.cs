@@ -24,6 +24,7 @@ public static class BuiltinScenes
 			{
 					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 1f))
 			},
+			Array.Empty<Light>(),
 			new DefaultSkyBox()
 	);
 
@@ -38,22 +39,32 @@ public static class BuiltinScenes
 					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f))
 					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
+			Array.Empty<Light>(),
 			new DefaultSkyBox()
 	);
 
+	/// <summary>
+	///  The good 'ol cornell box, as is traditional for raytracing
+	/// </summary>
 	public static readonly Scene CornellBox = new(
-			"Cornell Box", new Camera(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f/1f, 0f, 1f), new SceneObject[]
+			"Cornell Box", new Camera(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
 			{
-					new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.12f,    0.45f, 0.15f), Black, 1f)),
-					new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.65f,  0.05f, 0.05f), Black, 1f)),
+					new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.2f,    0.5f, 0.2f), Black, 1f)),
+					new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.5f,  0.2f, 0.2f), Black, 1f)),
 					new("Back", new XYPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
 					new("Top", new XZPlane(0,    555, 0, 555, 555), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
 					new("Bottom", new XZPlane(0, 555, 0, 555, 0), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
 
-					new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, White * 15f, 1f)),
+					// new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, White * 15f, 1f)),
 
-					new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
+					// new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+					// new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
+			},
+			new Light[]
+			{
+					new InfinitePointLight(new Vector3(550f, 554f, 555 /2f), Red * .5f),
+					new InfinitePointLight(new Vector3(5f, 554f, 555/2f), Green * .5f),
+					new InfinitePointLight(new Vector3(555f/2, 554f, 555/2f), White * .5f),
 			},
 			new SingleColourSkyBox(Black)
 	);
@@ -67,6 +78,7 @@ public static class BuiltinScenes
 					new("Sphere", new Sphere(new Vector3(0, 0.5f, 0), 1f), new StandardMaterial(Green,                       Black,      1f)),
 					new("Ground", new Disk(Zero, Normalize(new Vector3(0, 1, -1)), 1.5f), new StandardMaterial(0.5f * White, Red * 0.1f, 1f))
 			},
+			Array.Empty<Light>(),
 			new DefaultSkyBox()
 	);
 
@@ -74,20 +86,21 @@ public static class BuiltinScenes
 	///  Testing scene
 	/// </summary>
 	public static readonly Scene Testing = new(
-			"Testing", new Camera(new Vector3(0, 0, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			"Testing", new Camera(new Vector3(0, 3, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new(
 							"Box",
 							new Box(
 									Matrix4x4.Identity
-									* Matrix4x4.CreateScale(5, 2, 1)
-									* Matrix4x4.CreateFromYawPitchRoll(30 * (MathF.PI / 180f), 420 * (MathF.PI / 180f), 69 * (MathF.PI / 180f))
-									* Matrix4x4.CreateTranslation(0, 1f, 0)
+									* Matrix4x4.CreateScale(10, 2f, 3)
+									// * Matrix4x4.CreateFromYawPitchRoll(30 * (MathF.PI / 180f), 420 * (MathF.PI / 180f), 69 * (MathF.PI / 180f))
+									// * Matrix4x4.CreateTranslation(0, 1f, 0)
 							),
-							new StandardMaterial(HalfGrey, Black, 1f)
+							new StandardMaterial(HalfGrey, Black, .2f)
 					)
 			},
-			new DefaultSkyBox()
+			new Light[] { new SizedPointLight(new Vector3(0, 1.5f, 0), Red, 10f, 2f) },
+			new SingleColourSkyBox(White * .1f)
 	);
 
 	/// <summary>
@@ -139,7 +152,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), new DefaultSkyBox());
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), Array.Empty<Light>(), new DefaultSkyBox());
 		}
 	}
 
