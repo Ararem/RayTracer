@@ -1,4 +1,4 @@
-#define DEBUG_IGNORE_BUFFER_PREVIOUS
+// #define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using RayTracer.Core.Debugging;
 using RayTracer.Core.Environment;
@@ -292,7 +292,11 @@ public sealed class AsyncRenderJob : IDisposable
 			//Make a copy of the final colour and let the lights and the material do their calculations
 			Colour colour = finalColour;
 			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
-			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck);
+			//This makes the lights have less of an effect the deeper they are
+			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
+			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
+			float depthScalar                              = 1f / (depth + 1);
+			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit);
 
 			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)
