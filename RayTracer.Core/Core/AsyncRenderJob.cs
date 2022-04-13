@@ -267,7 +267,7 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				Interlocked.Increment(ref skyRays);
 				finalColour = skybox.GetSkyColour(ray);
-				if (!GraphicsValidator.CheckColourValid(finalColour))
+				if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(finalColour))
 				{
 					Colour correctColour = Colour.Clamp(finalColour, Colour.Black, Colour.White);
 
@@ -295,7 +295,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//This makes the lights have less of an effect the deeper they are
 			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
-			float depthScalar                              = 1f / (depth + 1);
+			float depthScalar                              = 3f/ (depth + 3);
 			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit);
 
@@ -304,7 +304,7 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
 
-				Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, sceneObject);
+				// Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, sceneObject);
 				colour = correctColour;
 				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, sceneObject);
 			}

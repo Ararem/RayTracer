@@ -55,14 +55,19 @@ public static class BuiltinScenes
 					new("Top", new XZPlane(0,    555, 0, 555, 555), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
 					new("Bottom", new XZPlane(0, 555, 0, 555, 0), new StandardMaterial(new Colour(0.73f,   0.73f, 0.73f), Black, 1f)),
 
-					new("Light", new XZPlane(213, 343, 227, 332, 554.999f), new StandardMaterial(Black, White * 2f, 1f)),
+					new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
 
 					new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
+					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+					new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White, Black)),
 			},
 			new Light[]
 			{
-					new SizedPointLight(new Vector3(555f/2, 554f, 555/2f), White * .5f, 200, 2),
+					// new SizedPointLight(new Vector3(213, 554f, 227), White * .1f, 250, 1),
+					// new SizedPointLight(new Vector3(213, 554f, 332), White * .1f, 250, 1),
+					// new SizedPointLight(new Vector3(343, 554f, 227), White * .1f, 250, 1),
+					// new SizedPointLight(new Vector3(343, 554f, 332), White * .1f, 250, 1),
+					new DiffuseSphereLight(new Vector3((213+343)/2f, 554-50, (227+332)/2f), 40, White * 0.5f, 150, 1.5f)
 			},
 			new SingleColourSkyBox(Black)
 	);
