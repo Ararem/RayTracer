@@ -36,7 +36,9 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Record containing options that affect how the resulting image is produced, such as resolution, multisample count or debug
 	///  visualisations
 	/// </param>
-	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: RayTracer.Core.Colour[]; size: 24MB")] //rawColourBuffer allocation
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: System.Byte[]")]
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: RayTracer.Core.Colour[]")]
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: System.Int32[]")] //rawColourBuffer allocation
 	public AsyncRenderJob(Scene scene, RenderOptions renderOptions)
 	{
 		ArgumentNullException.ThrowIfNull(scene);

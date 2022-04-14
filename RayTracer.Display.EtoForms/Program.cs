@@ -1,8 +1,6 @@
 ﻿using Eto;
 using GLib;
-using RayTracer.Display.EtoForms;
 using System;
-using System.Numerics;
 using System.Reflection;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
@@ -10,90 +8,98 @@ using Logger = RayTracer.Core.Logger;
 using Task = System.Threading.Tasks.Task;
 using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
 
-Logger.Init();
-Information("Commandline args: {Args}", args);
+namespace RayTracer.Display.EtoForms;
 
-Platform platform;
-try
+internal static class Program
 {
-	Verbose("Getting platform (Detect Mode)");
-	platform = Platform.Detect!;
-	Verbose("Got platform");
-}
-catch (Exception e)
-{
-	Fatal(e, "Could not initialise Eto.Forms platform");
-	return -1;
-}
-
-Debug("Platform is {Platform}", platform);
-
-Application application;
-try
-{
-	Verbose("Creating new application object");
-	application = new Application(platform)
+	private static int Main(string[] args)
 	{
-			Name = "RayTracer Application",
-			ID   = "Main Application"
-	};
-	Verbose("Created new application object");
-}
-catch (Exception e)
-{
-	Fatal(e, "Could not initialise Eto.Forms application");
-	return -1;
-}
+		Logger.Init();
+		Information("Commandline args: {Args}", args);
 
-Debug("Application is {Application}", application);
+		Platform platform;
+		try
+		{
+			Verbose("Getting platform (Detect Mode)");
+			platform = Platform.Detect!;
+			Verbose("Got platform");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise Eto.Forms platform");
+			return -1;
+		}
 
-Verbose("Hooking up unhandled exception event");
-application.UnhandledException      += EtoUnhandledException;
-ExceptionManager.UnhandledException += GLibUnhandledException;
-Verbose("Created new application object");
+		Debug("Platform is {Platform}", platform);
 
-Debug("Application is {Application}", application);
+		Application application;
+		try
+		{
+			Verbose("Creating new application object");
+			application = new Application(platform)
+			{
+					Name = "RayTracer Application",
+					ID   = "Main Application"
+			};
+			Verbose("Created new application object");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise Eto.Forms application");
+			return -1;
+		}
 
-MainForm form;
-try
-{
-	Verbose("Creating new MainForm");
-	form = new MainForm();
-	Verbose("Created new MainForm");
-}
-catch (Exception e)
-{
-	Fatal(e, "Could not initialise MainForm");
-	return -1;
-}
+		Debug("Application is {Application}", application);
 
-Debug("MainForm is {MainForm}", form);
+		Verbose("Hooking up unhandled exception event");
+		application.UnhandledException      += EtoUnhandledException;
+		ExceptionManager.UnhandledException += GLibUnhandledException;
+		Verbose("Created new application object");
 
-Debug("Starting task watcher");
-Task.Run(TaskWatcher.WatchTasksWorker);
+		Debug("Application is {Application}", application);
 
-try
-{
-	Information("Running App");
-	application.Run(form);
-	Information("App ran to completion");
-	return 0;
-}
-catch (Exception e)
-{
-	Fatal(e, "App threw exception");
-	return -1;
-}
+		MainForm form;
+		try
+		{
+			Verbose("Creating new MainForm");
+			form = new MainForm();
+			Verbose("Created new MainForm");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not initialise MainForm");
+			return -1;
+		}
 
-static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args)
-{
-	//Stupid GLib bug keeps printing these exceptions, nothing I can do about it afaik
-	if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
-	Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
-}
+		Debug("MainForm is {MainForm}", form);
 
-static void GLibUnhandledException(UnhandledExceptionArgs args)
-{
-	if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
-	Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
+		Debug("Starting task watcher");
+		Task.Run(TaskWatcher.WatchTasksWorker);
+
+		try
+		{
+			Information("Running App");
+			application.Run(form);
+			Information("App ran to completion");
+			return 0;
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "App threw exception");
+			return -1;
+		}
+	}
+
+	private static void GLibUnhandledException(UnhandledExceptionArgs args)
+	{
+		if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
+		Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
+	}
+
+	private static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args)
+	{
+		//Stupid GLib bug keeps printing these exceptions, nothing I can do about it afaik
+		if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
+		Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
+	}
 }

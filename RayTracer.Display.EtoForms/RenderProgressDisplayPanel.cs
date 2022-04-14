@@ -107,7 +107,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		};
 
 		//Periodically update the previews using a timer
-		updatePreviewTimer = new Timer(_ => Application.Instance.Invoke(UpdateAllPreviews),null, 1000, 1000);
+		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 50);
 	}
 
 	private readonly Timer updatePreviewTimer;
@@ -258,7 +258,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 			if (row.Cells[1].Control is not Label valueLabel)
 			{
-				Verbose("Cell [{Position}] was not label, disposing updating", (0, i));
+				Verbose("Cell [{Position}] was not label, disposing and updating", (0, i));
 				row.Cells[1]?.Control?.Detach();
 				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(valueLabel = new Label(), 1, i);
@@ -269,10 +269,29 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 
 		{
-			int maxDepth = renderJob.RenderOptions.MaxDepth;
 			Verbose("Updating depth buffer graphics");
-			statsTable.Add("Depth Buffer",       0, statsTable.Dimensions.Height - 1); //Last row
-			statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
+			int       maxDepth        = renderJob.RenderOptions.MaxDepth;
+			TableCell titleCell       = statsTable.Rows[^1].Cells[0];
+			TableCell depthBufferCell = statsTable.Rows[^1].Cells[1];
+
+			//Update title control type if needed
+			if (titleCell.Control is not Label titleLabel)
+			{
+				Verbose("Depth Buffer Title Cell ({Position}) was not label, disposing and updating", (0, statsTable.Dimensions.Height - 1));
+				titleCell.Control?.Detach();
+				titleCell.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(titleLabel = new Label(), 1, statsTable.Dimensions.Height - 1);
+			}
+			titleLabel.Text = "Depth Buffer"; //Update title control text
+
+			//Update image control if needed
+			if (depthBufferCell.Control != depthBufferImageView)
+			{
+				Verbose("Depth Buffer Image Cell ({Position}) was not label, disposing and updating", (1, statsTable.Dimensions.Height - 1));
+				depthBufferCell.Control?.Detach();
+				depthBufferCell.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
+			}
 			depthBufferGraphics.Clear();
 
 			//What I'm doing here is adjusting the depth values so that the largest one reaches the end of the graph (scaling up to fill the image)
