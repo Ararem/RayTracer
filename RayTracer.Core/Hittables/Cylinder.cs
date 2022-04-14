@@ -15,7 +15,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	private readonly Lazy<Vector3> centre = new(() => Lerp(P1, P2, 0.5f)); //Halfway between P1 and P2
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//XYZ are XYZ of normal, W is k value along ray of intersection
 		Vector4 kNor;
@@ -65,7 +65,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			Vector3 localPos = worldPos - centre.Value;
 			bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero); //TODO: UV coords
+			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero, depth); //TODO: UV coords
 		}
 		else
 		{

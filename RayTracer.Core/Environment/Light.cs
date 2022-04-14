@@ -17,7 +17,7 @@ public abstract record Light
 	///  <see langword="true"/> as soon as an intersection is hit, and does not take into account a material's properties (such as transparency), just
 	///  geometry.
 	/// </remarks>
-	public delegate bool FastAnyIntersectCheck(Ray ray, float kMin, float kMax);
+	public delegate bool FastAnyIntersectCheck(Ray ray, float kMin, float kMax, int depth);
 
 	/// <summary>
 	///  The big brother of <see cref="FastAnyIntersectCheck"/>, does a full raytrace along the given <paramref name="ray"/>, finding the closest
@@ -30,7 +30,7 @@ public abstract record Light
 	///  </i>
 	///  . Only use it when you really have to, because this is going to massively increase the render time due to how slow the method is
 	/// </remarks>
-	public delegate (SceneObject sceneObject, HitRecord hit)? SlowClosestIntersectCheck(Ray ray, float kMin, float kMax);
+	public delegate (SceneObject Object, HitRecord HitRecord)? SlowClosestIntersectCheck(Ray ray, float kMin, float kMax, int depth);
 
 	/// <summary>
 	///  Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/>
@@ -77,7 +77,7 @@ public abstract record Light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
 		const float kMin      = 0.0001f;
 		float       kMax      = Vector3.Distance(position, hit.WorldPoint);
-		return fastAnyIntersectCheck(shadowRay, kMin, kMax);
+		return fastAnyIntersectCheck(shadowRay, kMin, kMax, hit.Depth);
 	}
 
 	/// <summary>
@@ -89,6 +89,6 @@ public abstract record Light
 		Ray         shadowRay = Ray.FromPoints(hit.WorldPoint, position);
 		const float kMin      = 0.0001f;
 		float       kMax      = Vector3.Distance(position, hit.WorldPoint);
-		return fastAnyIntersectCheck(shadowRay, kMin, kMax);
+		return fastAnyIntersectCheck(shadowRay, kMin, kMax, hit.Depth);
 	}
 }

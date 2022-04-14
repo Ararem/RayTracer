@@ -16,7 +16,7 @@ namespace RayTracer.Core.Hittables;
 public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 {
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
 		float normDotDir = Dot(ray.Direction, Normal);
@@ -41,6 +41,6 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, depth);
 	}
 }

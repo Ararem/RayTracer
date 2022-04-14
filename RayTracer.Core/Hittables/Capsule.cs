@@ -17,7 +17,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 
 	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		/*
 		 * I'm not sure how this code actually works, but I believe that it works by finding the distance between the line defined by the ray,
@@ -68,7 +68,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			Vector2 uv        = UV(worldPos);
 			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
+			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv, depth);
 		}
 
 		return null;
@@ -193,7 +193,7 @@ return sqrt(o*o*o);
 vec3 pattern( in vec2 uv )
 {
 vec3 col = vec3(0.6);
-col += 0.4*smoothstep(-0.01,0.01,cos(uv.x*0.5)*cos(uv.y*0.5)); 
+col += 0.4*smoothstep(-0.01,0.01,cos(uv.x*0.5)*cos(uv.y*0.5));
 col *= smoothstep(-1.0,-0.98,cos(uv.x))*smoothstep(-1.0,-0.98,cos(uv.y));
 return col;
 }
@@ -202,7 +202,7 @@ return col;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-// camera movement	
+// camera movement
 float an = 0.5*iTime;
 vec3 ro = vec3( 1.0*cos(an), 0.4, 1.0*sin(an) );
 vec3 ta = vec3( 0.0, 0.0, 0.0 );
@@ -221,7 +221,7 @@ for( int n=0; n<AA; n++ )
 	// pixel coordinates
 	vec2 o = vec2(float(m),float(n)) / float(AA) - 0.5;
 	vec2 p = (-iResolution.xy + 2.0*(fragCoord+o))/iResolution.y;
-	#else    
+	#else
 	vec2 p = (-iResolution.xy + 2.0*fragCoord)/iResolution.y;
 	#endif
 
@@ -231,7 +231,7 @@ for( int n=0; n<AA; n++ )
 	const vec3  capA = vec3(-0.3,-0.1,-0.1);
 	const vec3  capB = vec3(0.3,0.1,0.4);
 	const float capR = 0.2;
-	
+
 	vec3 col = vec3(0.08)*(1.0-0.3*length(p)) + 0.02*rd.y;
 
 	float t = capIntersect( ro, rd, capA, capB, capR );

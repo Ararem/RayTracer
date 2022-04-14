@@ -10,7 +10,7 @@ namespace RayTracer.Core.Hittables;
 public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 {
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
 		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;
@@ -44,7 +44,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		//This forces the normal to always be going against the ray
 		Vector3   normal = inside ? -outwardNormal : outwardNormal;
 		Vector2   uv     = GetSphereUV(outwardNormal);
-		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv);
+		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv, depth);
 		return hit;
 	}
 

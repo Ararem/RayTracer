@@ -32,7 +32,7 @@ public record Box : Hittable
 	public Matrix4x4 BoxToWorldTransform { get; }
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		/*
 		 * Modified version of IQ's code here, many thanks!!
@@ -138,6 +138,6 @@ public record Box : Hittable
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, Vector3.Normalize(normal), k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, Vector3.Normalize(normal), k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero, depth);
 	}
 }

@@ -14,11 +14,12 @@ public abstract record Hittable
 	/// <param name="ray">The ray to check for intersection with</param>
 	/// <param name="kMin">Minimum distance along the ray to check for intersections</param>
 	/// <param name="kMax">Maximum distance along the ray to check for intersection</param>
+	/// <param name="depth">How many times the ray has bounced so far</param>
 	/// <returns>
 	///  If the ray hit this instance, returns a <see cref="HitRecord"/> containing information about where the ray intersection occured, otherwise
 	///  <see langword="null"/> if no intersection occured
 	/// </returns>
-	public abstract HitRecord? TryHit(Ray ray, float kMin, float kMax);
+	public abstract HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth);
 
 	/// <inheritdoc/>
 	public override string ToString() => GetType().Name;

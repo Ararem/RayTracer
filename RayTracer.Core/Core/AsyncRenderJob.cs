@@ -159,7 +159,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, hit))
+		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax, 0) is var (sceneObject, hit))
 			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -224,7 +224,7 @@ public sealed class AsyncRenderJob : IDisposable
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
 			Interlocked.Increment(ref rayCount);
-			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
+			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax, depth) is var (sceneObject, maybeHit))
 			{
 				HitRecord hit = maybeHit;
 				//See if the material scatters the ray
@@ -390,7 +390,7 @@ public sealed class AsyncRenderJob : IDisposable
 			*/
 	}
 
-	private bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
+	private bool AnyIntersectionFast(Ray ray, float kMin, float kMax, int depth)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
@@ -398,7 +398,7 @@ public sealed class AsyncRenderJob : IDisposable
 		foreach (SceneObject obj in objects)
 		{
 			//Try and hit the object
-			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
+			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax, depth);
 
 			//Try next object if there was no hit
 			if (maybeHit is not { } hit) continue;
@@ -427,8 +427,8 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <param name="ray">The ray to check for intersections</param>
 	/// <param name="kMin">Lower bound for K along the ray</param>
 	/// <param name="kMax">Upper bound for K along the ray</param>
-	/// <returns></returns>
-	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
+	/// <param name="depth">How deep the ray is in the scene</param>
+	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
@@ -436,7 +436,7 @@ public sealed class AsyncRenderJob : IDisposable
 		foreach (SceneObject obj in objects)
 		{
 			//Try and hit the object
-			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
+			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax, depth);
 			//No point continuing if there was no hit
 			if (maybeHit is not { } hit) continue;
 

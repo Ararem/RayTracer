@@ -16,7 +16,7 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 	private readonly Lazy<float> radiusSqr = new(() => Radius * Radius);
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//Code copied from `Plane.cs`, with a distance checker added
 		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
@@ -46,6 +46,6 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, depth);
 	}
 }

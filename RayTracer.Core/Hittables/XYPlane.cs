@@ -15,7 +15,7 @@ namespace RayTracer.Core.Hittables;
 public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, float Z, float AABBPadding = 0.001f) : Hittable
 {
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
 	{
 		//How far along the ray did it intersect with the unbounded version of this plane (x/y bounds of +- infinity)
 		float k = (Z - ray.Origin.Z) / ray.Direction.Z;
@@ -69,6 +69,6 @@ public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, f
 
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		if(float.IsNaN(k)) Debugger.Break();
-		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
+		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, depth);
 	}
 }
