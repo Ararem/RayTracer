@@ -1,6 +1,7 @@
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
+using JetBrains.Annotations;
 using LibEternal.ObjectPools;
 using RayTracer.Core;
 using SixLabors.ImageSharp;
@@ -9,16 +10,20 @@ using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
+using Timer = System.Threading.Timer;
 
 namespace RayTracer.Display.EtoForms;
 
 [SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
 internal sealed class RenderProgressDisplayPanel : Panel
 {
-	private const int DepthImageWidth = 100;
+	private readonly Pen depthBufferPen  = new (Colors.Gray);
+	private const    int DepthImageWidth = 100;
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -101,35 +106,22 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				ID          = "Main Content StackLayout"
 		};
 
-		TaskWatcher.Watch(Task.Run(UpdatePreviewWorker), false);
+		//Periodically update the previews using a timer
+		updatePreviewTimer = new Timer(_ => Application.Instance.Invoke(UpdateAllPreviews),null, 1000, 1000);
 	}
 
-	// ReSharper disable once FunctionNeverReturns
-	private async Task UpdatePreviewWorker()
+	private readonly Timer updatePreviewTimer;
+
+	/// <summary>
+	/// Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
+	/// </summary>
+	private void UpdateAllPreviews()
 	{
-		#if DEBUG //Never stop refreshing when in debug mode, so I can use Hot Reload to change things
-		while (true)
-				#else
-		while (!renderJob.RenderCompleted)
-				#endif
-		{
-			await Application.Instance.InvokeAsync(Update);
-			await Task.Delay(10000);
-		}
+		UpdateImagePreview();
+		UpdateStatsTable();
 
-		#if !DEBUG
-		//Do final run to ensure image isn't half updated (if render completed partway through update)
-		await Application.Instance.InvokeAsync(Update);
-		#endif
-
-		void Update()
-		{
-			UpdateImagePreview();
-			UpdateStatsTable();
-
-			Invalidate();
-			Verbose("Invalidated for redraw");
-		}
+		Invalidate();
+		Verbose("Invalidated for redraw");
 	}
 
 	private void UpdateImagePreview()
@@ -156,6 +148,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateStatsTable()
 	{
+
+		Verbose("Updating stats table");
+		Stopwatch    stop           = Stopwatch.StartNew();
+
 		const string timeFormat     = "h\\:mm\\:ss"; //Format string for Timespan
 		const string dateTimeFormat = "G";           //Format string for DateTime
 		const string percentFormat  = "p1";          //Format string for percentages
@@ -163,6 +159,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		const int    numAlign       = 15;
 		const int    percentAlign   = 8;
 
+		Verbose("Computing stats strings");
 		int           totalTruePixels = renderJob.TotalTruePixels;
 		ulong         totalRawPix     = renderJob.TotalRawPixels;
 		ulong         rayCount        = renderJob.RayCount;
@@ -183,9 +180,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			estimatedTotalTime = TimeSpan.FromDays(69.420); //If something's broke at least let me have some fun
 		}
-
-		Verbose("Updating stats table");
-		Stopwatch stop = Stopwatch.StartNew();
 
 		(string Title, string[] Values)[] stringStats =
 		{
@@ -240,20 +234,38 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		Size correctDims = new(2, stringStats.Length + 1);
 		if (statsTable.Dimensions != correctDims)
 		{
-			Debug("Old table dims {Dims} do not match stats array, resizing to {NewDims}", statsTable.Dimensions, correctDims);
+			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
+			statsTable.Detach();
+			statsTable.Dispose();
 			statsTable             = new TableLayout(correctDims) { ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0) };
 			statsContainer.Content = statsTable;
 		}
 
-		Verbose("Updating stats strings");
+		Verbose("Updating table cells");
 		for (int i = 0; i < stringStats.Length; i++)
 		{
 			(string? title, string[]? strings) = stringStats[i];
-			//WARN: Apparently too many `new`'s may be causing the errors i'm getting from GTK
-			//Gotta reuse maybe
-			string values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
-			statsTable.Add(new Label { Text = title, ID  = $"{title} stats title" },  0, i);
-			statsTable.Add(new Label { Text = values, ID = $"{title} stats values" }, 1, i);
+			string   values                                                = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
+			TableRow row                                                   = statsTable.Rows[i];
+			//Get the Labels at the correct locations, or assign them if needed
+			if (row.Cells[0].Control is not Label titleLabel)
+			{
+				Verbose("Cell [{Position}] was not label, disposing and updating", (0, i));
+				row.Cells[0]?.Control?.Detach();
+				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
+				statsTable.Add(titleLabel = new Label(), 0, i);
+			}
+
+			if (row.Cells[1].Control is not Label valueLabel)
+			{
+				Verbose("Cell [{Position}] was not label, disposing updating", (0, i));
+				row.Cells[1]?.Control?.Detach();
+				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(valueLabel = new Label(), 1, i);
+			}
+
+			titleLabel.Text = title;
+			valueLabel.Text = values;
 		}
 
 		{
@@ -284,7 +296,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			{
 				double corrected = doubleDepths[i] / max; //Adjust so the max == 1
 				int    endX      = (int)Math.Min(corrected * DepthImageWidth, DepthImageWidth);
-				depthBufferGraphics.DrawLine(Colors.Gray, 0, i, endX, i);
+				depthBufferGraphics.DrawLine(depthBufferPen, 0, i, endX, i);
 			}
 
 			//Flush the image or it might not be drawn
@@ -302,5 +314,12 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 		}
+	}
+
+	/// <inheritdoc />
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		updatePreviewTimer.Dispose();
 	}
 }
