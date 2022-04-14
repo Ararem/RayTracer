@@ -1,6 +1,7 @@
 ﻿using Eto;
 using GLib;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
@@ -12,6 +13,7 @@ namespace RayTracer.Display.EtoForms;
 
 internal static class Program
 {
+	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
 	private static int Main(string[] args)
 	{
 		Logger.Init();
@@ -90,16 +92,7 @@ internal static class Program
 		}
 	}
 
-	private static void GLibUnhandledException(UnhandledExceptionArgs args)
-	{
-		if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
-		Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
-	}
+	private static void GLibUnhandledException(UnhandledExceptionArgs args) => Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
 
-	private static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args)
-	{
-		//Stupid GLib bug keeps printing these exceptions, nothing I can do about it afaik
-		if (args.ExceptionObject is TargetInvocationException { InnerException: NullReferenceException { TargetSite.Name: "HandleSizeAllocated" } }) return;
-		Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
-	}
+	private static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args) => Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
 }
