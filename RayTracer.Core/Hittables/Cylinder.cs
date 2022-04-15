@@ -65,7 +65,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			Vector3 localPos = worldPos - centre.Value;
 			bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero, depth); //TODO: UV coords
+			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero); //TODO: UV coords
 		}
 		else
 		{

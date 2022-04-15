@@ -41,6 +41,6 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, depth);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
 }

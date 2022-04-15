@@ -42,6 +42,6 @@ public sealed record YZPlane(float YLow, float YHigh, float ZLow, float ZHigh, f
 						: new Vector3(1,  0, 0);
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		if(float.IsNaN(k)) Debugger.Break();
-		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, depth);
+		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
 }

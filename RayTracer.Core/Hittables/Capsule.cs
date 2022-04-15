@@ -68,7 +68,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			Vector2 uv        = UV(worldPos);
 			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv, depth);
+			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
 		}
 
 		return null;

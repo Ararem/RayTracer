@@ -59,7 +59,7 @@ public static class BuiltinScenes
 
 					new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
 					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-					new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White, Black)),
+					new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White, Blue)),
 			},
 			new Light[]
 			{
