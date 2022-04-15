@@ -17,7 +17,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 
 	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		/*
 		 * I'm not sure how this code actually works, but I believe that it works by finding the distance between the line defined by the ray,

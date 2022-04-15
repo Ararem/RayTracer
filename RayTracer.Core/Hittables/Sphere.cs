@@ -10,7 +10,7 @@ namespace RayTracer.Core.Hittables;
 public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 {
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
 		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;

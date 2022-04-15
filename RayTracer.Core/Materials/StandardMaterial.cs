@@ -34,5 +34,5 @@ public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Di
 	}
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit) => colour = (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
+	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => colour = (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
 }

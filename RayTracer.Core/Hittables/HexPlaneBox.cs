@@ -58,12 +58,12 @@ public record HexPlaneBox : Hittable
 	}
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		HitRecord? closest = null;
 		for (int i = 0; i < sides.Length; i++)
 		{
-			HitRecord? hit = sides[i].TryHit(ray, kMin, kMax, depth);
+			HitRecord? hit = sides[i].TryHit(ray, kMin, kMax);
 			if (hit is null) continue;
 			//First hit is always the closest
 			closest ??= hit;

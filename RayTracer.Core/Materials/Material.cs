@@ -30,6 +30,7 @@ public abstract record Material
 	///  colour-wise/lighting-wise
 	/// </param>
 	/// <param name="hit">Information such as where the ray hit, surface normals etc</param>
+	/// <param name="previousHits"></param>
 	/// <remarks>
 	///  Use the <paramref name="hit"/> to evaluation world information, such as where on a texture map the point corresponds to, and make changes to the
 	///  <paramref name="colour"/> using that information
@@ -64,5 +65,5 @@ public abstract record Material
 	///  </code>
 	///  </para>
 	/// </example>
-	public abstract void DoColourThings(ref Colour colour, HitRecord hit);
+	public abstract void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
 }

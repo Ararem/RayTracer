@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
+using System.Diagnostics;
 using System.Numerics;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
@@ -9,11 +10,17 @@ using static System.MathF;
 namespace RayTracer.Core.Materials;
 
 /// <summary>
-///  A material (such as glass) that refracts light rays going through it
+///  A material (such as glass) that refracts light rays going through it. This is an extended version of the <see cref="RefractiveMaterial"/>, as it
+///  supports emissive textures as well
 /// </summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
-public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
+/// <param name="Emission">Texture for the colour of the emitted light</param>
+/// <param name="IndirectEmissionOnly">
+///  Option whether to only emit light indirectly (directly means direct to the camera, indirect means only when reflecting off other surfaces). If
+///  <see langword="true"/>, light will only be emitted when a given ray has bounced off another object before.
+/// </param>
+public sealed record EmissiveRefractiveMaterial(float RefractiveIndex, Texture Tint, Texture Emission, bool IndirectEmissionOnly = true) : Material
 {
 	/// <summary>
 	///  Refractive index of a common material
@@ -81,5 +88,22 @@ public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : M
 	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
 	{
 		colour *= Tint.GetColour(hit);
+		//Don't care about (in)direct, force emit
+		if (IndirectEmissionOnly == false)
+			colour += Emission.GetColour(hit);
+		//Care whether it's direct or not
+		else
+			switch (previousHits.Count)
+			{
+				//Direct ray from camera
+				case 0:
+				//Semi indirect - refracted through this object once before
+				case 1 when previousHits[0].sceneObject.Material == this:
+					return;
+				//Indirect case
+				default:
+					colour += Emission.GetColour(hit);
+					return;
+			}
 	}
 }

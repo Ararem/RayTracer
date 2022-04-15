@@ -15,7 +15,7 @@ namespace RayTracer.Core.Hittables;
 public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, float Y, float AABBPadding = 0.001f) : Hittable
 {
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//How far along the ray did it intersect with the unbounded version of this plane (bounds of +- infinity)
 		float k = (Y - ray.Origin.Y) / ray.Direction.Y;

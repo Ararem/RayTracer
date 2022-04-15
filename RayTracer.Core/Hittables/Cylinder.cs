@@ -15,7 +15,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	private readonly Lazy<Vector3> centre = new(() => Lerp(P1, P2, 0.5f)); //Halfway between P1 and P2
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//XYZ are XYZ of normal, W is k value along ray of intersection
 		Vector4 kNor;

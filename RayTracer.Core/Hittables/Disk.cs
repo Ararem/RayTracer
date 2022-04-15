@@ -16,7 +16,7 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 	private readonly Lazy<float> radiusSqr = new(() => Radius * Radius);
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Code copied from `Plane.cs`, with a distance checker added
 		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm

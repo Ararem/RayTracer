@@ -32,7 +32,7 @@ public record Box : Hittable
 	public Matrix4x4 BoxToWorldTransform { get; }
 
 	/// <inheritdoc/>
-	public override HitRecord? TryHit(Ray ray, float kMin, float kMax, int depth)
+	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		/*
 		 * Modified version of IQ's code here, many thanks!!
