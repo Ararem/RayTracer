@@ -64,10 +64,6 @@ public static class BuiltinScenes
 			},
 			new Light[]
 			{
-					// new SizedPointLight(new Vector3(213, 554f, 227), White * .1f, 250, 1),
-					// new SizedPointLight(new Vector3(213, 554f, 332), White * .1f, 250, 1),
-					// new SizedPointLight(new Vector3(343, 554f, 227), White * .1f, 250, 1),
-					// new SizedPointLight(new Vector3(343, 554f, 332), White * .1f, 250, 1),
 					//Centre ceiling light
 					new DiffuseSphereLight(new Vector3((213+343)/2f, 554-50, (227+332)/2f), 40, White * 0.5f, 150, 1.5f),
 			},

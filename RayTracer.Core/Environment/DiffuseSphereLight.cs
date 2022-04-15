@@ -4,8 +4,9 @@ using System.Numerics;
 namespace RayTracer.Core.Environment;
 
 /// <summary>
-///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so
-///  the light will be equally bright at any distance away from it's <see cref="Position"/>
+///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the
+///  <see cref="DiffusionRadius"/> - points are randomly chosen inside a sphere centred at <see cref="Position"/> with a radius of
+///  <see cref="DiffusionRadius"/>.
 /// </summary>
 /// <param name="Position">Where the light source is located in world-space</param>
 /// <param name="Colour">Colour of the emitted light</param>
@@ -23,20 +24,20 @@ namespace RayTracer.Core.Environment;
 ///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
 ///  and 1 means the distance is accounted for following the inverse-square law.
 /// </param>
-public record DiffuseSphereLight(Vector3 Position, float DiffusionRadius, Colour Colour, float BrightnessBaselineRadius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
+public sealed record DiffuseSphereLight(Vector3 Position, float DiffusionRadius, Colour Colour, float BrightnessBaselineRadius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
 {
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit, FastAnyIntersectCheck fastAnyIntersectCheck, SlowClosestIntersectCheck slowClosestIntersectCheck)
 	{
 		//See if there's anything in between us and the object
-		Vector3 pos = Position + DiffusionRadius * RandUtils.RandomInUnitSphere();
+		Vector3 pos = Position + (DiffusionRadius * RandUtils.RandomInUnitSphere());
 		if (!CheckIntersection(hit, pos, fastAnyIntersectCheck, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
 			if (dot < 0) dot = -dot;                                                           //Backfaces give negative dot product
 			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                      //Account for how much the surface points towards our light
-			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos);               //Normally formula uses R^2, so don't bother rooting here to save performance
+			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos);                    //Normally formula uses R^2, so don't bother rooting here to save performance
 			float distScale = (BrightnessBaselineRadius * BrightnessBaselineRadius) / distSqr; // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);
 			colour    *= MathUtils.Lerp(1, distScale, DistanceImportance); //Account for inverse square law
