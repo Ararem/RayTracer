@@ -13,7 +13,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="Radius">How large the radius of the disk is</param>
 public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittable
 {
-	private readonly Lazy<float> radiusSqr = new(() => Radius * Radius);
+	private readonly float radiusSqr = Radius * Radius;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -40,7 +40,7 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 		Vector3 worldPoint = ray.PointAt(t);
 
 		//Now assert radius
-		if (DistanceSquared(Centre, worldPoint) > radiusSqr.Value) return null;
+		if (DistanceSquared(Centre, worldPoint) > radiusSqr) return null;
 
 		Vector3 localPoint = worldPoint - Centre;
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to

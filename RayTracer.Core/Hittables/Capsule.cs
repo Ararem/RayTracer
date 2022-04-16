@@ -13,7 +13,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="Radius">The radius of the capsule</param>
 public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 {
-	private readonly Lazy<Vector3> centre = new(() => Lerp(P1, P2, 0.5f)); //Halfway between P1 and P2
+	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
 
 	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
@@ -63,7 +63,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		if ((k != -1f) && (k >= kMin) && (k <= kMax))
 		{
 			Vector3 worldPos  = ray.PointAt(k);
-			Vector3 localPos  = worldPos - centre.Value;
+			Vector3 localPos  = worldPos - centre;
 			Vector3 outNormal = CapNormal(worldPos, P1, P2, Radius);
 			Vector2 uv        = UV(worldPos);
 			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
