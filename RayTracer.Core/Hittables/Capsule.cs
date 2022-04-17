@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.MathF;
@@ -111,6 +112,9 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		float   h  = Math.Clamp(Dot(pa, ba) / Dot(ba, ba), 0f, 1f);
 		return (pa - (h * ba)) / r;
 	}
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
 }
 
 #region Original ShaderToy Code

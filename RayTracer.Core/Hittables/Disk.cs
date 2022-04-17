@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
@@ -48,4 +49,8 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
+
+	//TODO: Very inefficient, need to make AABB smaller and more compact
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
 }

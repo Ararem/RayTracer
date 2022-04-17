@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.Numerics.Vector3;
@@ -31,6 +32,7 @@ public record HexPlaneBox : Hittable
 				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Min.Y),
 				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Max.Y)
 		};
+		BoundingVolume = new AxisAlignedBoundingBox(Min, Max);
 	}
 
 	/// <summary>
@@ -74,4 +76,7 @@ public record HexPlaneBox : Hittable
 		//TODO: Uv coords are local to the face they hit
 		return closest;
 	}
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; }
 }

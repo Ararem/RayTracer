@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using RayTracer.Core.Materials;
 using System.Numerics;
 
@@ -36,4 +37,7 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 
 		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero);
 	}
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume => Boundary.BoundingVolume;
 }

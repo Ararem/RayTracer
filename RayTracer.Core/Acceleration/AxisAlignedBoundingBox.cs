@@ -42,6 +42,23 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max) : Bounding
 	}
 
 	/// <summary>
+	/// Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/>
+	/// </summary>
+	/// <param name="points">Array of sub boxes to surround</param>
+	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="points"/></returns>
+	public static AxisAlignedBoundingBox Encompass(params Vector3[] points)
+	{
+		Vector3 min = new(float.PositiveInfinity), max = new(float.NegativeInfinity);
+		foreach (Vector3 p in points)
+		{
+			min = Vector3.Min(min, p);
+			max = Vector3.Max(max, p);
+		}
+
+		return new AxisAlignedBoundingBox(min, max);
+	}
+
+	/// <summary>
 	/// Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/>
 	/// </summary>
 	/// <param name="subBoxes">Array of sub boxes to surround</param>

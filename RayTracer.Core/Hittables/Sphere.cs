@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
@@ -72,4 +73,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 
 	/// <inheritdoc/>
 	public override string ToString() => $"Sphere {{Radius: {Radius}}}";
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Centre - new Vector3(Radius), Centre+ new Vector3(Radius));
 }

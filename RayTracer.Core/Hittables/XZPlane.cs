@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -44,4 +45,7 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 		if(float.IsNaN(k)) Debugger.Break();
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(new Vector3(XLow, Y - AABBPadding, ZLow), new Vector3(XHigh, Y + AABBPadding, ZHigh));
 }

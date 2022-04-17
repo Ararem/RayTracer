@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 
@@ -26,9 +27,33 @@ public record Box : Hittable
 		BoxToWorldTransform = boxToWorldTransform;
 		if (!Matrix4x4.Invert(boxToWorldTransform, out Matrix4x4 worldToBoxTransform)) throw new ArgumentOutOfRangeException(nameof(boxToWorldTransform), boxToWorldTransform, "Matrix not invertible");
 		WorldToBoxTransform = worldToBoxTransform;
+
+		//Bounding volume calculations
+		//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
+		//It's not super efficient but it should be pretty fast and simple
+		Vector3[] corners = {
+				new(0, 0, 0),
+				new(0, 0, 1),
+				new(0, 1, 0),
+				new(0, 1, 1),
+				new(1, 0, 0),
+				new(1, 0, 1),
+				new(1, 1, 0),
+				new(1, 1, 1),
+		};
+		//Transform each of the corners by our box to world matrix
+		for (int i = 0; i < corners.Length; i++) corners[i] = Vector3.Transform(corners[i], boxToWorldTransform);
+		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
 	}
 
+	/// <summary>
+	/// Matrix to convert world-space to box-space
+	/// </summary>
 	public Matrix4x4 WorldToBoxTransform { get; }
+
+	/// <summary>
+	/// Matrix to convert box-space to world-space
+	/// </summary>
 	public Matrix4x4 BoxToWorldTransform { get; }
 
 	/// <inheritdoc/>
@@ -127,8 +152,7 @@ public record Box : Hittable
 
 		Vector3 worldPoint = ray.PointAt(k);
 		//Transform the point from world space to box space to get the local point
-		temp4 = Vector4.Transform(worldPoint, WorldToBoxTransform);
-		Vector3 localPoint = new(temp4.X, temp4.Y, temp4.Z);
+		Vector3 localPoint =Vector3.Transform(worldPoint, WorldToBoxTransform);
 
 		//Will implement these later
 		_ = uv;
@@ -140,4 +164,7 @@ public record Box : Hittable
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
 		return new HitRecord(ray, worldPoint, localPoint, Vector3.Normalize(normal), k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
+
+	/// <inheritdoc />
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
 }

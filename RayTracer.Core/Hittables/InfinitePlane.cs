@@ -1,3 +1,4 @@
+using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
@@ -43,4 +44,7 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
+
+	/// <inheritdoc />
+	public override BoundingVolume BoundingVolume { get; } = new NoBoundingVolume();
 }
