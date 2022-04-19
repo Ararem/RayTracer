@@ -75,5 +75,5 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 	public override string ToString() => $"Sphere {{Radius: {Radius}}}";
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Centre - new Vector3(Radius), Centre+ new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre+ new Vector3(Radius));
 }

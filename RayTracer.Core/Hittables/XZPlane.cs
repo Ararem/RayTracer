@@ -47,5 +47,5 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 	}
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(new Vector3(XLow, Y - AABBPadding, ZLow), new Vector3(XHigh, Y + AABBPadding, ZHigh));
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(new Vector3(XLow, Y - AABBPadding, ZLow), new Vector3(XHigh, Y + AABBPadding, ZHigh));
 }

@@ -39,5 +39,5 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 	}
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume => Boundary.BoundingVolume;
+	public override AxisAlignedBoundingBox? BoundingVolume => Boundary.BoundingVolume;
 }

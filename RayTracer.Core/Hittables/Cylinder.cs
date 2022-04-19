@@ -75,5 +75,5 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	}
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
 }

@@ -78,5 +78,5 @@ public record HexPlaneBox : Hittable
 	}
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; }
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
 }

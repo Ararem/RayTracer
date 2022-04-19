@@ -46,5 +46,5 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 	}
 
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; } = new NoBoundingVolume();
+	public override AxisAlignedBoundingBox? BoundingVolume => null;
 }

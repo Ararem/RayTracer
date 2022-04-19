@@ -52,5 +52,5 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 
 	//TODO: Very inefficient, need to make AABB smaller and more compact
 	/// <inheritdoc />
-	public override BoundingVolume BoundingVolume { get; } = new AxisAlignedBoundingBox(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
 }
