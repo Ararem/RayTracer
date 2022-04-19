@@ -8,10 +8,17 @@ namespace RayTracer.Core.Acceleration;
 public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
 {
 	/// <inheritdoc />
-	public HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
-		if (BoundingBox?.Hit(ray, kMin, kMax) == false) return null;
-		else return SceneObject.Hittable.TryHit(ray, kMin, kMax);
+		if (BoundingBox?.Hit(ray, kMin, kMax) == false)
+		{
+			return null;
+		}
+		else
+		{
+			HitRecord? maybeHit =  SceneObject.Hittable.TryHit(ray, kMin, kMax);
+			return maybeHit is { } hit ? (SceneObject, hit) : null;
+		}
 	}
 
 	/// <inheritdoc />

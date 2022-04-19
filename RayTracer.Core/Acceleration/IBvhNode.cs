@@ -8,7 +8,7 @@ namespace RayTracer.Core.Acceleration;
 public interface IBvhNode
 {
 	/// <inheritdoc cref="Hittable.TryHit"/>
-	public HitRecord? TryHit(Ray ray, float kMin, float kMax);
+	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax);
 
 	/// <summary>
 	/// Bounding box that encompasses this <see cref="IBvhNode"/> and all it's children nodes (if any)

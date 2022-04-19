@@ -8,8 +8,18 @@ namespace RayTracer.Core.Acceleration;
 
 public sealed class BvhTree
 {
-	public IBvhNode RootNode;
+	/// <inheritdoc cref="Hittable.TryHit"/>
+	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
+	/// <summary>
+	/// Root <see cref="IBvhNode"/> for this BVH Tree
+	/// </summary>
+	public readonly IBvhNode RootNode;
+
+	/// <summary>
+	/// Creates a new BVH tree for the specified scene
+	/// </summary>
+	/// <param name="scene"></param>
 	public BvhTree(Scene scene)
 	{
 		Log.Debug("Creating new Bvh Tree for scene {Scene}", scene);

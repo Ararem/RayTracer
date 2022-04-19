@@ -8,18 +8,18 @@ public record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
 	public AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);
 
 	/// <inheritdoc />
-	public HitRecord? TryHit(Ray ray, float kMin, float kMax)
+	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Quit early if we miss the bounding volume
 		if (BoundingBox.Hit(ray, kMin, kMax) == false) return null;
 
-		HitRecord? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
+		(SceneObject Object, HitRecord Hit) ? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
 		//If we hit node A, we still need to check if node B is closer
 		if (maybeHitA is { } hitA)
 		{
 			//Check node B up to where node A intersected
 			//This way if node B has an intersection, we know that it has to be closer
-			HitRecord? maybeHitB = NodeB.TryHit(ray, kMin, hitA.K);
+			(SceneObject Object, HitRecord Hit)? maybeHitB = NodeB.TryHit(ray, kMin, hitA.Hit.K);
 			if (maybeHitB is { } hitB) return hitB;
 			else return hitA;
 		}

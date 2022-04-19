@@ -35,7 +35,7 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
-		bool HdrEnabled = true
+		bool HdrEnabled = true //TODO: Remove this honestly i dont think its useful
 		//TODO: Max depth for calculating lighting?
 )
 {
