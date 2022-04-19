@@ -7,10 +7,16 @@ namespace RayTracer.Core.Acceleration;
 /// </summary>
 /// <param name="Min">First corner of the box</param>
 /// <param name="Max">Second corner of the box</param>
-public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max) : BoundingVolume
+public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 {
-	/// <inheritdoc />
-	public override bool Hit(Ray ray, float kMin, float kMax)
+	/// <summary>
+	/// Tries to see if the given ray will intersect with the bounding box or not.
+	/// </summary>
+	/// <param name="ray">The ray to check for intersections along</param>
+	/// <param name="kMin">Lower bound for distance along the ray</param>
+	/// <param name="kMax">Upper bound for distance along the ray</param>
+	/// <returns><see langword="true"/> if the ray intersects this bounding volume and may hit the object inside, else <see langword="false"/></returns>
+	public bool Hit(Ray ray, float kMin, float kMax)
 	{
 		(Vector3 ro, Vector3 rd) = ray;
 		for(int a = 0; a<3; a++)

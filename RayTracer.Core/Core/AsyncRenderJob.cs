@@ -23,6 +23,7 @@ namespace RayTracer.Core;
 /// </remarks>
 public sealed class AsyncRenderJob : IDisposable
 {
+	//TODO: Maybe allow access to the render job from lights, objects and materials, to make this easier
 	private readonly Light.FastAnyIntersectCheck fastAnyIntersectCheck;
 
 	private readonly Light.SlowClosestIntersectCheck slowClosestIntersectCheck;
@@ -58,6 +59,8 @@ public sealed class AsyncRenderJob : IDisposable
 
 		slowClosestIntersectCheck = TryFindClosestHit;
 		fastAnyIntersectCheck     = AnyIntersectionFast;
+
+		//Calculate the bounding boxes
 
 		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}
