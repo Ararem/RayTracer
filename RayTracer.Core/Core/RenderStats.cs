@@ -2,6 +2,9 @@ using System.Diagnostics;
 
 namespace RayTracer.Core;
 
+/// <summary>
+/// Struct that stores statistics about a render
+/// </summary>
 public struct RenderStats
 {
 	/// <summary>
@@ -52,11 +55,6 @@ public struct RenderStats
 	public ulong RayCount = 0;
 
 	/// <summary>
-	///  Stopwatch used to time how long has elapsed since the rendering started
-	/// </summary>
-	public Stopwatch Stopwatch { get; }
-
-	/// <summary>
 	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
 	///  bounce, etc.
 	/// </summary>
@@ -72,6 +70,5 @@ public struct RenderStats
 		RawRayDepthCounts = rawRayDepthCounts;
 		TotalTruePixels        = totalTruePixels;
 		TotalRawPixels         = totalRawPixels;
-		Stopwatch              = new Stopwatch();
 	}
 }

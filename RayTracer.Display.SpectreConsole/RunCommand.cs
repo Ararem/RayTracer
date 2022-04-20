@@ -165,7 +165,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		const double  a  = 5;   //Max ellipses per cycle
 
 		int    n;
-		double sec = renderJob.RenderStats.Stopwatch.Elapsed.TotalSeconds;
+		double sec = renderJob.Stopwatch.Elapsed.TotalSeconds;
 		#if true
 		//Triangle wave, goes up and down
 		{
@@ -216,7 +216,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		ulong         rayCount        = renderJob.RenderStats.RayCount;
 		RenderOptions options         = renderJob.RenderOptions;
 		int           totalPasses     = options.Passes;
-		TimeSpan      elapsed         = renderJob.RenderStats.Stopwatch.Elapsed;
+		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
 
 		float    percentageRendered = (float)renderJob.RenderStats.RawPixelsRendered / totalRawPix;
 		ulong    rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
@@ -349,7 +349,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
 		Image<Rgb24> image = renderJob.ImageBuffer;
-		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.RenderStats.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
+		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors
 		if (!GraphicsValidator.Errors.IsEmpty)

@@ -67,7 +67,7 @@ public sealed class AsyncRenderJob : IDisposable
 	private void RenderInternal()
 	{
 		Log.Debug("Rendering start");
-		renderStats.Stopwatch.Start();
+		Stopwatch.Start();
 		/*
 		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in
 		 * It doesn't even matter if some pixels are rendered with different sample counts, since i'm using a multi-buffer approach to store the averaging data
@@ -113,7 +113,7 @@ public sealed class AsyncRenderJob : IDisposable
 			Log.Debug("Finished pass {Pass}", pass);
 		}
 
-		renderStats.Stopwatch.Stop();
+		Stopwatch.Stop();
 		Log.Information("Rendering end");
 	}
 
@@ -611,6 +611,11 @@ public sealed class AsyncRenderJob : IDisposable
 	private readonly SceneObject[] objects;
 	private readonly Light[]       lights;
 	private readonly BvhTree       bvhTree;
+
+	/// <summary>
+	///  Stopwatch used to time how long has elapsed since the rendering started
+	/// </summary>
+	public Stopwatch Stopwatch { get; } = new();
 
 	/// <summary>
 	///  Options used to render

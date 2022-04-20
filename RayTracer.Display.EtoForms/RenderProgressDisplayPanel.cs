@@ -7,6 +7,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using static Serilog.Log;
@@ -137,6 +138,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			}
 	}
 
+	/// <summary>
+	/// Render stats from the last time we updated the preview
+	/// </summary>
+	private RenderStats prevUpdateStats;
 	private void UpdateStatsTable()
 	{
 		const string timeFormat     = "h\\:mm\\:ss"; //Format string for Timespan
@@ -151,7 +156,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		ulong         rayCount        = renderJob.RenderStats.RayCount;
 		RenderOptions options         = renderJob.RenderOptions;
 		int           totalPasses     = options.Passes;
-		TimeSpan      elapsed         = renderJob.RenderStats.Stopwatch.Elapsed;
+		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
 
 		float    percentageRendered = (float)renderJob.RenderStats.RawPixelsRendered / totalRawPix;
 		ulong    rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
@@ -167,7 +172,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			estimatedTotalTime = TimeSpan.FromDays(69.420); //If something's broke at least let me have some fun
 		}
 
-		(string Title, string[] Values)[] stringStats =
+		List<(string Title, string[] Values)> stringStats =new()
 		{
 				("Time", new[]
 				{
@@ -217,7 +222,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Due to how the table is implemented, I can't rescale it later
 		//So if the size doesn't match our array, we need to recreate it
-		Size correctDims = new(2, stringStats.Length + 1);
+		Size correctDims = new(2, stringStats.Count + 1);
 		if (statsTable.Dimensions != correctDims)
 		{
 			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
@@ -227,7 +232,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			statsContainer.Content = statsTable;
 		}
 
-		for (int i = 0; i < stringStats.Length; i++)
+		for (int i = 0; i < stringStats.Count; i++)
 		{
 			(string? title, string[]? strings) = stringStats[i];
 			string   values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
@@ -308,6 +313,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Flush the image or it might not be drawn
 			depthBufferGraphics.Flush();
 		}
+
+		prevUpdateStats = renderJob.RenderStats;
 
 		static string FormatU(ulong val, ulong total)
 		{
