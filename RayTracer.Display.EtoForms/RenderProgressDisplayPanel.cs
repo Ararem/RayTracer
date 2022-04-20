@@ -146,16 +146,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		const int    numAlign       = 15;
 		const int    percentAlign   = 8;
 
-		int           totalTruePixels = renderJob.TotalTruePixels;
-		ulong         totalRawPix     = renderJob.TotalRawPixels;
-		ulong         rayCount        = renderJob.RayCount;
+		int           totalTruePixels = renderJob.RenderStats.TotalTruePixels;
+		ulong         totalRawPix     = renderJob.RenderStats.TotalRawPixels;
+		ulong         rayCount        = renderJob.RenderStats.RayCount;
 		RenderOptions options         = renderJob.RenderOptions;
 		int           totalPasses     = options.Passes;
-		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
+		TimeSpan      elapsed         = renderJob.RenderStats.Stopwatch.Elapsed;
 
-		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
-		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
-		int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+		float    percentageRendered = (float)renderJob.RenderStats.RawPixelsRendered / totalRawPix;
+		ulong    rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
+		int      passesRemaining    = totalPasses - renderJob.RenderStats.PassesRendered;
 		TimeSpan estimatedTotalTime;
 		//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws
 		try
@@ -178,7 +178,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				}),
 				("Pixels", new[]
 				{
-						$"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered",
+						$"{FormatU(renderJob.RenderStats.RawPixelsRendered, totalRawPix)} rendered",
 						$"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining",
 						$"{totalRawPix.ToString(numFormat),numAlign}          total"
 				}),
@@ -190,16 +190,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				}),
 				("Passes", new[]
 				{
-						$"{FormatI(renderJob.PassesRendered, totalPasses)} rendered",
+						$"{FormatI(renderJob.RenderStats.PassesRendered, totalPasses)} rendered",
 						$"{FormatI(passesRemaining,          totalPasses)} remaining",
 						$"{totalPasses.ToString(numFormat),numAlign}          total"
 				}),
 				("Rays", new[]
 				{
-						$"{FormatU(renderJob.RaysScattered,       rayCount)} scattered",
-						$"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed",
-						$"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded",
-						$"{FormatU(renderJob.SkyRays,             rayCount)} sky",
+						$"{FormatU(renderJob.RenderStats.RaysScattered,       rayCount)} scattered",
+						$"{FormatU(renderJob.RenderStats.RaysAbsorbed,        rayCount)} absorbed",
+						$"{FormatU(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded",
+						$"{FormatU(renderJob.RenderStats.SkyRays,             rayCount)} sky",
 						$"{rayCount.ToString(numFormat),numAlign}          total"
 				}),
 				("Scene", new[]
@@ -211,7 +211,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				}),
 				("Renderer", new[]
 				{
-						$"{renderJob.ThreadsRunning} {(renderJob.ThreadsRunning == 1 ? "thread" : "threads")}"
+						$"{renderJob.RenderStats.ThreadsRunning} {(renderJob.RenderStats.ThreadsRunning == 1 ? "thread" : "threads")}"
 				})
 		};
 
@@ -289,7 +289,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
 				const double b        = 0.000001;
 				double       m        = rayCount;
-				double       fraction = Math.Log((b * renderJob.RawRayDepthCounts[i]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
+				double       fraction = Math.Log((b * renderJob.RenderStats.RawRayDepthCounts[i]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
 				#else
 				double fraction = renderJob.RawRayDepthCounts[i] / System.Linq.Enumerable.Sum(renderJob.RawRayDepthCounts,u => (double)u); //https://www.desmos.com/calculator/erite0if8u
 				#endif

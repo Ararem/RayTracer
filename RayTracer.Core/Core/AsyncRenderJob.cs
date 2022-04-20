@@ -48,12 +48,15 @@ public sealed class AsyncRenderJob : IDisposable
 		RenderOptions                        = renderOptions;
 		rawColourBuffer                      = new Colour[renderOptions.Width * renderOptions.Height];
 		sampleCountBuffer                    = new int[renderOptions.Width    * renderOptions.Height];
-		TotalRawPixels                       = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		TotalTruePixels                      = RenderOptions.Width        * RenderOptions.Height;
 		(_, camera, objects, lights, skybox) = scene;
 		Scene                                = scene;
-		Stopwatch                            = new Stopwatch();
-		rawRayDepthCounts                    = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
+
+		var rawRayDepthCounts = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
+		var TotalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
+		var TotalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
+
+		renderStats = new RenderStats(rawRayDepthCounts, TotalTruePixels, TotalRawPixels);
+
 
 		//Calculate the bounding boxes
 		bvhTree = new BvhTree(scene);
@@ -64,7 +67,7 @@ public sealed class AsyncRenderJob : IDisposable
 	private void RenderInternal()
 	{
 		Log.Debug("Rendering start");
-		Stopwatch.Start();
+		renderStats.Stopwatch.Start();
 		/*
 		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in
 		 * It doesn't even matter if some pixels are rendered with different sample counts, since i'm using a multi-buffer approach to store the averaging data
@@ -87,11 +90,11 @@ public sealed class AsyncRenderJob : IDisposable
 		for (int pass = 0; pass < RenderOptions.Passes; pass++)
 		{
 			Parallel.For(
-					0, TotalTruePixels,
+					0, renderStats.TotalTruePixels,
 					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
 					() =>
 					{
-						Interlocked.Increment(ref threadsRunning);
+						Interlocked.Increment(ref renderStats.ThreadsRunning);
 						return this;
 					}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
 					static (i, _, state) =>
@@ -99,18 +102,18 @@ public sealed class AsyncRenderJob : IDisposable
 						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
 						Colour col = state.RenderPixelWithVisualisations(x, y);
 						state.UpdateBuffers(x, y, col);
-						Interlocked.Increment(ref state.rawPixelsRendered);
+						Interlocked.Increment(ref state.renderStats.RawPixelsRendered);
 
 						return state;
 					},
-					static state => { Interlocked.Decrement(ref state.threadsRunning); }
+					static state => { Interlocked.Decrement(ref state.renderStats.ThreadsRunning); }
 			);
 
-			Interlocked.Increment(ref passesRendered);
+			Interlocked.Increment(ref renderStats.PassesRendered);
 			Log.Debug("Finished pass {Pass}", pass);
 		}
 
-		Stopwatch.Stop();
+		renderStats.Stopwatch.Stop();
 		Log.Information("Rendering end");
 	}
 
@@ -223,7 +226,7 @@ public sealed class AsyncRenderJob : IDisposable
 		int depth;
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
-			Interlocked.Increment(ref rayCount);
+			Interlocked.Increment(ref renderStats.RayCount);
 			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
 			{
 				HitRecord hit = maybeHit;
@@ -234,7 +237,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//If the new ray is null, the material did not scatter (completely absorbed the light)
 					//So it's impossible to have any future bounces, so quit the loop
-					Interlocked.Increment(ref raysAbsorbed);
+					Interlocked.Increment(ref  renderStats.RaysAbsorbed);
 					finalColour = Colour.Black;
 					break;
 				}
@@ -242,7 +245,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 					ray = (Ray)maybeNewRay;
-					Interlocked.Increment(ref raysScattered);
+					Interlocked.Increment(ref  renderStats.RaysScattered);
 
 					if (!GraphicsValidator.CheckVectorNormalized(ray.Direction))
 					{
@@ -267,7 +270,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//No object was hit (at least not in the range), so return the skybox colour
 			else
 			{
-				Interlocked.Increment(ref skyRays);
+				Interlocked.Increment(ref renderStats.SkyRays);
 				finalColour = skybox.GetSkyColour(ray);
 				if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(finalColour))
 				{
@@ -284,8 +287,8 @@ public sealed class AsyncRenderJob : IDisposable
 			}
 		}
 
-		if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref bounceLimitExceeded);
-		Interlocked.Increment(ref rawRayDepthCounts[depth]);
+		if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref renderStats.BounceLimitExceeded);
+		Interlocked.Increment(ref renderStats.RawRayDepthCounts[depth]);
 
 		//Now do the colour pass
 		//Have to decrement depth here or we get index out of bounds because `depth++` is called on the exiting (last) iteration of the above for loop
@@ -634,89 +637,8 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </summary>
 	public Scene Scene { get; }
 
-#endregion
-
-#region Statistics
-
-	/// <summary>
-	///  How many pixels have been rendered, including multisampled pixels
-	/// </summary>
-	public ulong RawPixelsRendered => rawPixelsRendered;
-
-	private ulong rawPixelsRendered = 0;
-
-	private int passesRendered = 0;
-
-	/// <summary>
-	///  How many passes have been rendered
-	/// </summary>
-	public int PassesRendered => passesRendered;
-
-	private ulong raysScattered = 0;
-
-	/// <summary>
-	///  How many rays were scattered in the scene
-	/// </summary>
-	public ulong RaysScattered => raysScattered;
-
-	private ulong raysAbsorbed = 0;
-
-	/// <summary>
-	///  How many rays were absorbed in the scene
-	/// </summary>
-	public ulong RaysAbsorbed => raysAbsorbed;
-
-	private ulong skyRays = 0;
-
-	/// <summary>
-	///  How many rays did not hit any objects, and hit the sky
-	/// </summary>
-	public ulong SkyRays => skyRays;
-
-	/// <summary>
-	///  How many 'raw' pixels need to be rendered (including multisampled pixels)
-	/// </summary>
-	public ulong TotalRawPixels { get; }
-
-	/// <summary>
-	///  How many 'true' pixels need to be rendered (not including multisampling)
-	/// </summary>
-	public int TotalTruePixels { get; }
-
-	/// <summary>
-	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
-	///  <see cref="Core.RenderOptions.MaxDepth"/>
-	/// </summary>
-	public ulong BounceLimitExceeded => bounceLimitExceeded;
-
-	private ulong bounceLimitExceeded = 0;
-
-	/// <summary>
-	///  How many rays were rendered so far (scattered, absorbed, etc)
-	/// </summary>
-	public ulong RayCount => rayCount;
-
-	private ulong rayCount = 0;
-
-	/// <summary>
-	///  Stopwatch used to time how long has elapsed since the rendering started
-	/// </summary>
-	public Stopwatch Stopwatch { get; }
-
-	private readonly ulong[] rawRayDepthCounts;
-
-	/// <summary>
-	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
-	///  bounce, etc.
-	/// </summary>
-	public IReadOnlyList<ulong> RawRayDepthCounts => rawRayDepthCounts;
-
-	/// <summary>
-	///  How many threads are currently rendering pixels
-	/// </summary>
-	public int ThreadsRunning => threadsRunning;
-
-	private int threadsRunning;
+	private RenderStats renderStats;
+	public RenderStats RenderStats => renderStats;
 
 #endregion
 

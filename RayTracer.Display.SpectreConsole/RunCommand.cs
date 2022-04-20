@@ -165,7 +165,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		const double  a  = 5;   //Max ellipses per cycle
 
 		int    n;
-		double sec = renderJob.Stopwatch.Elapsed.TotalSeconds;
+		double sec = renderJob.RenderStats.Stopwatch.Elapsed.TotalSeconds;
 		#if true
 		//Triangle wave, goes up and down
 		{
@@ -211,16 +211,16 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 		Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
 
-		int           totalTruePixels = renderJob.TotalTruePixels;
-		ulong         totalRawPix     = renderJob.TotalRawPixels;
-		ulong         rayCount        = renderJob.RayCount;
+		int           totalTruePixels = renderJob.RenderStats.TotalTruePixels;
+		ulong         totalRawPix     = renderJob.RenderStats.TotalRawPixels;
+		ulong         rayCount        = renderJob.RenderStats.RayCount;
 		RenderOptions options         = renderJob.RenderOptions;
 		int           totalPasses     = options.Passes;
-		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
+		TimeSpan      elapsed         = renderJob.RenderStats.Stopwatch.Elapsed;
 
-		float    percentageRendered = (float)renderJob.RawPixelsRendered / totalRawPix;
-		ulong    rawPixelsRemaining = totalRawPix - renderJob.RawPixelsRendered;
-		int      passesRemaining    = totalPasses - renderJob.PassesRendered;
+		float    percentageRendered = (float)renderJob.RenderStats.RawPixelsRendered / totalRawPix;
+		ulong    rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
+		int      passesRemaining    = totalPasses - renderJob.RenderStats.PassesRendered;
 		TimeSpan estimatedTotalTime;
 		//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws
 		try
@@ -245,22 +245,22 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
 		renderStatsTable.AddRow("",                                        $"{(DateTime.Now + (estimatedTotalTime - elapsed)).ToString(dateTimeFormat)} ETC");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RawPixelsRendered, totalRawPix)} rendered");
-		renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,          totalRawPix)} remaining");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RenderStats.RawPixelsRendered, totalRawPix)} rendered");
+		renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,                      totalRawPix)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
 		renderStatsTable.AddRow("",                                        $"{options.Width.ToString(numFormat),numAlign}          pixels wide");
 		renderStatsTable.AddRow("",                                        $"{options.Height.ToString(numFormat),numAlign}          pixels high");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.PassesRendered, totalPasses)} rendered");
-		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,          totalPasses)} remaining");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Passes[/]",       $"{FormatI(renderJob.RenderStats.PassesRendered, totalPasses)} rendered");
+		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,                      totalPasses)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RaysScattered,       rayCount)} scattered");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RaysAbsorbed,        rayCount)} absorbed");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.BounceLimitExceeded, rayCount)} exceeded");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.SkyRays,             rayCount)} sky");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RenderStats.RaysScattered,       rayCount)} scattered");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.RaysAbsorbed,        rayCount)} absorbed");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.SkyRays,             rayCount)} sky");
 		renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
@@ -269,9 +269,9 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        "");
 		// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
 		if (options.ConcurrencyLevel != -1) //Don't want to divide by a negative
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{FormatI(renderJob.ThreadsRunning, options.ConcurrencyLevel)} threads");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{FormatI(renderJob.RenderStats.ThreadsRunning, options.ConcurrencyLevel)} threads");
 		else
-			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{renderJob.ThreadsRunning.ToString(numFormat),numAlign} threads");
+			renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Renderer[/]", $"{renderJob.RenderStats.ThreadsRunning.ToString(numFormat),numAlign} threads");
 		renderStatsTable.AddRow("", "");
 		// renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Console[/]",      $"CWin: ({Console.WindowWidth}x{Console.WindowHeight})");
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
@@ -289,9 +289,9 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			ulong count = 0;
 			for (int i = 0; i < grouping; i++)
 			{
-				if (rawIndex >= renderJob.RawRayDepthCounts.Count)
+				if (rawIndex >= renderJob.RenderStats.RawRayDepthCounts.Length)
 					break;
-				count += renderJob.RawRayDepthCounts[rawIndex];
+				count += renderJob.RenderStats.RawRayDepthCounts[rawIndex];
 				rawIndex++;
 				end = rawIndex;
 			}
@@ -299,7 +299,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			depths.Add((start..end, count));
 			grouping = (grouping * 1.5f) + .1f;
 			// grouping += 0f;
-			if (rawIndex >= renderJob.RawRayDepthCounts.Count)
+			if (rawIndex >= renderJob.RenderStats.RawRayDepthCounts.Length)
 				break;
 		}
 
@@ -317,7 +317,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		for (int i = 0; i < depths.Count; i++)
 			chart.AddItem(
 					$"[[{depths[i].range}]]",
-					depths[i].count / renderJob.RawRayDepthCounts.Sum(u => (double)u), //https://www.desmos.com/calculator/erite0if8u
+					depths[i].count / renderJob.RenderStats.RawRayDepthCounts.Sum(u => (double)u), //https://www.desmos.com/calculator/erite0if8u
 					Color.White
 			);
 		#endif
@@ -349,7 +349,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
 		Image<Rgb24> image = renderJob.ImageBuffer;
-		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
+		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.RenderStats.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors
 		if (!GraphicsValidator.Errors.IsEmpty)
