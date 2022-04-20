@@ -34,7 +34,6 @@ public static class TaskWatcher
 
 	private static void CheckTasks(object? _)
 	{
-		Log.Verbose("Checking tasks");
 		try
 		{
 			//Loop over all the tasks to check

@@ -24,7 +24,12 @@ public sealed class BvhTree
 	public BvhTree(Scene scene)
 	{
 		Log.Debug("Creating new Bvh Tree for scene {Scene}", scene);
-		RootNode = FromArraySegment(scene.SceneObjects);
+		// RootNode = FromArraySegment(scene.SceneObjects);
+		/*
+		 * Interesting side-note, using SAH as opposed to the plain "split in the middle" approach is really effective
+		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
+		 */
+		RootNode = FromSegment_SAH(scene.SceneObjects);
 	}
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
@@ -86,28 +91,28 @@ public sealed class BvhTree
 		}
 
 		//Find the index at which we get the smallest surface area, in order to find the most optimal split
-		float minSAH      = float.MaxValue;
-		int   minSAHIndex = 0;
+		float minSA      = float.MaxValue;
+		int   minSAIndex = 0;
 		for (int i = 0; i < n - 1; i++)
 		{
 			float sah = (i * leftArea[i]) + ((n - i - 1) * rightArea[i + 1]);
-			if (sah < minSAH)
+			if (sah < minSA)
 			{
-				minSAHIndex = i;
-				minSAH      = sah;
+				minSAIndex = i;
+				minSA      = sah;
 			}
 		}
 
 		//We know we'll be using binary nodes because we already checked for a single object earlier
 		IBvhNode leftNode, rightNode;
-		if (minSAHIndex == 0)
+		if (minSAIndex == 0)
 			leftNode  = new SingleObjectBvhNode(objects[0]);
 		else
-			leftNode = FromSegment_SAH(objects[..(minSAHIndex + 1)]);
-		if (minSAHIndex == n - 2)
-			rightNode  = new SingleObjectBvhNode(objects[minSAHIndex + 1]);
+			leftNode = FromSegment_SAH(objects[..(minSAIndex + 1)]);
+		if (minSAIndex == n - 2)
+			rightNode  = new SingleObjectBvhNode(objects[minSAIndex + 1]);
 		else
-			rightNode = FromSegment_SAH(objects[(minSAHIndex + 1)..]);
+			rightNode = FromSegment_SAH(objects[(minSAIndex + 1)..]);
 
 		return new BinaryBvhNode(leftNode, rightNode);
 
@@ -119,42 +124,43 @@ public sealed class BvhTree
 	}
 
 
-	private static IBvhNode FromArraySegment(ArraySegment<SceneObject> segment)
-	{
-		//Have to copy the list since we'll be modifying it
-		SceneObject[] objects = segment.ToArray();
-
-		//Choose a random axis to sort and split along
-		int axis = RandUtils.RandomInt(0, 3);
-		Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
-		Comparison<SceneObject> compareFunc = axis switch
-		{
-				0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
-				1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
-				_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
-		};
-
-		IBvhNode node;
-		switch (segment.Count)
-		{
-			case 1:
-				node = new SingleObjectBvhNode(segment[0]);
-				break;
-			case 2:
-				node = new BinaryBvhNode(new SingleObjectBvhNode(segment[0]), new SingleObjectBvhNode(segment[1]));
-				break;
-			//Recursively split the objects again
-			default:
-				Array.Sort(objects, compareFunc);
-				int      mid = objects.Length / 2;
-				IBvhNode a   = FromArraySegment(objects[..mid]);
-				IBvhNode b   = FromArraySegment(objects[mid..]);
-				node = new BinaryBvhNode(a, b);
-				break;
-		}
-
-		return node;
-	}
+	//Old version of splitting code
+	// private static IBvhNode FromArraySegment(ArraySegment<SceneObject> segment)
+	// {
+	// 	//Have to copy the list since we'll be modifying it
+	// 	SceneObject[] objects = segment.ToArray();
+	//
+	// 	//Choose a random axis to sort and split along
+	// 	int axis = RandUtils.RandomInt(0, 3);
+	// 	Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+	// 	Comparison<SceneObject> compareFunc = axis switch
+	// 	{
+	// 			0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
+	// 			1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
+	// 			_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
+	// 	};
+	//
+	// 	IBvhNode node;
+	// 	switch (segment.Count)
+	// 	{
+	// 		case 1:
+	// 			node = new SingleObjectBvhNode(segment[0]);
+	// 			break;
+	// 		case 2:
+	// 			node = new BinaryBvhNode(new SingleObjectBvhNode(segment[0]), new SingleObjectBvhNode(segment[1]));
+	// 			break;
+	// 		//Recursively split the objects again
+	// 		default:
+	// 			Array.Sort(objects, compareFunc);
+	// 			int      mid = objects.Length / 2;
+	// 			IBvhNode a   = FromArraySegment(objects[..mid]);
+	// 			IBvhNode b   = FromArraySegment(objects[mid..]);
+	// 			node = new BinaryBvhNode(a, b);
+	// 			break;
+	// 	}
+	//
+	// 	return node;
+	// }
 
 	/// <summary>
 	///  Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis

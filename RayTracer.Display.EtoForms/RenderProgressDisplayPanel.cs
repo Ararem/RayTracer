@@ -113,7 +113,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
-		Verbose("Updating previews");
 		UpdateImagePreview();
 		UpdateStatsTable();
 
