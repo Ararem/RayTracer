@@ -261,7 +261,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Update title control type if needed
 			if (titleCell.Control is not Label titleLabel)
 			{
-				Verbose("Depth Buffer Title Cell ({Position}) was not label (was {Control}), disposing and updating", (0, row), (titleCell.Control,((Label)titleCell.Control)?.Text));
+				Verbose("Depth Buffer Title Cell {Position} was not label (was {Control}), disposing and updating", (0, row), titleCell.Control);
 				titleCell.Control?.Detach();
 				titleCell.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(titleLabel = new Label(), 0, row);
@@ -272,7 +272,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Update image control if needed
 			if (depthBufferCell.Control != depthBufferImageView)
 			{
-				Verbose("Depth Buffer Image Cell ({Position}) was not our ImageView (was {Control}), disposing and updating", (1, row), (depthBufferCell.Control, ((Label)depthBufferCell.Control)?.Text));
+				Verbose("Depth Buffer Image Cell {Position} was not our ImageView (was {Control}), disposing and updating", (1, row), depthBufferCell.Control);
 				depthBufferCell.Control?.Detach();
 				depthBufferCell.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(depthBufferImageView, 1, row);
