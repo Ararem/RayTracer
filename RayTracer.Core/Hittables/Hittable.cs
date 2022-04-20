@@ -28,5 +28,5 @@ public abstract record Hittable
 	/// Bounding volume that encompasses this object
 	/// </summary>
 	///<remarks>Used for accelerating renders. If an object does not support being constrained to bounds (e.g. if it's infinite in one axis), this should return <see langword="null"/></remarks>
-	public abstract AxisAlignedBoundingBox? BoundingVolume { get; }
+	public abstract AxisAlignedBoundingBox BoundingVolume { get; }
 }

@@ -1,18 +1,13 @@
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
-using JetBrains.Annotations;
 using LibEternal.ObjectPools;
 using RayTracer.Core;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
 using Timer = System.Threading.Timer;
@@ -126,7 +121,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private void UpdateImagePreview()
 	{
 		using BitmapData data         = previewImage.Lock();
-		Stopwatch        stop         = Stopwatch.StartNew();
 		int              xSize        = previewImage.Width, ySize = previewImage.Height;
 		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
 		IntPtr offset = data.Data;
@@ -144,8 +138,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateStatsTable()
 	{
-		Stopwatch    stop           = Stopwatch.StartNew();
-
 		const string timeFormat     = "h\\:mm\\:ss"; //Format string for Timespan
 		const string dateTimeFormat = "G";           //Format string for DateTime
 		const string percentFormat  = "p1";          //Format string for percentages

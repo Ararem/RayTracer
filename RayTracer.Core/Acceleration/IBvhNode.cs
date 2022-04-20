@@ -14,5 +14,5 @@ public interface IBvhNode
 	/// Bounding box that encompasses this <see cref="IBvhNode"/> and all it's children nodes (if any)
 	/// </summary>
 	/// <remarks>Used to quickly discard nodes where a given <see cref="Ray"/> definitely won't intersect</remarks>
-	public AxisAlignedBoundingBox? BoundingBox { get; }
+	public AxisAlignedBoundingBox BoundingBox { get; }
 }

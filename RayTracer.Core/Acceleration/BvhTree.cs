@@ -1,11 +1,13 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
 using Serilog;
-using System.Data;
 using System.Numerics;
 
 namespace RayTracer.Core.Acceleration;
 
+/// <summary>
+/// Class that handles creating a Bounding Volume Hierarchy (BVH) tree for a given <see cref="Scene"/>. This can be used to accelerate ray-object intersections by quickly discarding a <see cref="Ray"/> that will not intersect a given objects (since it doesn't intersect it's bounds)
+/// </summary>
 public sealed class BvhTree
 {
 	/// <inheritdoc cref="Hittable.TryHit"/>
@@ -37,16 +39,16 @@ public sealed class BvhTree
 		Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
 		Comparison<SceneObject> compareFunc = axis switch
 		{
-				0 => static (a,b) => CompareHittables(a.Hittable,b.Hittable, static v => v.X),
-				1 => static (a,b) => CompareHittables(a.Hittable,b.Hittable, static v => v.Y),
-				_ => static (a,b) => CompareHittables(a.Hittable,b.Hittable, static v => v.Z),
+				0 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.X),
+				1 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Y),
+				_ => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Z),
 		};
 
 		IBvhNode node;
 		switch (segment.Count)
 		{
 			case 1:
-				node= new SingleObjectBvhNode(segment[0]);
+				node = new SingleObjectBvhNode(segment[0]);
 				break;
 			case 2:
 				node = new BinaryBvhNode(new SingleObjectBvhNode(segment[0]), new SingleObjectBvhNode(segment[1]));
@@ -57,7 +59,7 @@ public sealed class BvhTree
 				int      mid = objects.Length / 2;
 				IBvhNode a   = FromArraySegment(objects[..mid]);
 				IBvhNode b   = FromArraySegment(objects[mid..]);
-				node= new BinaryBvhNode(a, b);
+				node = new BinaryBvhNode(a, b);
 				break;
 		}
 
@@ -68,16 +70,13 @@ public sealed class BvhTree
 	/// <summary>
 	/// Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
 	/// </summary>
-	/// <param name="a"></param>
-	/// <param name="b"></param>
-	/// <param name="getAxis">Function to get the </param>
-	/// <returns></returns>
-	/// <exception cref="NoNullAllowedException"></exception>
+	/// <param name="a">First hittable to compare</param>
+	/// <param name="b">Second hittable to compare</param>
+	/// <param name="getAxis">Function to get the given axis value to compare along (e.g. <c>v => v.X</c>)</param>
 	private static int CompareHittables(Hittable a, Hittable b, [RequireStaticDelegate] Func<Vector3, float> getAxis)
 	{
-		//What I'm trying to do here is to make the comparison work for hittables that don't really have bounds (think ∞∞∞∞∞∞∞∞∞∞∞∞)
-		Vector3 aMin = a.BoundingVolume?.Min ?? new Vector3(float.NegativeInfinity);
-		Vector3 bMax = b.BoundingVolume?.Max ?? new Vector3(float.PositiveInfinity);
+		Vector3 aMin = a.BoundingVolume.Min;
+		Vector3 bMax = b.BoundingVolume.Max;
 
 		return getAxis(aMin).CompareTo(getAxis(bMax));
 	}

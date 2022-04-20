@@ -11,7 +11,6 @@ namespace RayTracer.Core.Hittables;
 /// <param name="Normal">The surface normal at the intersection. Should point away from the centre of the object (outwards)</param>
 /// <param name="K">Distance along the ray at which the intersection occured</param>
 /// <param name="OutsideFace">If the object was hit on the outside of it's surface, as opposed to it's inside</param>
-/// <param name="Depth">How many times the ray bounced before hitting this object</param>
 public readonly record struct HitRecord(
 		Ray     Ray,
 		Vector3 WorldPoint,
@@ -19,5 +18,5 @@ public readonly record struct HitRecord(
 		Vector3 Normal,
 		float   K,
 		bool    OutsideFace,
-		Vector2 UV//TODO: Add depth?
+		Vector2 UV
 );

@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace RayTracer.Core.Debugging;

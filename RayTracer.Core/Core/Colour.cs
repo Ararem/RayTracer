@@ -1,7 +1,6 @@
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;

@@ -71,6 +71,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="subBoxes"/></returns>
 	public static AxisAlignedBoundingBox Encompass(params AxisAlignedBoundingBox[] subBoxes)
 	{
+		if (subBoxes.Length < 2) throw new ArgumentException("Sub boxes must have at least 2 elements", nameof(subBoxes));
 		Vector3 min = new(float.PositiveInfinity), max = new(float.NegativeInfinity);
 		foreach (AxisAlignedBoundingBox aabb in subBoxes)
 		{
@@ -80,4 +81,9 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 
 		return new AxisAlignedBoundingBox(min, max);
 	}
+
+	/// <summary>
+	/// An <see cref="AxisAlignedBoundingBox"/> that is infinite in all dimensions - no ray should ever be discarded
+	/// </summary>
+	public static AxisAlignedBoundingBox Infinite { get; } = new (new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
 }

@@ -10,7 +10,7 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
 	/// <inheritdoc />
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
-		if (BoundingBox?.Hit(ray, kMin, kMax) == false)
+		if (!BoundingBox.Hit(ray, kMin, kMax))
 		{
 			return null;
 		}
@@ -22,7 +22,7 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
 	}
 
 	/// <inheritdoc />
-	public AxisAlignedBoundingBox? BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
+	public AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
 
 	/// <summary>
 	/// Implicit operator to create a new <see cref="SingleObjectBvhNode"/> from a <see cref="SceneObject"/>. Simply calls the default constructor (<see cref="SingleObjectBvhNode(RayTracer.Core.SceneObject)"/>)

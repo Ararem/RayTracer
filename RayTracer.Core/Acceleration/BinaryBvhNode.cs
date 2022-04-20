@@ -2,7 +2,12 @@ using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Acceleration;
 
-public record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
+/// <summary>
+/// Implementation of <see cref="IBvhNode"/> for two sub-nodes
+/// </summary>
+/// <param name="NodeA">First sub-node</param>
+/// <param name="NodeB">Second sub-node</param>
+public sealed record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
 {
 	/// <inheritdoc />
 	public AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);

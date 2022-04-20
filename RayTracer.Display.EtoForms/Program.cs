@@ -2,7 +2,6 @@
 using GLib;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
 using Logger = RayTracer.Core.Logger;
