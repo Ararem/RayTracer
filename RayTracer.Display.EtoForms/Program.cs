@@ -75,7 +75,7 @@ internal static class Program
 		Debug("MainForm is {MainForm}", form);
 
 		Debug("Starting task watcher");
-		Task.Run(TaskWatcher.WatchTasksWorker);
+		TaskWatcher.Init();
 
 		try
 		{

@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
 using Serilog;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 
 namespace RayTracer.Core.Acceleration;
@@ -39,9 +40,9 @@ public sealed class BvhTree
 		Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
 		Comparison<SceneObject> compareFunc = axis switch
 		{
-				0 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.X),
-				1 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Y),
-				_ => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Z)
+				0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
+				1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
+				_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
 		};
 
 		IBvhNode node;
@@ -55,7 +56,7 @@ public sealed class BvhTree
 				break;
 			//Recursively split the objects again
 			default:
-				Array.Sort(objects, compareFunc);
+				 Array.Sort(objects, compareFunc);
 				int      mid = objects.Length / 2;
 				IBvhNode a   = FromArraySegment(objects[..mid]);
 				IBvhNode b   = FromArraySegment(objects[mid..]);
@@ -71,11 +72,23 @@ public sealed class BvhTree
 	/// <param name="a">First hittable to compare</param>
 	/// <param name="b">Second hittable to compare</param>
 	/// <param name="getAxis">Function to get the given axis value to compare along (e.g. <c>v => v.X</c>)</param>
-	private static int CompareHittables(Hittable a, Hittable b, [RequireStaticDelegate] Func<Vector3, float> getAxis)
+	[SuppressMessage("ReSharper", "UseDeconstructionOnParameter")]
+	private static int CompareHittables(AxisAlignedBoundingBox a, AxisAlignedBoundingBox b, [RequireStaticDelegate] Func<Vector3, float> getAxis)
 	{
-		Vector3 aMin = a.BoundingVolume.Min;
-		Vector3 bMax = b.BoundingVolume.Max;
+		//So it would be better to sort by the min/max bounds like below, but that completely fails with infinities
+		//So i have to sort using the centre instead :(
+		//TODO: Implement the SAH method outlined here
+		//https://3.bp.blogspot.com/-PMG6dWk1i60/VuG9UHjsdlI/AAAAAAAACEo/BS1qJyut7LE/s1600/Screen%2BShot%2B2016-03-10%2Bat%2B11.25.08%2BAM.png
+		//
+		// ReSharper disable once ArrangeMethodOrOperatorBody
+		return getAxis((a.Min + a.Max) / 2f).CompareTo(getAxis((b.Min + b.Min) / 2f));
 
-		return getAxis(aMin).CompareTo(getAxis(bMax));
+		// if (a.Equals(b)) return 0;
+		// if (ReferenceEquals(a, b) && ReferenceEquals(a, AxisAlignedBoundingBox.Infinite)) return 0;
+		//
+		// Vector3 aMin = a.Min;
+		// Vector3 bMax = b.Max;
+		//
+		// return getAxis(aMin).CompareTo(getAxis(bMax));
 	}
 }

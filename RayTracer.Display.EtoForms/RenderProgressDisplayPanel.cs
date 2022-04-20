@@ -104,7 +104,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		};
 
 		//Periodically update the previews using a timer
-		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 50);
+		//PERF: This creates quite a few allocations when called frequently
+		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 500);
 	}
 
 	/// <summary>
@@ -112,6 +113,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
+		Verbose("Updating previews");
 		UpdateImagePreview();
 		UpdateStatsTable();
 

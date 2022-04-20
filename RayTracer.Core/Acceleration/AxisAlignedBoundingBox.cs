@@ -11,8 +11,10 @@ namespace RayTracer.Core.Acceleration;
 public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 {
 	/// <summary>
-	///  An <see cref="AxisAlignedBoundingBox"/> that is infinite in all dimensions - no ray should ever be discarded
+	///  An <see cref="AxisAlignedBoundingBox"/> that represents an unbounded AABB
 	/// </summary>
+	/// <remarks>This isn't truly infinite, as <see cref="float.PositiveInfinity"/> and <see cref="float.NegativeInfinity"/> may not work, however this is necessary for computation of <see cref="BvhTree">BVH Trees</see>
+	/// </remarks>
 	public static AxisAlignedBoundingBox Infinite { get; } = new(new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
 
 	/// <summary>
