@@ -432,8 +432,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		(Scene scene, RenderOptions renderOptions) = ConfirmSettings(context, settings);
 
 		//Start the render job and display the progress while we wait
-		AsyncRenderJob renderJob = new(scene, renderOptions);
-		Task renderTask = renderJob.StartOrGetRenderAsync();
+		AsyncRenderJob renderJob  = new(scene, renderOptions);
+		Task           renderTask = renderJob.StartOrGetRenderAsync();
 		await DisplayProgress(renderJob);
 		await renderTask; //Just in case DisplayProgress returned early
 

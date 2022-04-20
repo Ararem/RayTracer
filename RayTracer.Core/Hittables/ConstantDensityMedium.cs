@@ -23,7 +23,7 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 		if (Boundary.TryHit(ray, hit1.K + 0.001f, kMax) is not { } hit2) return null;
 
 		//Find how far we travelled between the inside and outside
-		float boundaryDistance  = hit2.K - hit1.K;
+		float boundaryDistance = hit2.K - hit1.K;
 		//Random distance for how far we're going to travel this time
 		float randomHitDistance = negInvDensity * MathF.Log(RandUtils.RandomFloat01());
 
@@ -38,6 +38,6 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume => Boundary.BoundingVolume;
 }

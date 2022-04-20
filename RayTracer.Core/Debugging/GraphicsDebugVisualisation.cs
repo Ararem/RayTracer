@@ -30,7 +30,7 @@ public enum GraphicsDebugVisualisation
 	Depth,
 
 	/// <summary>
-	/// UV coordinate output by the object's intersection code
+	///  UV coordinate output by the object's intersection code
 	/// </summary>
 	UVCoords,
 

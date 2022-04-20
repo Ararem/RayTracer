@@ -16,6 +16,10 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 {
 	private readonly float radiusSqr = Radius * Radius;
 
+	//TODO: Very inefficient, need to make AABB smaller and more compact
+	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
+
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
@@ -49,8 +53,4 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
-
-	//TODO: Very inefficient, need to make AABB smaller and more compact
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
 }

@@ -6,20 +6,18 @@ using System.Numerics;
 namespace RayTracer.Core.Acceleration;
 
 /// <summary>
-/// Class that handles creating a Bounding Volume Hierarchy (BVH) tree for a given <see cref="Scene"/>. This can be used to accelerate ray-object intersections by quickly discarding a <see cref="Ray"/> that will not intersect a given objects (since it doesn't intersect it's bounds)
+///  Class that handles creating a Bounding Volume Hierarchy (BVH) tree for a given <see cref="Scene"/>. This can be used to accelerate ray-object
+///  intersections by quickly discarding a <see cref="Ray"/> that will not intersect a given objects (since it doesn't intersect it's bounds)
 /// </summary>
 public sealed class BvhTree
 {
-	/// <inheritdoc cref="Hittable.TryHit"/>
-	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
-
 	/// <summary>
-	/// Root <see cref="IBvhNode"/> for this BVH Tree
+	///  Root <see cref="IBvhNode"/> for this BVH Tree
 	/// </summary>
 	public readonly IBvhNode RootNode;
 
 	/// <summary>
-	/// Creates a new BVH tree for the specified scene
+	///  Creates a new BVH tree for the specified scene
 	/// </summary>
 	/// <param name="scene"></param>
 	public BvhTree(Scene scene)
@@ -27,6 +25,9 @@ public sealed class BvhTree
 		Log.Debug("Creating new Bvh Tree for scene {Scene}", scene);
 		RootNode = FromArraySegment(scene.SceneObjects);
 	}
+
+	/// <inheritdoc cref="Hittable.TryHit"/>
+	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
 	private static IBvhNode FromArraySegment(ArraySegment<SceneObject> segment)
 	{
@@ -41,7 +42,7 @@ public sealed class BvhTree
 		{
 				0 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.X),
 				1 => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Y),
-				_ => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Z),
+				_ => static (a, b) => CompareHittables(a.Hittable, b.Hittable, static v => v.Z)
 		};
 
 		IBvhNode node;
@@ -68,7 +69,7 @@ public sealed class BvhTree
 	}
 
 	/// <summary>
-	/// Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
+	///  Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
 	/// </summary>
 	/// <param name="a">First hittable to compare</param>
 	/// <param name="b">Second hittable to compare</param>

@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 
 namespace RayTracer.Core.Environment;
+
 //TODO: HDRI Skybox
 /// <summary>
 ///  Base class for implementing a skybox

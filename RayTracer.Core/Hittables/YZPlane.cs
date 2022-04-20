@@ -16,6 +16,9 @@ namespace RayTracer.Core.Hittables;
 public sealed record YZPlane(float YLow, float YHigh, float ZLow, float ZHigh, float X, float AABBPadding = 0.001f) : Hittable
 {
 	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(new Vector3(X - AABBPadding, YLow, ZLow), new Vector3(X + AABBPadding, YHigh, ZHigh));
+
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//How far along the ray did it intersect with the unbounded version of this plane (bounds of +- infinity)
@@ -42,10 +45,7 @@ public sealed record YZPlane(float YLow, float YHigh, float ZLow, float ZHigh, f
 						? new Vector3(-1, 0, 0)
 						: new Vector3(1,  0, 0);
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
-		if(float.IsNaN(k)) Debugger.Break();
+		if (float.IsNaN(k)) Debugger.Break();
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
-
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(new Vector3(X - AABBPadding, YLow, ZLow), new Vector3(X + AABBPadding, YHigh, ZHigh));
 }

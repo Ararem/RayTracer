@@ -45,6 +45,9 @@ public record HexPlaneBox : Hittable
 	/// </summary>
 	public Vector3 Max { get; }
 
+	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
 
 	/// <summary>
 	///  Record method implementation
@@ -76,7 +79,4 @@ public record HexPlaneBox : Hittable
 		//TODO: Uv coords are local to the face they hit
 		return closest;
 	}
-
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume { get; }
 }

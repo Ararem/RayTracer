@@ -8,17 +8,16 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
-using Timer = System.Threading.Timer;
 
 namespace RayTracer.Display.EtoForms;
 
 [SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
 internal sealed class RenderProgressDisplayPanel : Panel
 {
-	private readonly Pen depthBufferPen  = new (Colors.Gray);
-	private const    int DepthImageWidth = 100;
+	private const int DepthImageWidth = 100;
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -31,6 +30,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private readonly Graphics depthBufferGraphics;
 
 	private readonly ImageView depthBufferImageView;
+	private readonly Pen       depthBufferPen = new(Colors.Gray);
 
 	/// <summary>
 	///  The actual preview image buffer
@@ -56,6 +56,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	///  Container that has a title and border around the stats table
 	/// </summary>
 	private readonly GroupBox statsContainer;
+
+	private readonly Timer updatePreviewTimer;
 
 	/// <summary>
 	///  Table that contains the various stats
@@ -105,10 +107,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 50);
 	}
 
-	private readonly Timer updatePreviewTimer;
-
 	/// <summary>
-	/// Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
+	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
@@ -123,7 +123,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		using BitmapData data         = previewImage.Lock();
 		int              xSize        = previewImage.Width, ySize = previewImage.Height;
 		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
-		IntPtr offset = data.Data;
+		IntPtr           offset       = data.Data;
 		for (int y = 0; y < ySize; y++)
 			unsafe
 			{
@@ -229,8 +229,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		for (int i = 0; i < stringStats.Length; i++)
 		{
 			(string? title, string[]? strings) = stringStats[i];
-			string   values                                                = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
-			TableRow row                                                   = statsTable.Rows[i];
+			string   values = StringBuilderPool.BorrowInline(static (sb, vs) => sb.AppendJoin(Environment.NewLine, vs), strings);
+			TableRow row    = statsTable.Rows[i];
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
 			{
@@ -265,6 +265,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				titleCell.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(titleLabel = new Label(), 1, statsTable.Dimensions.Height - 1);
 			}
+
 			titleLabel.Text = "Depth Buffer"; //Update title control text
 
 			//Update image control if needed
@@ -275,6 +276,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				depthBufferCell.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
 			}
+
 			depthBufferGraphics.Clear();
 
 			//What I'm doing here is adjusting the depth values so that the largest one reaches the end of the graph (scaling up to fill the image)
@@ -316,7 +318,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	protected override void Dispose(bool disposing)
 	{
 		base.Dispose(disposing);

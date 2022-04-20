@@ -3,22 +3,22 @@ using RayTracer.Core.Hittables;
 namespace RayTracer.Core.Acceleration;
 
 /// <summary>
-/// Implementation of <see cref="IBvhNode"/> for two sub-nodes
+///  Implementation of <see cref="IBvhNode"/> for two sub-nodes
 /// </summary>
 /// <param name="NodeA">First sub-node</param>
 /// <param name="NodeB">Second sub-node</param>
 public sealed record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
 {
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Quit early if we miss the bounding volume
 		if (BoundingBox.Hit(ray, kMin, kMax) == false) return null;
 
-		(SceneObject Object, HitRecord Hit) ? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
+		(SceneObject Object, HitRecord Hit)? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
 		//If we hit node A, we still need to check if node B is closer
 		if (maybeHitA is { } hitA)
 		{

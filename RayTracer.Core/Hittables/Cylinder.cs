@@ -16,6 +16,9 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
 
 	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
+
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//XYZ are XYZ of normal, W is k value along ray of intersection
@@ -73,7 +76,4 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 			return null;
 		}
 	}
-
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
 }

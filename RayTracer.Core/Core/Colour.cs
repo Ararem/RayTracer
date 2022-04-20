@@ -247,16 +247,16 @@ public readonly struct Colour : IFormattable
 	public static Colour Clamp(Colour value1, Colour min, Colour max) => Min(Max(value1, min), max);
 
 	/// <summary>
-	/// Clamps a colour's components in the range [0...1]
+	///  Clamps a colour's components in the range [0...1]
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[Pure]
 	public static Colour Clamp01(Colour colour) => Clamp(colour, Black, White);
 
 	/// <summary>
-	/// Calculates the square root of a colour's channels
+	///  Calculates the square root of a colour's channels
 	/// </summary>
-	public static Colour Sqrt(Colour colour) => new (MathF.Sqrt(colour.R), MathF.Sqrt(colour.G), MathF.Sqrt(colour.B));
+	public static Colour Sqrt(Colour colour) => new(MathF.Sqrt(colour.R), MathF.Sqrt(colour.G), MathF.Sqrt(colour.B));
 
 	/// <summary>
 	///  Linearly interpolates between two colours

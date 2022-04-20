@@ -17,6 +17,9 @@ namespace RayTracer.Core.Hittables;
 public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 {
 	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume => AxisAlignedBoundingBox.Infinite;
+
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
@@ -44,7 +47,4 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
-
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume => AxisAlignedBoundingBox.Infinite;
 }

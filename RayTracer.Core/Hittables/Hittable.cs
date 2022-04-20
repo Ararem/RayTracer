@@ -10,6 +10,15 @@ namespace RayTracer.Core.Hittables;
 public abstract record Hittable
 {
 	/// <summary>
+	///  Bounding volume that encompasses this object
+	/// </summary>
+	/// <remarks>
+	///  Used for accelerating renders. If an object does not support being constrained to bounds (e.g. if it's infinite in one axis), this should return
+	///  <see langword="null"/>
+	/// </remarks>
+	public abstract AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>
 	///  Attempts to intersect the current hittable instance with a <see cref="Ray"/>
 	/// </summary>
 	/// <param name="ray">The ray to check for intersection with</param>
@@ -23,10 +32,4 @@ public abstract record Hittable
 
 	/// <inheritdoc/>
 	public override string ToString() => GetType().Name;
-
-	/// <summary>
-	/// Bounding volume that encompasses this object
-	/// </summary>
-	///<remarks>Used for accelerating renders. If an object does not support being constrained to bounds (e.g. if it's infinite in one axis), this should return <see langword="null"/></remarks>
-	public abstract AxisAlignedBoundingBox BoundingVolume { get; }
 }

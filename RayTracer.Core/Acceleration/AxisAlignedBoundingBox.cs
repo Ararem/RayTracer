@@ -3,14 +3,20 @@ using System.Numerics;
 namespace RayTracer.Core.Acceleration;
 
 /// <summary>
-/// A bounding volume that takes the shape of an axis aligned box (cuboid) that spans from <see cref="Min"/> to <see cref="Max"/> (these are two opposing corners)
+///  A bounding volume that takes the shape of an axis aligned box (cuboid) that spans from <see cref="Min"/> to <see cref="Max"/> (these are two
+///  opposing corners)
 /// </summary>
 /// <param name="Min">First corner of the box</param>
 /// <param name="Max">Second corner of the box</param>
 public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 {
 	/// <summary>
-	/// Tries to see if the given ray will intersect with the bounding box or not.
+	///  An <see cref="AxisAlignedBoundingBox"/> that is infinite in all dimensions - no ray should ever be discarded
+	/// </summary>
+	public static AxisAlignedBoundingBox Infinite { get; } = new(new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
+
+	/// <summary>
+	///  Tries to see if the given ray will intersect with the bounding box or not.
 	/// </summary>
 	/// <param name="ray">The ray to check for intersections along</param>
 	/// <param name="kMin">Lower bound for distance along the ray</param>
@@ -19,13 +25,13 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	public bool Hit(Ray ray, float kMin, float kMax)
 	{
 		(Vector3 ro, Vector3 rd) = ray;
-		for(int a = 0; a<3; a++)
+		for (int a = 0; a < 3; a++)
 		{
-			float invD        = 1.0f                                   / Index(rd, a);
-			float t0          = (Index(Min, a) - Index(ro, a)) * invD;
-			float t1          = (Index(Max, a) - Index(ro, a)) * invD;
+			float invD = 1.0f                           / Index(rd, a);
+			float t0   = (Index(Min, a) - Index(ro, a)) * invD;
+			float t1   = (Index(Max, a) - Index(ro, a)) * invD;
 			if (invD < 0.0f)
-				(t1,t0)=(t0, t1);
+				(t1, t0) = (t0, t1);
 			kMin = t0 > kMin ? t0 : kMin;
 			kMax = t1 < kMax ? t1 : kMax;
 			if (kMax <= kMin)
@@ -48,7 +54,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	}
 
 	/// <summary>
-	/// Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/>
+	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/>
 	/// </summary>
 	/// <param name="points">Array of sub boxes to surround</param>
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="points"/></returns>
@@ -65,7 +71,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	}
 
 	/// <summary>
-	/// Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/>
+	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/>
 	/// </summary>
 	/// <param name="subBoxes">Array of sub boxes to surround</param>
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="subBoxes"/></returns>
@@ -81,9 +87,4 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 
 		return new AxisAlignedBoundingBox(min, max);
 	}
-
-	/// <summary>
-	/// An <see cref="AxisAlignedBoundingBox"/> that is infinite in all dimensions - no ray should ever be discarded
-	/// </summary>
-	public static AxisAlignedBoundingBox Infinite { get; } = new (new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
 }

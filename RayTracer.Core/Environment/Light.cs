@@ -69,19 +69,20 @@ public abstract record Light
 	public abstract Colour CalculateLight(HitRecord hit, FastAnyIntersectCheck fastAnyIntersectCheck, SlowClosestIntersectCheck slowClosestIntersectCheck);
 
 	/// <summary>
-	/// Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>. This overload also allows access to the computed shadow ray
+	///  Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>. This overload also allows access to the computed
+	///  shadow ray
 	/// </summary>
 	public static bool CheckIntersection(HitRecord hit, Vector3 position, FastAnyIntersectCheck fastAnyIntersectCheck, out Ray shadowRay)
 	{
 		//Find ray between the hit and the light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
-		const float kMin      = 0.0001f;
-		float       kMax      = Vector3.Distance(position, hit.WorldPoint);
+		const float kMin = 0.0001f;
+		float       kMax = Vector3.Distance(position, hit.WorldPoint);
 		return fastAnyIntersectCheck(shadowRay, kMin, kMax);
 	}
 
 	/// <summary>
-	/// Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>
+	///  Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>
 	/// </summary>
 	public static bool CheckIntersection(HitRecord hit, Vector3 position, FastAnyIntersectCheck fastAnyIntersectCheck)
 	{

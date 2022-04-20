@@ -25,7 +25,10 @@ namespace RayTracer.Core;
 /// </param>
 /// <param name="Passes">How many samples to average, to create a less noisy image</param>
 /// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
-/// <param name="HdrEnabled">Whether HDR mode is enabled. You may wish to enableDisabling this clamps colours to the range [0..1]. this in scenes where you purposefully have light sources that are too bright, in order to compensate for dim lighting</param>
+/// <param name="HdrEnabled">
+///  Whether HDR mode is enabled. You may wish to enableDisabling this clamps colours to the range [0..1]. this in scenes where you purposefully have
+///  light sources that are too bright, in order to compensate for dim lighting
+/// </param>
 public sealed record RenderOptions(
 		[NonNegativeValue] int     Width,
 		[NonNegativeValue] int     Height,
@@ -35,7 +38,7 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
-		bool HdrEnabled = true //TODO: Remove this honestly i dont think its useful
+		bool                       HdrEnabled         = true //TODO: Remove this honestly i dont think its useful
 		//TODO: Max depth for calculating lighting?
 )
 {

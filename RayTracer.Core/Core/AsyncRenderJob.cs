@@ -302,11 +302,11 @@ public sealed class AsyncRenderJob : IDisposable
 			//Make a copy of the final colour and let the lights and the material do their calculations
 			Colour colour = finalColour;
 			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
-			ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHits = new (materialHitArray, 0, depth); //Shouldn't include the current hit
+			ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
 			//This makes the lights have less of an effect the deeper they are
 			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
-			float depthScalar                              = 3f/ (depth + 3);
+			float depthScalar                              = 3f / (depth + 3);
 			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit, prevHits);
 
@@ -483,6 +483,7 @@ public sealed class AsyncRenderJob : IDisposable
 			GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
 			return null; //Skip because we can't consider it valid
 		}
+
 		return (obj, hit);
 		#else
 		(SceneObject obj, HitRecord hit)? maybeClosest = null;

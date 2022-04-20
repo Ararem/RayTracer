@@ -47,7 +47,7 @@ public static class TaskWatcher
 					await Task.Delay(100);
 				}
 
-				while(NotYetCompleted.TryTake(out (Task Task, bool ExitOnError) result)) WatchedTasks.Add(result);
+				while (NotYetCompleted.TryTake(out (Task Task, bool ExitOnError) result)) WatchedTasks.Add(result);
 			}
 		}
 		catch (Exception e)

@@ -17,6 +17,9 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
 
 	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
+
+	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
@@ -112,9 +115,6 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		float   h  = Math.Clamp(Dot(pa, ba) / Dot(ba, ba), 0f, 1f);
 		return (pa - (h * ba)) / r;
 	}
-
-	/// <inheritdoc />
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
 }
 
 #region Original ShaderToy Code
