@@ -30,6 +30,95 @@ public sealed class BvhTree
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
+	private static IBvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
+	{
+		//Simple check if 1 element so we can assume more than 1 later on
+		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0]);
+
+		//Port of Pete Shirley's code
+		// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
+		// https://3.bp.blogspot.com/-PMG6dWk1i60/VuG9UHjsdlI/AAAAAAAACEo/BS1qJyut7LE/s1600/Screen%2BShot%2B2016-03-10%2Bat%2B11.25.08%2BAM.png
+
+		int                      n         = segment.Count;
+		AxisAlignedBoundingBox[] boxes     = new AxisAlignedBoundingBox[n];
+		float[]                  leftArea  = new float[n];
+		float[]                  rightArea = new float[n];
+		SceneObject[]            objects   = segment.ToArray();
+
+		AxisAlignedBoundingBox mainBox = segment[0].Hittable.BoundingVolume;
+		for (int i = 1; i < n; i++)
+		{
+			mainBox = AxisAlignedBoundingBox.Encompass(segment[i].Hittable.BoundingVolume, mainBox);
+		}
+
+		//Find longest axis to split along, then sort
+		Vector3 size = mainBox.Max - mainBox.Min;
+		float   max  = MathF.Max(MathF.Max(size.X, size.Y), size.Z);
+		int     axis = Math.Abs(max - size.X) < 0.001f ? 0 : Math.Abs(max - size.Y) < 0.001f ? 1 : 2; //Choose longest axis
+		Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+		Comparison<SceneObject> compareFunc = axis switch
+		{
+				0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
+				1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
+				_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
+		};
+		Array.Sort(objects, compareFunc);
+
+		//Copy AABB's to an array for easier access
+		for (int i = 0; i < n; i++) boxes[i] = segment[i].Hittable.BoundingVolume;
+
+		//Calculate the area from the left towards right
+		leftArea[0] = GetAABBArea(boxes[0]);
+		AxisAlignedBoundingBox leftBox = boxes[0];
+		for (int i = 1; i < n - 1; i++)
+		{
+			leftBox     = AxisAlignedBoundingBox.Encompass(leftBox, boxes[i]);
+			leftArea[i] = GetAABBArea(leftBox);
+		}
+
+		//Calculate the area from right towards left
+		rightArea[n - 1] = GetAABBArea(boxes[n - 1]);
+		AxisAlignedBoundingBox rightBox = boxes[n - 1];
+		for (int i = n - 2; i > 0; i--)
+		{
+			rightBox     = AxisAlignedBoundingBox.Encompass(rightBox, boxes[i]);
+			rightArea[i] = GetAABBArea(rightBox);
+		}
+
+		//Find the index at which we get the smallest surface area, in order to find the most optimal split
+		float minSAH      = float.MaxValue;
+		int   minSAHIndex = 0;
+		for (int i = 0; i < n - 1; i++)
+		{
+			float sah = (i * leftArea[i]) + ((n - i - 1) * rightArea[i + 1]);
+			if (sah < minSAH)
+			{
+				minSAHIndex = i;
+				minSAH      = sah;
+			}
+		}
+
+		//We know we'll be using binary nodes because we already checked for a single object earlier
+		IBvhNode leftNode, rightNode;
+		if (minSAHIndex == 0)
+			leftNode  = new SingleObjectBvhNode(objects[0]);
+		else
+			leftNode = FromSegment_SAH(objects[..(minSAHIndex + 1)]);
+		if (minSAHIndex == n - 2)
+			rightNode  = new SingleObjectBvhNode(objects[minSAHIndex + 1]);
+		else
+			rightNode = FromSegment_SAH(objects[(minSAHIndex + 1)..]);
+
+		return new BinaryBvhNode(leftNode, rightNode);
+
+		static float GetAABBArea(AxisAlignedBoundingBox aabb)
+		{
+			Vector3 size = aabb.Max - aabb.Min;
+			return 2 * ((size.X * size.Y) + (size.Y * size.Z) + (size.Z * size.X));
+		}
+	}
+
+
 	private static IBvhNode FromArraySegment(ArraySegment<SceneObject> segment)
 	{
 		//Have to copy the list since we'll be modifying it
@@ -56,13 +145,14 @@ public sealed class BvhTree
 				break;
 			//Recursively split the objects again
 			default:
-				 Array.Sort(objects, compareFunc);
+				Array.Sort(objects, compareFunc);
 				int      mid = objects.Length / 2;
 				IBvhNode a   = FromArraySegment(objects[..mid]);
 				IBvhNode b   = FromArraySegment(objects[mid..]);
 				node = new BinaryBvhNode(a, b);
 				break;
 		}
+
 		return node;
 	}
 
