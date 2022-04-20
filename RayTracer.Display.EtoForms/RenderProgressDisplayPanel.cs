@@ -121,7 +121,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		UpdateStatsTable();
 
 		Invalidate();
-		Verbose("Invalidated for redraw");
 	}
 
 	private void UpdateImagePreview()
@@ -130,7 +129,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		Stopwatch        stop         = Stopwatch.StartNew();
 		int              xSize        = previewImage.Width, ySize = previewImage.Height;
 		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
-		Verbose("Updating image");
 		IntPtr offset = data.Data;
 		for (int y = 0; y < ySize; y++)
 			unsafe
@@ -142,14 +140,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				renderBufRow.CopyTo(destRow);
 				offset += data.ScanWidth;
 			}
-
-		Verbose("Finished updating image in {Elapsed}", stop.Elapsed);
 	}
 
 	private void UpdateStatsTable()
 	{
-
-		Verbose("Updating stats table");
 		Stopwatch    stop           = Stopwatch.StartNew();
 
 		const string timeFormat     = "h\\:mm\\:ss"; //Format string for Timespan
@@ -159,7 +153,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		const int    numAlign       = 15;
 		const int    percentAlign   = 8;
 
-		Verbose("Computing stats strings");
 		int           totalTruePixels = renderJob.TotalTruePixels;
 		ulong         totalRawPix     = renderJob.TotalRawPixels;
 		ulong         rayCount        = renderJob.RayCount;
@@ -241,7 +234,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			statsContainer.Content = statsTable;
 		}
 
-		Verbose("Updating table cells");
 		for (int i = 0; i < stringStats.Length; i++)
 		{
 			(string? title, string[]? strings) = stringStats[i];
@@ -269,7 +261,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 
 		{
-			Verbose("Updating depth buffer graphics");
 			int       maxDepth        = renderJob.RenderOptions.MaxDepth;
 			TableCell titleCell       = statsTable.Rows[^1].Cells[0];
 			TableCell depthBufferCell = statsTable.Rows[^1].Cells[1];
@@ -321,8 +312,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Flush the image or it might not be drawn
 			depthBufferGraphics.Flush();
 		}
-
-		Verbose("Finished updating stats in {Elapsed}", stop.Elapsed);
 
 		static string FormatU(ulong val, ulong total)
 		{
