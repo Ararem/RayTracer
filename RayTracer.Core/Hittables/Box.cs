@@ -1,6 +1,8 @@
 using RayTracer.Core.Acceleration;
+using System.Diagnostics;
 using System.Numerics;
 using static System.MathF;
+using Log = Serilog.Log;
 
 namespace RayTracer.Core.Hittables;
 
@@ -30,19 +32,19 @@ public record Box : Hittable
 		//Bounding volume calculations
 		//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
 		//It's not super efficient but it should be pretty fast and simple
+		//Due to how IQ implemented his code, valid box-space is [-1..1] so just plug these coords into the matrix and we find where they will end up
 		Vector3[] corners =
 		{
-				new(0, 0, 0),
-				new(0, 0, 1),
-				new(0, 1, 0),
-				new(0, 1, 1),
-				new(1, 0, 0),
-				new(1, 0, 1),
-				new(1, 1, 0),
+				new(-1, -1, -1),
+				new(-1, -1, 1),
+				new(-1, 1, -1),
+				new(-1, 1, 1),
+				new(1, -1, -1),
+				new(1, -1, 1),
+				new(1, 1, -1),
 				new(1, 1, 1)
 		};
 		//Transform each of the corners by our box to world matrix
-		//WARN: AABB Broken
 		for (int i = 0; i < corners.Length; i++) corners[i] = Vector3.Transform(corners[i], boxToWorldTransform);
 		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
 	}
