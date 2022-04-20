@@ -15,4 +15,7 @@ public interface IBvhNode
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax);
+
+	/// <inheritdoc cref="AsyncRenderJob.AnyIntersectionFast"/>
+	public bool AnyIntersection(Ray ray, float kMin, float kMax);
 }

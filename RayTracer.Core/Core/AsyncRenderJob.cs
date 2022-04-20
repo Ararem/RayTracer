@@ -403,8 +403,10 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </remarks>
 	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
 	{
-		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
-
+		//PERF: Ok this is really weird, but for some reason in the Cornell Box scene enabling this seems to slow down the render (14 min norm, 18 min bvh). Adding AABB checks in `foreach` also increases to 16 min?????
+		#if false // ACCELERATE_BVH
+		return bvhTree.RootNode.AnyIntersection(ray, kMin, kMax);
+		#else
 		// ReSharper disable once UseDeconstruction
 		foreach (SceneObject obj in objects)
 		{
@@ -430,6 +432,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//Didn't manage to hit any of the scene objects along the ray
 		return false;
+#endif
 	}
 
 	/// <summary>

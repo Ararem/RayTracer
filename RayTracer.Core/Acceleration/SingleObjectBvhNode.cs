@@ -21,6 +21,9 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
 		}
 	}
 
+	/// <inheritdoc />
+	public bool AnyIntersection(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
+
 	/// <inheritdoc/>
 	public AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
 

@@ -34,4 +34,8 @@ public sealed record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
 			return NodeB.TryHit(ray, kMin, kMax);
 		}
 	}
+
+	/// <inheritdoc/>
+	//Cool that the short-circuiting operator means we can skip half the tree if we get a positive
+	public bool AnyIntersection(Ray ray, float kMin, float kMax) => NodeA.AnyIntersection(ray, kMin, kMax) || NodeB.AnyIntersection(ray, kMin, kMax);
 }
