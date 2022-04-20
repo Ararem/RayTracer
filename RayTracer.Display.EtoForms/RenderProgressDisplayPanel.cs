@@ -253,17 +253,18 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 
 		{
+			int       row             = statsTable.Dimensions.Height - 1;
 			int       maxDepth        = renderJob.RenderOptions.MaxDepth;
-			TableCell titleCell       = statsTable.Rows[^1].Cells[0];
-			TableCell depthBufferCell = statsTable.Rows[^1].Cells[1];
+			TableCell titleCell       = statsTable.Rows[row].Cells[0];
+			TableCell depthBufferCell = statsTable.Rows[row].Cells[1];
 
 			//Update title control type if needed
 			if (titleCell.Control is not Label titleLabel)
 			{
-				Verbose("Depth Buffer Title Cell ({Position}) was not label, disposing and updating", (0, statsTable.Dimensions.Height - 1));
+				Verbose("Depth Buffer Title Cell ({Position}) was not label (was {Control}), disposing and updating", (0, row), (titleCell.Control,((Label)titleCell.Control)?.Text));
 				titleCell.Control?.Detach();
 				titleCell.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(titleLabel = new Label(), 1, statsTable.Dimensions.Height - 1);
+				statsTable.Add(titleLabel = new Label(), 0, row);
 			}
 
 			titleLabel.Text = "Depth Buffer"; //Update title control text
@@ -271,10 +272,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Update image control if needed
 			if (depthBufferCell.Control != depthBufferImageView)
 			{
-				Verbose("Depth Buffer Image Cell ({Position}) was not label, disposing and updating", (1, statsTable.Dimensions.Height - 1));
+				Verbose("Depth Buffer Image Cell ({Position}) was not our ImageView (was {Control}), disposing and updating", (1, row), (depthBufferCell.Control, ((Label)depthBufferCell.Control)?.Text));
 				depthBufferCell.Control?.Detach();
 				depthBufferCell.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(depthBufferImageView, 1, statsTable.Dimensions.Height - 1);
+				statsTable.Add(depthBufferImageView, 1, row);
 			}
 
 			depthBufferGraphics.Clear();

@@ -33,7 +33,6 @@ public sealed class BvhTree
 	{
 		//Have to copy the list since we'll be modifying it
 		SceneObject[] objects = segment.ToArray();
-		Log.Verbose("Segment is {Segment}", segment);
 
 		//Choose a random axis to sort and split along
 		int axis = RandUtils.RandomInt(0, 3);
@@ -63,8 +62,6 @@ public sealed class BvhTree
 				node = new BinaryBvhNode(a, b);
 				break;
 		}
-
-		Log.Verbose("Node is {Node}", node);
 		return node;
 	}
 
