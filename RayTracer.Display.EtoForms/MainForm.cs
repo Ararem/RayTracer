@@ -136,7 +136,7 @@ public sealed class MainForm : Form
 							Warning("\t{Object} = {Count}", obj, count);
 					}
 
-					if (GraphicsValidator.Errors.Count == 0)
+					if (GraphicsValidator.Errors.IsEmpty)
 						Information("No Errors");
 				}
 		);

@@ -26,10 +26,6 @@ namespace RayTracer.Core;
 public sealed class AsyncRenderJob : IDisposable
 {
 	//TODO: Maybe allow access to the render job from lights, objects and materials, to make this easier
-	private readonly Light.FastAnyIntersectCheck fastAnyIntersectCheck;
-
-	private readonly Light.SlowClosestIntersectCheck slowClosestIntersectCheck;
-
 	//TODO: Bloom would be quite fun. Might need to be a post-process after rendering complete
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>
@@ -58,9 +54,6 @@ public sealed class AsyncRenderJob : IDisposable
 		Scene                                = scene;
 		Stopwatch                            = new Stopwatch();
 		rawRayDepthCounts                    = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
-
-		slowClosestIntersectCheck = TryFindClosestHit;
-		fastAnyIntersectCheck     = AnyIntersectionFast;
 
 		//Calculate the bounding boxes
 		bvhTree = new BvhTree(scene);
@@ -307,7 +300,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
 			float depthScalar                              = 3f / (depth + 3);
-			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, fastAnyIntersectCheck, slowClosestIntersectCheck) * depthScalar;
+			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, this) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit, prevHits);
 
 			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)
@@ -399,7 +392,16 @@ public sealed class AsyncRenderJob : IDisposable
 			*/
 	}
 
-	private bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
+	/// <summary>
+	///  Fast method that simply checks if there is any intersection along a given <paramref name="ray"/>, in the range specified by [<paramref name="kMin"/>
+	///  ..<paramref name="kMax"/>]
+	/// </summary>
+	/// <remarks>
+	///  Use this for simple shadow-like checks, to see if <i>anything</i> lies in between the light source and target point. Note that this will return
+	///  <see langword="true"/> as soon as an intersection is hit, and does not take into account a material's properties (such as transparency), just
+	///  geometry.
+	/// </remarks>
+	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
 	{
 		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
 
@@ -436,10 +438,8 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <param name="ray">The ray to check for intersections</param>
 	/// <param name="kMin">Lower bound for K along the ray</param>
 	/// <param name="kMax">Upper bound for K along the ray</param>
-	private (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
+	public (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
 	{
-		//TODO: Optimize in the future with BVH nodes or something. Probably don't need to bother putting this into the scene, just store it locally in the camera when ctor is called
-
 		#if ACCELERATE_BVH
 		//I love how simple this is
 		//Like I just need to validate the result and that's it
