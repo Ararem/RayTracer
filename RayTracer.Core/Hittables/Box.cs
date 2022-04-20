@@ -42,6 +42,7 @@ public record Box : Hittable
 				new(1, 1, 1),
 		};
 		//Transform each of the corners by our box to world matrix
+		//WARN: AABB Broken
 		for (int i = 0; i < corners.Length; i++) corners[i] = Vector3.Transform(corners[i], boxToWorldTransform);
 		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
 	}

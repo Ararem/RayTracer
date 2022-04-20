@@ -75,12 +75,10 @@ public sealed class BvhTree
 	/// <exception cref="NoNullAllowedException"></exception>
 	private static int CompareHittables(Hittable a, Hittable b, [RequireStaticDelegate] Func<Vector3, float> getAxis)
 	{
-		AxisAlignedBoundingBox? boxA = a.BoundingVolume;
-		AxisAlignedBoundingBox? boxB = b.BoundingVolume;
+		//What I'm trying to do here is to make the comparison work for hittables that don't really have bounds (think ∞∞∞∞∞∞∞∞∞∞∞∞)
+		Vector3 aMin = a.BoundingVolume?.Min ?? new Vector3(float.NegativeInfinity);
+		Vector3 bMax = b.BoundingVolume?.Max ?? new Vector3(float.PositiveInfinity);
 
-		if (boxA is null || boxB is null)
-			throw new NoNullAllowedException("No bounding box in constructor");
-
-		return getAxis(boxA.Min).CompareTo(getAxis(boxB.Max));
+		return getAxis(aMin).CompareTo(getAxis(bMax));
 	}
 }
