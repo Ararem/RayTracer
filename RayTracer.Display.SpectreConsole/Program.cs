@@ -27,4 +27,3 @@ catch (Exception e)
 	return -1;
 }
 #endif
-//TODO: Add some styling - custom fonts most important

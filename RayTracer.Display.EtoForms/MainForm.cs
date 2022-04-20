@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
-
+//TODO: Add some styling - custom fonts most important
 public sealed class MainForm : Form
 {
 	private readonly RenderOptionSelectorPanel? selectorPanel = null;
