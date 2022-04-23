@@ -1,7 +1,8 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:Boolean x:Key="/Default/CodeInspection/HotReload/RuntimeHotReloadEnabled/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Dpa/ExcludeFilters/=_002A_003BEto_002E_002A_003B_002A_003B_002A/@EntryIndexedValue">True</s:Boolean>
-	<s:Boolean x:Key="/Default/Dpa/ExcludeFilters/=_002A_003BRayTracer_002EDisplay_002EEtoForms_003BProgram_003BMain/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/Dpa/ExcludeFilters/=_002A_003BGtk_002E_002A_003B_002A_003B_002A/@EntryIndexedValue">True</s:Boolean>
+	
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.ComponentModel.TypeConverter.dll" /&gt;
   &lt;Assembly Path="/home/rowan/.nuget/packages/eto.forms/2.6.1/lib/netstandard2.0/Eto.dll" /&gt;

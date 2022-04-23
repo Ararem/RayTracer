@@ -12,6 +12,7 @@ namespace RayTracer.Core;
 ///  This class handles the creation of view rays for each pixel, which renderers then use to create the scene image
 /// </remarks>
 [PublicAPI]
+//TODO: .ToString() impl
 public sealed class Camera
 {
 	/// <summary>

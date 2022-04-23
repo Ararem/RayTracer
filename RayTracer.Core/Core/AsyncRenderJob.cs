@@ -35,9 +35,7 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Record containing options that affect how the resulting image is produced, such as resolution, multisample count or debug
 	///  visualisations
 	/// </param>
-	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: System.Byte[]")]
-	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: RayTracer.Core.Colour[]")]
-	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH", MessageId = "type: System.Int32[]")] //rawColourBuffer allocation
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH")]
 	public AsyncRenderJob(Scene scene, RenderOptions renderOptions)
 	{
 		ArgumentNullException.ThrowIfNull(scene);
@@ -51,11 +49,11 @@ public sealed class AsyncRenderJob : IDisposable
 		(_, camera, objects, lights, skybox) = scene;
 		Scene                                = scene;
 
-		var rawRayDepthCounts = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
-		var TotalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		var TotalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
+		ulong[] rawRayDepthCounts = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
+		ulong totalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
+		int totalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
 
-		renderStats = new RenderStats(rawRayDepthCounts, TotalTruePixels, TotalRawPixels);
+		renderStats = new RenderStats(rawRayDepthCounts, totalTruePixels, totalRawPixels);
 
 
 		//Calculate the bounding boxes
@@ -642,7 +640,10 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </summary>
 	public Scene Scene { get; }
 
-	private RenderStats renderStats;
+	private      RenderStats renderStats;
+	/// <summary>
+	/// Struct containing statistics about the render, e.g. how many pixels have been rendered.
+	/// </summary>
 	public RenderStats RenderStats => renderStats;
 
 #endregion
