@@ -228,53 +228,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Task",renderJob.RenderTask.ToString()!),
 			}));
 		}
-		// {
-		// 	("Time", new[]
-		// 	{
-		// 			$"{elapsed.ToString(timeFormat),numAlign} elapsed",
-		// 			$"{(estimatedTotalTime - elapsed).ToString(timeFormat),numAlign} remaining",
-		// 			$"{estimatedTotalTime.ToString(timeFormat),numAlign} total",
-		// 			$"{(DateTime.Now + (estimatedTotalTime - elapsed)).ToString(dateTimeFormat),numAlign} ETC"
-		// 	}),
-		// 	("Pixels", new[]
-		// 	{
-		// 			$"{FormatUlong(renderStats.RawPixelsRendered, totalRawPix)} rendered",
-		// 			$"{FormatUlong(rawPixelsRemaining,                      totalRawPix)} remaining",
-		// 			$"{totalRawPix.ToString(numFormat),numAlign}          total"
-		// 	}),
-		// 	("Image", new[]
-		// 	{
-		// 			$"{totalTruePixels.ToString(numFormat),numAlign}          pixels total",
-		// 			$"{options.Width.ToString(numFormat),numAlign}          pixels wide",
-		// 			$"{options.Height.ToString(numFormat),numAlign}          pixels high"
-		// 	}),
-		// 	("Passes", new[]
-		// 	{
-		// 			$"{FormatInt(renderStats.PassesRendered, totalPasses)} rendered",
-		// 			$"{FormatInt(passesRemaining,                      totalPasses)} remaining",
-		// 			$"{totalPasses.ToString(numFormat),numAlign}          total"
-		// 	}),
-		// 	("Rays", new[]
-		// 	{
-		// 			$"{FormatUlong(renderStats.RaysScattered,       rayCount)} scattered",
-		// 			$"{FormatUlong(renderStats.RaysAbsorbed,        rayCount)} absorbed",
-		// 			$"{FormatUlong(renderStats.BounceLimitExceeded, rayCount)} exceeded",
-		// 			$"{FormatUlong(renderStats.SkyRays,             rayCount)} sky",
-		// 			$"{rayCount.ToString(numFormat),numAlign}          total"
-		// 	}),
-		// 	("Scene", new[]
-		// 	{
-		// 			$"Name:		{renderJob.Scene.Name}",
-		// 			$"Obj Count:	{renderJob.Scene.SceneObjects.Length}",
-		// 			$"Camera:		{renderJob.Scene.Camera}",
-		// 			$"SkyBox:		{renderJob.Scene.SkyBox}"
-		// 	}),
-		// 	("Renderer", new[]
-		// 	{
-		// 			$"{renderStats.ThreadsRunning} {(renderStats.ThreadsRunning == 1 ? "thread" : "threads")}"
-		// 	})
-		// }
-		// ;
 
 		//Due to how the table is implemented, I can't resize it later
 		//So if the size doesn't match our array, we need to recreate it
