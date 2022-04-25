@@ -11,7 +11,7 @@ public abstract record RenderAccess
 	public AsyncRenderJob Renderer { get; private set; } = null!; //Yes I'm setting it to null but it should always be set before any methods are called (except ctor)
 
 	//Used by AsyncRenderJob to assign itself
-	internal void Set(AsyncRenderJob renderer)
+	internal void SetRenderer(AsyncRenderJob renderer)
 	{
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 		if (Renderer == null) Renderer = renderer;

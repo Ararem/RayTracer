@@ -50,11 +50,18 @@ public sealed class AsyncRenderJob : IDisposable
 		Scene                                = scene;
 
 		ulong[] rawRayDepthCounts = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
-		ulong totalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		int totalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
+		ulong   totalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
+		int     totalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
 
 		renderStats = new RenderStats(rawRayDepthCounts, totalTruePixels, totalRawPixels);
 
+		//Assign access for all the components that need it
+		foreach (Light light in scene.Lights) light.SetRenderer(this);
+		foreach (SceneObject sceneObject in scene.SceneObjects)
+		{
+			sceneObject.Material.SetRenderer(this);
+			sceneObject.Hittable.SetRenderer(this);
+		}
 
 		//Calculate the bounding boxes
 		bvhTree = new BvhTree(scene);
@@ -235,7 +242,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//If the new ray is null, the material did not scatter (completely absorbed the light)
 					//So it's impossible to have any future bounces, so quit the loop
-					Interlocked.Increment(ref  renderStats.RaysAbsorbed);
+					Interlocked.Increment(ref renderStats.RaysAbsorbed);
 					finalColour = Colour.Black;
 					break;
 				}
@@ -243,7 +250,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 					ray = (Ray)maybeNewRay;
-					Interlocked.Increment(ref  renderStats.RaysScattered);
+					Interlocked.Increment(ref renderStats.RaysScattered);
 
 					if (!GraphicsValidator.CheckVectorNormalized(ray.Direction))
 					{
@@ -433,7 +440,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//Didn't manage to hit any of the scene objects along the ray
 		return false;
-#endif
+		#endif
 	}
 
 	/// <summary>
@@ -640,9 +647,10 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </summary>
 	public Scene Scene { get; }
 
-	private      RenderStats renderStats;
+	private RenderStats renderStats;
+
 	/// <summary>
-	/// Struct containing statistics about the render, e.g. how many pixels have been rendered.
+	///  Struct containing statistics about the render, e.g. how many pixels have been rendered.
 	/// </summary>
 	public RenderStats RenderStats => renderStats;
 
@@ -707,5 +715,4 @@ public sealed class AsyncRenderJob : IDisposable
 	}
 
 #endregion
-
 }
