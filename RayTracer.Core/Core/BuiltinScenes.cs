@@ -115,6 +115,7 @@ public static class BuiltinScenes
 		//RayTracing in a Weekend Chapter 1 cover
 		{
 			List<SceneObject> objects = new();
+			List<Light> lights = new();
 			for (int a = -11; a < 11; a++)
 			{
 				for (int b = -11; b < 11; b++)
@@ -126,23 +127,31 @@ public static class BuiltinScenes
 					{
 						Material sphereMaterial;
 
-						if (chooseMat < 0.6)
+						if (chooseMat < 0.5)
 						{
 							// diffuse
-							Colour albedo = RandomColour(Red, White);
+							Colour albedo = RandomColour(Black, White);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1f);
 						}
-						else if (chooseMat < 0.75)
+						else if (chooseMat < 0.65)
 						{
 							// metal
-							Colour albedo = RandomColour(Green, White);
+							Colour albedo = RandomColour(Black, White);
 							float  fuzz   = RandomFloat(0f, 0.5f);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1 - fuzz);
+						}
+						else if (chooseMat < 0.68)
+						{
+							Colour             colour = RandomColour(Black, White);
+							SurfaceSphereLight light  = new(center, 0.2001f, colour, 0.2f);
+							lights.Add(light);
+							sphereMaterial = new StandardMaterial(White, Black, 1f);
 						}
 						else
 						{
 							// glass
-							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), Lerp(White, Blue, RandomFloat01()));
+							Colour tint = RandomColour(Black, White);
+							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), tint);
 						}
 
 						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f), sphereMaterial));
@@ -154,7 +163,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), Array.Empty<Light>(), new DefaultSkyBox());
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
 		}
 	}
 
