@@ -64,6 +64,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private readonly Timer updatePreviewTimer;
 
 	/// <summary>
+	///  Time (real-world) at which the last frame update occurred
+	/// </summary>
+	private DateTime prevFrameTime;
+
+	/// <summary>
+	///  Elapsed render time at the last update (<see cref="AsyncRenderJob.Stopwatch"/>)
+	/// </summary>
+	private TimeSpan prevUpdateElapsed;
+
+	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
 	private RenderStats prevUpdateStats;
@@ -114,7 +124,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Periodically update the previews using a timer
 		//PERF: This creates quite a few allocations when called frequently
-		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 1000/60);
+		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 1000 / 60);
 	}
 
 	/// <summary>
@@ -122,8 +132,12 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
+		RenderStats stats = renderJob.RenderStats;
 		UpdateImagePreview();
-		UpdateStatsTable(renderJob.RenderStats);
+		UpdateStatsTable(stats);
+		prevUpdateStats   = stats;
+		prevFrameTime     = DateTime.Now;
+		prevUpdateElapsed = renderJob.Stopwatch.Elapsed;
 
 		Invalidate();
 	}
@@ -135,8 +149,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
 		IntPtr           offset       = data.Data;
 		for (int y = 0; y < ySize; y++)
-			//This code assumes the source and dest images are same bit depth and size
-			//Otherwise here be dragons
+				//This code assumes the source and dest images are same bit depth and size
+				//Otherwise here be dragons
 			unsafe
 			{
 				Span<Rgb24> renderBufRow = renderBuffer.GetPixelRowSpan(y);
@@ -150,7 +164,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateStatsTable(RenderStats renderStats)
 	{
-		List<(string Title, (string Name, string Value)[] NamedValues)> stringStats = new();
+		List<(string Title, (string Name, string Value, string? Delta)[] NamedValues)> stringStats = new();
+		TimeSpan                                                                       deltaT      = renderJob.Stopwatch.Elapsed - prevUpdateElapsed;
 
 		{
 			TimeSpan elapsed = renderJob.Stopwatch.Elapsed;
@@ -166,72 +181,102 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			}
 
 			stringStats.Add(
-					("Time", new[]
+					("Time", new (string Name, string Value, string? Delta)[]
 					{
-							("Elapsed", FormatTime(elapsed)),
-							("Remaining", FormatTime(estimatedTotalTime - elapsed)),
-							("Total", FormatTime(estimatedTotalTime)),
-							("ETC", FormatDate(DateTime.Now + (estimatedTotalTime - elapsed)) + "\t") //We need to add a tab here or else the width keeps changing (thanks non-monospaced fonts!)
+							("Elapsed", FormatTime(elapsed), null),
+							("Remaining", FormatTime(estimatedTotalTime - elapsed), null),
+							("Total", FormatTime(estimatedTotalTime), null),
+							("ETC", FormatDate(DateTime.Now + (estimatedTotalTime - elapsed)) + "\t", null) //We need to add a tab here or else the width keeps changing (thanks non-monospaced fonts!)
 					})
 			);
 		}
 		{
-			stringStats.Add(("Raw Pixels", new[]
-			{
-					("Rendered",FormatUlongRatio(renderStats.RawPixelsRendered,  renderStats.TotalRawPixels)),
-					("Remaining",FormatUlongRatio(renderStats.TotalRawPixels-renderStats.RawPixelsRendered, renderStats.TotalRawPixels)),
-					("Total",FormatUlong(renderStats.TotalRawPixels)),
-			}));
+			ulong total = renderStats.TotalRawPixels,
+				rend    = renderStats.RawPixelsRendered,
+				rem     = total - rend;
+			const string unit = "px/s";
+			stringStats.Add(
+					("Raw Pixels", new (string Name, string Value, string? Delta)[]
+					{
+							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend,                     prevUpdateStats.RawPixelsRendered,                                  deltaT, unit)),
+							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), FormatUlongDelta(rem, prevUpdateStats.TotalRawPixels - prevUpdateStats.RawPixelsRendered, deltaT, unit)),
+							("Total", FormatUlong(renderStats.TotalRawPixels), null)
+					})
+			);
 		}
 		{
-			stringStats.Add(("Image", new[]
-			{
-					//Assumes preview image has same dimensions as render buffer (which should always be the case)
-					("Width",FormatInt(previewImage.Width)),
-					("Height",FormatInt(previewImage.Height)),
-					("Pixels",FormatInt(renderStats.TotalTruePixels)),
-			}));
+			stringStats.Add(
+					("Image", new (string Name, string Value, string? Delta)[]
+					{
+							//Assumes preview image has same dimensions as render buffer (which should always be the case)
+							("Width", FormatInt(previewImage.Width), null),
+							("Height", FormatInt(previewImage.Height), null),
+							("Pixels", FormatInt(renderStats.TotalTruePixels), null)
+					})
+			);
 		}
 		{
-			stringStats.Add(("Passes", new[]
-			{
-					("Rendered",FormatIntRatio(renderStats.PassesRendered, renderJob.RenderOptions.Passes)),
-					("Remaining",FormatIntRatio(renderJob.RenderOptions.Passes - renderStats.PassesRendered, renderJob.RenderOptions.Passes)),
-					("Total",FormatInt(renderJob.RenderOptions.Passes)),
-					("Progress", FormatUlongRatio(renderStats.RawPixelsRendered % (ulong)renderStats.TotalTruePixels, (ulong)renderStats.TotalTruePixels))
-			}));
+			int total   = renderJob.RenderOptions.Passes,
+				rend    = renderStats.PassesRendered,
+				rem     = total - rend,
+				prevRem = total - prevUpdateStats.PassesRendered;
+			ulong        progress     = renderStats.RawPixelsRendered     % (ulong)renderStats.TotalTruePixels;
+			ulong        prevProgress = prevUpdateStats.RawPixelsRendered % (ulong)prevUpdateStats.TotalTruePixels;
+			const string unit         = "passes/sec";
+			stringStats.Add(
+					("Passes", new (string Name, string Value, string? Delta)[]
+					{
+							("Rendered", FormatIntRatio(rend, total), FormatIntDelta(rend, prevUpdateStats.PassesRendered, deltaT, unit)),
+							("Remaining", FormatIntRatio(rem, total), FormatIntDelta(rem,  prevRem,                        deltaT, unit)),
+							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), FormatUlongDelta(progress, prevProgress, deltaT, unit)),
+							("Total", FormatInt(total), null)
+					})
+			);
 		}
 		{
-			stringStats.Add(("Rays", new[]
-			{
-					("Scattered",FormatUlongRatio(renderStats.RaysScattered, renderStats.RayCount)),
-					("Absorbed",FormatUlongRatio(renderStats.RaysAbsorbed, renderStats.RayCount)),
-					("Exceeded",FormatUlongRatio(renderStats.BounceLimitExceeded, renderStats.RayCount)),
-					("Sky",FormatUlongRatio(renderStats.SkyRays, renderStats.RayCount)),
-					("Total",FormatUlong(renderStats.RayCount))
-			}));
+			ulong total = renderStats.RayCount,
+				scat    = renderStats.RaysScattered,
+				abs     = renderStats.RaysAbsorbed,
+				exceed  = renderStats.BounceLimitExceeded,
+				sky     = renderStats.SkyRays;
+			const string unit = "rays/s";
+			stringStats.Add(
+					("Rays", new (string Name, string Value, string? Delta)[]
+					{
+							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
+							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
+							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
+							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
+							("Total", FormatUlong(total), FormatUlongDelta(total, prevUpdateStats.RayCount, deltaT, unit))
+					})
+			);
 		}
 		{
-			stringStats.Add(("Scene", new[]
-			{
-					("Name",renderJob.Scene.Name),
-					("Object Count",FormatInt(renderJob.Scene.SceneObjects.Length)),
-					("Light Count",FormatInt(renderJob.Scene.Lights.Length)),
-					("Camera",renderJob.Scene.Camera.ToString()!),
-			}));
+			stringStats.Add(
+					("Scene", new (string Name, string Value, string? Delta)[]
+					{
+							("Name", renderJob.Scene.Name, null),
+							("Object Count", FormatInt(renderJob.Scene.SceneObjects.Length), null),
+							("Light Count", FormatInt(renderJob.Scene.Lights.Length), null),
+							("Camera", renderJob.Scene.Camera.ToString()!, null)
+					})
+			);
 		}
 		{
-			stringStats.Add(("Renderer", new[]
-			{
-					("Threads",FormatInt(renderStats.ThreadsRunning)),
-					("Completed",renderJob.RenderCompleted.ToString()),
-					("Task",renderJob.RenderTask.ToString()!),
-			}));
+			stringStats.Add(
+					("Renderer", new (string Name, string Value, string? Delta)[]
+					{
+							("Threads", FormatInt(renderStats.ThreadsRunning), FormatIntDelta(renderStats.ThreadsRunning, prevUpdateStats.ThreadsRunning, deltaT)),
+							("Completed", renderJob.RenderCompleted.ToString(), null),
+							("Task", renderJob.RenderTask.ToString()!, null)
+					})
+			);
 		}
 
 		//Due to how the table is implemented, I can't resize it later
 		//So if the size doesn't match our array, we need to recreate it
-		Size correctDims = new(3, stringStats.Count + 2); //+2 = 1 for depth + 1 for spacer row
+		//Columns are for Title, Names, Values, Deltas
+		Size correctDims = new(4, stringStats.Count + 2); //+2 = 1 for depth + 1 for spacer row
 		if (statsTable.Dimensions != correctDims)
 		{
 			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
@@ -244,10 +289,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		for (int rowIdx = 0; rowIdx < stringStats.Count; rowIdx++)
 		{
 			TableRow row = statsTable.Rows[rowIdx];
-			(string title, (string Name, string Value)[] namedValues) = stringStats[rowIdx];
+			(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[rowIdx];
 			//Aggregate the name and value texts
-			string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); }, namedValues);
-			string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },      namedValues);
+			string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
+			string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
+			string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? "N/A")); }, namedValues);
 
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
@@ -274,10 +320,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				statsTable.Add(valueLabel = new Label(), 2, rowIdx);
 			}
 
+			if (row.Cells[3].Control is not Label deltaLabel)
+			{
+				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx), row.Cells[3].Control);
+				row.Cells[3]?.Control?.Detach();
+				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(deltaLabel = new Label(), 3, rowIdx);
+			}
+
 
 			titleLabel.Text = title;
 			nameLabel.Text  = aggregatedNames;
 			valueLabel.Text = aggregatedValues;
+			deltaLabel.Text = aggregatedDeltas;
 		}
 
 		{
@@ -286,6 +341,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			TableCell titleCell       = statsTable.Rows[row].Cells[0];
 			TableCell descriptionCell = statsTable.Rows[row].Cells[1];
 			TableCell depthBufferCell = statsTable.Rows[row].Cells[2];
+			//No delta cell
 
 			//Update title control type if needed
 			if (titleCell.Control is not Label titleLabel)
@@ -370,19 +426,34 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 		}
-		//Format ULong
+
 		static string FormatUlong(ulong val)
 		{
 			return $"{val.ToString(numFormat),numAlign}";
+		}
+
+		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
+		{
+			ulong  delta  = curr - prev;
+			double tRatio = TimeSpan.FromTicks(TimeSpan.TicksPerSecond) / deltaT;
+			return $"{(delta * tRatio).ToString(numFormat),numAlign}{unit}";
 		}
 
 		static string FormatIntRatio(int val, int total)
 		{
 			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 		}
+
 		static string FormatInt(int val)
 		{
 			return $"{val.ToString(numFormat),numAlign}";
+		}
+
+		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
+		{
+			int    delta  = curr - prev;
+			double tRatio = TimeSpan.FromTicks(TimeSpan.TicksPerSecond) / deltaT;
+			return $"{(delta * tRatio).ToString(numFormat),numAlign}{unit}";
 		}
 
 	#endregion
