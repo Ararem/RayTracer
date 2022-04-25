@@ -59,7 +59,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/>
 	/// </summary>
 	/// <param name="points">Array of sub boxes to surround</param>
-	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="points"/></returns>
+	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <paramref name="points"/></returns>
 	public static AxisAlignedBoundingBox Encompass(params Vector3[] points)
 	{
 		Vector3 min = new(float.PositiveInfinity), max = new(float.NegativeInfinity);
@@ -76,7 +76,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/>
 	/// </summary>
 	/// <param name="subBoxes">Array of sub boxes to surround</param>
-	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <see cref="subBoxes"/></returns>
+	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <paramref name="subBoxes"/></returns>
 	public static AxisAlignedBoundingBox Encompass(params AxisAlignedBoundingBox[] subBoxes)
 	{
 		if (subBoxes.Length < 2) throw new ArgumentException("Sub boxes must have at least 2 elements", nameof(subBoxes));

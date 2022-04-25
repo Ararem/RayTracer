@@ -27,7 +27,7 @@ namespace RayTracer.Core.Environment;
 public sealed record DiffuseSphereLight(Vector3 Position, float DiffusionRadius, Colour Colour, float BrightnessBaselineRadius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
 {
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer)
+	public override Colour CalculateLight(HitRecord hit)
 	{
 		//See if there's anything in between us and the object
 		Vector3 pos = Position + (DiffusionRadius * RandUtils.RandomInUnitSphere());

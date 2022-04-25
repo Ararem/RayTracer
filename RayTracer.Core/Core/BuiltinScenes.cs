@@ -127,11 +127,17 @@ public static class BuiltinScenes
 					{
 						Material sphereMaterial;
 
-						if (chooseMat < 0.5)
+						if (chooseMat < 0.3)
 						{
 							// diffuse
 							Colour albedo = RandomColour(Black, White);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1f);
+						}
+						else if (chooseMat < 0.5)
+						{
+							// diffuse
+							Colour albedo = RandomColour(Black, White);
+							sphereMaterial = new StandardMaterial(White, albedo, 1f);
 						}
 						else if (chooseMat < 0.65)
 						{
@@ -140,12 +146,12 @@ public static class BuiltinScenes
 							float  fuzz   = RandomFloat(0f, 0.5f);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1 - fuzz);
 						}
-						else if (chooseMat < 0.68)
+						else if (chooseMat < 0.655)
 						{
-							Colour             colour = RandomColour(Black, White);
-							SurfaceSphereLight light  = new(center, 0.2001f, colour, 0.2f);
+							Colour             colour = RandomColour(HalfGrey, White);
+							SurfaceSphereLight light  = new(center, 0.4f, colour, 1f);
 							lights.Add(light);
-							sphereMaterial = new StandardMaterial(White, Black, 1f);
+							sphereMaterial = new StandardMaterial(White, Black, 0f);
 						}
 						else
 						{
@@ -163,7 +169,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
+			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", new Camera(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new SingleColourSkyBox(White * 0.02f));
 		}
 	}
 

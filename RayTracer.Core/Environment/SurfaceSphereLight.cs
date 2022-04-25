@@ -11,7 +11,7 @@ namespace RayTracer.Core.Environment;
 /// <param name="Position">Where the light source is located in world-space</param>
 /// <param name="Colour">Colour of the emitted light</param>
 /// <param name="BrightnessBaselineRadius">The radius at which the brightness is considered baseline (1)</param>
-/// <param name="Radius">How large of an area the light occupies (radius in which points will be chosen for shadow testing)</param>
+/// <param name="Radius">How large of an area the light occupies (radius at which points will be chosen for shadow testing)</param>
 /// <param name="DistanceScaleLimit">
 ///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
 ///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
@@ -27,17 +27,20 @@ namespace RayTracer.Core.Environment;
 public sealed record SurfaceSphereLight(Vector3 Position, float Radius, Colour Colour, float BrightnessBaselineRadius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
 {
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer)
+	public override Colour CalculateLight(HitRecord hit)
 	{
 		//See if there's anything in between us and the object
-		Vector3 pos = Position + (Radius * RandUtils.RandomOnUnitSphere());
-		if (!CheckIntersection(hit, pos, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
+		Ray   shadowRay    = Ray.FromPoints(hit.WorldPoint, Position); //Hit towards centre of light
+		const float kMin         = 0.0001f;
+		float kMax         = Vector3.Distance(hit.WorldPoint, Position) - Radius; //Subtract radius to get the point on the side closest to the hit
+		bool  intersection = Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
+		if (!intersection) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
 			if (dot < 0) dot = -dot;                                                           //Backfaces give negative dot product
 			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                      //Account for how much the surface points towards our light
-			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos);                    //Normally formula uses R^2, so don't bother rooting here to save performance
+			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, shadowRay.PointAt(kMax));                    //Normally formula uses R^2, so don't bother rooting here to save performance
 			float distScale = (BrightnessBaselineRadius * BrightnessBaselineRadius) / distSqr; // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);
 			colour    *= MathUtils.Lerp(1, distScale, DistanceImportance); //Account for inverse square law

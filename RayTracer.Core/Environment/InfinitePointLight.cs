@@ -16,7 +16,7 @@ namespace RayTracer.Core.Environment;
 public sealed record InfinitePointLight(Vector3 Position, Colour Colour, float SurfaceDirectionImportance = 1f) : Light
 {
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer)
+	public override Colour CalculateLight(HitRecord hit)
 	{
 		//See if there's anything in between us and the object
 		if (!CheckIntersection(hit, Position, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path

@@ -11,6 +11,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="Normal">The surface normal at the intersection. Should point away from the centre of the object (outwards)</param>
 /// <param name="K">Distance along the ray at which the intersection occured</param>
 /// <param name="OutsideFace">If the object was hit on the outside of it's surface, as opposed to it's inside</param>
+/// <param name="OutsideFace">UV coordinate of the hit (for texture mapping)</param>
 public readonly record struct HitRecord(
 		Ray     Ray,
 		Vector3 WorldPoint,

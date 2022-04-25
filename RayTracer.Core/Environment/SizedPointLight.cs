@@ -25,7 +25,7 @@ namespace RayTracer.Core.Environment;
 public sealed record SizedPointLight(Vector3 Position, Colour Colour, float Radius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
 {
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer)
+	public override Colour CalculateLight(HitRecord hit)
 	{
 		//See if there's anything in between us and the object
 		if (!CheckIntersection(hit, Position, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path

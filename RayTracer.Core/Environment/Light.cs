@@ -16,9 +16,6 @@ public abstract record Light : RenderAccess
 	///  Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/>
 	/// </summary>
 	/// <param name="hit">The information about the hit to calculate the lighting for</param>
-	/// <param name="renderer">
-	///  The renderer (render job) that is currently rendering using this light. Allows for intersection checks between objects in the scene, in order to calculate shadows.
-	/// </param>
 	/// <returns>The amount of light received by the <paramref name="hit"/>, from this light source</returns>
 	/// <remarks>
 	///  When checking for shadowing, you would most likely use <see cref="AsyncRenderJob.AnyIntersectionFast"/> between the point hit and the position of the light
@@ -41,10 +38,10 @@ public abstract record Light : RenderAccess
 	/// }
 	///  </code>
 	/// </example>
-	public abstract Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer);
+	public abstract Colour CalculateLight(HitRecord hit);
 
 	/// <summary>
-	///  Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>. This overload also allows access to the computed
+	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to the computed
 	///  shadow ray
 	/// </summary>
 	[PublicAPI]
@@ -58,7 +55,7 @@ public abstract record Light : RenderAccess
 	}
 
 	/// <summary>
-	///  Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>
+	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>
 	/// </summary>
 	[PublicAPI]
 	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _);

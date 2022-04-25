@@ -308,7 +308,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
 			float depthScalar                              = 3f / (depth + 3);
-			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit, this) * depthScalar;
+			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit, prevHits);
 
 			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)

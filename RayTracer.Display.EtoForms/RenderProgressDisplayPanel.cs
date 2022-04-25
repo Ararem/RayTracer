@@ -196,7 +196,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(("Passes", new[]
 			{
 					("Rendered",FormatIntRatio(renderStats.PassesRendered, renderJob.RenderOptions.Passes)),
-					("Remaining",FormatIntRatio(renderStats.PassesRendered, renderJob.RenderOptions.Passes)),
+					("Remaining",FormatIntRatio(renderJob.RenderOptions.Passes - renderStats.PassesRendered, renderJob.RenderOptions.Passes)),
 					("Total",FormatInt(renderJob.RenderOptions.Passes)),
 					("Progress", FormatUlongRatio(renderStats.RawPixelsRendered % (ulong)renderStats.TotalTruePixels, (ulong)renderStats.TotalTruePixels))
 			}));
