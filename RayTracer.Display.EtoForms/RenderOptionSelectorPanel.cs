@@ -256,8 +256,9 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	private void UpdateRenderOptionEditorsFromVariable()
 	{
 		Debug("Updating editor views from variables");
-		foreach (PropertyEditorView propertyEditorView in renderOptionsPropertyEditors)
+		for (int i = 0; i < renderOptionsPropertyEditors.Count; i++)
 		{
+			PropertyEditorView propertyEditorView = renderOptionsPropertyEditors[i];
 			Verbose("Updating property view for property {Property}", propertyEditorView.Prop);
 			propertyEditorView.UpdateDisplayedFromTarget();
 		}

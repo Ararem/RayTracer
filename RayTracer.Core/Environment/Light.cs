@@ -10,7 +10,7 @@ namespace RayTracer.Core.Environment;
 /// <remarks>
 ///
 /// </remarks>
-public abstract record Light
+public abstract record Light : RenderAccess
 {
 	/// <summary>
 	///  Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/>
@@ -41,8 +41,6 @@ public abstract record Light
 	/// }
 	///  </code>
 	/// </example>
-	/// <seealso cref="SlowClosestIntersectCheck"/>
-	/// <seealso cref="FastAnyIntersectCheck"/>
 	public abstract Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer);
 
 	/// <summary>
@@ -50,18 +48,18 @@ public abstract record Light
 	///  shadow ray
 	/// </summary>
 	[PublicAPI]
-	protected static bool CheckIntersection(HitRecord hit, Vector3 position, AsyncRenderJob renderer, out Ray shadowRay)
+	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay)
 	{
 		//Find ray between the hit and the light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
 		const float kMin = 0.0001f;
 		float       kMax = Vector3.Distance(position, hit.WorldPoint);
-		return renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
+		return Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
 	}
 
 	/// <summary>
 	///  Returns if there is an intersection between a <see cref="hit"/> and another <see cref="position"/>
 	/// </summary>
 	[PublicAPI]
-	protected static bool CheckIntersection(HitRecord hit, Vector3 position, AsyncRenderJob renderer) => CheckIntersection(hit, position, renderer, out _);
+	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _);
 }

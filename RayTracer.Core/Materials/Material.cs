@@ -8,7 +8,7 @@ namespace RayTracer.Core.Materials;
 ///  A class that defines a material that a <see cref="Hittable"/> can have
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public abstract record Material
+public abstract record Material : RenderAccess
 {
 	/// <summary>
 	///  Scatters an input ray, according to this material's properties

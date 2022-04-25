@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
 using Logger = RayTracer.Core.Logger;
-using Task = System.Threading.Tasks.Task;
 using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
 
 namespace RayTracer.Display.EtoForms;

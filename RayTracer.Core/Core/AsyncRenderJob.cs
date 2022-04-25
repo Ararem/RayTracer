@@ -35,7 +35,7 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Record containing options that affect how the resulting image is produced, such as resolution, multisample count or debug
 	///  visualisations
 	/// </param>
-	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH")]
+	[SuppressMessage("ReSharper.DPA", "DPA0003: Excessive memory allocations in LOH")] //Buffers
 	public AsyncRenderJob(Scene scene, RenderOptions renderOptions)
 	{
 		ArgumentNullException.ThrowIfNull(scene);
@@ -707,4 +707,5 @@ public sealed class AsyncRenderJob : IDisposable
 	}
 
 #endregion
+
 }

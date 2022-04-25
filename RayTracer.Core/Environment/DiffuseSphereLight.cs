@@ -31,7 +31,7 @@ public sealed record DiffuseSphereLight(Vector3 Position, float DiffusionRadius,
 	{
 		//See if there's anything in between us and the object
 		Vector3 pos = Position + (DiffusionRadius * RandUtils.RandomInUnitSphere());
-		if (!CheckIntersection(hit, pos, renderer, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
+		if (!CheckIntersection(hit, pos, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);

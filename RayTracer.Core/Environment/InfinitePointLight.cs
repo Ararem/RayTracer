@@ -19,7 +19,7 @@ public sealed record InfinitePointLight(Vector3 Position, Colour Colour, float S
 	public override Colour CalculateLight(HitRecord hit, AsyncRenderJob renderer)
 	{
 		//See if there's anything in between us and the object
-		if (!CheckIntersection(hit, Position, renderer, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
+		if (!CheckIntersection(hit, Position, out Ray shadowRay)) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
