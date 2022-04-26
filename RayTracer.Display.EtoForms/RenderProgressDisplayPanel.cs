@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -23,9 +24,9 @@ namespace RayTracer.Display.EtoForms;
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const  int DepthImageWidth = 100;
-	private static int UpdatePeriod => 1;
+	private static int UpdatePeriod => 1000/20; //FPS
 
-	private static ReaderWriterLockSlim updateLock = new();
+	private static readonly ReaderWriterLockSlim updateLock = new();
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -73,11 +74,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private DateTime prevFrameTime;
 
 	/// <summary>
-	///  Elapsed render time at the last update (<see cref="AsyncRenderJob.Stopwatch"/>)
-	/// </summary>
-	private TimeSpan prevUpdateElapsed;
-
-	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
 	private RenderStats prevUpdateStats;
@@ -86,6 +82,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	///  Table that contains the various stats
 	/// </summary>
 	private TableLayout statsTable;
+
+	/// <summary>
+	/// How long the last update took to complete (since we can't display how long the current one will take)
+	/// </summary>
+	private TimeSpan prevUpdateDuration;
 
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
@@ -131,23 +132,28 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 	}
 
+	private static ulong lockFailedCount = 0;
+
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
-		updatePreviewTimer.Change(UpdatePeriod, -1);
+		bool gotLock = updateLock.TryEnterWriteLock(0);
+		//If another thread was already locked (already updating previews), quit so we don't have race conditions
+		if (!gotLock)
+		{
+			Interlocked.Increment(ref lockFailedCount);
+			return;
+		}
 
 		RenderStats stats = renderJob.RenderStats;
 		try
 		{
-			bool gotLock = updateLock.TryEnterWriteLock(0);
-			//If another thread was already locked (already updating previews), quit so we don't have race conditions
-			if (!gotLock) return;
+			Stopwatch sw = Stopwatch.StartNew();
 			UpdateImagePreview();
 			UpdateStatsTable(stats);
-			updateLock.ExitWriteLock();
-
+			prevUpdateDuration = sw.Elapsed;
 		}
 		catch (Exception e)
 		{
@@ -157,8 +163,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			prevUpdateStats   = stats;
 			prevFrameTime     = DateTime.Now;
-			prevUpdateElapsed = renderJob.Stopwatch.Elapsed;
 			Invalidate();
+			updatePreviewTimer.Change(UpdatePeriod, -1);
+			updateLock.ExitWriteLock();
 		}
 	}
 
@@ -249,7 +256,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					{
 							("Rendered", FormatIntRatio(rend, total), FormatIntDelta(rend, prevUpdateStats.PassesRendered, deltaT, unit)),
 							("Remaining", FormatIntRatio(rem, total), FormatIntDelta(rem,  prevRem,                        deltaT, unit)),
-							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), FormatUlongDelta(progress, prevProgress, deltaT, unit)),
+							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), FormatUlongDelta(progress, prevProgress, deltaT, "px/sec")),
 							("Total", FormatInt(total), null)
 					})
 			);
@@ -284,15 +291,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
+			// ReSharper disable once StringLiteralTypo
+			const string timeFormat = "ss'.'fffffff";
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), FormatIntDelta(renderStats.ThreadsRunning, prevUpdateStats.ThreadsRunning, deltaT)),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							("Task", renderJob.RenderTask.ToString()!, null),
-							// ReSharper disable once StringLiteralTypo
-							("𝚫T", deltaT.ToString("ss'.'fffffff"), "sec"),
-							("Updates", (TimeSpan.FromSeconds(1)/deltaT).ToString("n1"), "updates/sec")
+							("𝚫T", deltaT.ToString(timeFormat), "sec"),
+							("Updates", (TimeSpan.FromSeconds(1)/deltaT).ToString("n1"), null),
+							("UI Race", FormatUlong(lockFailedCount), null),
+							("Upd Duration", prevUpdateDuration.ToString(timeFormat), "sec"),
+							("Delay", ((deltaT - prevUpdateDuration)*1000).ToString(timeFormat), "ms"),
 					})
 			);
 		}
@@ -379,7 +390,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
 					row.Cells[0]?.Control?.Detach();
 					row.Cells[0]?.Control?.Dispose(); //Dispose the old control
-					titleLabel = new Label() { Style = Appearance.Styles.GeneralTextualUnderline };
+					titleLabel = new Label { Style = Appearance.Styles.GeneralTextualUnderline };
 					statsTable.Add(titleLabel, 0, rowIdx);
 				}
 
@@ -388,7 +399,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
 					row.Cells[1]?.Control?.Detach();
 					row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
-					statsTable.Add(nameLabel = new Label(), 1, rowIdx);
+					nameLabel = new Label { Style = Appearance.Styles.GeneralTextual };
+					statsTable.Add(nameLabel, 1, rowIdx);
 				}
 
 				if (row.Cells[2].Control is not Label valueLabel)
@@ -396,7 +408,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
 					row.Cells[2]?.Control?.Detach();
 					row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
-					statsTable.Add(valueLabel = new Label(), 2, rowIdx);
+					valueLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
+					statsTable.Add(valueLabel, 2, rowIdx);
 				}
 
 				if (row.Cells[3].Control is not Label deltaLabel)
@@ -404,7 +417,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
 					row.Cells[3]?.Control?.Detach();
 					row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
-					statsTable.Add(deltaLabel = new Label(), 3, rowIdx);
+					deltaLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
+					statsTable.Add(deltaLabel, 3, rowIdx);
 				}
 
 
