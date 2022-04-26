@@ -3,6 +3,7 @@ using Eto.Drawing;
 using Eto.Forms;
 using LibEternal.ObjectPools;
 using RayTracer.Core;
+using Serilog.Context;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
 
@@ -22,6 +24,7 @@ namespace RayTracer.Display.EtoForms;
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const int DepthImageWidth = 100;
+	private const int UpdatePeriod = 100;
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -124,7 +127,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Periodically update the previews using a timer
 		//PERF: This creates quite a few allocations when called frequently
-		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, 1000 / 60);
+		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 	}
 
 	/// <summary>
@@ -132,14 +135,26 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
-		RenderStats stats = renderJob.RenderStats;
-		UpdateImagePreview();
-		UpdateStatsTable(stats);
-		prevUpdateStats   = stats;
-		prevFrameTime     = DateTime.Now;
-		prevUpdateElapsed = renderJob.Stopwatch.Elapsed;
+		updatePreviewTimer.Change(UpdatePeriod, -1);
 
-		Invalidate();
+		RenderStats stats = renderJob.RenderStats;
+		try
+		{
+			UpdateImagePreview();
+			UpdateStatsTable(stats);
+
+		}
+		catch (Exception e)
+		{
+			ForContext("RenderStats", stats, true).Warning(e, "Exception thrown when updating progress display");
+		}
+		finally
+		{
+			prevUpdateStats   = stats;
+			prevFrameTime     = DateTime.Now;
+			prevUpdateElapsed = renderJob.Stopwatch.Elapsed;
+			Invalidate();
+		}
 	}
 
 	private void UpdateImagePreview()
@@ -165,7 +180,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private void UpdateStatsTable(RenderStats renderStats)
 	{
 		List<(string Title, (string Name, string Value, string? Delta)[] NamedValues)> stringStats = new();
-		TimeSpan                                                                       deltaT      = renderJob.Stopwatch.Elapsed - prevUpdateElapsed;
+		TimeSpan                                                                       deltaT      = DateTime.Now - prevFrameTime;
 
 		{
 			TimeSpan elapsed = renderJob.Stopwatch.Elapsed;
@@ -199,7 +214,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
 							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend,                     prevUpdateStats.RawPixelsRendered,                                  deltaT, unit)),
-							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), FormatUlongDelta(rem, prevUpdateStats.TotalRawPixels - prevUpdateStats.RawPixelsRendered, deltaT, unit)),
+							//Swap the order of prev & curr, then add a negative sign to bypass the fact ulongs don't have -ve numbers
+							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), FormatIntDelta(-(int)(rend - prevUpdateStats.RawPixelsRendered), 0, deltaT, unit)),
 							("Total", FormatUlong(renderStats.TotalRawPixels), null)
 					})
 			);
@@ -220,8 +236,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				rend    = renderStats.PassesRendered,
 				rem     = total - rend,
 				prevRem = total - prevUpdateStats.PassesRendered;
-			ulong        progress     = renderStats.RawPixelsRendered     % (ulong)renderStats.TotalTruePixels;
-			ulong        prevProgress = prevUpdateStats.RawPixelsRendered % (ulong)prevUpdateStats.TotalTruePixels;
+			ulong        progress     = SafeMod(renderStats.RawPixelsRendered    , (ulong)renderStats.TotalTruePixels);
+			ulong        prevProgress = SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels);
 			const string unit         = "passes/sec";
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
@@ -244,9 +260,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Rays", new (string Name, string Value, string? Delta)[]
 					{
 							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
-							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
-							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
-							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
+							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(scat, prevUpdateStats.RaysAbsorbed, deltaT, unit)),
+							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(scat, prevUpdateStats.BounceLimitExceeded, deltaT, unit)),
+							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(scat, prevUpdateStats.SkyRays, deltaT, unit)),
 							("Total", FormatUlong(total), FormatUlongDelta(total, prevUpdateStats.RayCount, deltaT, unit))
 					})
 			);
@@ -268,7 +284,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), FormatIntDelta(renderStats.ThreadsRunning, prevUpdateStats.ThreadsRunning, deltaT)),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
-							("Task", renderJob.RenderTask.ToString()!, null)
+							("Task", renderJob.RenderTask.ToString()!, null),
+							// ReSharper disable once StringLiteralTypo
+							("𝚫T", deltaT.ToString("ss'.'fffffff"), "sec"),
+							("Updates", (TimeSpan.FromSeconds(1)/deltaT).ToString("n1"), "updates/sec")
 					})
 			);
 		}
@@ -276,7 +295,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		//Due to how the table is implemented, I can't resize it later
 		//So if the size doesn't match our array, we need to recreate it
 		//Columns are for Title, Names, Values, Deltas
-		Size correctDims = new(4, stringStats.Count + 2); //+2 = 1 for depth + 1 for spacer row
+		Size correctDims = new(4, stringStats.Count + 2); //+3 = 1 for depth + 1 for spacer row + 1 for column titles
 		if (statsTable.Dimensions != correctDims)
 		{
 			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
@@ -286,10 +305,54 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			statsContainer.Content = statsTable;
 		}
 
-		for (int rowIdx = 0; rowIdx < stringStats.Count; rowIdx++)
+		//Headers
 		{
-			TableRow row = statsTable.Rows[rowIdx];
-			(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[rowIdx];
+			TableRow row    = statsTable.Rows[0];
+			//Get the Labels at the correct locations, or assign them if needed
+			if (row.Cells[0].Control is not Label titleLabel)
+			{
+				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
+				row.Cells[0]?.Control?.Detach();
+				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
+				statsTable.Add(titleLabel = new Label(), 0, 0);
+			}
+
+			if (row.Cells[1].Control is not Label nameLabel)
+			{
+				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
+				row.Cells[1]?.Control?.Detach();
+				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(nameLabel = new Label(), 1, 0);
+			}
+
+			if (row.Cells[2].Control is not Label valueLabel)
+			{
+				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
+				row.Cells[2]?.Control?.Detach();
+				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(valueLabel = new Label(), 2, 0);
+			}
+
+			if (row.Cells[3].Control is not Label deltaLabel)
+			{
+				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
+				row.Cells[3]?.Control?.Detach();
+				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
+				statsTable.Add(deltaLabel = new Label(), 3, 0);
+			}
+
+			titleLabel.Text = "Category";
+			nameLabel.Text  = "Statistic";
+			valueLabel.Text = "Value";
+			deltaLabel.Text = "Delta";
+		}
+
+		//String stats
+		for (int i = 0; i < stringStats.Count; i++)
+		{
+			int      rowIdx = i + 1; //Account for headers
+			TableRow row    = statsTable.Rows[rowIdx];
+			(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[i];
 			//Aggregate the name and value texts
 			string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
 			string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
@@ -298,7 +361,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
 			{
-				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx), row.Cells[0].Control);
+				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
 				row.Cells[0]?.Control?.Detach();
 				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
 				statsTable.Add(titleLabel = new Label(), 0, rowIdx);
@@ -306,7 +369,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 			if (row.Cells[1].Control is not Label nameLabel)
 			{
-				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx), row.Cells[1].Control);
+				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
 				row.Cells[1]?.Control?.Detach();
 				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(nameLabel = new Label(), 1, rowIdx);
@@ -314,7 +377,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 			if (row.Cells[2].Control is not Label valueLabel)
 			{
-				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx), row.Cells[2].Control);
+				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
 				row.Cells[2]?.Control?.Detach();
 				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(valueLabel = new Label(), 2, rowIdx);
@@ -322,7 +385,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 			if (row.Cells[3].Control is not Label deltaLabel)
 			{
-				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx), row.Cells[3].Control);
+				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
 				row.Cells[3]?.Control?.Detach();
 				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
 				statsTable.Add(deltaLabel = new Label(), 3, rowIdx);
@@ -335,8 +398,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			deltaLabel.Text = aggregatedDeltas;
 		}
 
+		//Depth buffer
 		{
-			int       row             = statsTable.Dimensions.Height - 2; //Account for start at 0 offset and last spacer row
+			int       row             = statsTable.Dimensions.Height - 1;
 			int       maxDepth        = renderJob.RenderOptions.MaxDepth;
 			TableCell titleCell       = statsTable.Rows[row].Cells[0];
 			TableCell descriptionCell = statsTable.Rows[row].Cells[1];
@@ -407,10 +471,12 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	#region Format Methods
 
-		const string percentFormat = "p1"; //Format string for percentages
-		const string numFormat     = "n0";
-		const int    numAlign      = 15;
-		const int    percentAlign  = 8;
+		const string percentFormat  = "p1";
+		const string smallNumFormat = "n3";
+		const string numFormat      = "n0";
+		const int    numAlign       = 15;
+		const int    percentAlign   = 8;
+		const int    smallNum       = 1000;
 
 		static string FormatTime(TimeSpan val)
 		{
@@ -435,8 +501,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
 		{
 			ulong  delta  = curr - prev;
-			double tRatio = TimeSpan.FromTicks(TimeSpan.TicksPerSecond) / deltaT;
-			return $"{(delta * tRatio).ToString(numFormat),numAlign}{unit}";
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			return $"{(delta * tRatio).ToString(numFormat),numAlign} {unit}";
 		}
 
 		static string FormatIntRatio(int val, int total)
@@ -446,14 +512,15 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		static string FormatInt(int val)
 		{
-			return $"{val.ToString(numFormat),numAlign}";
+			return $"{val.ToString(val < smallNum? smallNumFormat : numFormat),numAlign}";
 		}
 
 		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
 		{
 			int    delta  = curr - prev;
-			double tRatio = TimeSpan.FromTicks(TimeSpan.TicksPerSecond) / deltaT;
-			return $"{(delta * tRatio).ToString(numFormat),numAlign}{unit}";
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			double res    = delta                                       * tRatio;
+			return $"{res.ToString(res < smallNum ? smallNumFormat : numFormat),numAlign} {unit}";
 		}
 
 	#endregion
