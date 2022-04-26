@@ -3,7 +3,6 @@ using Eto.Drawing;
 using Eto.Forms;
 using LibEternal.ObjectPools;
 using RayTracer.Core;
-using Serilog.Context;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -23,8 +22,10 @@ namespace RayTracer.Display.EtoForms;
 [SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
 internal sealed class RenderProgressDisplayPanel : Panel
 {
-	private const int DepthImageWidth = 100;
-	private const int UpdatePeriod = 100;
+	private const  int DepthImageWidth = 100;
+	private static int UpdatePeriod => 1;
+
+	private static ReaderWriterLockSlim updateLock = new();
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -140,8 +141,12 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		RenderStats stats = renderJob.RenderStats;
 		try
 		{
+			bool gotLock = updateLock.TryEnterWriteLock(0);
+			//If another thread was already locked (already updating previews), quit so we don't have race conditions
+			if (!gotLock) return;
 			UpdateImagePreview();
 			UpdateStatsTable(stats);
+			updateLock.ExitWriteLock();
 
 		}
 		catch (Exception e)
@@ -307,6 +312,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Headers
 		{
+			static Label CreateHeaderLabel()
+			{
+				return new Label { Style = Appearance.Styles.GeneralTextualBold };
+			}
+
 			TableRow row    = statsTable.Rows[0];
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
@@ -314,7 +324,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
 				row.Cells[0]?.Control?.Detach();
 				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
-				statsTable.Add(titleLabel = new Label(), 0, 0);
+				titleLabel = CreateHeaderLabel();
+				statsTable.Add(titleLabel, 0, 0);
 			}
 
 			if (row.Cells[1].Control is not Label nameLabel)
@@ -322,7 +333,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
 				row.Cells[1]?.Control?.Detach();
 				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(nameLabel = new Label(), 1, 0);
+				nameLabel = CreateHeaderLabel();
+				statsTable.Add(nameLabel, 1, 0);
 			}
 
 			if (row.Cells[2].Control is not Label valueLabel)
@@ -330,7 +342,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
 				row.Cells[2]?.Control?.Detach();
 				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(valueLabel = new Label(), 2, 0);
+				valueLabel = CreateHeaderLabel();
+				statsTable.Add(valueLabel, 2, 0);
 			}
 
 			if (row.Cells[3].Control is not Label deltaLabel)
@@ -338,7 +351,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
 				row.Cells[3]?.Control?.Detach();
 				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(deltaLabel = new Label(), 3, 0);
+				deltaLabel = CreateHeaderLabel();
+				statsTable.Add(deltaLabel, 3, 0);
 			}
 
 			titleLabel.Text = "Category";
@@ -347,55 +361,58 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			deltaLabel.Text = "Delta";
 		}
 
-		//String stats
-		for (int i = 0; i < stringStats.Count; i++)
 		{
-			int      rowIdx = i + 1; //Account for headers
-			TableRow row    = statsTable.Rows[rowIdx];
-			(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[i];
-			//Aggregate the name and value texts
-			string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
-			string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
-			string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? "N/A")); }, namedValues);
-
-			//Get the Labels at the correct locations, or assign them if needed
-			if (row.Cells[0].Control is not Label titleLabel)
+			//String stats
+			for (int i = 0; i < stringStats.Count; i++)
 			{
-				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
-				row.Cells[0]?.Control?.Detach();
-				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
-				statsTable.Add(titleLabel = new Label(), 0, rowIdx);
+				int      rowIdx = i + 1; //Account for headers
+				TableRow row    = statsTable.Rows[rowIdx];
+				(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[i];
+				//Aggregate the name and value texts
+				string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
+				string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
+				string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? "N/A")); }, namedValues);
+
+				//Get the Labels at the correct locations, or assign them if needed
+				if (row.Cells[0].Control is not Label titleLabel)
+				{
+					Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
+					row.Cells[0]?.Control?.Detach();
+					row.Cells[0]?.Control?.Dispose(); //Dispose the old control
+					titleLabel = new Label() { Style = Appearance.Styles.GeneralTextualUnderline };
+					statsTable.Add(titleLabel, 0, rowIdx);
+				}
+
+				if (row.Cells[1].Control is not Label nameLabel)
+				{
+					Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
+					row.Cells[1]?.Control?.Detach();
+					row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
+					statsTable.Add(nameLabel = new Label(), 1, rowIdx);
+				}
+
+				if (row.Cells[2].Control is not Label valueLabel)
+				{
+					Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
+					row.Cells[2]?.Control?.Detach();
+					row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
+					statsTable.Add(valueLabel = new Label(), 2, rowIdx);
+				}
+
+				if (row.Cells[3].Control is not Label deltaLabel)
+				{
+					Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
+					row.Cells[3]?.Control?.Detach();
+					row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
+					statsTable.Add(deltaLabel = new Label(), 3, rowIdx);
+				}
+
+
+				titleLabel.Text = title;
+				nameLabel.Text  = aggregatedNames;
+				valueLabel.Text = aggregatedValues;
+				deltaLabel.Text = aggregatedDeltas;
 			}
-
-			if (row.Cells[1].Control is not Label nameLabel)
-			{
-				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
-				row.Cells[1]?.Control?.Detach();
-				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(nameLabel = new Label(), 1, rowIdx);
-			}
-
-			if (row.Cells[2].Control is not Label valueLabel)
-			{
-				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
-				row.Cells[2]?.Control?.Detach();
-				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(valueLabel = new Label(), 2, rowIdx);
-			}
-
-			if (row.Cells[3].Control is not Label deltaLabel)
-			{
-				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
-				row.Cells[3]?.Control?.Detach();
-				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
-				statsTable.Add(deltaLabel = new Label(), 3, rowIdx);
-			}
-
-
-			titleLabel.Text = title;
-			nameLabel.Text  = aggregatedNames;
-			valueLabel.Text = aggregatedValues;
-			deltaLabel.Text = aggregatedDeltas;
 		}
 
 		//Depth buffer

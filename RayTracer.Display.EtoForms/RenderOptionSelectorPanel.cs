@@ -44,7 +44,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView editorView;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name };
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name, Style = Appearance.Styles.GeneralTextual};
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -77,14 +77,14 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		tableLayout.Rows!.Add(new TableRow()); //Add empty row so that scaling looks nice (last row sizes to fil gap)
 
 		Verbose("Creating start render button");
-		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options", ID = "Start render button" };
+		Button startRenderButton = new(click) { Text = "Start Render", ToolTip = "Starts the render job with the specified render options", ID = "Start render button", Style = Appearance.Styles.GeneralTextual };
 
 		Verbose("Creating scene selection dropdown");
 		Scene[] scenes = BuiltinScenes.GetAll().ToArray();
 		Verbose("Builtin scenes are: {BuiltinScenes}", scenes);
 		sceneSelectDropdown = new DropDown
 		{
-				DataStore = scenes, ToolTip = "Select a scene to be rendered", ID = "Scene select dropdown"
+				DataStore = scenes, ToolTip = "Select a scene to be rendered", ID = "Scene select dropdown", Style = Appearance.Styles.GeneralTextual
 		};
 		//Select the first scene by default
 		sceneSelectDropdown.SelectedValue = Scene = scenes[0];
@@ -121,7 +121,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
+			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 0, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]", Style = Appearance.Styles.GeneralTextual };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				int value = (int)((NumericStepper)sender!).Value;
@@ -152,7 +152,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		{
 			Verbose("{Property}: Possible enum values are {Values}", prop, Enum.GetValues<T>());
 
-			dropDown = new EnumDropDown<T> { ID = $"{Prop.Name} dropdown" };
+			dropDown = new EnumDropDown<T> { ID = $"{Prop.Name} dropdown", Style = Appearance.Styles.GeneralTextual };
 			dropDown.SelectedValueChanged += (sender, _) =>
 			{
 				T value = ((EnumDropDown<T>)sender!).SelectedValue;
@@ -194,7 +194,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
-			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]" };
+			stepper = new NumericStepper { ID = $"{Prop.Name} stepper", Increment = 1, MaximumDecimalPlaces = 5, DecimalPlaces = 1, MinValue = min, MaxValue = max, ToolTip = $"Valid range is [{min}...{max}]", Style = Appearance.Styles.GeneralTextual };
 			stepper.ValueChanged += (sender, _) =>
 			{
 				float value = (float)((NumericStepper)sender!).Value;
