@@ -1,5 +1,7 @@
 ﻿using Eto;
+using Eto.Forms;
 using GLib;
+using RayTracer.Display.EtoForms.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using static Serilog.Log;
@@ -57,6 +59,15 @@ internal static class Program
 		Verbose("Created new application object");
 
 		Debug("Application is {Application}", application);
+
+		try
+		{
+			Styles.RegisterStyles();
+		}
+		catch (Exception e)
+		{
+			Error(e, "Could not register styles");
+		}
 
 		MainForm form;
 		try

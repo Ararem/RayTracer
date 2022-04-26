@@ -31,7 +31,7 @@ public sealed class MainForm : Form
 		Padding = 10;
 
 		Verbose("Creating UI elements");
-		titleLabel          = new Label { Text                          = title, Font                         = new Font(FontFamilies.Sans!, 32f, FontStyle.Bold) };
+		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle};
 		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
