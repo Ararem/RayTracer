@@ -14,7 +14,6 @@ using System.Linq;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
-using Border = Gtk.Border;
 using Size = Eto.Drawing.Size;
 
 // using NetFabric.Hyperlinq;
@@ -24,10 +23,11 @@ namespace RayTracer.Display.EtoForms;
 [SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
 internal sealed class RenderProgressDisplayPanel : Panel
 {
-	private const  int DepthImageWidth = 100;
-	private static int UpdatePeriod => 1000/60; //FPS
+	private const int DepthImageWidth = 100;
 
 	private static readonly object updateLock = new();
+
+	private static ulong lockFailedCount = 0;
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -75,6 +75,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
 
 	/// <summary>
+	///  How long the last update took to complete (since we can't display how long the current one will take)
+	/// </summary>
+	private TimeSpan prevUpdateDuration;
+
+	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
 	private RenderStats prevUpdateStats;
@@ -83,11 +88,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	///  Table that contains the various stats
 	/// </summary>
 	private TableLayout statsTable;
-
-	/// <summary>
-	/// How long the last update took to complete (since we can't display how long the current one will take)
-	/// </summary>
-	private TimeSpan prevUpdateDuration;
 
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
@@ -135,7 +135,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 	}
 
-	private static ulong lockFailedCount = 0;
+	private static int UpdatePeriod => 1000 / 60; //FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
@@ -165,8 +165,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		finally
 		{
-			prevUpdateStats   = stats;
-			prevFrameTime     = DateTime.Now;
+			prevUpdateStats = stats;
+			prevFrameTime   = DateTime.Now;
 			Invalidate();
 			Monitor.Exit(updateLock);
 			updatePreviewTimer.Change(UpdatePeriod, -1);
@@ -229,7 +229,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend,                     prevUpdateStats.RawPixelsRendered,                                  deltaT, unit)),
+							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend, prevUpdateStats.RawPixelsRendered, deltaT, unit)),
 							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), null),
 							("Total", FormatUlong(renderStats.TotalRawPixels), null)
 					})
@@ -251,22 +251,23 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				rend    = renderStats.PassesRendered,
 				rem     = total - rend,
 				prevRem = total - prevUpdateStats.PassesRendered;
-			ulong        progress     = SafeMod(renderStats.RawPixelsRendered    , (ulong)renderStats.TotalTruePixels);
+			ulong        progress     = SafeMod(renderStats.RawPixelsRendered,     (ulong)renderStats.TotalTruePixels);
 			ulong        prevProgress = SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels);
 			const string unit         = "passes/s";
 			//Ensure we don't get overflow errors when previous update was a previous pass
 			//Since then prevProgress > progress and FormatUlongDelta has overflows
-			string progressDelta = prevProgress > progress ? FormatUlongDelta(progress, prevProgress, deltaT, "px/s") : FormatUlongDelta(progress + ((ulong)renderStats.TotalTruePixels - prevProgress), 0, deltaT, "px/s");
+			ulong progressDelta     = prevProgress > progress ? progress - prevProgress : progress + ((ulong)renderStats.TotalTruePixels - prevProgress);
+			float progressDeltaFrac = (float)progressDelta / renderStats.TotalTruePixels;
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatIntRatio(rend, total), FormatIntDelta(rend, prevUpdateStats.PassesRendered, deltaT, unit)),
-							("Remaining", FormatIntRatio(rem, total), FormatIntDelta(rem,  prevRem,                        deltaT, unit)),
-							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), progressDelta),
+							("Rendered", FormatIntWithPercentage(rend, total), FormatFloatDelta(progressDeltaFrac, 0, deltaT, unit)),
+							("Remaining", FormatIntWithPercentage(rem, total), null),
+							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), null),
 							("Total", FormatInt(total), null)
 					})
 			);
-		}
+		} //TODO: Intersection counts
 		{
 			ulong total = renderStats.RayCount,
 				scat    = renderStats.RaysScattered,
@@ -277,11 +278,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Rays", new (string Name, string Value, string? Delta)[]
 					{
-							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat, prevUpdateStats.RaysScattered, deltaT, unit)),
-							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(scat, prevUpdateStats.RaysAbsorbed, deltaT, unit)),
-							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(scat, prevUpdateStats.BounceLimitExceeded, deltaT, unit)),
-							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(scat, prevUpdateStats.SkyRays, deltaT, unit)),
-							("Total", FormatUlong(total), FormatUlongDelta(total, prevUpdateStats.RayCount, deltaT, unit))
+							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevUpdateStats.RaysScattered,       deltaT, unit)),
+							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevUpdateStats.RaysAbsorbed,        deltaT, unit)),
+							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(exceed, prevUpdateStats.BounceLimitExceeded, deltaT, unit)),
+							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(sky,    prevUpdateStats.SkyRays,             deltaT, unit)),
+							("Total", FormatUlong(total), FormatUlongDelta(total,                  prevUpdateStats.RayCount,            deltaT, unit))
 					})
 			);
 		}
@@ -302,14 +303,14 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add( //Overflow??
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", FormatInt(renderStats.ThreadsRunning), FormatIntDelta(renderStats.ThreadsRunning, prevUpdateStats.ThreadsRunning, deltaT)),
+							("Threads", FormatInt(renderStats.ThreadsRunning), null),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							("Task", renderJob.RenderTask.ToString()!, null),
-							("𝚫T", deltaT.ToString(timeFormat), "sec"),
-							("Updates", (TimeSpan.FromSeconds(1)/deltaT).ToString("n1"), null),
+							("𝚫T", FormatTimeSmall(deltaT), null),
+							("Updates", FormatDouble(TimeSpan.FromSeconds(1) / deltaT), null),
 							("UI Race", FormatUlong(lockFailedCount), null),
-							("Upd Duration", prevUpdateDuration.ToString(timeFormat), "sec"),
-							("Delay", ((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) *1000).ToString(timeFormat), "ms"),
+							("Upd Duration", FormatTimeSmall(prevUpdateDuration), null),
+							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000), null)
 					})
 			);
 		}
@@ -323,9 +324,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
 			statsTable.Detach();
 			statsTable.Dispose();
-			statsTable             = new TableLayout(correctDims)
+			statsTable = new TableLayout(correctDims)
 			{
-					ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0),
+					ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0)
 			};
 			statsContainer.Content = statsTable;
 		}
@@ -337,7 +338,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				return new Label { Style = Appearance.Styles.GeneralTextualBold };
 			}
 
-			TableRow row    = statsTable.Rows[0];
+			TableRow row = statsTable.Rows[0];
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
 			{
@@ -389,8 +390,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				TableRow row    = statsTable.Rows[rowIdx];
 				(string title, (string Name, string Value, string? Delta)[] namedValues) = stringStats[i];
 				//Aggregate the name and value texts
-				string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
-				string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
+				string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },            namedValues);
+				string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },                 namedValues);
 				string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? string.Empty)); }, namedValues);
 
 				//Get the Labels at the correct locations, or assign them if needed
@@ -429,7 +430,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					deltaLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
 					statsTable.Add(deltaLabel, 3, rowIdx);
 				}
-
 
 				titleLabel.Text = title;
 				nameLabel.Text  = aggregatedNames;
@@ -513,54 +513,72 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		const string percentFormat  = "p1";
 		const string smallNumFormat = "n3";
-		const string numFormat      = "n0";
-		const int    numAlign       = 15;
-		const int    percentAlign   = 8;
+		const string integerFormat  = "n0";
+		const int    leftAlign      = 15;
+		const int    rightAlign     = 10;
 		const int    smallNum       = 1000;
 
 		static string FormatTime(TimeSpan val)
 		{
-			return val.Days != 0 ? val.ToString("d'd 'hh':'mm':'ss'.'f").PadRight(numAlign) : val.ToString("hh':'mm':'ss'.'f").PadRight(numAlign);
+			return val.Days != 0 ? val.ToString("d'd 'hh':'mm':'ss'.'f").PadLeft(leftAlign) : val.ToString("hh':'mm':'ss'.'f").PadLeft(leftAlign);
+		}
+
+		static string FormatTimeSmall(TimeSpan val)
+		{
+			return val.ToString("ss'.'ffffff").PadLeft(leftAlign);
 		}
 
 		static string FormatDate(DateTime val)
 		{
-			return val.ToString("G").PadRight(21);
+			return val.ToString("d").PadLeft(leftAlign) + ' ' + val.ToString("h:mm:ss tt").PadRight(rightAlign);
 		}
 
 		static string FormatUlongRatio(ulong val, ulong total)
 		{
-			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
 		}
 
 		static string FormatUlong(ulong val)
 		{
-			return $"{val.ToString(numFormat),numAlign}";
+			return $"{val.ToString(integerFormat),leftAlign}";
 		}
 
 		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
 		{
 			ulong  delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			return $"{(delta * tRatio).ToString(numFormat),numAlign} {unit}";
+			return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
 		}
 
-		static string FormatIntRatio(int val, int total)
+		static string FormatIntWithPercentage(int val, int total)
 		{
-			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
+			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
 		}
 
 		static string FormatInt(int val)
 		{
-			return $"{val.ToString(val < smallNum? smallNumFormat : numFormat),numAlign}";
+			return $"{val.ToString(integerFormat),leftAlign}";
 		}
 
 		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
 		{
 			int    delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			double res    = delta                                       * tRatio;
-			return $"{res.ToString(res < smallNum ? smallNumFormat : numFormat),numAlign} {unit}";
+			double res    = delta                   * tRatio;
+			return $"{res.ToString(integerFormat),leftAlign} {unit}";
+		}
+
+		static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
+		{
+			float  delta  = curr - prev;
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			double res    = delta                   * tRatio;
+			return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
+		}
+
+		static string FormatDouble(double val)
+		{
+			return $"{val.ToString(smallNumFormat),leftAlign}";
 		}
 
 	#endregion
