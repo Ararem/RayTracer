@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
+using Border = Gtk.Border;
 using Size = Eto.Drawing.Size;
 
 // using NetFabric.Hyperlinq;
@@ -24,9 +25,9 @@ namespace RayTracer.Display.EtoForms;
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const  int DepthImageWidth = 100;
-	private static int UpdatePeriod => 1000/20; //FPS
+	private static int UpdatePeriod => 1000/60; //FPS
 
-	private static readonly ReaderWriterLockSlim updateLock = new();
+	private static readonly object updateLock = new();
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -141,8 +142,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
-		bool gotLock = updateLock.TryEnterWriteLock(0);
+		bool gotLock = Monitor.TryEnter(updateLock);
 		//If another thread was already locked (already updating previews), quit so we don't have race conditions
+		//The other thread should ensure the update gets called again, once it exits
 		if (!gotLock)
 		{
 			Interlocked.Increment(ref lockFailedCount);
@@ -166,8 +168,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			prevUpdateStats   = stats;
 			prevFrameTime     = DateTime.Now;
 			Invalidate();
+			Monitor.Exit(updateLock);
 			updatePreviewTimer.Change(UpdatePeriod, -1);
-			updateLock.ExitWriteLock();
 		}
 	}
 
@@ -228,7 +230,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
 							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend,                     prevUpdateStats.RawPixelsRendered,                                  deltaT, unit)),
-							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), "\"\""),
+							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), null),
 							("Total", FormatUlong(renderStats.TotalRawPixels), null)
 					})
 			);
@@ -321,7 +323,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			Verbose("Old table dims {Dims} do not match stats array, disposing and recreating with dims {NewDims}", statsTable.Dimensions, correctDims);
 			statsTable.Detach();
 			statsTable.Dispose();
-			statsTable             = new TableLayout(correctDims) { ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0) };
+			statsTable             = new TableLayout(correctDims)
+			{
+					ID = "Stats Table", Spacing = new Size(10, 10), Padding = 10, Size = new Size(0, 0),
+			};
 			statsContainer.Content = statsTable;
 		}
 
@@ -386,7 +391,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				//Aggregate the name and value texts
 				string aggregatedNames  = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => $"{val.Name}:")); },     namedValues);
 				string aggregatedValues = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Value)); },          namedValues);
-				string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? "N/A")); }, namedValues);
+				string aggregatedDeltas = StringBuilderPool.BorrowInline(static (sb, namedValues) => { sb.AppendJoin(Environment.NewLine, namedValues.Select(val => val.Delta ?? string.Empty)); }, namedValues);
 
 				//Get the Labels at the correct locations, or assign them if needed
 				if (row.Cells[0].Control is not Label titleLabel)
