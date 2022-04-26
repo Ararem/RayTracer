@@ -1,4 +1,4 @@
-#define DEBUG_IGNORE_BUFFER_PREVIOUS
+// #define DEBUG_IGNORE_BUFFER_PREVIOUS
 #define ACCELERATE_BVH
 
 using RayTracer.Core.Acceleration;

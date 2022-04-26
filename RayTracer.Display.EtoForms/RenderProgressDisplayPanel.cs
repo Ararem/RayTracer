@@ -293,7 +293,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			// ReSharper disable once StringLiteralTypo
 			const string timeFormat = "ss'.'fffffff";
-			stringStats.Add(
+			stringStats.Add( //Overflow??
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), FormatIntDelta(renderStats.ThreadsRunning, prevUpdateStats.ThreadsRunning, deltaT)),
@@ -303,7 +303,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Updates", (TimeSpan.FromSeconds(1)/deltaT).ToString("n1"), null),
 							("UI Race", FormatUlong(lockFailedCount), null),
 							("Upd Duration", prevUpdateDuration.ToString(timeFormat), "sec"),
-							("Delay", ((deltaT - prevUpdateDuration)*1000).ToString(timeFormat), "ms"),
+							("Delay", ((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) *1000).ToString(timeFormat), "ms"),
 					})
 			);
 		}
