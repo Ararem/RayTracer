@@ -247,21 +247,18 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
-			int total   = renderJob.RenderOptions.Passes,
-				rend    = renderStats.PassesRendered,
-				rem     = total - rend,
-				prevRem = total - prevUpdateStats.PassesRendered;
+			int total = renderJob.RenderOptions.Passes,
+				rend  = renderStats.PassesRendered,
+				rem   = total - rend;
 			ulong        progress     = SafeMod(renderStats.RawPixelsRendered,     (ulong)renderStats.TotalTruePixels);
-			ulong        prevProgress = SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels);
 			const string unit         = "passes/s";
-			//Ensure we don't get overflow errors when previous update was a previous pass
-			//Since then prevProgress > progress and FormatUlongDelta has overflows
-			ulong progressDelta     = prevProgress > progress ? progress - prevProgress : progress + ((ulong)renderStats.TotalTruePixels - prevProgress);
-			float progressDeltaFrac = (float)progressDelta / renderStats.TotalTruePixels;
+			//Calculate fraction of the passes that was rendered between updates
+			float passFrac     = (float)progress                                                                            / renderStats.TotalTruePixels;
+			float prevPassFrac = (float) SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels) / prevUpdateStats.TotalTruePixels;
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatIntWithPercentage(rend, total), FormatFloatDelta(progressDeltaFrac, 0, deltaT, unit)),
+							("Rendered", FormatIntWithPercentage(rend, total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, unit)),
 							("Remaining", FormatIntWithPercentage(rem, total), null),
 							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), null),
 							("Total", FormatInt(total), null)
@@ -307,10 +304,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							("Task", renderJob.RenderTask.ToString()!, null),
 							("𝚫T", FormatTimeSmall(deltaT), null),
-							("Updates", FormatDouble(TimeSpan.FromSeconds(1) / deltaT), null),
+							("Updates", FormatDouble(TimeSpan.FromSeconds(1) / deltaT) + " /s", null),
 							("UI Race", FormatUlong(lockFailedCount), null),
-							("Upd Duration", FormatTimeSmall(prevUpdateDuration), null),
-							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000), null)
+							("Upd Duration", FormatTimeSmall(prevUpdateDuration * 1000) + " ms", null),
+							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000) + " ms", null)
 					})
 			);
 		}
