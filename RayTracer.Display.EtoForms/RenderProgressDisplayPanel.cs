@@ -135,7 +135,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 	}
 
-	private static int UpdatePeriod => 1000 / 60; //FPS
+	private static int UpdatePeriod => 1000 / 60; //60 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
@@ -195,6 +195,80 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateStatsTable(RenderStats renderStats)
 	{
+	#region Format Methods
+
+		const string percentFormat  = "p1";
+		const string smallNumFormat = "n3";
+		const string integerFormat  = "n0";
+		const int    leftAlign      = 15;
+		const int    rightAlign     = 10;
+		const int    smallNum       = 1000;
+
+		static string FormatTime(TimeSpan val)
+		{
+			return val.Days != 0 ? val.ToString("d'd 'hh':'mm':'ss'.'f").PadLeft(leftAlign) : val.ToString("hh':'mm':'ss'.'f").PadLeft(leftAlign);
+		}
+
+		static string FormatTimeSmall(TimeSpan val)
+		{
+			return val.ToString("ss'.'ffffff").PadLeft(leftAlign);
+		}
+
+		static string FormatDate(DateTime val)
+		{
+			return val.ToString("d").PadLeft(leftAlign) + ' ' + val.ToString("h:mm:ss tt").PadRight(rightAlign);
+		}
+
+		static string FormatUlongRatio(ulong val, ulong total)
+		{
+			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
+		}
+
+		static string FormatUlong(ulong val)
+		{
+			return $"{val.ToString(integerFormat),leftAlign}";
+		}
+
+		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
+		{
+			ulong  delta  = curr - prev;
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
+		}
+
+		static string FormatIntWithPercentage(int val, int total)
+		{
+			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
+		}
+
+		static string FormatInt(int val)
+		{
+			return $"{val.ToString(integerFormat),leftAlign}";
+		}
+
+		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
+		{
+			int    delta  = curr - prev;
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			double res    = delta                   * tRatio;
+			return $"{res.ToString(integerFormat),leftAlign} {unit}";
+		}
+
+		static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
+		{
+			float  delta  = curr - prev;
+			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+			double res    = delta                   * tRatio;
+			return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
+		}
+
+		static string FormatDouble(double val)
+		{
+			return $"{val.ToString(smallNumFormat),leftAlign}";
+		}
+
+	#endregion
+
 		List<(string Title, (string Name, string Value, string? Delta)[] NamedValues)> stringStats = new();
 		TimeSpan                                                                       deltaT      = DateTime.Now - prevFrameTime;
 
@@ -250,11 +324,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			int total = renderJob.RenderOptions.Passes,
 				rend  = renderStats.PassesRendered,
 				rem   = total - rend;
-			ulong        progress     = SafeMod(renderStats.RawPixelsRendered,     (ulong)renderStats.TotalTruePixels);
-			const string unit         = "passes/s";
+			ulong        progress = SafeMod(renderStats.RawPixelsRendered, (ulong)renderStats.TotalTruePixels);
+			const string unit     = "passes/s";
 			//Calculate fraction of the passes that was rendered between updates
-			float passFrac     = (float)progress                                                                            / renderStats.TotalTruePixels;
-			float prevPassFrac = (float) SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels) / prevUpdateStats.TotalTruePixels;
+			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
+			float prevPassFrac = (float)SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels) / prevUpdateStats.TotalTruePixels;
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
@@ -284,29 +358,34 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
+			Scene  scene = renderJob.Scene;
+			Camera cam   = scene.Camera;
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
-							("Name", renderJob.Scene.Name, null),
-							("Object Count", FormatInt(renderJob.Scene.SceneObjects.Length), null),
-							("Light Count", FormatInt(renderJob.Scene.Lights.Length), null),
-							("Camera", renderJob.Scene.Camera.ToString()!, null)
+							("Name", scene.Name, null),
+							("Object Count", FormatInt(scene.SceneObjects.Length), null),
+							("Light Count", FormatInt(scene.Lights.Length), null),
+							//Leaving out camera positioning, partly since it doesn't fit and partly because it's not really a stat
+							("Camera", $@"FOV:{cam.VerticalFov.ToString(smallNumFormat),leftAlign - 4} °
+Lens:{cam.LensRadius.ToString(smallNumFormat),leftAlign - 5} m
+Focus:{cam.FocusDistance.ToString(smallNumFormat),leftAlign - 6} m", null)
 					})
 			);
 		}
 		{
-			// ReSharper disable once StringLiteralTypo
-			const string timeFormat = "ss'.'fffffff";
 			stringStats.Add( //Overflow??
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), null),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							("Task", renderJob.RenderTask.ToString()!, null),
+							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
 							("𝚫T", FormatTimeSmall(deltaT), null),
-							("Updates", FormatDouble(TimeSpan.FromSeconds(1) / deltaT) + " /s", null),
+							("Updates", $"{FormatDouble(TimeSpan.FromSeconds(1) / deltaT)} /s", null),
+							("Target", $"{FormatDouble(1000d/UpdatePeriod)} FPS", null),
 							("UI Race", FormatUlong(lockFailedCount), null),
-							("Upd Duration", FormatTimeSmall(prevUpdateDuration * 1000) + " ms", null),
+							("Upd Duration", FormatTimeSmall(prevUpdateDuration                                               * 1000) + " ms", null),
 							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000) + " ms", null)
 					})
 			);
@@ -505,80 +584,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 
 		prevUpdateStats = renderJob.RenderStats;
-
-	#region Format Methods
-
-		const string percentFormat  = "p1";
-		const string smallNumFormat = "n3";
-		const string integerFormat  = "n0";
-		const int    leftAlign      = 15;
-		const int    rightAlign     = 10;
-		const int    smallNum       = 1000;
-
-		static string FormatTime(TimeSpan val)
-		{
-			return val.Days != 0 ? val.ToString("d'd 'hh':'mm':'ss'.'f").PadLeft(leftAlign) : val.ToString("hh':'mm':'ss'.'f").PadLeft(leftAlign);
-		}
-
-		static string FormatTimeSmall(TimeSpan val)
-		{
-			return val.ToString("ss'.'ffffff").PadLeft(leftAlign);
-		}
-
-		static string FormatDate(DateTime val)
-		{
-			return val.ToString("d").PadLeft(leftAlign) + ' ' + val.ToString("h:mm:ss tt").PadRight(rightAlign);
-		}
-
-		static string FormatUlongRatio(ulong val, ulong total)
-		{
-			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
-		}
-
-		static string FormatUlong(ulong val)
-		{
-			return $"{val.ToString(integerFormat),leftAlign}";
-		}
-
-		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
-		{
-			ulong  delta  = curr - prev;
-			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
-		}
-
-		static string FormatIntWithPercentage(int val, int total)
-		{
-			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
-		}
-
-		static string FormatInt(int val)
-		{
-			return $"{val.ToString(integerFormat),leftAlign}";
-		}
-
-		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
-		{
-			int    delta  = curr - prev;
-			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			double res    = delta                   * tRatio;
-			return $"{res.ToString(integerFormat),leftAlign} {unit}";
-		}
-
-		static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
-		{
-			float  delta  = curr - prev;
-			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			double res    = delta                   * tRatio;
-			return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
-		}
-
-		static string FormatDouble(double val)
-		{
-			return $"{val.ToString(smallNumFormat),leftAlign}";
-		}
-
-	#endregion
 	}
 
 	/// <inheritdoc/>
