@@ -71,7 +71,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// <summary>
 	///  Time (real-world) at which the last frame update occurred
 	/// </summary>
-	private DateTime prevFrameTime;
+	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
 
 	/// <summary>
 	///  Render stats from the last time we updated the preview
@@ -126,6 +126,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Padding     = 10,
 				ID          = "Main Content StackLayout"
 		};
+		//Add option to reset image view
+		Application.Instance.MainForm.Menu.Items.Add(new Command((sender, args) => previewImageView.ResetView()) { MenuText = "Reset Image", ToolTip = "Resets the preview image's size and position to default." });
 
 		//Periodically update the previews using a timer
 		//PERF: This creates quite a few allocations when called frequently
@@ -226,8 +228,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
 							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend,                     prevUpdateStats.RawPixelsRendered,                                  deltaT, unit)),
-							//Swap the order of prev & curr, then add a negative sign to bypass the fact ulongs don't have -ve numbers
-							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), FormatIntDelta(-(int)(rend - prevUpdateStats.RawPixelsRendered), 0, deltaT, unit)),
+							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), "\"\""),
 							("Total", FormatUlong(renderStats.TotalRawPixels), null)
 					})
 			);
@@ -250,13 +251,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				prevRem = total - prevUpdateStats.PassesRendered;
 			ulong        progress     = SafeMod(renderStats.RawPixelsRendered    , (ulong)renderStats.TotalTruePixels);
 			ulong        prevProgress = SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels);
-			const string unit         = "passes/sec";
+			const string unit         = "passes/s";
+			//Ensure we don't get overflow errors when previous update was a previous pass
+			//Since then prevProgress > progress and FormatUlongDelta has overflows
+			string progressDelta = prevProgress > progress ? FormatUlongDelta(progress, prevProgress, deltaT, "px/s") : FormatUlongDelta(progress + ((ulong)renderStats.TotalTruePixels - prevProgress), 0, deltaT, "px/s");
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
 							("Rendered", FormatIntRatio(rend, total), FormatIntDelta(rend, prevUpdateStats.PassesRendered, deltaT, unit)),
 							("Remaining", FormatIntRatio(rem, total), FormatIntDelta(rem,  prevRem,                        deltaT, unit)),
-							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), FormatUlongDelta(progress, prevProgress, deltaT, "px/sec")),
+							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), progressDelta),
 							("Total", FormatInt(total), null)
 					})
 			);
