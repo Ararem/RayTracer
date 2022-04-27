@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
@@ -11,32 +10,40 @@ namespace RayTracer.Core;
 /// <remarks>
 ///  This class handles the creation of view rays for each pixel, which renderers then use to create the scene image
 /// </remarks>
-[PublicAPI]
-//TODO: .ToString() impl
-public sealed class Camera
+/// <param name="LensRadius">Radius of the artificially simulated lens (for DOF Blur)</param>
+/// <param name="Horizontal">Unknown Vector</param>
+/// <param name="Vertical">Unknown Vector</param>
+/// <param name="LowerLeftCorner">Unknown Vector</param>
+/// <param name="LookFrom">Where the camera looks from (it's position)</param>
+/// <param name="U">Unknown Vector</param>
+/// <param name="V">Unknown Vector</param>
+public sealed record Camera(
+		float   LensRadius,
+		Vector3 Horizontal,
+		Vector3 Vertical,
+		Vector3 LowerLeftCorner,
+		Vector3 LookFrom,
+		Vector3 U,
+		Vector3 V
+)
 {
 	/// <summary>
-	///  Focus distance of the simulated lens (how far away rays will be perfectly in focus)
+	///  Gets the world-space ray that corresponds to the given pixel's <paramref name="u"/><paramref name="v"/> coordinate
 	/// </summary>
-	public readonly float FocusDistance;
+	/// <param name="u">The UV coordinate of the pixel</param>
+	/// <param name="v">The UV coordinate of the pixel</param>
+	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
+	public Ray GetRay(float u, float v)
+	{
+		Vector2 rand      = RandUtils.RandomInUnitCircle() * LensRadius;
+		Vector3 offset    = (U * rand.X)                                          + (V * rand.Y);
+		Vector3 origin    = LookFrom                                              + offset;
+		Vector3 direction = (LowerLeftCorner + (u * Horizontal) + (v * Vertical)) - origin;
+		return new Ray(origin, Normalize(direction));
+	}
 
 	/// <summary>
-	///  The horizontal field-of-view angle (in degrees)
-	/// </summary>
-	public readonly float HorizontalFov;
-
-	/// <summary>
-	///  Radius of the simulated lens. Larger values increase blur
-	/// </summary>
-	public readonly float LensRadius;
-
-	/// <summary>
-	///  The vertical field-of-view angle (in degrees)
-	/// </summary>
-	public readonly float VerticalFov;
-
-	/// <summary>
-	///  Constructor for creating a camera
+	///  Factory method for creating a camera
 	/// </summary>
 	/// <param name="lookFrom">Position the camera is located at - where it looks from</param>
 	/// <param name="lookTowards">Point the camera should point towards - this will be the focus of the camera</param>
@@ -54,102 +61,27 @@ public sealed class Camera
 	///  <paramref name="upVector"/> points in a different direction to the direction of <paramref name="lookFrom"/> -> <paramref name="lookTowards"/>.
 	///  So ensure that <c>Cross(UpVector, LookFrom - LookTowards) != Zero</c> before calling this constructor
 	/// </exception>
-	public Camera(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio, float lensRadius, float focusDistance)
+	public static Camera Create(Vector3 lookFrom, Vector3 lookTowards, Vector3 upVector, float verticalFov, float aspectRatio, float lensRadius, float focusDistance)
 	{
 		//Have to ensure it's normalized because this is a direction-type vector
-		upVector      = Normalize(upVector);
-		LookFrom      = lookFrom;
-		LookTowards   = lookTowards;
-		UpVector      = upVector;
-		VerticalFov   = verticalFov;
-		HorizontalFov = verticalFov / aspectRatio;
-		FocusDistance = focusDistance;
-		LensRadius    = lensRadius;
+		upVector = Normalize(upVector);
 
-		float theta          = VerticalFov * (PI / 180f);
+		float theta          = verticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
 		float viewportHeight = 2f          * h;
 		float viewportWidth  = aspectRatio * viewportHeight;
 
 		//Magic that lets us position and rotate the camera
-		W = Normalize(LookFrom - LookTowards);
-		if (Cross(UpVector, W) == Zero)
+		Vector3 w = Normalize(lookFrom - lookTowards);
+		if (Cross(upVector, w) == Zero)
 			throw new ArithmeticException("Camera cannot point in the same direction as its 'up' vector (Cross(CameraUpVector, LookDirection) must != Zero)");
-		U = Normalize(Cross(UpVector, W));
-		V = Cross(W, U);
+		Vector3 u = Normalize(Cross(upVector, w));
+		Vector3 v = Cross(w, u);
 
-		Horizontal      = viewportWidth  * U * FocusDistance;
-		Vertical        = viewportHeight * V * FocusDistance;
-		LowerLeftCorner = LookFrom - (Horizontal / 2) - (Vertical / 2) - (FocusDistance * W);
+		Vector3 horizontal      = viewportWidth  * u * focusDistance;
+		Vector3 vertical        = viewportHeight * v * focusDistance;
+		Vector3 lowerLeftCorner = lookFrom - (horizontal / 2) - (vertical / 2) - (focusDistance * w);
+
+		return new Camera(lensRadius, horizontal, vertical, lowerLeftCorner, lookFrom, u, v);
 	}
-
-	/// <summary>
-	///  Gets the world-space ray that corresponds to the given pixel's <paramref name="u"/><paramref name="v"/> coordinate
-	/// </summary>
-	/// <param name="u">The UV coordinate of the pixel</param>
-	/// <param name="v">The UV coordinate of the pixel</param>
-	/// <remarks>It is expected that the <paramref name="u"/><paramref name="v"/> coordinates are normalized to the range [0..1] for the X and Y values</remarks>
-	public Ray GetRay(float u, float v)
-	{
-		Vector2 rand      = RandUtils.RandomInUnitCircle() * LensRadius;
-		Vector3 offset    = (U * rand.X)                                          + (V * rand.Y);
-		Vector3 origin    = LookFrom                                              + offset;
-		Vector3 direction = (LowerLeftCorner + (u * Horizontal) + (v * Vertical)) - origin;
-		return new Ray(origin, Normalize(direction));
-	}
-
-#region Internal View-Ray Vectors
-
-	/// <summary>
-	///  Unknown vector
-	/// </summary>
-	public readonly Vector3 Horizontal;
-
-	/// <summary>
-	///  Where the camera is located in the world
-	/// </summary>
-	public readonly Vector3 LookFrom;
-
-	/// <summary>
-	///  The point that the camera looks at (where it is facing)
-	/// </summary>
-	public readonly Vector3 LookTowards;
-
-	/// <summary>
-	///  The world-space position of the lowermost, leftmost pixel
-	/// </summary>
-	public readonly Vector3 LowerLeftCorner;
-
-	/// <summary>
-	///  <para>
-	///   The world-space direction to move in when increasing the X position in pixel-space.
-	///  </para>
-	///  <para>
-	///   When increasing the X (horizontal) coordinate for a pixel (such as moving left to to right on the screen), this is the direction the view ray
-	///   should move, in world space
-	///  </para>
-	/// </summary>
-	public readonly Vector3 U;
-
-	/// <summary>
-	///  The vector that is considered 'upwards' to the camera
-	/// </summary>
-	public readonly Vector3 UpVector;
-
-	/// <summary>
-	///  The direction the view ray moves in when increasing a pixel's Y coordinate.
-	/// </summary>
-	public readonly Vector3 V;
-
-	/// <summary>
-	///  Unknown vector
-	/// </summary>
-	public readonly Vector3 Vertical;
-
-	/// <summary>
-	///  The normalized 'forward' direction. Essentially which direction the camera is facing
-	/// </summary>
-	public readonly Vector3 W;
-
-#endregion
 }

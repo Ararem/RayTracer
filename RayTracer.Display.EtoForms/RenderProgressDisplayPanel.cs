@@ -365,22 +365,29 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					{
 							("Name", scene.Name, null),
 							("Object Count", FormatInt(scene.SceneObjects.Length), null),
-							("Light Count", FormatInt(scene.Lights.Length), null),
-							//Leaving out camera positioning, partly since it doesn't fit and partly because it's not really a stat
-							("Camera", $@"FOV:{cam.VerticalFov.ToString(smallNumFormat),leftAlign - 4} °
-Lens:{cam.LensRadius.ToString(smallNumFormat),leftAlign - 5} m
-Focus:{cam.FocusDistance.ToString(smallNumFormat),leftAlign - 6} m", null)
+							("Light Count", FormatInt(scene.Lights.Length), null)
 					})
 			);
 		}
 		{
-			stringStats.Add( //Overflow??
+			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), null),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
+							("Depth Max", FormatInt(renderJob.RenderOptions.MaxDepth), null),
+							("Near Plane", FormatDouble(renderJob.RenderOptions.KMin), null),
+							("Far Plane", FormatDouble(renderJob.RenderOptions.KMax), null),
+							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null),
+					})
+			);
+		}
+		{
+			stringStats.Add(
+					("UI", new (string Name, string Value, string? Delta)[]
+					{
 							("𝚫T", FormatTimeSmall(deltaT), null),
 							("Updates", $"{FormatDouble(TimeSpan.FromSeconds(1) / deltaT)} /s", null),
 							("Target", $"{FormatDouble(1000d/UpdatePeriod)} FPS", null),
