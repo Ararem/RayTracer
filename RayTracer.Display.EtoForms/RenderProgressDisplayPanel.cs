@@ -375,7 +375,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					{
 							("Threads", FormatInt(renderStats.ThreadsRunning), null),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
-							("Task", renderJob.RenderTask.ToString()!, null),
+							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
 							("Depth Max", FormatInt(renderJob.RenderOptions.MaxDepth), null),
 							("Near Plane", FormatDouble(renderJob.RenderOptions.KMin), null),
