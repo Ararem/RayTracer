@@ -5,11 +5,12 @@ namespace RayTracer.Core.Acceleration;
 /// <summary>
 ///  Bvh node for a singular object
 /// </summary>
-public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
+public sealed record SingleObjectBvhNode(SceneObject SceneObject, AsyncRenderJob ParentJob) : BvhNode(ParentJob)
 {
 	/// <inheritdoc/>
-	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
+	public override (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
+		//Skip early if AABB miss
 		if (!BoundingBox.Hit(ray, kMin, kMax))
 		{
 			return null;
@@ -22,10 +23,10 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject) : IBvhNode
 	}
 
 	/// <inheritdoc />
-	public bool AnyIntersection(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
+	public override bool AnyIntersection(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
 
 	/// <inheritdoc/>
-	public AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
+	public override AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
 
 	/// <summary>
 	///  Implicit operator to create a new <see cref="SingleObjectBvhNode"/> from a <see cref="SceneObject"/>. Simply calls the default constructor (

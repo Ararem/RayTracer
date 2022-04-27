@@ -14,15 +14,21 @@ namespace RayTracer.Core.Acceleration;
 public sealed class BvhTree
 {
 	/// <summary>
-	///  Root <see cref="IBvhNode"/> for this BVH Tree
+	///  Root <see cref="BvhNode"/> for this BVH Tree
 	/// </summary>
-	public readonly IBvhNode RootNode;
+	public readonly BvhNode RootNode;
+
+	/// <summary>
+	/// Parent job that created this tree, used for stats tracking
+	/// </summary>
+	private readonly AsyncRenderJob parentJob;
 
 	/// <summary>
 	///  Creates a new BVH tree for the specified scene
 	/// </summary>
-	/// <param name="scene"></param>
-	public BvhTree(Scene scene)
+	/// <param name="scene">Scene to create the BVH tree for</param>
+	/// <param name="parentJob">Parent <see cref="AsyncRenderJob"/> that is rendering the <paramref name="scene"/>. Used for tracking render statistics</param>
+	public BvhTree(Scene scene, AsyncRenderJob parentJob)
 	{
 		Log.Debug("Creating new Bvh Tree for scene {Scene}", scene);
 		// RootNode = FromArraySegment(scene.SceneObjects);
@@ -30,16 +36,17 @@ public sealed class BvhTree
 		 * Interesting side-note, using SAH as opposed to the plain "split in the middle" approach is really effective
 		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
 		 */
-		RootNode = FromSegment_SAH(scene.SceneObjects);
+		this.parentJob = parentJob;
+		RootNode  = FromSegment_SAH(scene.SceneObjects);
 	}
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
-	private static IBvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
+	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
 	{
 		//Simple check if 1 element so we can assume more than 1 later on
-		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0]);
+		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], parentJob);
 
 		//Port of Pete Shirley's code
 		// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
@@ -105,17 +112,10 @@ public sealed class BvhTree
 		}
 
 		//We know we'll be using binary nodes because we already checked for a single object earlier
-		IBvhNode leftNode, rightNode;
-		if (minSAIndex == 0)
-			leftNode  = new SingleObjectBvhNode(objects[0]);
-		else
-			leftNode = FromSegment_SAH(objects[..(minSAIndex + 1)]);
-		if (minSAIndex == n - 2)
-			rightNode  = new SingleObjectBvhNode(objects[minSAIndex + 1]);
-		else
-			rightNode = FromSegment_SAH(objects[(minSAIndex + 1)..]);
+		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  parentJob) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
+		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], parentJob) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
 
-		return new BinaryBvhNode(leftNode, rightNode);
+		return new BinaryBvhNode(leftNode, rightNode, parentJob);
 
 		static float GetAABBArea(AxisAlignedBoundingBox aabb)
 		{

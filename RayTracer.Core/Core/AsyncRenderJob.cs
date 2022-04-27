@@ -63,7 +63,7 @@ public sealed class AsyncRenderJob : IDisposable
 		}
 
 		//Calculate the bounding boxes
-		bvhTree = new BvhTree(scene);
+		bvhTree = new BvhTree(scene, this);
 
 		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}

@@ -3,17 +3,17 @@ using RayTracer.Core.Hittables;
 namespace RayTracer.Core.Acceleration;
 
 /// <summary>
-///  Implementation of <see cref="IBvhNode"/> for two sub-nodes
+///  Implementation of <see cref="BvhNode"/> for two sub-nodes
 /// </summary>
 /// <param name="NodeA">First sub-node</param>
 /// <param name="NodeB">Second sub-node</param>
-public sealed record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
+public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, AsyncRenderJob ParentJob) : BvhNode(ParentJob)
 {
 	/// <inheritdoc/>
-	public AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);
+	public override AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);
 
 	/// <inheritdoc/>
-	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
+	public override (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Quit early if we miss the bounding volume
 		if (BoundingBox.Hit(ray, kMin, kMax) == false) return null;
@@ -37,5 +37,5 @@ public sealed record BinaryBvhNode(IBvhNode NodeA, IBvhNode NodeB) : IBvhNode
 
 	/// <inheritdoc/>
 	//Cool that the short-circuiting operator means we can skip half the tree if we get a positive
-	public bool AnyIntersection(Ray ray, float kMin, float kMax) => NodeA.AnyIntersection(ray, kMin, kMax) || NodeB.AnyIntersection(ray, kMin, kMax);
+	public override bool AnyIntersection(Ray ray, float kMin, float kMax) => NodeA.AnyIntersection(ray, kMin, kMax) || NodeB.AnyIntersection(ray, kMin, kMax);
 }

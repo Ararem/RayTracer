@@ -4,7 +4,7 @@ namespace RayTracer.Core;
 /// Struct that stores statistics about a render
 /// </summary>
 public struct RenderStats
-{
+{ //TODO: Redo how rays are categorized, this doesn't seem very accurately named
 	/// <summary>
 	///  How many pixels have been rendered, including multisampled pixels
 	/// </summary>
@@ -19,7 +19,6 @@ public struct RenderStats
 	///  How many rays were scattered (bounced off other objects) in the scene
 	/// </summary>
 	public ulong RaysScattered = 0;
-
 
 	/// <summary>
 	///  How many rays were absorbed in the scene
