@@ -82,7 +82,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
-	private RenderStats prevUpdateStats;
+	private RenderStats prevStats;
 
 	/// <summary>
 	///  Table that contains the various stats
@@ -165,7 +165,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		finally
 		{
-			prevUpdateStats = stats;
+			prevStats = stats;
 			prevFrameTime   = DateTime.Now;
 			Invalidate();
 			Monitor.Exit(updateLock);
@@ -303,7 +303,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend, prevUpdateStats.RawPixelsRendered, deltaT, unit)),
+							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend, prevStats.RawPixelsRendered, deltaT, unit)),
 							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), null),
 							("Total", FormatUlong(renderStats.TotalRawPixels), null)
 					})
@@ -328,7 +328,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			const string unit     = "passes/s";
 			//Calculate fraction of the passes that was rendered between updates
 			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
-			float prevPassFrac = (float)SafeMod(prevUpdateStats.RawPixelsRendered, (ulong)prevUpdateStats.TotalTruePixels) / prevUpdateStats.TotalTruePixels;
+			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, (ulong)prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
@@ -349,11 +349,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Rays", new (string Name, string Value, string? Delta)[]
 					{
-							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevUpdateStats.RaysScattered,       deltaT, unit)),
-							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevUpdateStats.RaysAbsorbed,        deltaT, unit)),
-							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(exceed, prevUpdateStats.BounceLimitExceeded, deltaT, unit)),
-							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(sky,    prevUpdateStats.SkyRays,             deltaT, unit)),
-							("Total", FormatUlong(total), FormatUlongDelta(total,                  prevUpdateStats.RayCount,            deltaT, unit))
+							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevStats.RaysScattered,       deltaT, unit)),
+							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevStats.RaysAbsorbed,        deltaT, unit)),
+							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(exceed, prevStats.BounceLimitExceeded, deltaT, unit)),
+							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(sky,    prevStats.SkyRays,             deltaT, unit)),
+							("Total", FormatUlong(total), FormatUlongDelta(total,                  prevStats.RayCount,            deltaT, unit))
 					})
 			);
 		}
@@ -583,7 +583,7 @@ Focus:{cam.FocusDistance.ToString(smallNumFormat),leftAlign - 6} m", null)
 			depthBufferGraphics.Flush();
 		}
 
-		prevUpdateStats = renderJob.RenderStats;
+		prevStats = renderJob.RenderStats;
 	}
 
 	/// <inheritdoc/>
