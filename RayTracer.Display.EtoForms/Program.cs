@@ -1,5 +1,4 @@
 ﻿using Eto;
-using Eto.Forms;
 using GLib;
 using RayTracer.Display.EtoForms.Appearance;
 using System;

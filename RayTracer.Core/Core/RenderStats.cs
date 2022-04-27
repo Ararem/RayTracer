@@ -5,6 +5,7 @@ namespace RayTracer.Core;
 /// </summary>
 public struct RenderStats
 { //TODO: Redo how rays are categorized, this doesn't seem very accurately named
+	//TODO: Also BVH stats
 	/// <summary>
 	///  How many pixels have been rendered, including multisampled pixels
 	/// </summary>
