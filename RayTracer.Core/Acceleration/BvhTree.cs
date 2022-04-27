@@ -174,9 +174,6 @@ public sealed class BvhTree
 	{
 		//So it would be better to sort by the min/max bounds like below, but that completely fails with infinities
 		//So i have to sort using the centre instead :(
-		//TODO: Implement the SAH method outlined here
-		//https://3.bp.blogspot.com/-PMG6dWk1i60/VuG9UHjsdlI/AAAAAAAACEo/BS1qJyut7LE/s1600/Screen%2BShot%2B2016-03-10%2Bat%2B11.25.08%2BAM.png
-		//
 		// ReSharper disable once ArrangeMethodOrOperatorBody
 		return getAxis((a.Min + a.Max) / 2f).CompareTo(getAxis((b.Min + b.Min) / 2f));
 

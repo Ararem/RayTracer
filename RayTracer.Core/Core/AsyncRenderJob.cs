@@ -25,7 +25,6 @@ namespace RayTracer.Core;
 /// </remarks>
 public sealed class AsyncRenderJob : IDisposable
 {
-	//TODO: Maybe allow access to the render job from lights, objects and materials, to make this easier
 	//TODO: Bloom would be quite fun. Might need to be a post-process after rendering complete
 	/// <summary>
 	///  Creates an async render job for a <paramref name="scene"/>, with configurable <paramref name="renderOptions"/>

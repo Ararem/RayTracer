@@ -128,7 +128,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				ID          = "Main Content StackLayout"
 		};
 		//Add option to reset image view
-		Application.Instance.MainForm.Menu.Items.Add(new Command((sender, args) => previewImageView.ResetView()) { MenuText = "Reset Image", ToolTip = "Resets the preview image's size and position to default." });
+		Application.Instance.MainForm.Menu.Items.Add(new Command((_, _) => previewImageView.ResetView()) { MenuText = "Reset Image", ToolTip = "Resets the preview image's size and position to default." });
 
 		//Periodically update the previews using a timer
 		//PERF: This creates quite a few allocations when called frequently
