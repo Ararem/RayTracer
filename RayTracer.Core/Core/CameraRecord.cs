@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
@@ -11,20 +10,21 @@ namespace RayTracer.Core;
 /// <remarks>
 ///  This class handles the creation of view rays for each pixel, which renderers then use to create the scene image
 /// </remarks>
+/// <param name="LensRadius">Radius of the artificially simulated lens (for DOF Blur)</param>
+/// <param name="Horizontal">Unknown Vector</param>
+/// <param name="Vertical">Unknown Vector</param>
+/// <param name="LowerLeftCorner">Unknown Vector</param>
+/// <param name="LookFrom">Where the camera looks from (it's position)</param>
+/// <param name="U">Unknown Vector</param>
+/// <param name="V">Unknown Vector</param>
 public sealed record CameraRecord(
-		float   FocusDistance,
-		float   HorizontalFov,
 		float   LensRadius,
-		float   VerticalFov,
 		Vector3 Horizontal,
 		Vector3 Vertical,
 		Vector3 LowerLeftCorner,
 		Vector3 LookFrom,
-		Vector3 LookTowards,
-		Vector3 UpVector,
 		Vector3 U,
-		Vector3 V,
-		Vector3 W
+		Vector3 V
 )
 {
 	/// <summary>
@@ -65,7 +65,6 @@ public sealed record CameraRecord(
 	{
 		//Have to ensure it's normalized because this is a direction-type vector
 		upVector = Normalize(upVector);
-		float horizontalFov = verticalFov / aspectRatio;
 
 		float theta          = verticalFov * (PI / 180f);
 		float h              = Tan(theta / 2f);
@@ -83,6 +82,6 @@ public sealed record CameraRecord(
 		Vector3 vertical        = viewportHeight * v * focusDistance;
 		Vector3 lowerLeftCorner = lookFrom - (horizontal / 2) - (vertical / 2) - (focusDistance * w);
 
-		return new CameraRecord(focusDistance, horizontalFov, lensRadius, verticalFov, horizontal, vertical, lowerLeftCorner, lookFrom, lookTowards, upVector, u, v, w);
+		return new CameraRecord(lensRadius, horizontal, vertical, lowerLeftCorner, lookFrom, u, v);
 	}
 }
