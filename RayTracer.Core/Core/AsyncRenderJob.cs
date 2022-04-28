@@ -53,7 +53,7 @@ public sealed class AsyncRenderJob : IDisposable
 		ulong   totalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
 		int     totalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
 
-		renderStats = new RenderStats(rawRayDepthCounts, totalTruePixels, totalRawPixels);
+		RenderStats = new RenderStats(rawRayDepthCounts, totalTruePixels, totalRawPixels);
 
 		//Assign access for all the components that need it
 		foreach (Light light in scene.Lights) light.SetRenderer(this);
@@ -95,11 +95,11 @@ public sealed class AsyncRenderJob : IDisposable
 		for (int pass = 0; pass < RenderOptions.Passes; pass++)
 		{
 			Parallel.For(
-					0, renderStats.TotalTruePixels,
+					0, RenderStats.TotalTruePixels,
 					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
 					() =>
 					{
-						Interlocked.Increment(ref renderStats.ThreadsRunning);
+						Interlocked.Increment(ref RenderStats.ThreadsRunning);
 						return this;
 					}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
 					static (i, _, state) =>
@@ -107,14 +107,14 @@ public sealed class AsyncRenderJob : IDisposable
 						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
 						Colour col = state.RenderPixelWithVisualisations(x, y);
 						state.UpdateBuffers(x, y, col);
-						Interlocked.Increment(ref state.renderStats.RawPixelsRendered);
+						Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
 
 						return state;
 					},
-					static state => { Interlocked.Decrement(ref state.renderStats.ThreadsRunning); }
+					static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
 			);
 
-			Interlocked.Increment(ref renderStats.PassesRendered);
+			Interlocked.Increment(ref RenderStats.PassesRendered);
 			Log.Debug("Finished pass {Pass}", pass);
 		}
 
@@ -231,7 +231,7 @@ public sealed class AsyncRenderJob : IDisposable
 		int depth;
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
-			Interlocked.Increment(ref renderStats.RayCount);
+			Interlocked.Increment(ref RenderStats.RayCount);
 			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
 			{
 				HitRecord hit = maybeHit;
@@ -242,7 +242,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//If the new ray is null, the material did not scatter (completely absorbed the light)
 					//So it's impossible to have any future bounces, so quit the loop
-					Interlocked.Increment(ref renderStats.RaysAbsorbed);
+					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
 					finalColour = Colour.Black;
 					break;
 				}
@@ -250,7 +250,7 @@ public sealed class AsyncRenderJob : IDisposable
 				{
 					//Otherwise, the material scattered, creating a new ray, so calculate the future bounces recursively
 					ray = (Ray)maybeNewRay;
-					Interlocked.Increment(ref renderStats.RaysScattered);
+					Interlocked.Increment(ref RenderStats.MaterialScatterCount);
 
 					if (!GraphicsValidator.CheckVectorNormalized(ray.Direction))
 					{
@@ -275,7 +275,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//No object was hit (at least not in the range), so return the skybox colour
 			else
 			{
-				Interlocked.Increment(ref renderStats.SkyRays);
+				Interlocked.Increment(ref RenderStats.SkyRays);
 				finalColour = skybox.GetSkyColour(ray);
 				if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(finalColour))
 				{
@@ -292,8 +292,8 @@ public sealed class AsyncRenderJob : IDisposable
 			}
 		}
 
-		if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref renderStats.BounceLimitExceeded);
-		Interlocked.Increment(ref renderStats.RawRayDepthCounts[depth]);
+		if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
+		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[depth]);
 
 		//Now do the colour pass
 		//Have to decrement depth here or we get index out of bounds because `depth++` is called on the exiting (last) iteration of the above for loop
@@ -647,12 +647,10 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </summary>
 	public Scene Scene { get; }
 
-	private RenderStats renderStats;
-
 	/// <summary>
 	///  Struct containing statistics about the render, e.g. how many pixels have been rendered.
 	/// </summary>
-	public RenderStats RenderStats => renderStats;
+	public RenderStats RenderStats;
 
 #endregion
 

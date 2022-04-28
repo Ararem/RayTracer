@@ -16,7 +16,11 @@ public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, AsyncRenderJob 
 	public override (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Quit early if we miss the bounding volume
-		if (BoundingBox.Hit(ray, kMin, kMax) == false) return null;
+		if (BoundingBox.Hit(ray, kMin, kMax) == false)
+		{
+			Interlocked.Increment(ref ParentJob.RenderStats.AabbMisses);
+			return null;
+		}
 
 		(SceneObject Object, HitRecord Hit)? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
 		//If we hit node A, we still need to check if node B is closer

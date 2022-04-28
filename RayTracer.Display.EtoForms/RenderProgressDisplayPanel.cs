@@ -334,16 +334,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		} //TODO: Intersection counts
 		{
 			ulong total = renderStats.RayCount,
-				scat    = renderStats.RaysScattered,
-				abs     = renderStats.RaysAbsorbed,
+				scat    = renderStats.MaterialScatterCount,
+				abs     = renderStats.MaterialAbsorbedCount,
 				exceed  = renderStats.BounceLimitExceeded,
 				sky     = renderStats.SkyRays;
 			const string unit = "rays/s";
 			stringStats.Add(
 					("Rays", new (string Name, string Value, string? Delta)[]
 					{
-							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevStats.RaysScattered,       deltaT, unit)),
-							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevStats.RaysAbsorbed,        deltaT, unit)),
+							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevStats.MaterialScatterCount,       deltaT, unit)),
+							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevStats.MaterialAbsorbedCount,        deltaT, unit)),
 							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(exceed, prevStats.BounceLimitExceeded, deltaT, unit)),
 							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(sky,    prevStats.SkyRays,             deltaT, unit)),
 							("Total", FormatUlong(total), FormatUlongDelta(total,                  prevStats.RayCount,            deltaT, unit))
@@ -374,6 +374,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Near Plane", FormatDouble(renderJob.RenderOptions.KMin), null),
 							("Far Plane", FormatDouble(renderJob.RenderOptions.KMax), null),
 							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null),
+					})
+			);
+		}
+		{
+			stringStats.Add(
+					("BVH", new (string Name, string Value, string? Delta)[]
+					{
+							("AABB Misses", FormatUlong(renderStats.AabbMisses), null),
+							("Hittable Misses", FormatUlong(renderStats.HittableMisses), null),
+							("Hittable Intersections", FormatUlong(renderStats.HittableIntersections), null),
 					})
 			);
 		}

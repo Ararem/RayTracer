@@ -13,12 +13,22 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, AsyncRenderJob
 		//Skip early if AABB miss
 		if (!BoundingBox.Hit(ray, kMin, kMax))
 		{
+			Interlocked.Increment(ref ParentJob.RenderStats.AabbMisses);
 			return null;
 		}
 		else
 		{
 			HitRecord? maybeHit = SceneObject.Hittable.TryHit(ray, kMin, kMax);
-			return maybeHit is { } hit ? (SceneObject, hit) : null;
+			if (maybeHit is { } hit)
+			{
+				Interlocked.Increment(ref ParentJob.RenderStats.HittableIntersections);
+				return (SceneObject, hit);
+			}
+			else
+			{
+				Interlocked.Increment(ref ParentJob.RenderStats.HittableMisses);
+				return null;
+			}
 		}
 	}
 

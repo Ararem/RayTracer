@@ -257,8 +257,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,                      totalPasses)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RenderStats.RaysScattered,       rayCount)} scattered");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.RaysAbsorbed,        rayCount)} absorbed");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RenderStats.MaterialScatterCount,       rayCount)} scattered");
+		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.MaterialAbsorbedCount,        rayCount)} absorbed");
 		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded");
 		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.SkyRays,             rayCount)} sky");
 		renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
