@@ -97,9 +97,15 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		Verbose("Creating StackPanelLayout for content");
 		Content = new StackLayout
 		{
-				Items   = { tableLayout, sceneSelectDropdown, startRenderButton },
-				Spacing = 10,
-				ID      = "Main Content StackLayout"
+				Items       =
+				{
+						new StackLayoutItem(tableLayout, HorizontalAlignment.Stretch),
+						new StackLayoutItem(sceneSelectDropdown, HorizontalAlignment.Stretch),
+						new StackLayoutItem(startRenderButton, HorizontalAlignment.Stretch)
+				},
+				Orientation = Orientation.Vertical,
+				Spacing     = 10,
+				ID          = "Main Content StackLayout"
 		};
 
 		UpdateRenderOptionEditorsFromVariable();

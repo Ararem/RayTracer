@@ -121,7 +121,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				},
 				Orientation = Orientation.Horizontal,
 				Spacing     = 10,
-				Padding     = 10,
 				ID          = "Main Content StackLayout"
 		};
 		//Add option to reset image view
