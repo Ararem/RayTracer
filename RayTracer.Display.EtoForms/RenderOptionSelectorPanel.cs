@@ -38,7 +38,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 		Verbose("Creating new table layout");
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
-
+		//TODO: Width needs to be filled
 		//Loop over each property in RenderOptions and create an editor for it
 		Verbose("Creating property editors");
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
@@ -114,10 +114,10 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		/// <inheritdoc/>
 		public IntEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
-			int min = int.MinValue;
-			int max = int.MaxValue;
-			if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
-				min = 0;
+			const int min = int.MinValue;
+			const int max = int.MaxValue;
+			// if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
+				// min = 0;
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
@@ -182,15 +182,16 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		/// <inheritdoc/>
 		public FloatEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
-			float min = float.MinValue;
-			float max = float.MaxValue;
+			//TODO: Infinities don't display properly for some reason
+			const double min = double.NegativeInfinity;
+			const double max = double.PositiveInfinity;
 			// //It's a record so must have a backing field, don't have to worry about null refs
 			// FieldInfo backingField = prop.DeclaringType!.GetField($"<{Prop.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic)!;
 			// if ((Prop.GetCustomAttribute<NonNegativeValueAttribute>() ?? backingField.GetCustomAttribute<NonNegativeValueAttribute>()) is not null)
 			//Honestly why the hell do I have to do this microsoft????
 			//Just apply it to the field, property and parameter, please for the love of god
-			if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
-				min = 0f;
+			// if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
+				// min = 0f;
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
