@@ -11,11 +11,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
-using Thread = Eto.Threading.Thread;
 
 // using NetFabric.Hyperlinq;
 
@@ -25,13 +25,6 @@ namespace RayTracer.Display.EtoForms;
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const int DepthImageWidth = 100;
-
-	/// <summary>
-	/// Random object used to lock on when updating, so that we don't get any naughty race conditions
-	/// </summary>
-	private static readonly object UpdateLock = new();
-
-	private static ulong lockFailedCount = 0;
 
 	/// <summary>
 	///  Image used for the depth buffer
@@ -136,32 +129,28 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		//Periodically update the previews using a timer
 		//PERF: This creates quite a few allocations when called frequently
+		//TODO: Perhaps PeriodicTimer or UITimer
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 	}
 
-	private static int UpdatePeriod => 0; //60 FPS
+	private static int UpdatePeriod => 1000/10; //60 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
 	/// </summary>
 	private void UpdateAllPreviews()
 	{
-		bool gotLock = Monitor.TryEnter(UpdateLock, TimeSpan.Zero);
-		//If another thread was already locked (already updating previews), quit so we don't have race conditions
-		//The other thread should ensure the update gets called again, once it exits
-		if (!gotLock)
-		{
-			Interlocked.Increment(ref lockFailedCount);
-			return;
-		}
-
+		/*
+		 * Note that we don't have to worry about locks or anything, since
+		 * (A) - It's only called on the main thread
+		 * (B) - The timer is only ever reset *after* everything's already been updated
+		 */
 		RenderStats stats = renderJob.RenderStats;
 		try
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 			UpdateImagePreview();
 			UpdateStatsTable(stats);
-			System.Threading.Thread.Sleep(100);
 			prevUpdateDuration = sw.Elapsed;
 		}
 		catch (Exception e)
@@ -173,7 +162,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			prevStats = stats;
 			prevFrameTime   = DateTime.Now;
 			Invalidate();
-			Monitor.Exit(UpdateLock);
 			updatePreviewTimer.Change(UpdatePeriod, -1);
 		}
 	}
@@ -390,13 +378,14 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
+			double fps       = TimeSpan.FromSeconds(1) / deltaT;
+			double targetFps = 1000d                   / UpdatePeriod;
 			stringStats.Add(
 					("UI", new (string Name, string Value, string? Delta)[]
 					{
 							("𝚫T", FormatTimeSmall(deltaT), null),
-							("Updates", $"{FormatDouble(TimeSpan.FromSeconds(1) / deltaT)} /s", null),
-							("Target", $"{FormatDouble(1000d/UpdatePeriod)} FPS", null),
-							("UI Race", FormatUlong(lockFailedCount), null),
+							("FPS", $"{FormatDouble(fps)} {'(' + (fps/targetFps).ToString(percentFormat) + ')',rightAlign}", null),
+							("Target", $"{FormatDouble(targetFps)} FPS", null),
 							("Upd Duration", FormatTimeSmall(prevUpdateDuration                                               * 1000) + " ms", null),
 							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000) + " ms", null)
 					})
