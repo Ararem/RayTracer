@@ -11,12 +11,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
-
 // using NetFabric.Hyperlinq;
 
 namespace RayTracer.Display.EtoForms;
@@ -351,7 +349,6 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		{
 			Scene  scene = renderJob.Scene;
-			Camera cam   = scene.Camera;
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{

@@ -1,6 +1,5 @@
 using Eto.Drawing;
 using Eto.Forms;
-using JetBrains.Annotations;
 using RayTracer.Core;
 using System;
 using System.Collections.Generic;
