@@ -1,4 +1,4 @@
-// #define DEBUG_IGNORE_BUFFER_PREVIOUS
+#define DEBUG_IGNORE_BUFFER_PREVIOUS
 #define ACCELERATE_BVH
 
 using RayTracer.Core.Acceleration;
@@ -201,7 +201,9 @@ public sealed class AsyncRenderJob : IDisposable
 				}
 				//Debug texture based on X/Y pixel coordinates
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
-					return MathF.Sin(x / 40f) * MathF.Sin(y / 20f) < 0 ? Colour.Black : Colour.Purple;
+					return MathF.Sin(x / 40f) * MathF.Sin(y / 40f) < 0 ? Colour.Black : Colour.Purple;
+				case GraphicsDebugVisualisation.LocalCoordDebugTexture:
+					return MathF.Sin(hit.LocalPoint.X  *40f) * MathF.Sin(hit.LocalPoint.Y *40f) * MathF.Sin(hit.LocalPoint.Z *40f) < 0 ? Colour.Black : Colour.Purple;
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]

@@ -377,12 +377,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
+			const string unit = "/s";
 			stringStats.Add(
 					("BVH", new (string Name, string Value, string? Delta)[]
 					{
-							("AABB Misses", FormatUlong(renderStats.AabbMisses), null),
-							("Hittable Misses", FormatUlong(renderStats.HittableMisses), null),
-							("Hittable Intersections", FormatUlong(renderStats.HittableIntersections), null),
+							("AABB Misses", FormatUlong(renderStats.AabbMisses), FormatUlongDelta(renderStats.AabbMisses, prevStats.AabbMisses, deltaT, unit)),
+							("Hittable Misses", FormatUlong(renderStats.HittableMisses), FormatUlongDelta(renderStats.HittableMisses, prevStats.HittableMisses, deltaT, unit)),
+							("Hittable Intersections", FormatUlong(renderStats.HittableIntersections), FormatUlongDelta(renderStats.HittableIntersections, prevStats.HittableIntersections, deltaT, unit)),
 					})
 			);
 		}
