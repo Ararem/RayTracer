@@ -6,11 +6,9 @@ namespace RayTracer.Core;
 /// <summary>
 ///  Struct that stores statistics about a render
 /// </summary>
+//TODO: Make class and create copy ctor, so that we don't have to expose the parent AsyncRenderJob everywhere for tracking
 public struct RenderStats
 {
-	//TODO: Redo how rays are categorized, this doesn't seem very accurately named
-	//TODO: Also BVH stats
-
 #region Pixels & Passes
 
 	/// <summary>
@@ -104,4 +102,7 @@ public struct RenderStats
 		TotalTruePixels   = totalTruePixels;
 		TotalRawPixels    = totalRawPixels;
 	}
+
+	/// <inheritdoc />
+	public readonly override string ToString() => $"{nameof(RawPixelsRendered)}: {RawPixelsRendered}, {nameof(PassesRendered)}: {PassesRendered}, {nameof(MaterialScatterCount)}: {MaterialScatterCount}, {nameof(MaterialAbsorbedCount)}: {MaterialAbsorbedCount}, {nameof(AabbMisses)}: {AabbMisses}, {nameof(HittableMisses)}: {HittableMisses}, {nameof(HittableIntersections)}: {HittableIntersections}, {nameof(SkyRays)}: {SkyRays}, {nameof(BounceLimitExceeded)}: {BounceLimitExceeded}, {nameof(RayCount)}: {RayCount}, {nameof(RawRayDepthCounts)}: {RawRayDepthCounts}, {nameof(ThreadsRunning)}: {ThreadsRunning}, {nameof(TotalRawPixels)}: {TotalRawPixels}, {nameof(TotalTruePixels)}: {TotalTruePixels}";
 }
