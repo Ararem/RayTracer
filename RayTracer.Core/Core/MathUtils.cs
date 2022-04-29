@@ -58,7 +58,7 @@ public static class MathUtils
 	/// Safe version of mod operator that doesn't throw. Might give some (slightly) weird outputs, namely when <paramref name="y"/> == 0 (output is <paramref name="x"/>)
 	/// </summary>
 	/// <returns><c>x % y</c></returns>
-	public static ulong SafeMod(ulong x, ulong y)
+	public static long SafeMod(long x, long y)
 	{
 		if (x == y) return 0;
 		if (y == 0) return x;

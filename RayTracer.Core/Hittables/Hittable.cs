@@ -8,7 +8,7 @@ namespace RayTracer.Core.Hittables;
 /// </summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public abstract record Hittable : RenderAccess
+public abstract record Hittable : RenderAccessor
 {
 	/// <summary>
 	///  Bounding volume that encompasses this object

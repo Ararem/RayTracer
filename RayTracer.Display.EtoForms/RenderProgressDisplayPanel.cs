@@ -77,7 +77,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
-	private RenderStats prevStats;
+	private RenderStats_TEMP prevStats;
 
 	/// <summary>
 	///  Table that contains the various stats
@@ -142,7 +142,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		 * (A) - It's only called on the main thread
 		 * (B) - The timer is only ever reset *after* everything's already been updated
 		 */
-		RenderStats stats = renderJob.RenderStats;
+		RenderStats_TEMP stats = renderJob.RenderStats;
 		try
 		{
 			Stopwatch sw = Stopwatch.StartNew();
@@ -156,7 +156,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		finally
 		{
-			prevStats = stats;
+			prevStats = new RenderStats_TEMP(stats);
 			prevFrameTime   = DateTime.Now;
 			Invalidate();
 			updatePreviewTimer.Change(UpdatePeriod, -1);
@@ -183,13 +183,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			}
 	}
 
-	private void UpdateStatsTable(RenderStats renderStats)
+	private void UpdateStatsTable(RenderStats_TEMP renderStats)
 	{
 	#region Format Methods
 
 		const string percentFormat  = "p1";
 		const string smallNumFormat = "n3";
-		const string integerFormat  = "n0";
+		const string numFormat  = "n0";
 		const int    leftAlign      = 15;
 		const int    rightAlign     = 10;
 		const int    smallNum       = 1000;
@@ -209,39 +209,21 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			return val.ToString("d").PadLeft(leftAlign) + ' ' + val.ToString("h:mm:ss tt").PadRight(rightAlign);
 		}
 
-		static string FormatUlongRatio(ulong val, ulong total)
+		static string FormatNum(long value)
 		{
-			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
+			return $"{value.ToString(numFormat),leftAlign}";
 		}
 
-		static string FormatUlong(ulong val)
+		static string FormatNumDelta(long curr, long prev, TimeSpan deltaT, string unit = "")
 		{
-			return $"{val.ToString(integerFormat),leftAlign}";
-		}
-
-		static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
-		{
-			ulong  delta  = curr - prev;
+			long   delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
+			return $"{(delta * tRatio).ToString(numFormat),leftAlign} {unit}";
 		}
 
-		static string FormatIntWithPercentage(int val, int total)
+		static string FormatNumWithPercentage(long value, long total)
 		{
-			return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
-		}
-
-		static string FormatInt(int val)
-		{
-			return $"{val.ToString(integerFormat),leftAlign}";
-		}
-
-		static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
-		{
-			int    delta  = curr - prev;
-			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			double res    = delta                   * tRatio;
-			return $"{res.ToString(integerFormat),leftAlign} {unit}";
+			return $"{value.ToString(numFormat),leftAlign} {'(' + ((float)value / total).ToString(percentFormat) + ')',rightAlign}";
 		}
 
 		static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
@@ -249,13 +231,62 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			float  delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
 			double res    = delta                   * tRatio;
-			return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
+			return $"{res.ToString(res < smallNum ? smallNumFormat : numFormat),leftAlign} {unit}";
 		}
 
-		static string FormatDouble(double val)
+		static string FormatFloat(float val)
 		{
 			return $"{val.ToString(smallNumFormat),leftAlign}";
 		}
+
+		//
+		// static string FormatUlongRatio(ulong val, ulong total)
+		// {
+		// 	return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
+		// }
+		//
+		// static string FormatUlong(ulong val)
+		// {
+		// 	return $"{val.ToString(integerFormat),leftAlign}";
+		// }
+		//
+		// static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
+		// {
+		// 	ulong  delta  = curr - prev;
+		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+		// 	return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
+		// }
+		//
+		// static string FormatIntWithPercentage(int val, int total)
+		// {
+		// 	return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
+		// }
+		//
+		// static string FormatInt(int val)
+		// {
+		// 	return $"{val.ToString(integerFormat),leftAlign}";
+		// }
+		//
+		// static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
+		// {
+		// 	int    delta  = curr - prev;
+		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+		// 	double res    = delta                   * tRatio;
+		// 	return $"{res.ToString(integerFormat),leftAlign} {unit}";
+		// }
+		//
+		// static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
+		// {
+		// 	float  delta  = curr - prev;
+		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
+		// 	double res    = delta                   * tRatio;
+		// 	return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
+		// }
+		//
+		// static string FormatDouble(double val)
+		// {
+		// 	return $"{val.ToString(smallNumFormat),leftAlign}";
+		// }
 
 	#endregion
 
@@ -286,16 +317,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
-			ulong total = renderStats.TotalRawPixels,
-				rend    = renderStats.RawPixelsRendered,
-				rem     = total - rend;
+			long total = renderStats.TotalRawPixels,
+				rend   = renderStats.RawPixelsRendered,
+				rem    = total - rend;
 			const string unit = "px/s";
 			stringStats.Add(
 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatUlongRatio(rend, total), FormatUlongDelta(rend, prevStats.RawPixelsRendered, deltaT, unit)),
-							("Remaining", FormatUlongRatio(rem, renderStats.TotalRawPixels), null),
-							("Total", FormatUlong(renderStats.TotalRawPixels), null)
+							("Rendered", FormatNumWithPercentage(rend, total), FormatNumDelta(rend, prevStats.RawPixelsRendered, deltaT, unit)),
+							("Remaining", FormatNumWithPercentage(rem, renderStats.TotalRawPixels), null),
+							("Total", FormatNum(renderStats.TotalRawPixels), null)
 					})
 			);
 		}
@@ -304,46 +335,46 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Image", new (string Name, string Value, string? Delta)[]
 					{
 							//Assumes preview image has same dimensions as render buffer (which should always be the case)
-							("Width", FormatInt(previewImage.Width), null),
-							("Height", FormatInt(previewImage.Height), null),
-							("Pixels", FormatInt(renderStats.TotalTruePixels), null)
+							("Width", FormatNum(previewImage.Width), null),
+							("Height", FormatNum(previewImage.Height), null),
+							("Pixels", FormatNum(renderStats.TotalTruePixels), null)
 					})
 			);
 		}
 		{
-			int total = renderJob.RenderOptions.Passes,
+			long total = renderJob.RenderOptions.Passes,
 				rend  = renderStats.PassesRendered,
 				rem   = total - rend;
-			ulong        progress = SafeMod(renderStats.RawPixelsRendered, (ulong)renderStats.TotalTruePixels);
+			long        progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
 			const string unit     = "passes/s";
 			//Calculate fraction of the passes that was rendered between updates
 			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
-			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, (ulong)prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
+			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatIntWithPercentage(rend, total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, unit)),
-							("Remaining", FormatIntWithPercentage(rem, total), null),
-							("Progress", FormatUlongRatio(progress, (ulong)renderStats.TotalTruePixels), null),
-							("Total", FormatInt(total), null)
+							("Rendered", FormatNumWithPercentage(rend, total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, unit)),
+							("Remaining", FormatNumWithPercentage(rem, total), null),
+							("Progress", FormatNumWithPercentage(progress, renderStats.TotalTruePixels), null),
+							("Total", FormatNum(total), null)
 					})
 			);
 		} //TODO: Intersection counts
 		{
-			ulong total = renderStats.RayCount,
-				scat    = renderStats.MaterialScatterCount,
-				abs     = renderStats.MaterialAbsorbedCount,
-				exceed  = renderStats.BounceLimitExceeded,
-				sky     = renderStats.SkyRays;
+			long total = renderStats.RayCount,
+				scat   = renderStats.MaterialScatterCount,
+				abs    = renderStats.MaterialAbsorbedCount,
+				exceed = renderStats.BounceLimitExceeded,
+				sky    = renderStats.SkyRays;
 			const string unit = "rays/s";
 			stringStats.Add(
 					("Rays", new (string Name, string Value, string? Delta)[]
 					{
-							("Scattered", FormatUlongRatio(scat,  total), FormatUlongDelta(scat,   prevStats.MaterialScatterCount,       deltaT, unit)),
-							("Absorbed", FormatUlongRatio(abs,    total), FormatUlongDelta(abs,    prevStats.MaterialAbsorbedCount,        deltaT, unit)),
-							("Exceeded", FormatUlongRatio(exceed, total), FormatUlongDelta(exceed, prevStats.BounceLimitExceeded, deltaT, unit)),
-							("Sky", FormatUlongRatio(sky,         total), FormatUlongDelta(sky,    prevStats.SkyRays,             deltaT, unit)),
-							("Total", FormatUlong(total), FormatUlongDelta(total,                  prevStats.RayCount,            deltaT, unit))
+							("Scattered", FormatNumWithPercentage(scat,  total), FormatNumDelta(scat,   prevStats.MaterialScatterCount,  deltaT, unit)),
+							("Absorbed", FormatNumWithPercentage(abs,    total), FormatNumDelta(abs,    prevStats.MaterialAbsorbedCount, deltaT, unit)),
+							("Exceeded", FormatNumWithPercentage(exceed, total), FormatNumDelta(exceed, prevStats.BounceLimitExceeded,   deltaT, unit)),
+							("Sky", FormatNumWithPercentage(sky,         total), FormatNumDelta(sky,    prevStats.SkyRays,               deltaT, unit)),
+							("Total", FormatNum(total), FormatNumDelta(total,                         prevStats.RayCount,              deltaT, unit))
 					})
 			);
 		}
@@ -353,8 +384,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
 							("Name", scene.Name, null),
-							("Object Count", FormatInt(scene.SceneObjects.Length), null),
-							("Light Count", FormatInt(scene.Lights.Length), null)
+							("Object Count", FormatNum(scene.SceneObjects.Length), null),
+							("Light Count", FormatNum(scene.Lights.Length), null)
 					})
 			);
 		}
@@ -362,13 +393,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", FormatInt(renderStats.ThreadsRunning), null),
+							("Threads", FormatNum(renderStats.ThreadsRunning), null),
 							("Completed", renderJob.RenderCompleted.ToString(), null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
-							("Depth Max", FormatInt(renderJob.RenderOptions.MaxDepth), null),
-							("Near Plane", FormatDouble(renderJob.RenderOptions.KMin), null),
-							("Far Plane", FormatDouble(renderJob.RenderOptions.KMax), null),
+							("Depth Max", FormatNum(renderJob.RenderOptions.MaxDepth), null),
+							("Near Plane", FormatFloat(renderJob.RenderOptions.KMin), null),
+							("Far Plane", FormatFloat(renderJob.RenderOptions.KMax), null),
 							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null),
 					})
 			);
@@ -378,21 +409,21 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("BVH", new (string Name, string Value, string? Delta)[]
 					{
-							("AABB Misses", FormatUlong(renderStats.AabbMisses), FormatUlongDelta(renderStats.AabbMisses, prevStats.AabbMisses, deltaT, unit)),
-							("Hittable Misses", FormatUlong(renderStats.HittableMisses), FormatUlongDelta(renderStats.HittableMisses, prevStats.HittableMisses, deltaT, unit)),
-							("Hittable Intersections", FormatUlong(renderStats.HittableIntersections), FormatUlongDelta(renderStats.HittableIntersections, prevStats.HittableIntersections, deltaT, unit)),
+							("AABB Misses", FormatNum(renderStats.AabbMisses), FormatNumDelta(renderStats.AabbMisses, prevStats.AabbMisses, deltaT, unit)),
+							("Hittable Misses", FormatNum(renderStats.HittableMisses), FormatNumDelta(renderStats.HittableMisses, prevStats.HittableMisses, deltaT, unit)),
+							("Hittable Intersections", FormatNum(renderStats.HittableIntersections), FormatNumDelta(renderStats.HittableIntersections, prevStats.HittableIntersections, deltaT, unit)),
 					})
 			);
 		}
 		{
-			double fps       = TimeSpan.FromSeconds(1) / deltaT;
-			double targetFps = 1000d                   / UpdatePeriod;
+			float fps       = (float)(TimeSpan.FromSeconds(1) / deltaT);
+			float targetFps = 1000f / UpdatePeriod;
 			stringStats.Add(
 					("UI", new (string Name, string Value, string? Delta)[]
 					{
 							("𝚫T", FormatTimeSmall(deltaT), null),
-							("FPS", $"{FormatDouble(fps)} {'(' + (fps/targetFps).ToString(percentFormat) + ')',rightAlign}", null),
-							("Target", $"{FormatDouble(targetFps)} FPS", null),
+							("FPS", $"{FormatFloat(fps)} {'(' + (fps/targetFps).ToString(percentFormat) + ')',rightAlign}", null),
+							("Target", $"{FormatFloat(targetFps)} FPS", null),
 							("Upd Duration", FormatTimeSmall(prevUpdateDuration                                               * 1000) + " ms", null),
 							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000) + " ms", null)
 					})

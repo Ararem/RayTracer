@@ -10,7 +10,7 @@ namespace RayTracer.Core.Environment;
 /// <remarks>
 ///
 /// </remarks>
-public abstract record Light : RenderAccess
+public abstract record Light : RenderAccessor
 {
 	/// <summary>
 	///  Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/>

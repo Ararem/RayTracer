@@ -49,11 +49,7 @@ public sealed class AsyncRenderJob : IDisposable
 		(_, camera, objects, lights, skybox) = scene;
 		Scene                                = scene;
 
-		ulong[] rawRayDepthCounts = new ulong[renderOptions.MaxDepth + 1]; //+1 because we can also have 0 bounces
-		ulong   totalRawPixels    = (ulong)RenderOptions.Width * (ulong)RenderOptions.Height * (ulong)RenderOptions.Passes;
-		int     totalTruePixels   = RenderOptions.Width        * RenderOptions.Height;
-
-		RenderStats = new RenderStats(rawRayDepthCounts, totalTruePixels, totalRawPixels);
+		RenderStats = new RenderStats_TEMP(renderOptions);
 
 		//Assign access for all the components that need it
 		foreach (Light light in scene.Lights) light.SetRenderer(this);
@@ -650,9 +646,9 @@ public sealed class AsyncRenderJob : IDisposable
 	public Scene Scene { get; }
 
 	/// <summary>
-	///  Struct containing statistics about the render, e.g. how many pixels have been rendered.
+	///  Object containing statistics about the render, e.g. how many pixels have been rendered.
 	/// </summary>
-	public RenderStats RenderStats;
+	public RenderStats_TEMP RenderStats { get; }
 
 #endregion
 

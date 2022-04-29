@@ -3,7 +3,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// Base class for a record that needs access to a renderer
 /// </summary>
-public abstract record RenderAccess
+public abstract record RenderAccessor
 {
 	/// <summary>
 	/// Accessor for the current rendered

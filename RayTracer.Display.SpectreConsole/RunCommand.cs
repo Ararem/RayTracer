@@ -212,14 +212,14 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		Table renderStatsTable = new Table { Border = new NoTableBorder() }.AddColumns($"[{HeadingMarkup}]Property[/]", $"[{HeadingMarkup}]Value[/]").HideHeaders(); //Add the headers so the column count is correct, but we don't want them shown
 
 		int           totalTruePixels = renderJob.RenderStats.TotalTruePixels;
-		ulong         totalRawPix     = renderJob.RenderStats.TotalRawPixels;
-		ulong         rayCount        = renderJob.RenderStats.RayCount;
+		long          totalRawPix     = renderJob.RenderStats.TotalRawPixels;
+		long          rayCount        = renderJob.RenderStats.RayCount;
 		RenderOptions options         = renderJob.RenderOptions;
 		int           totalPasses     = options.Passes;
 		TimeSpan      elapsed         = renderJob.Stopwatch.Elapsed;
 
 		float    percentageRendered = (float)renderJob.RenderStats.RawPixelsRendered / totalRawPix;
-		ulong    rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
+		long     rawPixelsRemaining = totalRawPix - renderJob.RenderStats.RawPixelsRendered;
 		int      passesRemaining    = totalPasses - renderJob.RenderStats.PassesRendered;
 		TimeSpan estimatedTotalTime;
 		//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws
@@ -245,8 +245,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{estimatedTotalTime.ToString(timeFormat)} total");
 		renderStatsTable.AddRow("",                                        $"{(DateTime.Now + (estimatedTotalTime - elapsed)).ToString(dateTimeFormat)} ETC");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatU(renderJob.RenderStats.RawPixelsRendered, totalRawPix)} rendered");
-		renderStatsTable.AddRow("",                                        $"{FormatU(rawPixelsRemaining,                      totalRawPix)} remaining");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Pixels (Raw)[/]", $"{FormatL(renderJob.RenderStats.RawPixelsRendered, totalRawPix)} rendered");
+		renderStatsTable.AddRow("",                                        $"{FormatL(rawPixelsRemaining,                      totalRawPix)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalRawPix.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Image [/]",       $"{totalTruePixels.ToString(numFormat),numAlign}          pixels total");
@@ -257,10 +257,10 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,                      totalPasses)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatU(renderJob.RenderStats.MaterialScatterCount,       rayCount)} scattered");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.MaterialAbsorbedCount,        rayCount)} absorbed");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded");
-		renderStatsTable.AddRow("",                                        $"{FormatU(renderJob.RenderStats.SkyRays,             rayCount)} sky");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatL(renderJob.RenderStats.MaterialScatterCount,       rayCount)} scattered");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.MaterialAbsorbedCount,        rayCount)} absorbed");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.SkyRays,             rayCount)} sky");
 		renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
@@ -277,16 +277,16 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		// renderStatsTable.AddRow("",                                        $"CBuf: ({Console.BufferWidth}x{Console.BufferHeight})");
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 		//Because we'll probably have a crazy sized depth buffer, group the indices together
-		List<(Range range, ulong count)> depths = new();
+		List<(Range range, long count)> depths = new();
 		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
 		//Group the raw buffer into our aggregated one
 		float grouping = 0.5f; //How many depths to combine into a group
 		int   rawIndex = 0;    //Where we are in the raw (ungrouped) index buffer
 		while (true)
 		{
-			int   start = rawIndex;
-			int   end   = start;
-			ulong count = 0;
+			int  start = rawIndex;
+			int  end   = start;
+			long count = 0;
 			for (int i = 0; i < grouping; i++)
 			{
 				if (rawIndex >= renderJob.RenderStats.RawRayDepthCounts.Length)
@@ -324,7 +324,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow(new Markup($"[{StatsCategoryMarkup}]Depth Buffer[/]"), chart);
 
 
-		static string FormatU(ulong val, ulong total)
+		static string FormatL(long val, long total)
 		{
 			return $"{val.ToString(numFormat),numAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',percentAlign}";
 		}
