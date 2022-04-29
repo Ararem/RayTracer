@@ -7,7 +7,7 @@ namespace RayTracer.Core.Acceleration;
 /// </summary>
 /// <param name="NodeA">First sub-node</param>
 /// <param name="NodeB">Second sub-node</param>
-public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, AsyncRenderJob ParentJob) : BvhNode(ParentJob)
+public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, RenderStats RenderStats) : BvhNode(RenderStats)
 {
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingBox { get; } = AxisAlignedBoundingBox.Encompass(NodeA.BoundingBox, NodeB.BoundingBox);
@@ -18,7 +18,7 @@ public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, AsyncRenderJob 
 		//Quit early if we miss the bounding volume
 		if (BoundingBox.Hit(ray, kMin, kMax) == false)
 		{
-			Interlocked.Increment(ref ParentJob.RenderStats.AabbMisses);
+			Interlocked.Increment(ref RenderStats.AabbMisses);
 			return null;
 		}
 
@@ -41,5 +41,5 @@ public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, AsyncRenderJob 
 
 	/// <inheritdoc/>
 	//Cool that the short-circuiting operator means we can skip half the tree if we get a positive
-	public override bool AnyIntersection(Ray ray, float kMin, float kMax) => NodeA.AnyIntersection(ray, kMin, kMax) || NodeB.AnyIntersection(ray, kMin, kMax);
+	public override bool FastTryHit(Ray ray, float kMin, float kMax) => NodeA.FastTryHit(ray, kMin, kMax) || NodeB.FastTryHit(ray, kMin, kMax);
 }

@@ -18,17 +18,14 @@ public sealed class BvhTree
 	/// </summary>
 	public readonly BvhNode RootNode;
 
-	/// <summary>
-	/// Parent job that created this tree, used for stats tracking
-	/// </summary>
-	private readonly AsyncRenderJob parentJob;
+	private readonly RenderStats RenderStats;
 
 	/// <summary>
 	///  Creates a new BVH tree for the specified scene
 	/// </summary>
 	/// <param name="scene">Scene to create the BVH tree for</param>
-	/// <param name="parentJob">Parent <see cref="AsyncRenderJob"/> that is rendering the <paramref name="scene"/>. Used for tracking render statistics</param>
-	public BvhTree(Scene scene, AsyncRenderJob parentJob)
+	/// <param name="renderStats">Object used for tracking render statistics</param>
+	public BvhTree(Scene scene, RenderStats renderStats)
 	{
 		Log.Debug("Creating new Bvh Tree for scene {Scene}", scene);
 		// RootNode = FromArraySegment(scene.SceneObjects);
@@ -36,8 +33,8 @@ public sealed class BvhTree
 		 * Interesting side-note, using SAH as opposed to the plain "split in the middle" approach is really effective
 		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
 		 */
-		this.parentJob = parentJob;
-		RootNode  = FromSegment_SAH(scene.SceneObjects);
+		RenderStats = renderStats;
+		RootNode         = FromSegment_SAH(scene.SceneObjects);
 	}
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
@@ -46,7 +43,7 @@ public sealed class BvhTree
 	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
 	{
 		//Simple check if 1 element so we can assume more than 1 later on
-		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], parentJob);
+		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], RenderStats);
 
 		//Port of Pete Shirley's code
 		// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
@@ -112,10 +109,10 @@ public sealed class BvhTree
 		}
 
 		//We know we'll be using binary nodes because we already checked for a single object earlier
-		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  parentJob) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
-		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], parentJob) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
+		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  RenderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
+		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], RenderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
 
-		return new BinaryBvhNode(leftNode, rightNode, parentJob);
+		return new BinaryBvhNode(leftNode, rightNode, RenderStats);
 
 		static float GetAABBArea(AxisAlignedBoundingBox aabb)
 		{

@@ -8,7 +8,7 @@ public abstract record RenderAccessor
 	/// <summary>
 	/// Accessor for the current rendered
 	/// </summary>
-	public AsyncRenderJob Renderer { get; private set; } = null!; //Yes I'm setting it to null but it should always be set before any methods are called (except ctor)
+	protected AsyncRenderJob Renderer { get; private set; } = null!; //Yes I'm setting it to null but it should always be set before any methods are called (except ctor)
 
 	//Used by AsyncRenderJob to assign itself
 	internal void SetRenderer(AsyncRenderJob renderer)

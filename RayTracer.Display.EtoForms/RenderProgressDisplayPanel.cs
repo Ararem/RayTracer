@@ -77,7 +77,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// <summary>
 	///  Render stats from the last time we updated the preview
 	/// </summary>
-	private RenderStats_TEMP prevStats;
+	private RenderStats prevStats;
 
 	/// <summary>
 	///  Table that contains the various stats
@@ -128,6 +128,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		//PERF: This creates quite a few allocations when called frequently
 		//TODO: Perhaps PeriodicTimer or UITimer
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
+		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
 	}
 
 	private static int UpdatePeriod => 1000/10; //60 FPS
@@ -142,7 +143,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		 * (A) - It's only called on the main thread
 		 * (B) - The timer is only ever reset *after* everything's already been updated
 		 */
-		RenderStats_TEMP stats = renderJob.RenderStats;
+		RenderStats stats = renderJob.RenderStats;
 		try
 		{
 			Stopwatch sw = Stopwatch.StartNew();
@@ -156,7 +157,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		finally
 		{
-			prevStats = new RenderStats_TEMP(stats);
+			prevStats = new RenderStats(stats);
 			prevFrameTime   = DateTime.Now;
 			Invalidate();
 			updatePreviewTimer.Change(UpdatePeriod, -1);
@@ -183,7 +184,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			}
 	}
 
-	private void UpdateStatsTable(RenderStats_TEMP renderStats)
+	private void UpdateStatsTable(RenderStats renderStats)
 	{
 	#region Format Methods
 
@@ -193,6 +194,11 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		const int    leftAlign      = 15;
 		const int    rightAlign     = 10;
 		const int    smallNum       = 1000;
+
+		static char Sign(float f)
+		{
+			return f switch { < 0 => '-', 0 => ' ', > 0 => '+', _ => '!' };
+		}
 
 		static string FormatTime(TimeSpan val)
 		{
@@ -218,7 +224,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		{
 			long   delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-			return $"{(delta * tRatio).ToString(numFormat),leftAlign} {unit}";
+			return $"{Sign(delta) + (delta * tRatio).ToString(numFormat),leftAlign} {unit}";
 		}
 
 		static string FormatNumWithPercentage(long value, long total)
@@ -231,62 +237,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			float  delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
 			double res    = delta                   * tRatio;
-			return $"{res.ToString(res < smallNum ? smallNumFormat : numFormat),leftAlign} {unit}";
+			return $"{Sign(delta) + res.ToString(res < smallNum ? smallNumFormat : numFormat),leftAlign} {unit}";
 		}
 
 		static string FormatFloat(float val)
 		{
 			return $"{val.ToString(smallNumFormat),leftAlign}";
 		}
-
-		//
-		// static string FormatUlongRatio(ulong val, ulong total)
-		// {
-		// 	return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
-		// }
-		//
-		// static string FormatUlong(ulong val)
-		// {
-		// 	return $"{val.ToString(integerFormat),leftAlign}";
-		// }
-		//
-		// static string FormatUlongDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
-		// {
-		// 	ulong  delta  = curr - prev;
-		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-		// 	return $"{(delta * tRatio).ToString(integerFormat),leftAlign} {unit}";
-		// }
-		//
-		// static string FormatIntWithPercentage(int val, int total)
-		// {
-		// 	return $"{val.ToString(integerFormat),leftAlign} {'(' + ((float)val / total).ToString(percentFormat) + ')',rightAlign}";
-		// }
-		//
-		// static string FormatInt(int val)
-		// {
-		// 	return $"{val.ToString(integerFormat),leftAlign}";
-		// }
-		//
-		// static string FormatIntDelta(int curr, int prev, TimeSpan deltaT, string unit = "")
-		// {
-		// 	int    delta  = curr - prev;
-		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-		// 	double res    = delta                   * tRatio;
-		// 	return $"{res.ToString(integerFormat),leftAlign} {unit}";
-		// }
-		//
-		// static string FormatFloatDelta(float curr, float prev, TimeSpan deltaT, string unit = "")
-		// {
-		// 	float  delta  = curr - prev;
-		// 	double tRatio = TimeSpan.FromSeconds(1) / deltaT;
-		// 	double res    = delta                   * tRatio;
-		// 	return $"{res.ToString(res < smallNum ? smallNumFormat : integerFormat),leftAlign} {unit}";
-		// }
-		//
-		// static string FormatDouble(double val)
-		// {
-		// 	return $"{val.ToString(smallNumFormat),leftAlign}";
-		// }
 
 	#endregion
 
@@ -350,6 +307,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			//Calculate fraction of the passes that was rendered between updates
 			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
 			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
+			if (passFrac - prevPassFrac < 0) passFrac++; //This just ensures we don't get negatives when calculating the delta (from pass overflow)
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{

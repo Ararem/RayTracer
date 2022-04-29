@@ -7,6 +7,7 @@ using Serilog.Debugging;
 using Serilog.Enrichers;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Diagnostics;
+using System.Numerics;
 using static LibEternal.Logging.Enrichers.CallerContextEnricher;
 using static LibEternal.Logging.Enrichers.EventLevelIndentEnricher;
 using static LibEternal.Logging.Enrichers.ThreadInfoEnricher;
@@ -41,6 +42,8 @@ internal static class Logger
 					.Enrich.With(new CallerContextEnricher(perfMode))
 					.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
 					.Destructure.With<DelegateDestructurer>()
+					.Destructure.AsScalar<Vector3>()
+					.Destructure.AsScalar<Vector2>()
 					.CreateLogger();
 		// ReSharper restore PossibleNullReferenceException
 

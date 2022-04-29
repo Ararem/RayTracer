@@ -7,7 +7,7 @@ namespace RayTracer.Core;
 ///  Class that stores statistics about a render
 /// </summary>
 //Yeah I'm using long's everywhere, just cause `ints` aren't large enough on large images, and I still want negative support
-public sealed class RenderStats_TEMP
+public sealed class RenderStats
 {
 	/// <summary>
 	///  How many threads are currently rendering the scene
@@ -15,10 +15,10 @@ public sealed class RenderStats_TEMP
 	public int ThreadsRunning = 0;
 
 	/// <summary>
-	///  Constructor for creating a new <see cref="RenderStats_TEMP"/> object
+	///  Constructor for creating a new <see cref="RenderStats"/> object
 	/// </summary>
 	/// <param name="options">Render options, used to assign and calculate some of the values</param>
-	public RenderStats_TEMP(RenderOptions options)
+	public RenderStats(RenderOptions options)
 	{
 		RawRayDepthCounts = new long[options.MaxDepth + 1]; //+1 because we can also have 0 bounces;
 		TotalTruePixels   = options.Width * options.Height;
@@ -28,7 +28,7 @@ public sealed class RenderStats_TEMP
 	/// <summary>
 	/// Copy constructor
 	/// </summary>
-	public RenderStats_TEMP(RenderStats_TEMP original)
+	public RenderStats(RenderStats original)
 	{
 		RawPixelsRendered     = original.RawPixelsRendered;
 		PassesRendered        = original.PassesRendered;

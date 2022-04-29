@@ -1,5 +1,4 @@
 #define DEBUG_IGNORE_BUFFER_PREVIOUS
-#define ACCELERATE_BVH
 
 using RayTracer.Core.Acceleration;
 using RayTracer.Core.Debugging;
@@ -49,7 +48,7 @@ public sealed class AsyncRenderJob : IDisposable
 		(_, camera, objects, lights, skybox) = scene;
 		Scene                                = scene;
 
-		RenderStats = new RenderStats_TEMP(renderOptions);
+		RenderStats = new RenderStats(renderOptions);
 
 		//Assign access for all the components that need it
 		foreach (Light light in scene.Lights) light.SetRenderer(this);
@@ -60,7 +59,7 @@ public sealed class AsyncRenderJob : IDisposable
 		}
 
 		//Calculate the bounding boxes
-		bvhTree = new BvhTree(scene, this);
+		bvhTree = new BvhTree(scene, RenderStats);
 
 		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}
@@ -409,36 +408,8 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </remarks>
 	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
 	{
-		//PERF: Ok this is really weird, but for some reason in the Cornell Box scene enabling this seems to slow down the render (14 min norm, 18 min bvh). Adding AABB checks in `foreach` also increases to 16 min?????
-		#if false // ACCELERATE_BVH
-		return bvhTree.RootNode.AnyIntersection(ray, kMin, kMax);
-		#else
-		// ReSharper disable once UseDeconstruction
-		foreach (SceneObject obj in objects)
-		{
-			//Try and hit the object
-			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
-
-			//Try next object if there was no hit
-			if (maybeHit is not { } hit) continue;
-
-			//Check the K value just in case
-			if (!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
-			{
-				Log.Warning(
-						"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
-						hit.K, kMin, kMax, hit, obj.Hittable
-				);
-				GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
-				continue; //Skip because we can't consider it valid
-			}
-
-			return true;
-		}
-
-		//Didn't manage to hit any of the scene objects along the ray
-		return false;
-		#endif
+		return TryFindClosestHit(ray, kMin, kMax) is not null;
+		return bvhTree.RootNode.FastTryHit(ray, kMin, kMax);
 	}
 
 	/// <summary>
@@ -449,7 +420,6 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <param name="kMax">Upper bound for K along the ray</param>
 	public (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
 	{
-		#if ACCELERATE_BVH
 		//I love how simple this is
 		//Like I just need to validate the result and that's it
 		(SceneObject Object, HitRecord Hit)? maybeHit = bvhTree.TryHit(ray, kMin, kMax);
@@ -494,84 +464,6 @@ public sealed class AsyncRenderJob : IDisposable
 		}
 
 		return (obj, hit);
-		#else
-		(SceneObject obj, HitRecord hit)? maybeClosest = null;
-		foreach (SceneObject obj in objects)
-		{
-			//Try and hit the object
-			HitRecord? maybeHit = obj.Hittable.TryHit(ray, kMin, kMax);
-			//No point continuing if there was no hit
-			if (maybeHit is not { } hit) continue;
-
-			if (!GraphicsValidator.CheckVectorNormalized(hit.Normal))
-			{
-				Vector3 wrongNormal = hit.Normal;
-				float   wrongMag = wrongNormal.Length();
-
-				ray = ray.WithNormalizedDirection();
-
-				Vector3 correctNormal = ray.Direction;
-				float   correctMag = correctNormal.Length();
-
-				Log.Warning(
-						"HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
-						wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable
-				);
-				GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj.Hittable);
-			}
-
-			if (!GraphicsValidator.CheckUVCoordValid(hit.UV))
-			{
-				Vector2 wrongUv = hit.UV;
-				Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
-
-				Log.Warning(
-						"HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
-						wrongUv, correctedUv, hit, obj.Hittable
-				);
-				GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj.Hittable);
-			}
-
-			if (!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
-			{
-				Log.Warning(
-						"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
-						hit.K, kMin, kMax, hit, obj.Hittable
-				);
-				GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
-				continue; //Skip because we can't consider it valid
-			}
-
-			//If it's the first hit, or it's closer, update the variable
-			if (maybeClosest is not var (_, oldHit)) //Check first hit (because it's null)
-			{
-				maybeClosest = (obj, hit);
-				continue;
-			}
-
-			float currentK = oldHit.K;
-			float newK = hit.K;
-			if (newK < currentK) //Check if closer
-				maybeClosest = (obj, hit);
-
-			//This shouldn't happen, but just a little debug check to make sure nothing funky happens if the K's are the (exact) same
-			//Because I'm using `<` instead of `<=`, this means that the object we first iterate will be prioritized if multiple hittables have the same distance values
-			//(this would happen when several objects overlap exactly at a certain point)
-			//Also due to the control flow, we know that the 'old' object is stored as `closest.obj`, and the 'current' is `obj`
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			// else if (currentK == newK)
-			// {
-			// Log.Warning("Found Z-Fighting when calculating closest hit. Objects: {@Obj1}, {@Obj2}. Hits: {@Hit1}, {@Hit2}", oldObj, obj, oldHit, hit);
-			// GraphicsValidator.RecordError(GraphicsErrorType.ZFighting, (Old: oldObj, New: obj));
-			// }
-		}
-
-		//If we hit anything, set the variables, otherwise make them null
-		if (maybeClosest is var (sceneObject, hitRecord))
-			return (sceneObject, hitRecord);
-		else
-			return null;
-		#endif
 	}
 
 	/// <summary>
@@ -648,7 +540,7 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <summary>
 	///  Object containing statistics about the render, e.g. how many pixels have been rendered.
 	/// </summary>
-	public RenderStats_TEMP RenderStats { get; }
+	public RenderStats RenderStats { get; }
 
 #endregion
 

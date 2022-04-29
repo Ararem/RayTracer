@@ -5,8 +5,8 @@ namespace RayTracer.Core.Acceleration;
 /// <summary>
 ///  Interface defining a node on a <see cref="BvhTree"/>
 /// </summary>
-/// <param name="ParentJob">Parent job that created this node, used for stats tracking</param>
-public abstract record BvhNode(AsyncRenderJob ParentJob)
+/// <param name="RenderStats">Render statistics used to track things...</param>
+public abstract record BvhNode(RenderStats RenderStats)
 {
 	/// <summary>
 	///  Bounding box that encompasses this <see cref="BvhNode" /> and all it's children nodes (if any)
@@ -18,5 +18,5 @@ public abstract record BvhNode(AsyncRenderJob ParentJob)
 	public abstract (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax);
 
 	/// <inheritdoc cref="AsyncRenderJob.AnyIntersectionFast" />
-	public abstract bool AnyIntersection(Ray ray, float kMin, float kMax);
+	public abstract bool FastTryHit(Ray ray, float kMin, float kMax);
 }

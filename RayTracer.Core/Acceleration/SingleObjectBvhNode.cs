@@ -5,7 +5,7 @@ namespace RayTracer.Core.Acceleration;
 /// <summary>
 ///  Bvh node for a singular object
 /// </summary>
-public sealed record SingleObjectBvhNode(SceneObject SceneObject, AsyncRenderJob ParentJob) : BvhNode(ParentJob)
+public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats RenderStats) : BvhNode(RenderStats)
 {
 	/// <inheritdoc/>
 	public override (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
@@ -13,7 +13,7 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, AsyncRenderJob
 		//Skip early if AABB miss
 		if (!BoundingBox.Hit(ray, kMin, kMax))
 		{
-			Interlocked.Increment(ref ParentJob.RenderStats.AabbMisses);
+			Interlocked.Increment(ref RenderStats.AabbMisses);
 			return null;
 		}
 		else
@@ -21,19 +21,19 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, AsyncRenderJob
 			HitRecord? maybeHit = SceneObject.Hittable.TryHit(ray, kMin, kMax);
 			if (maybeHit is { } hit)
 			{
-				Interlocked.Increment(ref ParentJob.RenderStats.HittableIntersections);
+				Interlocked.Increment(ref RenderStats.HittableIntersections);
 				return (SceneObject, hit);
 			}
 			else
 			{
-				Interlocked.Increment(ref ParentJob.RenderStats.HittableMisses);
+				Interlocked.Increment(ref RenderStats.HittableMisses);
 				return null;
 			}
 		}
 	}
 
 	/// <inheritdoc />
-	public override bool AnyIntersection(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
+	public override bool FastTryHit(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
