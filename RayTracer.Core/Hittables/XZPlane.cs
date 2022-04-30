@@ -45,7 +45,6 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 						? new Vector3(0, -1, 0)
 						: new Vector3(0, 1,  0);
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
-		if (float.IsNaN(k)) Debugger.Break();
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
 }

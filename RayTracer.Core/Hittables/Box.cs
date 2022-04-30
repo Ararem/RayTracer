@@ -1,4 +1,5 @@
 using RayTracer.Core.Acceleration;
+using System.Diagnostics;
 using System.Numerics;
 using static System.MathF;
 
@@ -93,7 +94,9 @@ public record Box : Hittable
 		Vector3 ro = new(temp4.X, temp4.Y, temp4.Z);
 
 		// ray-box intersection in box space
-		Vector3 m = new Vector3(1f) / rd; //NAN?
+		Vector3 m = new Vector3(1f) / rd;
+		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
+		if(m.X is float.NaN || m.Y is float.NaN ||m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y)||float.IsInfinity(m.Z)) return null;
 		Vector3 s = new(
 				rd.X < 0f ? 1f : -1f,
 				rd.Y < 0f ? 1f : -1f,
