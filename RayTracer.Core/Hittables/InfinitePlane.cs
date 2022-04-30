@@ -9,8 +9,8 @@ namespace RayTracer.Core.Hittables;
 /// <summary>
 ///  A 2D Plane in 3D space.
 /// </summary>
-/// <param name="Point"></param>
-/// <param name="Normal"></param>
+/// <param name="Point">A point on the plane</param>
+/// <param name="Normal">Normal of the plane</param>
 /// <remarks>
 ///  Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/>
 /// </remarks>
