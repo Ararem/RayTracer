@@ -9,19 +9,21 @@ namespace RayTracer.Core.Hittables;
 /// </summary>
 /// <remarks>
 /// The quad is assumed to be in the shape
+/// <code>
 /// A --------- +
-/// |			|
-/// |			|
-/// |			|
+/// |           |
+/// |           |
+/// |           |
 /// B --------- C
+/// </code>
 /// </remarks>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 {
-	public Vector3 Normal { get; } = Normalize(Cross(B - A, B - C));
+	public Vector3 Normal => Normalize(Cross(SideDirBA, SideDirBC));
 
-	public Vector3 SideDirBA { get; } = Normalize(B - A);
-	public Vector3 SideDirBC { get; } = Normalize(B - C);
+	public Vector3 SideDirBA => Normalize(A-B);
+	public Vector3 SideDirBC => Normalize(C-B);
 
 	/// <inheritdoc />
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Broken
@@ -54,7 +56,7 @@ public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 		Vector3 localPoint       = worldPoint - B; //Treat B as the origin
 		//Project the point onto the edge direction vectors
 		float u = Dot(localPoint, SideDirBA),
-			v   = -Dot(localPoint, SideDirBC);
+			v   = Dot(localPoint, SideDirBC);
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 || v is < 0 or > 1) return null;

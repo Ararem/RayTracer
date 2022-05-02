@@ -92,7 +92,7 @@ public static class BuiltinScenes
 			{
 					new(
 							"Test Object",
-							new Quad(UnitY, Zero, UnitX),
+							new Quad(new (.5f,1,0), new(.5f,0,0), new(1.5f,0,0)),
 							new StandardMaterial(HalfGrey, Black, .2f)
 					),new(
 							"UnitX",
