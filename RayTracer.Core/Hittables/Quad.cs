@@ -42,7 +42,7 @@ public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 		else
 		{
 			//Find intersection normally
-			// float d = -Dot(A, Normal);
+			// float d = -Dot(B, Normal);
 			// t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
 			t = -Dot(Normal, ray.Origin - B)   / normDotDir;
 		}
@@ -51,10 +51,10 @@ public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 		if ((t < kMin) || (t > kMax)) return null;
 
 		Vector3 worldPoint       = ray.PointAt(t);
-		Vector3 localPoint       = worldPoint - A; //Treat A as the origin
+		Vector3 localPoint       = worldPoint - B; //Treat B as the origin
 		//Project the point onto the edge direction vectors
-		float u = Dot(localPoint, SideDirBA)/SideDirBA.Length(),
-			v   = Dot(localPoint, SideDirBC)/SideDirBC.Length();
+		float u = Dot(localPoint, SideDirBA),
+			v   = -Dot(localPoint, SideDirBC);
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 || v is < 0 or > 1) return null;
