@@ -88,28 +88,28 @@ public static class BuiltinScenes
 	///  Testing scene
 	/// </summary>
 	public static readonly Scene Testing = new(
-			"Testing", Camera.Create(new Vector3(0, 0, 1.5f), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			"Testing", Camera.Create(new Vector3(.5f, 0.5f, 1.5f), new(.5f,.5f,0), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new(
 							"Test Object",
 							new Quad(new (.5f,1,0), new(.5f,0,0), new(1.5f,0,0)),
-							new StandardMaterial(HalfGrey, Black, .2f)
+							new StandardMaterial(HalfGrey, Black, .0f)
 					),new(
 							"UnitX",
 							new Sphere(UnitX, .1f),
-							new StandardMaterial(Red, Black, .2f)
+							new StandardMaterial(Red, Black, .0f)
 					),new(
 							"UnitY",
 							new Sphere(UnitY, .15f),
-							new StandardMaterial(Green, Black, .2f)
+							new StandardMaterial(Green, Black, .0f)
 					),new(
 							"UnitZ",
 							new Sphere(UnitZ, .05f),
-							new StandardMaterial(Blue, Black, .2f)
+							new StandardMaterial(Blue, Black, .0f)
 					),
 			},
             Array.Empty<Light>(),
-			new SingleColourSkyBox(White)
+			new DefaultSkyBox()
 	);
 
 	/// <summary>
