@@ -7,6 +7,9 @@ namespace RayTracer.Core.Hittables;
 /// <summary>
 ///  Bounded version of <see cref="InfinitePlane"/>
 /// </summary>
+/// <param name="A">First corner</param>
+/// <param name="B">Second corner, between <paramref name="A"/> and <paramref name="C"/>. This is treated as the 'origin' of the quad (UV's are <see cref="Vector2.Zero"/> here</param>
+/// <param name="C">Third corner</param>
 /// <remarks>
 /// The quad is assumed to be in the shape
 /// <code>
@@ -20,10 +23,19 @@ namespace RayTracer.Core.Hittables;
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 {
-	public Vector3 Normal => Normalize(Cross(SideDirBA, SideDirBC));
+	/// <summary>
+	///	Normal direction of the quad
+	/// </summary>
+	public Vector3 Normal { get; } = Normalize(Cross(A -B, C -B)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
 
-	public Vector3 SideDirBA => Normalize(A-B);
-	public Vector3 SideDirBC => Normalize(C-B);
+	/// <summary>
+	/// Vector direction of the side going from <see cref="B"/>==> <see cref="A"/>
+	/// </summary>
+	public Vector3 SideDirectionBToA { get; } = Normalize(A -B);
+	/// <summary>
+	/// Vector direction of the side going from <see cref="B"/>==> <see cref="C"/>
+	/// </summary>
+	public Vector3 SideDirectionBToC { get; } = Normalize(C -B);
 
 	/// <inheritdoc />
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Broken
@@ -55,8 +67,8 @@ public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 		Vector3 worldPoint       = ray.PointAt(t);
 		Vector3 localPoint       = worldPoint - B; //Treat B as the origin
 		//Project the point onto the edge direction vectors
-		float u = Dot(localPoint, SideDirBA),
-			v   = Dot(localPoint, SideDirBC);
+		float u = Dot(localPoint, SideDirectionBToA),
+			v   = Dot(localPoint, SideDirectionBToC);
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 || v is < 0 or > 1) return null;
