@@ -88,21 +88,19 @@ public static class BuiltinScenes
 	///  Testing scene
 	/// </summary>
 	public static readonly Scene Testing = new(
-			"Testing", Camera.Create(new Vector3(0, 3, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			"Testing", Camera.Create(new Vector3(0, 0, -1), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new(
-							"Box",
-							new Box(
-									Matrix4x4.Identity
-									* Matrix4x4.CreateScale(10, 2f, 3)
-									// * Matrix4x4.CreateFromYawPitchRoll(30 * (MathF.PI / 180f), 420 * (MathF.PI / 180f), 69 * (MathF.PI / 180f))
-									// * Matrix4x4.CreateTranslation(0, 1f, 0)
-							),
+							"Test Object",
+							new Quad(
+									UnitY,
+									Zero,
+									UnitX),
 							new StandardMaterial(HalfGrey, Black, .2f)
 					)
 			},
-			new Light[] { new SizedPointLight(new Vector3(0, 1.5f, 0), Red, 10f, 2f) },
-			new SingleColourSkyBox(White * .1f)
+            Array.Empty<Light>(),
+			new SingleColourSkyBox(White)
 	);
 
 	/// <summary>
