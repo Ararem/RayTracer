@@ -58,7 +58,7 @@ public static class BuiltinScenes
 					new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
 
 					new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+					new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
 					// new("Tall Box", new ConstantDensityMedium(new Box(Matrix4x4.CreateScale(165, 330, 165) * Matrix4x4.CreateFromYawPitchRoll(15 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f, 377.5f)), 0.01f), new VolumetricMaterial(new Colour(0.73f, 0.73f, 0.73f)))
 					// new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, White, Blue)),
 					// new ("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White)),
@@ -88,27 +88,30 @@ public static class BuiltinScenes
 	///  Testing scene
 	/// </summary>
 	public static readonly Scene Testing = new(
-			"Testing", Camera.Create(new Vector3(.5f, 0.5f, 1.5f), new(.5f,.5f,0), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			"Testing", Camera.Create(new Vector3(0f, 0.0f, 1.5f), new Vector3(.0f, .0f, 0), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new(
 							"Test Object",
-							new Quad(new (.5f,1,0), new(.5f,0,0), new(1.5f,0,0)),
+							new Quad(UnitY + new Vector3(.5f, 0, 0), Zero, UnitX),
 							new StandardMaterial(HalfGrey, Black, .0f)
-					),new(
+					),
+					new(
 							"UnitX",
-							new Sphere(UnitX, .1f),
+							new Sphere(UnitX, .05f),
 							new StandardMaterial(Red, Black, .0f)
-					),new(
+					),
+					new(
 							"UnitY",
 							new Sphere(UnitY, .15f),
 							new StandardMaterial(Green, Black, .0f)
-					),new(
-							"UnitZ",
-							new Sphere(UnitZ, .05f),
-							new StandardMaterial(Blue, Black, .0f)
 					),
+					new(
+							"Origin",
+							new Sphere(Zero, .1f),
+							new StandardMaterial(Blue, Black, .0f)
+					)
 			},
-            Array.Empty<Light>(),
+			Array.Empty<Light>(),
 			new DefaultSkyBox()
 	);
 
@@ -122,7 +125,7 @@ public static class BuiltinScenes
 		//RayTracing in a Weekend Chapter 1 cover
 		{
 			List<SceneObject> objects = new();
-			List<Light> lights = new();
+			List<Light>       lights  = new();
 			for (int a = -11; a < 11; a++)
 			{
 				for (int b = -11; b < 11; b++)
