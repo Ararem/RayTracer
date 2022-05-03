@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.Numerics.Vector3;
@@ -5,44 +6,37 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Bounded version of <see cref="InfinitePlane"/>
+///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin point, and two vector directions for the sides of the quad (these do not
+///  need to be normalized, as their length is used to infer the size of the quad)
 /// </summary>
-/// <param name="A">First corner</param>
-/// <param name="B">Second corner, between <paramref name="A"/> and <paramref name="C"/>. This is treated as the 'origin' of the quad (UV's are <see cref="Vector2.Zero"/> here</param>
-/// <param name="C">Third corner</param>
 /// <remarks>
-/// The quad is assumed to be in the shape
-/// <code>
-/// A --------- B
-/// |           |
-/// |           |
-/// |           |
-/// C --------- +
+///  The quad is assumed to be in the shape
+///  <code>
+/// O+V ----------+     ^
+///   |           |    | |
+///   |           |    | |
+///   |           |    |V|
+///   O --------- O+U  | |
+///                    | |
+/// =====U=====>       | |
 /// </code>
+///  The arrows in the above diagram show how the direction vectors U and V are interpreted
 /// </remarks>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
-public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
+[PublicAPI]
+public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 {
 	/// <summary>
-	///	Normal direction of the quad
+	///  Normal direction of the quad
 	/// </summary>
-	public Vector3 Normal =>Normalize(Cross(B-A, C -A)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
+	public Vector3 Normal => Normalize(Cross(U, V)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
 
-	/// <summary>
-	/// Vector direction of the side going from <see cref="B"/>==> <see cref="A"/>
-	/// </summary>
-	public Vector3 SideDirectionBToA => Normalize(B-A);
-	/// <summary>
-	/// Vector direction of the side going from <see cref="C"/>==> <see cref="A"/>
-	/// </summary>
-	public Vector3 SideDirectionCToA => Normalize(C-A);
-
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Broken
 		//AxisAlignedBoundingBox.Encompass(A,B,C);
 		AxisAlignedBoundingBox.Infinite;
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		float normDotDir = Dot(Normal, ray.Direction);
@@ -56,22 +50,25 @@ public record Quad(Vector3 A, Vector3 B, Vector3 C) : Hittable
 		else
 		{
 			//Find intersection normally
-			t = -Dot(Normal, ray.Origin - A)   / normDotDir;
+			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
 		}
 
 		//Assert K ranges
 		if ((t < kMin) || (t > kMax)) return null;
 
-		Vector3 worldPoint       = ray.PointAt(t);
-		Vector3 localPoint       = worldPoint - A; //Treat B as the origin
+		Vector3 worldPoint = ray.PointAt(t);
+		Vector3 localPoint = worldPoint - Origin;
 		//Project the point onto the edge direction vectors
-		float u = Dot(localPoint, SideDirectionBToA),
-			v   = Dot(localPoint, SideDirectionCToA);
+		float u = Dot(localPoint, U), v = Dot(localPoint, V);
+		//Since the side vectors (and the local point) aren't normalized, we have to account for that
+		//So Sqrt and divide by the side length
+		u = MathF.Sqrt(u / U.LengthSquared());
+		v = MathF.Sqrt(v / V.LengthSquared());
 
 		//Assert our bounds of the quad (ensure the point is inside)
-		if (u is < 0 or > 1 || v is < 0 or > 1) return null;
+		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null; //NaN is if value was negative before sqrt
 
-		Vector2 uv      = new (u,v);
+		Vector2 uv      = new(u, v);
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
