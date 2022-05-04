@@ -1,13 +1,14 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Acceleration;
+using System.Net;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin point, and two vector directions for the sides of the quad (these do not
-///  need to be normalized, as their length is used to infer the size of the quad)
+///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these do not
+///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which creates a parallelogram instead of a rectangle (however they must not be parallel)
 /// </summary>
 /// <remarks>
 ///  The quad is assumed to be in the shape
@@ -18,14 +19,22 @@ namespace RayTracer.Core.Hittables;
 ///   |           |    |V|
 ///   O --------- O+U  | |
 ///                    | |
-/// =====U=====>       | |
+///    =====U=====>    | |
 /// </code>
-///  The arrows in the above diagram show how the direction vectors U and V are interpreted
+///  The arrows in the above diagram show how the direction vectors U and V are interpreted.
 /// </remarks>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 [PublicAPI]
 public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 {
+	/// <summary>
+	/// Creates a new quad from three points, as opposed to a point and two directions
+	/// </summary>
+	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
+	/// <param name="oPlusU">Position of the point that corresponds to <see cref="Origin"/> + <see cref="U"/>. Used to calculate the <see cref="U"/> vector</param>
+	/// <param name="oPlusV">Position of the point that corresponds to <see cref="Origin"/> + <see cref="V"/>. Used to calculate the <see cref="V"/> vector</param>
+	/// <returns>A new quad that has corners at the given input points</returns>
+	public static Quad CreateFromPoints(Vector3 o, Vector3 oPlusU, Vector3 oPlusV) => new (o, oPlusU - o, oPlusV - o);
 	private Matrix4x4 LocalToQuadMatrix { get; } = GetLocalToQuadMatrix(U, V);
 
 	/// <summary>
