@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Acceleration;
-using System.Net;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
@@ -93,8 +92,11 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 		Vector3 worldPoint = ray.PointAt(t);
 		Vector3 localPoint = worldPoint - Origin;
 
-		Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
-		float   u   = uvn.X, v = uvn.Y;
+		// Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
+		// float   u   = uvn.X, v = uvn.Y;
+		//Inlined code above, since we don't need the Z coord, and removed the casts to `double`
+		float   u   = (localPoint.X * LocalToQuadMatrix.M11)  + (localPoint.Y *  LocalToQuadMatrix.M21) + (localPoint.Z *  LocalToQuadMatrix.M31) + LocalToQuadMatrix.M41;
+		float   v   =(localPoint.X  *  LocalToQuadMatrix.M12) + (localPoint.Y *  LocalToQuadMatrix.M22) + (localPoint.Z *  LocalToQuadMatrix.M32) + LocalToQuadMatrix.M42;
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null;
