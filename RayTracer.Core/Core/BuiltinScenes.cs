@@ -16,10 +16,36 @@ namespace RayTracer.Core;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public static class BuiltinScenes
 {
+
+	/// <summary>
+	///  Scene that contains pretty much all types of objects
+	/// </summary>
+	public static Scene Everything {
+		get
+		{
+			List<SceneObject> objects = new();
+			List<Light>       lights  = new();
+
+			//First off, position the camera
+			Camera cam = Camera.Create(new Vector3(100, 100, -700), Zero, UnitY, 90, 16 /9f, 0f, 700f);
+
+			//Testing of our Axis Aligned Planes
+			{
+				Material material = new StandardMaterial(HalfGrey, Black, 1f);
+				Vector3  origin   = new (-100, 0, 300);
+				Vector3  end      = new (-50, 75, 275);
+				objects.Add(new SceneObject("XY Plane", new XYPlane(origin.X, end.X, origin.Y, end.Y, origin.Z), material));
+				objects.Add(new SceneObject("XZ Plane", new XZPlane(origin.X, end.X, origin.Z, end.Z, origin.Y), material));
+				objects.Add(new SceneObject("YZ Plane", new YZPlane(origin.Y, end.Y, origin.Z, end.Z, origin.X), material));
+			}
+
+			return new Scene("EVERYTHING", cam, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
+		}}
+
 	/// <summary>
 	///  Simple scene with a single sphere at (0, 0, 0)
 	/// </summary>
-	public static readonly Scene Sphere = new(
+	public static Scene Sphere => new(
 			"A lonely Sphere", Camera.Create(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, Black, 1f))
@@ -31,7 +57,7 @@ public static class BuiltinScenes
 	/// <summary>
 	///  Simple scene with two spheres at (+-1, 0, 0)
 	/// </summary>
-	public static readonly Scene RgbSpheres = new(
+	public static Scene RgbSpheres => new(
 			"RGB Spheres", Camera.Create(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, .00002f, 5f), new SceneObject[]
 			{
 					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
@@ -46,7 +72,7 @@ public static class BuiltinScenes
 	/// <summary>
 	///  The good 'ol cornell box, as is traditional for raytracing
 	/// </summary>
-	public static readonly Scene CornellBox = new(
+	public static Scene CornellBox => new(
 			"Cornell Box", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
 			{
 					new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.5f,     0.1f,  0.1f),  Black, 1f)),
@@ -72,27 +98,14 @@ public static class BuiltinScenes
 	);
 
 	/// <summary>
-	///  Simple scene with a sphere at (+-1, 0, 0) and a ground plane
-	/// </summary>
-	public static readonly Scene Everything = new(
-			"Everything", Camera.Create(new Vector3(0, 1, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
-			{
-					new("Sphere", new Sphere(new Vector3(0, 0.5f, 0), 1f), new StandardMaterial(Green,                       Black,      1f)),
-					new("Ground", new Disk(Zero, Normalize(new Vector3(0, 1, -1)), 1.5f), new StandardMaterial(0.5f * White, Red * 0.1f, 1f))
-			},
-			Array.Empty<Light>(),
-			new DefaultSkyBox()
-	);
-
-	/// <summary>
 	///  Testing scene
 	/// </summary>
-	public static readonly Scene Testing = new(
+	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 0.0f, 1.5f), new Vector3(.0f, .0f, 0), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new(
 							"Test Object",
-							new Quad(-UnitX-UnitY, UnitY + new Vector3(.5f, 0, 0), UnitX),
+							new Quad(Zero, UnitY + new Vector3(.5f, 0, 0), UnitX),
 							new StandardMaterial(HalfGrey, Black, .0f)
 					),
 					new(
@@ -118,11 +131,9 @@ public static class BuiltinScenes
 	/// <summary>
 	///  Cover for RayTracing in a weekend, chapter one
 	/// </summary>
-	public static readonly Scene RtInAWeekendCover1;
-
-	static BuiltinScenes()
+	public static Scene RtInAWeekendCover1
 	{
-		//RayTracing in a Weekend Chapter 1 cover
+		get
 		{
 			List<SceneObject> objects = new();
 			List<Light>       lights  = new();
@@ -179,7 +190,7 @@ public static class BuiltinScenes
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
-			RtInAWeekendCover1 = new Scene("RayTracing Chapter 1", Camera.Create(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
+			return new Scene("RayTracing Chapter 1", Camera.Create(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
 		}
 	}
 
@@ -189,8 +200,8 @@ public static class BuiltinScenes
 	public static IEnumerable<Scene> GetAll()
 	{
 		return typeof(BuiltinScenes)
-				.GetFields(BindingFlags.Public | BindingFlags.Static)
-				.Where(f => f.FieldType == typeof(Scene))
-				.Select(f => (Scene)f.GetValue(null)!);
+				.GetProperties(BindingFlags.Public | BindingFlags.Static)
+				.Where(p => p.PropertyType == typeof(Scene))
+				.Select(p => (Scene)p.GetValue(null)!);
 	}
 }
