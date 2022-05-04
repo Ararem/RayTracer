@@ -74,8 +74,8 @@ public static class BuiltinScenes
 	/// <summary>
 	///  Simple scene with a sphere at (+-1, 0, 0) and a ground plane
 	/// </summary>
-	public static readonly Scene WithGround = new(
-			"With Ground", Camera.Create(new Vector3(0, 1, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+	public static readonly Scene Everything = new(
+			"Everything", Camera.Create(new Vector3(0, 1, -5), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(new Vector3(0, 0.5f, 0), 1f), new StandardMaterial(Green,                       Black,      1f)),
 					new("Ground", new Disk(Zero, Normalize(new Vector3(0, 1, -1)), 1.5f), new StandardMaterial(0.5f * White, Red * 0.1f, 1f))
