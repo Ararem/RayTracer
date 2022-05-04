@@ -26,15 +26,40 @@ namespace RayTracer.Core.Hittables;
 [PublicAPI]
 public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 {
+	private Matrix4x4 LocalToQuadMatrix { get; } = GetLocalToQuadMatrix(U, V);
+
 	/// <summary>
 	///  Normal direction of the quad
 	/// </summary>
-	public Vector3 Normal => Normalize(Cross(U, V)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
+	public Vector3 Normal { get; } = Normalize(Cross(U, V)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Broken
 		//AxisAlignedBoundingBox.Encompass(A,B,C);
 		AxisAlignedBoundingBox.Infinite;
+
+	private static Matrix4x4 GetLocalToQuadMatrix(Vector3 u, Vector3 v)
+	{
+		//This UV/World space conversion code is essentially just transforming points between two different coordinate systems
+		//So from World Coords (X,Y,Z) ==> Quad (UV) Coords (U,V,N)
+		//First step we need to get the matrix that converts Quad coords => World Coords
+		//This is easy, since it's essentially just our UV vectors
+		//If we have a vector that's the length and direction of our U side, it's (1, 0, 0) in quad coords
+		//In world coords it's just the U vector
+		//This StackOverflow answer was helpful in creating the matrix: https://stackoverflow.com/questions/31257325/converting-points-into-another-coordinate-system
+
+		Vector3 n = Normalize(Cross(u, v));
+        Matrix4x4 quadToWorld = new(
+          u.X, u.Y, u.Z, 0,
+          v.X, v.Y, v.Z, 0,
+          n.X, n.Y, n.Z, 0,
+          0, 0, 0, 1
+        );
+
+        if (!Matrix4x4.Invert(quadToWorld, out Matrix4x4 worldToQuad)) throw new ArithmeticException("Could not invert Quad to world transformation matrix (UV coords were probably parallel)");
+
+        return worldToQuad;
+    }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -58,15 +83,12 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 
 		Vector3 worldPoint = ray.PointAt(t);
 		Vector3 localPoint = worldPoint - Origin;
-		//Project the point onto the edge direction vectors
-		float u = Dot(localPoint, U), v = Dot(localPoint, V);
-		//Since the side vectors (and the local point) aren't normalized, we have to account for that
-		//So Sqrt and divide by the side length
-		u = MathF.Sqrt(u / U.LengthSquared());
-		v = MathF.Sqrt(v / V.LengthSquared());
+
+		Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
+		float   u   = uvn.X, v = uvn.Y;
 
 		//Assert our bounds of the quad (ensure the point is inside)
-		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null; //NaN is if value was negative before sqrt
+		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null;
 
 		Vector2 uv      = new(u, v);
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
