@@ -13,8 +13,7 @@ public abstract record RenderAccessor
 	//Used by AsyncRenderJob to assign itself
 	internal void SetRenderer(AsyncRenderJob renderer)
 	{
-		// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-		if (Renderer == null) Renderer = renderer;
+		if (ReferenceEquals(Renderer, null)) Renderer = renderer;
 		else throw new Exception("Tried to set Renderer property when already set");
 	}
 }

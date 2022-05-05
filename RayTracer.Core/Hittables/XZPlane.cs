@@ -1,5 +1,4 @@
 using RayTracer.Core.Acceleration;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace RayTracer.Core.Hittables;
@@ -25,8 +24,7 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 		float k = (Y - ray.Origin.Y) / ray.Direction.Y;
 		//The above code doesn't work when `ray.Direction.Y == 0`, since the ray is essentially going along/parallel to the plane
 		//So we have to do a sanity check here, otherwise `k` will be NaN, and that messes up everything else
-		//Since the ray is inside the plane, just set `k` to `kMin` so that the nearest possible intersection in the valid range will be used
-		if ((ray.Direction.Y == 0f) || float.IsNaN(k)) k = kMin;
+		if ((ray.Direction.Y == 0f) || float.IsNaN(k)) return null;
 		if ((k < kMin) || (k > kMax)) //Out of range for our near/far plane
 			return null;
 		Vector3 worldPoint = ray.PointAt(k);

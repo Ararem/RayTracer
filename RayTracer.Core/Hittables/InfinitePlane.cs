@@ -28,7 +28,7 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 		//If the ray is going parallel to the plane (through it), then the normal and ray direction will be perpendicular
 		if (Abs(normDotDir) <= 0.001f) //Approx for ==0
 		{
-			t = kMin; //Going inside plane, find lowest point along the ray
+			return null;
 		}
 		else
 		{

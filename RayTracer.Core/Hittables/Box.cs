@@ -1,5 +1,4 @@
 using RayTracer.Core.Acceleration;
-using System.Diagnostics;
 using System.Numerics;
 using static System.MathF;
 

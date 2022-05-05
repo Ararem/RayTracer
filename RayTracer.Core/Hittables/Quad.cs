@@ -74,11 +74,10 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 	{
 		float normDotDir = Dot(Normal, ray.Direction);
 		float t;
-		//If the ray is going parallel to the plane (through it), then the normal and ray direction will be perpendicular
+		//If the ray is going parallel to the plane (along it), then the normal and ray direction will be perpendicular
 		if (MathF.Abs(normDotDir) <= 0.001f) //Approx for ==0
 		{
 			return null;
-			t = kMin; //Going inside plane, find lowest point along the ray
 		}
 		else
 		{

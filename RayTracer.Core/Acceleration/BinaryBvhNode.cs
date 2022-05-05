@@ -7,6 +7,7 @@ namespace RayTracer.Core.Acceleration;
 /// </summary>
 /// <param name="NodeA">First sub-node</param>
 /// <param name="NodeB">Second sub-node</param>
+/// <param name="RenderStats"><see cref="RenderStats"/> object used to track statistics for this node</param>
 public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, RenderStats RenderStats) : BvhNode(RenderStats)
 {
 	/// <inheritdoc/>

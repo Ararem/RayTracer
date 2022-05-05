@@ -52,7 +52,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//Assign access for all the components that need it
 		foreach (Light light in scene.Lights) light.SetRenderer(this);
-		foreach (SceneObject sceneObject in scene.SceneObjects)
+		foreach (SceneObject sceneObject in objects)
 		{
 			sceneObject.Material.SetRenderer(this);
 			sceneObject.Hittable.SetRenderer(this);
@@ -182,7 +182,9 @@ public sealed class AsyncRenderJob : IDisposable
 					//Changing `a` affects how steep the curve is. Higher values cause a faster drop off
 					//Have to ensure it's >0 or else all functions return 1
 					// ReSharper disable once UnusedVariable
+					#pragma warning disable CS0219
 					const float a = .200f;
+					#pragma warning restore CS0219
 					// ReSharper disable once JoinDeclarationAndInitializer
 					float val;
 					float z = hit.K - RenderOptions.KMin;
@@ -407,11 +409,7 @@ public sealed class AsyncRenderJob : IDisposable
 	///  <see langword="true"/> as soon as an intersection is hit, and does not take into account a material's properties (such as transparency), just
 	///  geometry.
 	/// </remarks>
-	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax)
-	{
-		return TryFindClosestHit(ray, kMin, kMax) is not null;
-		return bvhTree.RootNode.FastTryHit(ray, kMin, kMax);
-	}
+	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax) => bvhTree.RootNode.FastTryHit(ray, kMin, kMax);
 
 	/// <summary>
 	///  Finds the closest intersection along a given <paramref name="ray"/>
@@ -502,11 +500,13 @@ public sealed class AsyncRenderJob : IDisposable
 
 #region Internal state
 
+	// ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 	private readonly Camera        camera;
 	private readonly SkyBox        skybox;
 	private readonly SceneObject[] objects;
 	private readonly Light[]       lights;
 	private readonly BvhTree       bvhTree;
+	// ReSharper restore PrivateFieldCanBeConvertedToLocalVariable
 
 	/// <summary>
 	///  Stopwatch used to time how long has elapsed since the rendering started

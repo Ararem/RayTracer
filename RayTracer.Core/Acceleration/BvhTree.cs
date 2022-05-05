@@ -18,7 +18,7 @@ public sealed class BvhTree
 	/// </summary>
 	public readonly BvhNode RootNode;
 
-	private readonly RenderStats RenderStats;
+	private readonly RenderStats renderStats;
 
 	/// <summary>
 	///  Creates a new BVH tree for the specified scene
@@ -33,7 +33,7 @@ public sealed class BvhTree
 		 * Interesting side-note, using SAH as opposed to the plain "split in the middle" approach is really effective
 		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
 		 */
-		RenderStats = renderStats;
+		this.renderStats = renderStats;
 		RootNode         = FromSegment_SAH(scene.SceneObjects);
 	}
 
@@ -43,7 +43,7 @@ public sealed class BvhTree
 	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
 	{
 		//Simple check if 1 element so we can assume more than 1 later on
-		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], RenderStats);
+		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], renderStats);
 
 		//Port of Pete Shirley's code
 		// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
@@ -109,10 +109,10 @@ public sealed class BvhTree
 		}
 
 		//We know we'll be using binary nodes because we already checked for a single object earlier
-		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  RenderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
-		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], RenderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
+		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
+		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
 
-		return new BinaryBvhNode(leftNode, rightNode, RenderStats);
+		return new BinaryBvhNode(leftNode, rightNode, renderStats);
 
 		static float GetAABBArea(AxisAlignedBoundingBox aabb)
 		{
