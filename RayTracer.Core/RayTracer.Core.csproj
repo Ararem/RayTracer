@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\LibEternal\LibEternal\LibEternal\LibEternal.csproj" />
+	  <ProjectReference Include="..\LibEternal\LibEternal.Core\LibEternal.Core.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,16 +1,16 @@
 // #define DEBUG_LOG
 
-using LibEternal.Logging.Destructurers;
-using LibEternal.Logging.Enrichers;
+using LibEternal.Core.Logging.Destructurers;
+using LibEternal.Core.Logging.Enrichers;
 using Serilog;
 using Serilog.Debugging;
 using Serilog.Enrichers;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Diagnostics;
 using System.Numerics;
-using static LibEternal.Logging.Enrichers.CallerContextEnricher;
-using static LibEternal.Logging.Enrichers.EventLevelIndentEnricher;
-using static LibEternal.Logging.Enrichers.ThreadInfoEnricher;
+using static LibEternal.Core.Logging.Enrichers.CallerContextEnricher;
+using static LibEternal.Core.Logging.Enrichers.EventLevelIndentEnricher;
+using static LibEternal.Core.Logging.Enrichers.ThreadInfoEnricher;
 
 namespace RayTracer.Core;
 
