@@ -1,0 +1,3 @@
+[submodule "LibEternal"]
+	path = LibEternal
+	url = https://github.com/EternalClickbait/LibEternal
