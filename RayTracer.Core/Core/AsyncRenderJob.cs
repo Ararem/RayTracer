@@ -131,7 +131,7 @@ public sealed class AsyncRenderJob : IDisposable
 		//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
 		float s = x, t = y;
 		//Add up to half a pixel of offset randomness to the coords
-		const float ssaaRadius = .5f;
+		const float ssaaRadius = .3f;
 		s += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		t += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		//Account for the fact that we want uv coords not pixel coords
