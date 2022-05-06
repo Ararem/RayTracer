@@ -54,7 +54,6 @@ internal static class Program
 
 		Verbose("Hooking up unhandled exception event");
 		application.UnhandledException      += EtoUnhandledException;
-		ExceptionManager.UnhandledException += GLibUnhandledException;
 		Verbose("Created new application object");
 
 		Debug("Application is {Application}", application);
@@ -99,8 +98,6 @@ internal static class Program
 			return -1;
 		}
 	}
-
-	private static void GLibUnhandledException(UnhandledExceptionArgs args) => Error((Exception)args.ExceptionObject, "Caught GLib Unhandled Exception ({Terminating}, Exit: {ExitApplication})", args.IsTerminating ? "Terminating" : "Non-Terminating", args.ExitApplication);
 
 	private static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args) => Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
 }
