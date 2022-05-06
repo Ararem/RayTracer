@@ -13,7 +13,7 @@ namespace RayTracer.Core.Materials;
 /// </summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
-public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
+public record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
 {
 	/// <summary>
 	///  Refractive index of a common material
@@ -72,6 +72,9 @@ public sealed record RefractiveMaterial(float RefractiveIndex, Texture Tint) : M
 			Vector3 refractedRayParallel =
 					-Sqrt(Abs(1.0f - refractedRayPerpendicular.LengthSquared())) * hit.Normal;
 			outDirection = refractedRayPerpendicular + refractedRayParallel;
+
+			outDirection = (Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal)));
+			outDirection = Normalize(outDirection);
 		}
 
 		return new Ray(hit.WorldPoint, outDirection);
