@@ -24,10 +24,10 @@ public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Di
 		Vector3 reflect                           = Reflect(hit.Ray.Direction, hit.Normal);
 		Vector3 scatter                           = Lerp(reflect, diffuse, Diffusion);
 
-		// Catch degenerate scatter direction (when scatter magnitude is almost 0)
-		const float thresh = (float)1e-5;
-		if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
-			scatter = hit.Normal;
+		// // Catch degenerate scatter direction (when scatter magnitude is almost 0)
+		// const float thresh = (float)1e-5;
+		// if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
+		// 	scatter = hit.Normal;
 
 		Ray r = new(hit.WorldPoint, Normalize(scatter));
 		return r;

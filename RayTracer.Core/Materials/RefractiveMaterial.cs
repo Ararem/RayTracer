@@ -13,7 +13,7 @@ namespace RayTracer.Core.Materials;
 /// </summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
-public record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
+public record RefractiveMaterial(float RefractiveIndex, Texture Tint, bool AlternateRefractionMode = false) : Material
 {
 	/// <summary>
 	///  Refractive index of a common material
@@ -67,14 +67,18 @@ public record RefractiveMaterial(float RefractiveIndex, Texture Tint) : Material
 		}
 		else
 		{
-			//Complex maths, don't ask me what this does or how it works
+			//Big problem, I've got two different ways of calculating the refracted ray and I don't know which way is correct
+			//So just let the user decide
+			Vector3 standard, alternate;
+
 			Vector3 refractedRayPerpendicular = refractionRatio * (unitDirection + (cosTheta * hit.Normal));
 			Vector3 refractedRayParallel =
 					-Sqrt(Abs(1.0f - refractedRayPerpendicular.LengthSquared())) * hit.Normal;
-			outDirection = refractedRayPerpendicular + refractedRayParallel;
+			standard = refractedRayPerpendicular + refractedRayParallel;
 
-			outDirection = (Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal)));
-			outDirection = Normalize(outDirection);
+			alternate  = Normalize((Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal))));
+
+			outDirection = AlternateRefractionMode ? alternate : standard;
 		}
 
 		return new Ray(hit.WorldPoint, outDirection);

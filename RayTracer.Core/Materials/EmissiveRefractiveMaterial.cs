@@ -22,7 +22,7 @@ namespace RayTracer.Core.Materials;
 ///  Indirect emission is when the ray has already bounced off another object, such as a wall. Indirect emission is much more nice to look at, since it
 ///  doesn't blow up the object's colour completely, but still gives a nice glow to it's surroundings.
 /// </remarks>
-public sealed record EmissiveRefractiveMaterial(float RefractiveIndex, Texture Tint, Texture Emission, bool DirectEmission = false) : RefractiveMaterial(RefractiveIndex, Tint)
+public sealed record EmissiveRefractiveMaterial(float RefractiveIndex, Texture Tint, Texture Emission, bool DirectEmission = false, bool AlternateRefractionMode = false) : RefractiveMaterial(RefractiveIndex, Tint, AlternateRefractionMode)
 {
 	/// <inheritdoc/>
 	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
