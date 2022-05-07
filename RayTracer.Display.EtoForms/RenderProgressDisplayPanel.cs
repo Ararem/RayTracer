@@ -131,7 +131,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
 	}
 
-	private static int UpdatePeriod => 1000/10; //60 FPS
+	private static int UpdatePeriod => 1000/20; //20 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
@@ -303,16 +303,18 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				rend  = renderStats.PassesRendered,
 				rem   = total - rend;
 			long        progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
-			const string unit     = "passes/s";
 			//Calculate fraction of the passes that was rendered between updates
 			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
 			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
 			if (passFrac - prevPassFrac < 0) passFrac++; //This just ensures we don't get negatives when calculating the delta (from pass overflow)
+			float  fracDelta = passFrac - prevPassFrac;
+			double tRatio  = TimeSpan.FromSeconds(1) / deltaT;
+
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
-							("Rendered", FormatNumWithPercentage(rend, total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, unit)),
-							("Remaining", FormatNumWithPercentage(rem, total), null),
+							("Rendered", FormatNumWithPercentage(rend,     total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, "passes/s")),
+							("Remaining", FormatNumWithPercentage(rem,     total), $"{FormatFloat(1f/(float)(fracDelta * tRatio))} sec/pass"),
 							("Progress", FormatNumWithPercentage(progress, renderStats.TotalTruePixels), null),
 							("Total", FormatNum(total), null)
 					})
@@ -352,7 +354,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
 							("Threads", FormatNum(renderStats.ThreadsRunning), null),
-							("Completed", renderJob.RenderCompleted.ToString(), null),
+							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
 							("Depth Max", FormatNum(renderJob.RenderOptions.MaxDepth), null),

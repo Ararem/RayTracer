@@ -19,9 +19,9 @@ namespace RayTracer.Core;
 public static class BuiltinScenes
 {
 	/// <summary>
-	///  Fancy scene containing (hopefully) every type of shape
+	///  Fancy scene containing (hopefully) every type of shape, light and material
 	/// </summary>
-	public static Scene Everything
+	public static Scene Demo
 	{
 		get
 		{
@@ -68,11 +68,18 @@ public static class BuiltinScenes
 			}
 
 			{
-				//Box
-				objects.Add(new SceneObject("Hex Box", new ConstantDensityMedium(Box.CreateFromCorners(new Vector3(-4, 0, 0), new Vector3(-1, 1, 2)), 1f), new VolumetricMaterial(Black)));
+				//Cuboids
+				objects.Add(new SceneObject("Smoke Box", new ConstantDensityMedium(Box.CreateFromCorners(new Vector3(-4, 0, 0), new Vector3(-1, 1, 2)), 1f), new VolumetricMaterial(Black)));
+				objects.Add(new SceneObject("Hex Box", new HexPlaneBox(new Vector3(-3, 0.75f, 0.5f), new Vector3(-2, 1.25f, 1.5f)), new StandardMaterial(Orange * .5f, Black, 1f)));
 			}
 
-			return new Scene("EVERYTHING!!!", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
+			{
+				//Bounded planar objects
+				objects.Add(new SceneObject("Disk", new Disk(new Vector3(5,.5f,1), Normalize(new Vector3(-1,1,-1)), .7f), new StandardMaterial(Purple*.6f, Black, .3f)));
+				objects.Add(new SceneObject("Quad", new Quad(new Vector3(2,0,1), new Vector3(0,1,-1), new Vector3(1,0,0)), new StandardMaterial(Yellow*.6f, Black, .1f)));
+			}
+
+			return new Scene("Demo", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
 		}
 	}
 
