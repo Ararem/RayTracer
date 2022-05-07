@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
+using static System.Numerics.Vector2;
+using Log = Serilog.Log;
 
 namespace RayTracer.Core.Hittables;
 
@@ -83,27 +85,42 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	/// </summary>
 	private Vector2 UV(Vector3 point)
 	{
+		//PERF: Cache these and the matrix?
 		Vector3 w = Normalize(P2 - P1);
 		Vector3 u = Normalize(Cross(w, new Vector3(0, 0, 1)));
 		Vector3 v = Normalize(Cross(u, w));
 		// Original is:
 		// Vector3 q = (point-Position1)*mat3(u, v, w);
-		// Since C# doesn't have native 3x3 matrices, I've transposed it myself
-		// One weird thing is `mat3(u,v,w)` should use u,v,w as the columns, but this doesn't quite work properly
-		// When I expand out the matrix multiplication
-		// So I had to use it as the rows to get it to work
-		Vector3 t = point - P1;
-		// Vector3 q = new(
-		// 		(u.X * t.X) + (v.X* t.Y) + (w.X * t.Z),
-		// 		(u.Y * t.X) + (v.Y* t.Y) + (w.Y * t.Z),
-		// 		(u.Z * t.X) + (v.Z* t.Y) + (w.Z * t.Z)
-		// );
-		Vector3 q = new(
-				(u.X * t.X) + (u.Y * t.Y) + (u.Z * t.Z),
-				(v.X * t.X) + (v.Y * t.Y) + (v.Z * t.Z),
-				(w.X * t.X) + (w.Y * t.Y) + (w.Z * t.Z)
+		// OpenGL uses column-major ordering, so `u` is the first column, the v, then w
+		Matrix4x4 mat = new(
+				u.X, v.X, w.X, 0,
+				u.Y, v.Y, w.Y, 0,
+				u.Z, v.Z, w.Z, 0,
+				0, 0, 0, 0
 		);
-		Vector2 uv = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
+
+		Vector3 q  = Transform(point - P1, mat);
+		Vector2 rawUv = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
+		/*
+		 *
+		 * This block of code here translates the calculated 'raw' UV coordinate into something more compatible
+		 * I'm not sure how exactly it works, but I assume it's projecting the point onto a plane around the line segment of the cylinder
+		 * And then calculating the distance along the segment (from P1), and rotation from the origin of the plane
+		 *
+		 * This output should explain:
+		 * {
+		 *		[rawUv variable]	Min = <-3.141583, -0.9317696>, Max = <3.1415896, 3.6393933>,
+		 *		[Matrix Components]	U = <0.37139067, -0.9284767, 0>, V = <-0.6317484, -0.25269935, 0.73282814>, W = <0.68041384, 0.27216554, 0.68041384>,
+		 *		[Capsule Shape]		Dist = 2.9393876, Radius = 0.7
+		 * }
+		 * See how the rawUv's X ranges ± PI, and the Y ranges [-Radius...Dist+Radius]
+		 * So inverse lerp them into the range [0...1] and we have our UV coordinates!
+		 */
+		Vector2 uv = new (
+				(rawUv.X + PI) /6.2831855F //MathUtils.InverseLerp(-PI, PI, rawUv.X)
+				, MathUtils.InverseLerp(-Radius, Distance(P1, P2)+Radius, rawUv.Y)
+				);
+
 		return uv;
 	}
 

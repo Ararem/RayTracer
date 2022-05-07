@@ -7,6 +7,7 @@ using System.Reflection;
 using static RayTracer.Core.Colour;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
+using static System.MathF;
 
 namespace RayTracer.Core;
 
@@ -16,7 +17,6 @@ namespace RayTracer.Core;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public static class BuiltinScenes
 {
-
 	/// <summary>
 	///  Fancy scene containing (hopefully) every type of shape
 	/// </summary>
@@ -32,16 +32,17 @@ public static class BuiltinScenes
 			{
 				objects.Add(new SceneObject("Ground", new InfinitePlane(Zero, UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
 			}
-			//Axis aligned planes
 			{
-				Vector3  low = new(-7, 0, -2), high = new(-5, 3f, -.5f);
-				objects.Add(new SceneObject("XY", new XYPlane(low.X, high.X, low.Y, high.Y, low.Z), new StandardMaterial(new Colour(1f, .5f,.5f), Black, .5f)));
-				objects.Add(new SceneObject("YZ", new YZPlane(low.Y, high.Y, low.Z, high.Z, low.X), new StandardMaterial(new Colour(.5f, 1f,.5f), Black, .5f)));
-				objects.Add(new SceneObject("XZ", new XZPlane(low.X, high.X, low.Z, high.Z, low.Y), new StandardMaterial(new Colour(.5f, .5f,1f), Black, .5f)));
+				Vector3 low = new(-7, 0, -2), high = new(-5, 2.8f, -.5f);
+				objects.Add(new SceneObject("XY",                  new XYPlane(low.X, high.X, low.Y, high.Y, low.Z), new StandardMaterial(new Colour(1f,  .5f, .5f), Black,        .5f)));
+				objects.Add(new SceneObject("YZ",                  new YZPlane(low.Y, high.Y, low.Z, high.Z, low.X), new StandardMaterial(new Colour(.5f, 1f,  .5f), Black,        .5f)));
+				objects.Add(new SceneObject("XZ",                  new XZPlane(low.X, high.X, low.Z, high.Z, low.Y), new StandardMaterial(new Colour(.5f, .5f, 1f),  Black,        .5f)));
+				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f),     new StandardMaterial(Black,                     White * 0.8f, 0f)));
+				lights.Add(new DiffuseSphereLight(((low + high) / 2f) - UnitY, .51f, White, .5f));
 			}
-			//Sphere, inside planes
 			{
-				objects.Add(new SceneObject("Sphere", new Sphere(new Vector3(-6, 3f, -1.25f) ,.7f), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White)));
+				objects.Add(new SceneObject("Lonely Sphere", new Sphere(new Vector3(-1, 2.5f, -2), 1f), new StandardMaterial(new Colour(165 / 255f, 42 / 255f, 42 / 255f), Black, 0f)));
+				objects.Add(new SceneObject("Capsule", new Capsule(new Vector3(-2, .7f, -3),new Vector3(0, 1.5f, -1f), .7f), new StandardMaterial(Yellow, Black, 1f)));
 			}
 
 			return new Scene("EVERYTHING!!!", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
@@ -94,8 +95,8 @@ public static class BuiltinScenes
 
 							new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
 
-							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
+							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
 							// new("Tall Box", new ConstantDensityMedium(new Box(Matrix4x4.CreateScale(165, 330, 165) * Matrix4x4.CreateFromYawPitchRoll(15 * (MathF.PI / 180f), 0 * (MathF.PI / 180f), 0 * (MathF.PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f, 377.5f)), 0.01f), new VolumetricMaterial(new Colour(0.73f, 0.73f, 0.73f)))
 							// new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, White, Blue)),
 							// new ("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White)),
