@@ -1,5 +1,4 @@
 ﻿using Eto;
-using GLib;
 using RayTracer.Display.EtoForms.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;

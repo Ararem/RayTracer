@@ -1,10 +1,5 @@
-using JetBrains.Annotations;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Textures;
-using System.Numerics;
-using static RayTracer.Core.RandUtils;
-using static System.Numerics.Vector3;
-using static System.MathF;
 
 namespace RayTracer.Core.Materials;
 

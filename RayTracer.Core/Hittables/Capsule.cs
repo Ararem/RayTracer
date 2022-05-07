@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
-using static System.Numerics.Vector2;
-using Log = Serilog.Log;
 
 namespace RayTracer.Core.Hittables;
 
