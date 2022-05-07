@@ -148,7 +148,7 @@ public sealed class AsyncRenderJob : IDisposable
 			float   correctMag = correctDir.Length();
 
 			Log.Warning(
-					"Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Coords: {UvCoords} ({PixelCoords}). Camera: {@Camera}",
+					"Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude})\nCoords: {UvCoords} ({PixelCoords})\nCamera: {@Camera}",
 					wrongDir, wrongMag, correctDir, correctMag, (s, t), (x, y), camera
 			);
 			GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, camera);
@@ -261,8 +261,8 @@ public sealed class AsyncRenderJob : IDisposable
 						float   correctMag = correctDir.Length();
 
 						Log.Warning(
-								"Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} HitRecord: {HitRecord}. Material: {@Material}",
-								wrongDir, wrongMag, correctDir, correctMag, ray, hit, sceneObject.Material
+								"Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} Hit: {@Hit}. Object: {@Object}",
+								wrongDir, wrongMag, correctDir, correctMag, ray, hit, sceneObject
 						);
 						GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, sceneObject.Material);
 
@@ -277,17 +277,6 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				Interlocked.Increment(ref RenderStats.SkyRays);
 				finalColour = skybox.GetSkyColour(ray);
-				if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(finalColour))
-				{
-					Colour correctColour = Colour.Clamp(finalColour, Colour.Black, Colour.White);
-
-					Log.Warning(
-							"Skybox colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. Ray: {Ray}. SkyBox: {SkyBox}",
-							finalColour, correctColour, ray, skybox
-					);
-					GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, skybox);
-				}
-
 				break;
 			}
 		}
@@ -310,16 +299,6 @@ public sealed class AsyncRenderJob : IDisposable
 			float depthScalar                              = 3f / (depth + 3);
 			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit) * depthScalar;
 			sceneObject.Material.DoColourThings(ref colour, hit, prevHits);
-
-			//Now we have to check that the colour's in the SDR range (assuming that we don't have HDR enabled)
-			if (!RenderOptions.HdrEnabled && !GraphicsValidator.CheckColourValid(colour))
-			{
-				Colour correctColour = Colour.Clamp(colour, Colour.Black, Colour.White);
-
-				// Log.Warning("Material modified colour was out of range, fixing. Correcting {WrongColour}	=>	{CorrectedColour}. HitRecord: {HitRecord}. Material: {Material}", finalColour, colour, hit, sceneObject);
-				colour = correctColour;
-				GraphicsValidator.RecordError(GraphicsErrorType.ColourChannelOutOfRange, sceneObject);
-			}
 
 			finalColour = colour;
 		}
@@ -434,10 +413,10 @@ public sealed class AsyncRenderJob : IDisposable
 			float   correctMag    = correctNormal.Length();
 
 			Log.Warning(
-					"HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude}). Hit: {HitRecord}. Hittable: {Material}",
-					wrongNormal, wrongMag, correctNormal, correctMag, hit, obj.Hittable
+					"HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude})\nHit: {@Hit}\nObject: {@Object}",
+					wrongNormal, wrongMag, correctNormal, correctMag, hit, obj
 			);
-			GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj.Hittable);
+			GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj);
 		}
 
 		if (!GraphicsValidator.CheckUVCoordValid(hit.UV))
@@ -446,19 +425,19 @@ public sealed class AsyncRenderJob : IDisposable
 			Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
 
 			Log.Warning(
-					"HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}. Hit: {HitRecord}. Hittable: {Material}",
-					wrongUv, correctedUv, hit, obj.Hittable
+					"HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}\nHit: {@Hit}\nObject: {@Object}",
+					wrongUv, correctedUv, hit, obj
 			);
-			GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj.Hittable);
+			GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj);
 		}
 
 		if (!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
 		{
-			Log.Error(
-					"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]. HitRecord: {@HitRecord}. Hittable: {@Hittable}",
-					hit.K, kMin, kMax, hit, obj.Hittable
+			Log.Warning(
+					"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]\nHit: {@Hit}\nObject: {@Object}",
+					hit.K, kMin, kMax, hit, obj
 			);
-			GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj.Hittable);
+			GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj);
 			return null; //Skip because we can't consider it valid
 		}
 

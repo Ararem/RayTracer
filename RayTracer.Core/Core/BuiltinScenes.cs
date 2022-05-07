@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
+using RayTracer.Core.Textures;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
@@ -26,23 +27,43 @@ public static class BuiltinScenes
 		{
 			List<SceneObject> objects = new();
 			List<Light>       lights  = new();
-			Camera            camera  = Camera.Create(new Vector3(0, 3, 7), UnitY * 3, UnitY, 70, 16f / 9f, 0f, 1f);
+			Camera            camera  = Camera.Create(new Vector3(0, 2.87f, 7), UnitY * 3, UnitY, 70, 16f / 9f, 0f, 1f);
 
 			//Ground plane
 			{
 				objects.Add(new SceneObject("Ground", new InfinitePlane(Zero, UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
 			}
 			{
+				//Demonstrates axis-aligned planes and semi-diffuse materials
 				Vector3 low = new(-7, 0, -2), high = new(-5, 2.8f, -.5f);
 				objects.Add(new SceneObject("XY",                  new XYPlane(low.X, high.X, low.Y, high.Y, low.Z), new StandardMaterial(new Colour(1f,  .5f, .5f), Black,        .5f)));
 				objects.Add(new SceneObject("YZ",                  new YZPlane(low.Y, high.Y, low.Z, high.Z, low.X), new StandardMaterial(new Colour(.5f, 1f,  .5f), Black,        .5f)));
 				objects.Add(new SceneObject("XZ",                  new XZPlane(low.X, high.X, low.Z, high.Z, low.Y), new StandardMaterial(new Colour(.5f, .5f, 1f),  Black,        .5f)));
+
+				//Demonstrates emission from material
 				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f),     new StandardMaterial(Black,                     White * 0.8f, 0f)));
-				lights.Add(new DiffuseSphereLight(((low + high) / 2f) - UnitY, .51f, White, .5f));
 			}
 			{
-				objects.Add(new SceneObject("Lonely Sphere", new Sphere(new Vector3(-1, 2.5f, -2), 1f), new StandardMaterial(new Colour(165 / 255f, 42 / 255f, 42 / 255f), Black, 0f)));
-				objects.Add(new SceneObject("Capsule", new Capsule(new Vector3(-2, .7f, -3),new Vector3(0, 1.5f, -1f), .7f), new StandardMaterial(Yellow, Black, 1f)));
+				//Demonstrates reflective materials
+				objects.Add(new SceneObject("Lonely Sphere", new Sphere(new Vector3(-1, 3f, -2), 1f), new StandardMaterial(new Colour(165 / 255f, 42 / 255f, 42 / 255f), Black, 0f)));
+				//Demonstrates refractive materials
+				objects.Add(new SceneObject("Capsule", new Capsule(new Vector3(-2, .7f, -3),new Vector3(0, 1.5f, -1f), .7f), new RefractiveMaterial(RefractiveMaterial.GlassIndex, new Colour(0.27058825F, 0.77254903F,1F),false)));
+			}
+
+			{
+				//Infinite point light
+				lights.Add(new InfinitePointLight(new Vector3(-1, 5, -2), Red*.25f, 1));
+				//Position this slightly above the light so it doesn't affect the shadow calculations
+				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f), new StandardMaterial(Black, Red, 0f)));
+
+				lights.Add(new SizedPointLight(new Vector3(-5, 1f, -7f), Green, 1.5f));
+				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f), new StandardMaterial(Black, Green, 0f)));
+				objects.Add(new SceneObject("Sized Light Blocker", new Sphere(new Vector3(-5, .6f, -7f), .2f), new StandardMaterial(Black, Black, 0f)));
+
+				lights.Add(new DiffuseSphereLight(new Vector3(3, 1f, -7f), .4f, Blue, 2f));
+				objects.Add(new SceneObject("Diffuse Light Visualiser", new Sphere(new Vector3(3, 1.1f, -7f), .1f), new StandardMaterial(Black, Blue, 0f)));
+				objects.Add(new SceneObject("Diffuse Light Blocker", new Sphere(new Vector3(3, .6f, -7f), .2f), new StandardMaterial(Black, Black, 0f)));
+
 			}
 
 			return new Scene("EVERYTHING!!!", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());

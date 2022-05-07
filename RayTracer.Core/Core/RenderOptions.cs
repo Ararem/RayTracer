@@ -37,8 +37,7 @@ public sealed record RenderOptions(
 		int                        ConcurrencyLevel,
 		[NonNegativeValue] int     Passes,
 		[NonNegativeValue] int     MaxDepth,
-		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
-		bool                       HdrEnabled         = true //TODO: Remove this honestly i dont think its useful
+		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
 		//TODO: Max depth for calculating lighting?
 )
 {

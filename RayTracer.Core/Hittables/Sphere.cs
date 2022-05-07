@@ -32,10 +32,10 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		//This way we do a double check on both, prioritizing the less-positive root (as it's closer)
 		//And we only return null if neither is valid
 		float root = (-halfB - sqrtD) / a;
-		if ((root < kMin) || (kMax < root))
+		if ((root < kMin) || (kMax < root) || root is float.NaN)
 		{
 			root = (-halfB + sqrtD) / a;
-			if ((root < kMin) || (kMax < root)) return null;
+			if ((root < kMin) || (kMax < root)||root is float.NaN) return null;
 		}
 
 		float   k             = root;                            //How far along the ray we had to go to hit the sphere
