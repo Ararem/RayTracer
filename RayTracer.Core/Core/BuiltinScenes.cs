@@ -31,7 +31,7 @@ public static class BuiltinScenes
 
 			//Ground plane
 			{
-				objects.Add(new SceneObject("Ground", new InfinitePlane(Zero, UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
+				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0,-0.001f,0), UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
 			}
 			{
 				//Demonstrates axis-aligned planes and semi-diffuse materials
@@ -56,14 +56,20 @@ public static class BuiltinScenes
 				//Position this slightly above the light so it doesn't affect the shadow calculations
 				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f), new StandardMaterial(Black, Red, 0f)));
 
+				//Same but with a sized (area) light
 				lights.Add(new SizedPointLight(new Vector3(-5, 1f, -7f), Green, 1.5f));
 				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f), new StandardMaterial(Black, Green, 0f)));
 				objects.Add(new SceneObject("Sized Light Blocker", new Sphere(new Vector3(-5, .6f, -7f), .2f), new StandardMaterial(Black, Black, 0f)));
 
-				lights.Add(new DiffuseSphereLight(new Vector3(3, 1f, -7f), .4f, Blue, 2f));
+				//Same but the light is diffuse
+				lights.Add(new DiffuseSphereLight(new Vector3(3, 1f, -7f), .3f, Blue, 2f));
 				objects.Add(new SceneObject("Diffuse Light Visualiser", new Sphere(new Vector3(3, 1.1f, -7f), .1f), new StandardMaterial(Black, Blue, 0f)));
-				objects.Add(new SceneObject("Diffuse Light Blocker", new Sphere(new Vector3(3, .6f, -7f), .2f), new StandardMaterial(Black, Black, 0f)));
+				objects.Add(new SceneObject("Diffuse Light Blocker", new Sphere(new Vector3(3, .6f, -7f), .3f), new StandardMaterial(Black, Black, 0f)));
+			}
 
+			{
+				//Box
+				objects.Add(new SceneObject("Hex Box", new ConstantDensityMedium(Box.CreateFromCorners(new Vector3(-4, 0, 0), new Vector3(-1, 1, 2)), 1f), new VolumetricMaterial(Black)));
 			}
 
 			return new Scene("EVERYTHING!!!", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());

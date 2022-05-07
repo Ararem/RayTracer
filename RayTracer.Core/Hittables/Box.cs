@@ -17,6 +17,15 @@ namespace RayTracer.Core.Hittables;
 /// </remarks>
 public record Box : Hittable
 {
+	public static Box CreateFromCorners(Vector3 low, Vector3 high)
+	{
+		Vector3 size   = high - low;
+		Vector3 centre = (high + low) / 2f;
+
+		Matrix4x4 matrix = Matrix4x4.CreateScale(size) * Matrix4x4.CreateTranslation(centre);
+		return new Box(matrix);
+	}
+
 	/// <summary>
 	/// </summary>
 	/// <param name="boxToWorldTransform"></param>
