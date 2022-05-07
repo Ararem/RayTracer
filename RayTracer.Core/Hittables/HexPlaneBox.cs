@@ -29,8 +29,8 @@ public record HexPlaneBox : Hittable
 				new XZPlane(Min.X, Max.X, Min.Z, Max.Z, Min.Y),
 				new XZPlane(Min.X, Max.X, Min.Z, Max.Z, Max.Y),
 
-				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Min.Y),
-				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Max.Y)
+				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Min.X),
+				new YZPlane(Min.Y, Max.Y, Min.Z, Max.Z, Max.X)
 		};
 		BoundingVolume = new AxisAlignedBoundingBox(Min, Max);
 	}
