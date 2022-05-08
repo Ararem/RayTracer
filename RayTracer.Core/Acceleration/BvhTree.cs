@@ -34,13 +34,13 @@ public sealed class BvhTree
 		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
 		 */
 		this.renderStats = renderStats;
-		RootNode         = FromSegment_SAH(scene.SceneObjects);
+		RootNode         = FromSegment_SAH(scene.SceneObjects, 0);
 	}
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
-	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment)
+	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment, int depth)
 	{
 		//Simple check if 1 element so we can assume more than 1 later on
 		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], renderStats);
@@ -65,7 +65,7 @@ public sealed class BvhTree
 		Vector3 size = mainBox.Max - mainBox.Min;
 		float   max  = MathF.Max(MathF.Max(size.X, size.Y), size.Z);
 		int     axis = Math.Abs(max - size.X) < 0.001f ? 0 : Math.Abs(max - size.Y) < 0.001f ? 1 : 2; //Choose longest axis
-		Log.Verbose("Split Axis is {Axis}", axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+
 		Comparison<SceneObject> compareFunc = axis switch
 		{
 				0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
@@ -109,8 +109,11 @@ public sealed class BvhTree
 		}
 
 		//We know we'll be using binary nodes because we already checked for a single object earlier
-		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)]);
-		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..]);
+		string indent = new(' ', depth);
+		Log.Verbose("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+
+		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)], depth + 1);
+		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..], depth + 1);
 
 		return new BinaryBvhNode(leftNode, rightNode, renderStats);
 

@@ -148,7 +148,7 @@ public sealed class AsyncRenderJob : IDisposable
 			float   correctMag = correctDir.Length();
 
 			Log.Warning(
-					"Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude})\nCoords: {UvCoords} ({PixelCoords})\nCamera: {@Camera}",
+					"Camera initial view ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude})\nCoords: {@UvCoords} ({@PixelCoords})\nCamera: {@Camera}",
 					wrongDir, wrongMag, correctDir, correctMag, (s, t), (x, y), camera
 			);
 			GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, camera);
@@ -261,7 +261,7 @@ public sealed class AsyncRenderJob : IDisposable
 						float   correctMag = correctDir.Length();
 
 						Log.Warning(
-								"Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {Ray} Hit: {@Hit}. Object: {@Object}",
+								"Material scatter ray direction had incorrect magnitude, fixing. Correcting {WrongDirection} ({WrongMagnitude})	=>	{CorrectedDirection} ({CorrectedMagnitude}). Ray: {@Ray} Hit: {@Hit}. Object: {@Object}",
 								wrongDir, wrongMag, correctDir, correctMag, ray, hit, sceneObject
 						);
 						GraphicsValidator.RecordError(GraphicsErrorType.RayDirectionWrongMagnitude, sceneObject.Material);

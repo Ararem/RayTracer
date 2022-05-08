@@ -2,6 +2,7 @@ using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
+using Serilog;
 using SixLabors.ImageSharp.Formats.Png;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -129,15 +130,21 @@ public sealed class MainForm : Form
 							}
 					);
 
-					foreach ((GraphicsErrorType errorType, ConcurrentDictionary<object, ulong>? dict) in GraphicsValidator.Errors)
-					{
-						Error("{ErrorType}:", errorType);
-						foreach ((object? obj, ulong count) in dict)
-							Warning("\t{Object} = {Count}", obj, count);
-					}
 
 					if (GraphicsValidator.Errors.IsEmpty)
+					{
 						Information("No Errors");
+					}
+					else
+					{
+						foreach ((GraphicsErrorType errorType, ConcurrentDictionary<object, ulong>? dict) in GraphicsValidator.Errors)
+						{
+							Warning("{ErrorType} Errors:", errorType);
+							foreach ((object? obj, ulong count) in dict)
+								Warning("\t{Object} = {Count}", obj, count);
+						}
+						Error("{@Dict}", GraphicsValidator.Errors);
+					}
 				}
 		);
 	}
