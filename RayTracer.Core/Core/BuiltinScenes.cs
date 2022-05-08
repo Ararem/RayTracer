@@ -11,6 +11,7 @@ using static RayTracer.Core.Colour;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 using static System.MathF;
+using Module = SharpNoise.Modules.Module;
 
 namespace RayTracer.Core;
 
@@ -34,27 +35,21 @@ public static class BuiltinScenes
 			//Ground plane
 			{
 				// objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0,-0.001f,0), UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
-				objects.Add(
-						new SceneObject(
-								"Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(
-										new GreyscaleNoiseTexture(
-														new Power
-														{
-																Source0 = new Abs
-																{
-																		Source0 = new Perlin
-																		{
-																				Quality   = NoiseQuality.Best,
-																				Frequency = 2f
-																		}
-																},
-																Source1 = new Constant { ConstantValue = 2f }
-														}
-										), Black, .5f
-								)
-						)
-				);
+				Module noise = new Power
+				{
+						Source0 = new Abs
+						{
+								Source0 = new Perlin
+								{
+										Quality   = NoiseQuality.Best,
+										Frequency = 2f
+								}
+						},
+						Source1 = new Constant { ConstantValue = 2f }
+				};
+				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new GreyscaleNoiseTexture(noise), Black, .5f)));
 			}
+
 			{
 				//Demonstrates axis-aligned planes and semi-diffuse materials
 				Vector3 low = new(-7, 0, -2), high = new(-5, 2.8f, -.5f);
