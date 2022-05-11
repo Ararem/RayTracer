@@ -21,6 +21,20 @@ namespace RayTracer.Core;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public static class BuiltinScenes
 {
+
+	/// <summary>
+	///  Testing scene
+	/// </summary>
+	public static Scene Testing => new(
+			"Testing", Camera.Create(new Vector3(0f, 2f, 1.5f), new Vector3(.0f, .0f, .0f), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
+			{
+					// new ("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new MarbleTexture(), Black, .5f))
+					new ("Ground", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(new MarbleTexture(), Black, 0f))
+			},
+			Array.Empty<Light>(),
+			new DefaultSkyBox()
+	);
+
 	/// <summary>
 	///  Fancy scene containing (hopefully) every type of shape, light and material
 	/// </summary>
@@ -49,7 +63,6 @@ public static class BuiltinScenes
 				};
 				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new GreyscaleNoiseTexture(noise), Black, .5f)));
 			}
-
 			{
 				//Demonstrates axis-aligned planes and semi-diffuse materials
 				Vector3 low = new(-7, 0, -2), high = new(-5, 2.8f, -.5f);
@@ -162,36 +175,6 @@ public static class BuiltinScenes
 		}
 	}
 
-	/// <summary>
-	///  Testing scene
-	/// </summary>
-	public static Scene Testing => new(
-			"Testing", Camera.Create(new Vector3(0f, 0.0f, 1.5f), new Vector3(.0f, .0f, 0), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
-			{
-					new(
-							"Test Object",
-							new Quad(Zero, UnitY + new Vector3(.5f, 0, 0), UnitX - UnitY),
-							new StandardMaterial(HalfGrey, Black, .0f)
-					),
-					new(
-							"UnitX",
-							new Sphere(UnitX, .05f),
-							new StandardMaterial(Red, Black, .0f)
-					),
-					new(
-							"UnitY",
-							new Sphere(UnitY, .15f),
-							new StandardMaterial(Green, Black, .0f)
-					),
-					new(
-							"Origin",
-							new Sphere(Zero, .1f),
-							new StandardMaterial(Blue, Black, .0f)
-					)
-			},
-			Array.Empty<Light>(),
-			new DefaultSkyBox()
-	);
 
 	/// <summary>
 	///  Cover for RayTracing in a weekend, chapter one

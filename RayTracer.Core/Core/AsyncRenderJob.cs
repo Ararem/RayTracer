@@ -1,5 +1,5 @@
 //Debugging aid to help me compare when I change things with Hot Reload
-// #define DEBUG_IGNORE_BUFFER_PREVIOUS
+#define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using RayTracer.Core.Acceleration;
 using RayTracer.Core.Debugging;
@@ -87,7 +87,7 @@ public sealed class AsyncRenderJob : IDisposable
 		//Same comment from above applies, just different order
 		//Values are also compressed into a single number, then unpacked after
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
-		for (int pass = 0; pass < RenderOptions.Passes; pass++)
+		for (int pass = 0; (RenderOptions.Passes == -1) || (pass < RenderOptions.Passes); pass++)
 		{
 			Parallel.For(
 					0, RenderStats.TotalTruePixels,
