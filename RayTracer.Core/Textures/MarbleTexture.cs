@@ -1,39 +1,37 @@
 using RayTracer.Core.Hittables;
+using SharpNoise;
 using SharpNoise.Modules;
 using static System.MathF;
 
 namespace RayTracer.Core.Textures;
 
-public record MarbleTexture : Texture
+public record MarbleTexture(Colour Dark, Colour Light, float Scale = 1f, float NoiseScale = 1f, float NoiseStrength = 5f) : Texture
 {
-	//TODO: Properties, comments, docs & more options to modify
-	private float Scale         => 1f;
-	private float NoiseScale    => 0.5f;
-	private float NoiseStrength => 1f;
-
-	private Module noise =>
+	/// <summary>
+	/// Power controlling how fast the value drops off
+	/// </summary>
+	private const float DropoffPower = 1 / 6f;
+	private static readonly Module Noise =
 			new Perlin
 			{
-					// Quality   = NoiseQuality.Best,
+					Quality   = NoiseQuality.Fast,
 					Persistence = .5,
 					Lacunarity  = 3,
-					OctaveCount = 15
+					OctaveCount = 5
 			};
 
 	/// <inheritdoc/>
 	public override Colour GetColour(HitRecord hit)
 	{
 		float x = hit.WorldPoint.X / Scale, y = hit.WorldPoint.Y / Scale, z = hit.WorldPoint.Z / Scale;
-		float t = x;
-		t += (float)noise.GetValue(x / NoiseScale, y / NoiseScale, z / NoiseScale) * NoiseStrength;
-		t =  t                                                                     * 2 * PI; //Adjust for 1 wave per cycle
+		float t = x + y + z;
+		t += (float)Noise.GetValue(x / NoiseScale, y / NoiseScale, z / NoiseScale) * NoiseStrength;
 
-		t = Sin(t);
-		t = (0.5f * t) + 0.5f; //Remap [-1..1] to [0..1]
-		t = Pow(t, 1 / 5f);    //Make the curve rise rapidly (bias towards 1)
-		// t = .2f + 0.75f * t; // Remap from [0..1] to [0.2 .. 0.95]
-		Colour col = new(t);
-		col = new Colour(col.R, col.G, col.B * 0.95f); //Make the colour slightly warmer
-		return col;
+		float val = Sin(t);
+		val = (0.5f * val) + 0.5f; //Remap [-1..1] to [0..1]
+		val = Pow(val, DropoffPower);    //Make the curve rise rapidly (bias towards 1)
+		// Colour col = new(val);
+		// col = new Colour(col.R, col.G, col.B * 0.95f); //Make the colour slightly warmer
+		return Colour.Lerp(Dark, Light, val);
 	}
 }

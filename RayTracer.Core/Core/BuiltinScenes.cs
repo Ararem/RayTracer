@@ -3,15 +3,12 @@ using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using RayTracer.Core.Materials;
 using RayTracer.Core.Textures;
-using SharpNoise;
-using SharpNoise.Modules;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 using static System.MathF;
-using Module = SharpNoise.Modules.Module;
 
 namespace RayTracer.Core;
 
@@ -28,8 +25,7 @@ public static class BuiltinScenes
 	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 2f, 1.5f), new Vector3(.0f, .0f, .0f), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					// new ("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new MarbleTexture(), Black, .5f))
-					new ("Ground", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(new MarbleTexture(), Black, 0f))
+					new ("Test", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(new MarbleTexture(new Colour(0,.1f,0), White), Black, 0f))
 			},
 			Array.Empty<Light>(),
 			new DefaultSkyBox()
@@ -48,20 +44,7 @@ public static class BuiltinScenes
 
 			//Ground plane
 			{
-				// objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0,-0.001f,0), UnitY), new StandardMaterial(HalfGrey, Black, .5f)));
-				Module noise = new Power
-				{
-						Source0 = new Abs
-						{
-								Source0 = new Perlin
-								{
-										Quality   = NoiseQuality.Best,
-										Frequency = 2f
-								}
-						},
-						Source1 = new Constant { ConstantValue = 2f }
-				};
-				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new GreyscaleNoiseTexture(noise), Black, .5f)));
+				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY), new StandardMaterial(new MarbleTexture(Black, White), Black, .5f)));
 			}
 			{
 				//Demonstrates axis-aligned planes and semi-diffuse materials
@@ -71,7 +54,7 @@ public static class BuiltinScenes
 				objects.Add(new SceneObject("XZ", new XZPlane(low.X, high.X, low.Z, high.Z, low.Y), new StandardMaterial(new Colour(.5f, .5f, 1f),  Black, .5f)));
 
 				//Demonstrates emission from material
-				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f), new StandardMaterial(Black, Colour.White * 0.8f, 0f)));
+				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f), new StandardMaterial(Black, White * 0.8f, 0f)));
 			}
 			{
 				//Demonstrates reflective materials
@@ -131,9 +114,9 @@ public static class BuiltinScenes
 	public static Scene RgbSpheres => new(
 			"RGB Spheres", Camera.Create(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, .00002f, 5f), new SceneObject[]
 			{
-					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   Colour.White, 0.5f), Black, 1f)),
-					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, Colour.White, 0.5f), Black, 1f)),
-					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  Colour.White, 0.5f), Black, 1f))
+					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), Black, 1f)),
+					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, White, 0.5f), Black, 1f)),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), Black, 1f))
 					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
 			Array.Empty<Light>(),
@@ -157,7 +140,7 @@ public static class BuiltinScenes
 							new("Top", new XZPlane(0,    555, 0, 555, 555), greyWallMaterial),
 							new("Bottom", new XZPlane(0, 555, 0, 555, 0), greyWallMaterial),
 
-							new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(Colour.White, Colour.White, 1f)),
+							new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
 
 							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
 							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f))
@@ -168,7 +151,7 @@ public static class BuiltinScenes
 					new Light[]
 					{
 							//Centre ceiling light
-							new DiffuseSphereLight(new Vector3((213 + 343) / 2f, 554 - 50, (227 + 332) / 2f), 40, Colour.White * 0.5f, 150, 1.5f)
+							new DiffuseSphereLight(new Vector3((213 + 343) / 2f, 554 - 50, (227 + 332) / 2f), 40, White * 0.5f, 150, 1.5f)
 					},
 					new SingleColourSkyBox(Black)
 			);
@@ -200,33 +183,33 @@ public static class BuiltinScenes
 						if (chooseMat < 0.3)
 						{
 							// diffuse
-							Colour albedo = RandomColour(Black, Colour.White);
+							Colour albedo = RandomColour(Black, White);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1f);
 						}
 						else if (chooseMat < 0.5)
 						{
 							// diffuse
-							Colour albedo = RandomColour(Black, Colour.White);
-							sphereMaterial = new StandardMaterial(Colour.White, albedo, 1f);
+							Colour albedo = RandomColour(Black, White);
+							sphereMaterial = new StandardMaterial(White, albedo, 1f);
 						}
 						else if (chooseMat < 0.65)
 						{
 							// metal
-							Colour albedo = RandomColour(Black, Colour.White);
+							Colour albedo = RandomColour(Black, White);
 							float  fuzz   = RandomFloat(0f, 0.5f);
 							sphereMaterial = new StandardMaterial(albedo, Black, 1 - fuzz);
 						}
 						else if (chooseMat < 0.655)
 						{
-							Colour             colour = RandomColour(HalfGrey, Colour.White);
+							Colour             colour = RandomColour(HalfGrey, White);
 							SurfaceSphereLight light  = new(center, 0.4f, colour, 1f);
 							lights.Add(light);
-							sphereMaterial = new StandardMaterial(Colour.White, Black, 0f);
+							sphereMaterial = new StandardMaterial(White, Black, 0f);
 						}
 						else
 						{
 							// glass
-							Colour tint = RandomColour(Black, Colour.White);
+							Colour tint = RandomColour(Black, White);
 							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), tint);
 						}
 
@@ -235,7 +218,7 @@ public static class BuiltinScenes
 				}
 			}
 
-			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, Colour.White)));
+			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, White)));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), Black, 1f)));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), Black, 0f)));
 			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
