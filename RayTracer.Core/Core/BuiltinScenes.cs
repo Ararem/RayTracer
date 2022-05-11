@@ -25,7 +25,7 @@ public static class BuiltinScenes
 	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 2f, 1.5f), new Vector3(.0f, .0f, .0f), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					new ("Test", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(Black, new DarkMarbleTexture(), 0f))
+					new ("Test", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(Black, new MarbleTexture(), 0f))
 			},
 			Array.Empty<Light>(),
 			new SingleColourSkyBox(Black)
