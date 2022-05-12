@@ -552,15 +552,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				statsTable.Add(depthBufferImageView, 2, row);
 			}
 
-			depthBufferGraphics.Clear();
-
 			//What I'm doing here is adjusting the depth values so that the largest one reaches the end of the graph (scaling up to fill the image)
 			double[] doubleDepths = ArrayPool<double>.Shared.Rent(maxDepth);
 			double   max          = 0;
 			for (int depth = 0; depth < maxDepth; depth++) //Calculate the fractions and the max
 			{
 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
-				const double b        = 800;
+				const double b        = .0000001;
 				double       m        = renderStats.RayCount;
 				double       fraction = Math.Log((b * renderStats.RawRayDepthCounts[depth]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
 				#else
@@ -571,6 +569,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				max                 = Math.Max(max, fraction);
 			}
 
+			depthBufferGraphics.Clear();
 			for (int depth = 0; depth < maxDepth; depth++)
 			{
 				double corrected = doubleDepths[depth] / max; //Adjust so the max == 1
