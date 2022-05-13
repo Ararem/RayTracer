@@ -41,7 +41,8 @@ public sealed class AsyncRenderJob : IDisposable
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
 
-		ImageBuffer                          = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		Image                          = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		ImageBuffer                          =Image.Frames.RootFrame!;
 		RenderOptions                        = renderOptions;
 		rawColourBuffer                      = new Colour[renderOptions.Width * renderOptions.Height];
 		sampleCountBuffer                    = new int[renderOptions.Width    * renderOptions.Height];
@@ -472,6 +473,7 @@ public sealed class AsyncRenderJob : IDisposable
 		#else
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
+		//PERF: Perhaps cache the pixel row spans, to avoid range checks
 		//Have to clamp the colour here or we get funky things in the image later
 		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
 		#endif
@@ -508,9 +510,14 @@ public sealed class AsyncRenderJob : IDisposable
 	private readonly int[] sampleCountBuffer;
 
 	/// <summary>
-	///  Image buffer for the output image
+	///  Image buffer for the output image. Points to the <see cref="ImageFrameCollection{TPixel}.RootFrame"/> of the <see cref="Image"/> being rendered.
 	/// </summary>
-	public Image<Rgb24> ImageBuffer { get; }
+	public ImageFrame<Rgb24> ImageBuffer { get; }
+
+	/// <summary>
+	///	Image for the final render output
+	/// </summary>
+	public Image<Rgb24> Image { get; }
 
 	/// <summary>
 	///  The scene that is being rendered

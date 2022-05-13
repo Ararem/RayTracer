@@ -115,7 +115,7 @@ public sealed class MainForm : Form
 				() =>
 				{
 					string path = Path.GetFullPath("./image.png");
-					renderJob.ImageBuffer.Save(File.OpenWrite(path), new PngEncoder());
+					renderJob.Image.Save(File.OpenWrite(path), new PngEncoder());
 					Process.Start(
 							new ProcessStartInfo
 							{

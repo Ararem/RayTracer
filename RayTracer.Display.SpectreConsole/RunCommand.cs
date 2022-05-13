@@ -203,7 +203,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		int                   maxHeight       = Console.WindowHeight - 6; //The offset is so that we leave enough room for the title (1) + heading (2) + caption (1) + newline (1) = 5
 		float                 aspect          = (float)renderJob.ImageBuffer.Width / renderJob.ImageBuffer.Height;
 		int                   maxWidth        = (int)(maxHeight * aspect);
-		CustomImageRenderable imageRenderable = new(renderJob.ImageBuffer) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth - 6 };
+		CustomImageRenderable imageRenderable = new(renderJob.Image) { Resampler = KnownResamplers.Robidoux, MaxConsoleWidth = maxWidth - 6 };
 
 	#endregion
 
@@ -348,7 +348,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	/// </summary>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
-		Image<Rgb24> image = renderJob.ImageBuffer;
+		Image<Rgb24> image = renderJob.Image;
 		MarkupLine($"[{FinishedRenderMarkup}]Finished Rendering in {renderJob.Stopwatch.Elapsed:h\\:mm\\:ss}[/]");
 
 		//Print any errors

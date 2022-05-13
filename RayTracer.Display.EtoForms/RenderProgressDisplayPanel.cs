@@ -168,7 +168,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	{
 		using BitmapData data         = previewImage.Lock();
 		int              xSize        = previewImage.Width, ySize = previewImage.Height;
-		Image<Rgb24>     renderBuffer = renderJob.ImageBuffer;
+		ImageFrame<Rgb24>     renderBuffer = renderJob.ImageBuffer;
 		IntPtr           offset       = data.Data;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
