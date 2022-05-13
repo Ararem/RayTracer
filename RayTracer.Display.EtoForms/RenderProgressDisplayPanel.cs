@@ -207,6 +207,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		static string FormatTimeSmall(TimeSpan val)
 		{
+			// ReSharper disable once StringLiteralTypo
 			return val.ToString("ss'.'ffffff").PadLeft(leftAlign);
 		}
 

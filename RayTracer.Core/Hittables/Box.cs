@@ -1,6 +1,7 @@
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
+using static System.Numerics.Vector3;
 
 namespace RayTracer.Core.Hittables;
 
@@ -17,10 +18,15 @@ namespace RayTracer.Core.Hittables;
 /// </remarks>
 public record Box : Hittable
 {
-	public static Box CreateFromCorners(Vector3 low, Vector3 high)
+	/// <summary>
+	/// Creates a <see cref="Box"/> from two opposing corners
+	/// </summary>
+	public static Box CreateFromCorners(Vector3 corner1, Vector3 corner2)
 	{
-		Vector3 size   = high - low;
-		Vector3 centre = (high + low) / 2f;
+		corner1  = Min(corner1, corner2);
+		corner2 = Max(corner1, corner2);
+		Vector3 size   = corner2 - corner1;
+		Vector3 centre = (corner2 + corner1) / 2f;
 
 		Matrix4x4 matrix = Matrix4x4.CreateScale(size) * Matrix4x4.CreateTranslation(centre);
 		return new Box(matrix);
@@ -52,7 +58,7 @@ public record Box : Hittable
 				new(1, 1, 1)
 		};
 		//Transform each of the corners by our box to world matrix
-		for (int i = 0; i < corners.Length; i++) corners[i] = Vector3.Transform(corners[i], boxToWorldTransform);
+		for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], boxToWorldTransform);
 		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
 	}
 
@@ -167,7 +173,7 @@ public record Box : Hittable
 
 		Vector3 worldPoint = ray.PointAt(k);
 		//Transform the point from world space to box space to get the local point
-		Vector3 localPoint = Vector3.Transform(worldPoint, WorldToBoxTransform);
+		Vector3 localPoint = Transform(worldPoint, WorldToBoxTransform);
 
 		//Will implement these later
 		_ = uv;
@@ -177,6 +183,6 @@ public record Box : Hittable
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, Vector3.Normalize(normal), k, Vector3.Dot(ray.Direction, normal) < 0f, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
 }

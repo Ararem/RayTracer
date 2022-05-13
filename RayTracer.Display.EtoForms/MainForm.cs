@@ -2,7 +2,6 @@ using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
-using Serilog;
 using SixLabors.ImageSharp.Formats.Png;
 using System.Collections.Concurrent;
 using System.Diagnostics;
