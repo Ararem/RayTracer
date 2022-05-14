@@ -33,7 +33,7 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats Re
 	}
 
 	/// <inheritdoc />
-	public override bool FastTryHit(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
+	public override bool FastTryHit(Ray ray, float kMin, float kMax) => SceneObject.Hittable.FastTryHit(ray, kMin, kMax);
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;

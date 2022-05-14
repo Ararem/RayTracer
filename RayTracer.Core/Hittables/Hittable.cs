@@ -33,4 +33,16 @@ public abstract record Hittable : RenderAccessor
 
 	/// <inheritdoc/>
 	public override string ToString() => GetType().Name;
+
+	/// <summary>
+	/// Fast version of <see cref="TryHit"/> that only checks if there was an intersection, without any extra detail
+	/// </summary>
+	/// <param name="ray">The ray to check for intersection with</param>
+	/// <param name="kMin">Minimum distance along the ray to check for intersections</param>
+	/// <param name="kMax">Maximum distance along the ray to check for intersection</param>
+	/// <returns>
+	///  If the ray hit this instance, returns <see langword="true"/>, else <see langword="false"/>
+	/// </returns>
+	public virtual bool FastTryHit(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
+	#warning REMOVE THIS FAST CODE IMPLE
 }

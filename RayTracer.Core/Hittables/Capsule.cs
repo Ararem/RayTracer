@@ -78,6 +78,49 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		return null;
 	}
 
+	/// <inheritdoc/>
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		float   k  = -1f;
+		Vector3 ba = P2         - P1;
+		Vector3 oa = ray.Origin - P1;
+
+		float baba = Dot(ba,            ba);
+		float bard = Dot(ba,            ray.Direction);
+		float baoa = Dot(ba,            oa);
+		float rdoa = Dot(ray.Direction, oa);
+		float oaoa = Dot(oa,            oa);
+
+		float a = baba - (bard * bard);
+		float b = (baba        * rdoa) - (baoa * bard);
+		float c = (baba        * oaoa) - (baoa * baoa) - (Radius * Radius * baba);
+		float h = (b           * b)    - (a    * c);
+		if (h >= 0.0)
+		{
+			float t = (-b - Sqrt(h)) / a;
+			float y = baoa + (t * bard);
+			// body
+			if ((y > 0.0) && (y < baba))
+			{
+				k = t;
+			}
+			// caps
+			else
+			{
+				Vector3 oc = y <= 0.0 ? oa : ray.Origin - P2;
+				b = Dot(ray.Direction, oc);
+				c = Dot(oc, oc) - (Radius * Radius);
+				h = (b                    * b) - c;
+				if (h > 0.0) k = -b - Sqrt(h);
+			}
+		}
+
+		//If we didn't hit anything `k` will still have it's value of -1, indicating nothing was hit
+		//Not sure if it is also somehow set to negative values elsewhere when it's invalid, but I'm assuming it's fine
+		// ReSharper disable once CompareOfFloatsByEqualityOperator
+		return (k != -1f) && (k >= kMin) && (k <= kMax);
+	}
+
 	/// <summary>
 	///  Gets the UV coordinate for a point on the capsule's surface
 	/// </summary>

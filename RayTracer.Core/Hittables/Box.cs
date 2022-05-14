@@ -185,4 +185,43 @@ public record Box : Hittable
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
 		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		//Same as TryHit() but with HitRecord calculation code removed
+
+		// convert from world to box space
+		Vector4 temp4 = Vector4.Transform(new Vector4(ray.Direction, 0f), WorldToBoxTransform);
+		Vector3 rd    = new(temp4.X, temp4.Y, temp4.Z);
+		temp4 = Vector4.Transform(new Vector4(ray.Origin, 1f), WorldToBoxTransform);
+		Vector3 ro = new(temp4.X, temp4.Y, temp4.Z);
+
+		// ray-box intersection in box space
+		Vector3 m = new Vector3(1f) / rd;
+		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
+		if(m.X is float.NaN || m.Y is float.NaN ||m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y)||float.IsInfinity(m.Z)) return false;
+		Vector3 s = new(
+				rd.X < 0f ? 1f : -1f,
+				rd.Y < 0f ? 1f : -1f,
+				rd.Z < 0f ? 1f : -1f
+		);
+		Vector3 t1 = m * (-ro + (s / 2f));
+		Vector3 t2 = m * (-ro - (s / 2f));
+
+		float kNear = Max(Max(t1.X, t1.Y), t1.Z);
+		float kFar  = Min(Min(t2.X, t2.Y), t2.Z);
+
+		//Validate our K value ranges
+		if ((kNear > kFar) || (kFar < 0f)) return false;
+		float k = kNear;
+		if ((k < kMin) || (kMax < k))
+		{
+			k = kFar;
+			if ((k < kMin) || (kMax < k)) return false;
+		}
+		if (float.IsNaN(k)) return false;
+
+		return true;
+	}
 }
