@@ -13,7 +13,9 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	/// <summary>
 	///  An <see cref="AxisAlignedBoundingBox"/> that represents an unbounded AABB
 	/// </summary>
-	/// <remarks>This isn't truly infinite, as <see cref="float.PositiveInfinity"/> and <see cref="float.NegativeInfinity"/> may not work, however this is necessary for computation of <see cref="BvhTree">BVH Trees</see>
+	/// <remarks>
+	///  This isn't truly infinite, as <see cref="float.PositiveInfinity"/> and <see cref="float.NegativeInfinity"/> may not work, however this is necessary
+	///  for computation of <see cref="BvhTree">BVH Trees</see>
 	/// </remarks>
 	public static AxisAlignedBoundingBox Infinite { get; } = new(new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
 
@@ -26,13 +28,65 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 	/// <returns><see langword="true"/> if the ray intersects this bounding volume and may hit the object inside, else <see langword="false"/></returns>
 	public bool Hit(Ray ray, float kMin, float kMax)
 	{
-		(Vector3 ro, Vector3 rd) = ray;
-		for (int a = 0; a < 3; a++)
+		/*
+		 * I did some optimisations based on profiling info, so theres a few ways of doing this
+		 *
+		 * (1): R# Suggested for loop
+		 * (Vector3 ro, Vector3 rd) = ray;
+		 * for (int a = 0; a < 3; a++)
+		 * {
+		 * 		float invD = 1.0f                           / Index(rd, a);
+		 * 		float t0   = (Index(Min, a) - Index(ro, a)) * invD;
+		 * 		float t1   = (Index(Max, a) - Index(ro, a)) * invD;
+		 * 		if (invD < 0.0f)
+		 * 			(t1, t0) = (t0, t1);
+		 * 		kMin = t0 > kMin ? t0 : kMin;
+		 * 		kMax = t1 < kMax ? t1 : kMax;
+		 * 		if (kMax <= kMin)
+		 * 			return false;
+		 * }
+		 *
+		 * (2): No decomposition (since apparently it was 14% of access time??)
+		 * for (int a = 0; a < 3; a++)
+		 * {
+		 * 		float invD = 1.0f                                   / Index(ray.Direction, a);
+		 * 		float t0   = (Index(Min, a) - Index(ray.Origin, a)) * invD;
+		 * 		float t1   = (Index(Max, a) - Index(ray.Origin, a)) * invD;
+		 * 		if (invD < 0.0f)
+		 * 			(t1, t0) = (t0, t1);
+		 * 		kMin = t0 > kMin ? t0 : kMin;
+		 * 		kMax = t1 < kMax ? t1 : kMax;
+		 * 		if (kMax <= kMin)
+		 * 			return false;
+		 * }
+		 *
+		 * (3): Remove `Index()` method because its 30% of access time..???
+		 */
+		Vector3 invD = Vector3.One / ray.Direction;
 		{
-			float invD = 1.0f                           / Index(rd, a);
-			float t0   = (Index(Min, a) - Index(ro, a)) * invD;
-			float t1   = (Index(Max, a) - Index(ro, a)) * invD;
-			if (invD < 0.0f)
+			float t0  = (Min.X - ray.Origin.X) * invD.X;
+			float t1  = (Max.X - ray.Origin.X) * invD.X;
+			if (invD.X < 0.0f)
+				(t1, t0) = (t0, t1);
+			kMin = t0 > kMin ? t0 : kMin;
+			kMax = t1 < kMax ? t1 : kMax;
+			if (kMax <= kMin)
+				return false;
+		}
+		{
+			float t0 = (Min.Y - ray.Origin.Y) * invD.Y;
+			float t1 = (Max.Y - ray.Origin.Y) * invD.Y;
+			if (invD.Y < 0.0f)
+				(t1, t0) = (t0, t1);
+			kMin = t0 > kMin ? t0 : kMin;
+			kMax = t1 < kMax ? t1 : kMax;
+			if (kMax <= kMin)
+				return false;
+		}
+		{
+			float t0 = (Min.Z - ray.Origin.Z) * invD.Z;
+			float t1 = (Max.Z - ray.Origin.Z) * invD.Z;
+			if (invD.Z < 0.0f)
 				(t1, t0) = (t0, t1);
 			kMin = t0 > kMin ? t0 : kMin;
 			kMax = t1 < kMax ? t1 : kMax;
@@ -41,18 +95,6 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 		}
 
 		return true;
-
-		static float Index(Vector3 v, int p)
-		{
-			// ReSharper disable once ConvertSwitchStatementToSwitchExpression
-			switch (p)
-			{
-				case 0:  return v.X;
-				case 1:  return v.Y;
-				case 2:  return v.Z;
-				default: throw new ArgumentOutOfRangeException(nameof(p), p, "Invalid vector index");
-			}
-		}
 	}
 
 	/// <summary>
