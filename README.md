@@ -3,7 +3,7 @@
 ---
 
 ## Overview
-This is my personal ray-tracer project, built to be as realistic as possible (at the cost of performance). Rays are traced recursively (starting at the camera), spawning new rays each bounce until a limit is reached, whereupon the colours are calculated in reverse (starting at the last bounce). Since each material can *completely* modify how the colour changes, this allows for some fancy materials that (while technically unrealistic) look much better than simply using raw emission and albedo.
+This is my personal ray-tracer project, built to be as realistic as possible (at the cost of performance). Rays are traced recursively (starting at the camera), spawning new rays each bounce until a limit is reached, whereupon the colours are calculated in reverse (starting at the last bounce). Since each material can *completely* modify how the colour changes, this allows for some fancy materials that (while technically unrealistic) look much better than simply using raw emission and albedo (see [Refractive Material In/Direct Emission Comparison](Renders/Refractive%20Material%20Indirect%20Emission%20Comparison))
 
 # API Explanation
 | File/Type                                                 | What it does                                                                                                        |
