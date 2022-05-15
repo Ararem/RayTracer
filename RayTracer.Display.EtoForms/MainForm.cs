@@ -1,8 +1,10 @@
+using Eto;
 using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
 using SixLabors.ImageSharp.Formats.Png;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
@@ -110,16 +112,28 @@ public sealed class MainForm : Form
 				Spacing = 10
 		};
 
-		//Once the render job is complete, save the image and open it up
+		//Once the render job is complete, save the image and open it up in the default editor
 		renderJob.GetAwaiter().OnCompleted(
 				() =>
 				{
-					string path = Path.GetFullPath("./image.png");
-					renderJob.Image.Save(File.OpenWrite(path), new PngEncoder());
+					string     path            = Path.GetFullPath("./image.png");
+
+					//Save to the path
+					FileStream imageFileStream = new (path, FileMode.Truncate, FileAccess.Write, FileShare.Read);
+					renderJob.Image.Save(imageFileStream, new PngEncoder());
+					imageFileStream.Dispose();
+
+					//Start in the default program
 					Process.Start(
 							new ProcessStartInfo
 							{
-									FileName  = "eog",
+									//What command we run depends on what platform
+									FileName  = EtoEnvironment.Platform switch
+									{
+											{IsWindows:true} => "explorer.exe",
+											{IsLinux:true} => "xdg-open",
+											_=> throw new PlatformNotSupportedException("Cannot locate file opener command on platform")
+									},
 									Arguments = $"\"{path}\"",
 									//These flags stop the image display program's console from attaching to ours (because that's yuck!)
 									UseShellExecute        = false,

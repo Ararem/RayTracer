@@ -4,11 +4,15 @@ using System.Numerics;
 
 namespace RayTracer.Core.Debugging;
 
+//TODO: I don't really like how this is made a static class, perhaps refactor this into an instance class and store in AsyncRenderJob
 /// <summary>
 ///  Static class for validating graphics
 /// </summary>
 public static class GraphicsValidator
 {
+	/// <summary>
+	/// Threshold for how close floats need to be to considered 'equal' (cause of floating point errors)
+	/// </summary>
 	private const float MagnitudeEqualityError = 0.01f;
 
 #region Storing errors
@@ -16,7 +20,7 @@ public static class GraphicsValidator
 	/// <summary>
 	///  Dictionary that stores how many times each error type has occurred, on a per-object basis
 	/// </summary>
-	//TODO: Figure out how to make this publicly readonly, preferably without having to copy the dictionary
+	//TODO: Figure out how to make this properly readonly, preferably without having to copy the dictionary
 	public static readonly ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> Errors = new();
 
 	// /// <summary>
