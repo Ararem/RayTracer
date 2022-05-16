@@ -7,6 +7,7 @@ using RayTracer.Core.Environment;
 using RayTracer.Core.Hittables;
 using Serilog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Buffers;
 using System.Diagnostics;
@@ -388,7 +389,7 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Use this for simple shadow-like checks, to see if <i>anything</i> lies in between the light source and target point. Note that this will return
 	///  <see langword="true"/> as soon as an intersection is hit, and does not take into account a material's properties (such as transparency), just
 	///  geometry.
-	/// </remarks>
+	/// </remarks>s
 	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax) => bvhTree.RootNode.FastTryHit(ray, kMin, kMax);
 
 	/// <summary>
@@ -462,7 +463,7 @@ public sealed class AsyncRenderJob : IDisposable
 		//NOTE: Although this may not be 'thread-safe' at first glance, we don't actually need to lock to safely access and change to array
 		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
-		//In previous profiles, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
+		//In previous profiling sessions, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
 		int i = Compress2DIndex(x, y, RenderOptions.Width);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
@@ -473,7 +474,6 @@ public sealed class AsyncRenderJob : IDisposable
 		#else
 		sampleCountBuffer[i]++;
 		rawColourBuffer[i] += colour;
-		//PERF: Perhaps cache the pixel row spans, to avoid range checks
 		//Have to clamp the colour here or we get funky things in the image later
 		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
 		#endif
@@ -512,6 +512,7 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <summary>
 	///  Image buffer for the output image. Points to the <see cref="ImageFrameCollection{TPixel}.RootFrame"/> of the <see cref="Image"/> being rendered.
 	/// </summary>
+	//The reason I have pulled this out is because when trying to set an image pixel, it has to evaluate the ImageFrame each time, so cache it here
 	public ImageFrame<Rgb24> ImageBuffer { get; }
 
 	/// <summary>
