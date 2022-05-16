@@ -448,12 +448,12 @@ public sealed class AsyncRenderJob : IDisposable
 
 	/// <summary>
 	///  Updates the pixel and colour buffers for the pixel at (<paramref name="x"/>, <paramref name="y"/>), on the basis that that pixel was just rendered
-	///  with a <paramref name="colour"/>, and the average needs to be updated
+	///  with a <paramref name="newSampleColour"/>, and the average needs to be updated
 	/// </summary>
 	/// <param name="x">X coordinate for the pixel (camera coords, left to right)</param>
 	/// <param name="y">Y coordinate for the pixel (camera coords, bottom to top)</param>
-	/// <param name="colour">Colour that the pixel was just rendered as</param>
-	private void UpdateBuffers(int x, int y, Colour colour)
+	/// <param name="newSampleColour">Colour that the pixel was just rendered as</param>
+	private void UpdateBuffers(int x, int y, Colour newSampleColour)
 	{
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
@@ -467,16 +467,21 @@ public sealed class AsyncRenderJob : IDisposable
 		int i = Compress2DIndex(x, y, RenderOptions.Width);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
-		rawColourBuffer[i]   = colour;
+		rawColourBuffer[i]   = newSampleColour;
 		//Have to clamp the colour here or we get funky things in the image later
-		//Sqrt for gamma=2 correction
-		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(colour));
+		Colour finalColour = newSampleColour;
 		#else
 		sampleCountBuffer[i]++;
-		rawColourBuffer[i] += colour;
-		//Have to clamp the colour here or we get funky things in the image later
-		ImageBuffer[x, y] = (Rgb24)Colour.Sqrt(Colour.Clamp01(rawColourBuffer[i] / sampleCountBuffer[i]));
+		rawColourBuffer[i] += newSampleColour;
+		Colour finalColour = rawColourBuffer[i] / sampleCountBuffer[i];
 		#endif
+
+		//Have to clamp the colour here or we get funky things in the image later
+		finalColour       = Colour.Clamp01(finalColour);
+		//Sqrt for gamma=2 correction
+		finalColour       = Colour.Sqrt(finalColour);
+		Rgb24 rgb24 = (Rgb24)finalColour;
+		ImageBuffer[x, y] = rgb24;
 	}
 
 #region Internal state
