@@ -12,6 +12,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="P1">The first point that makes up the capsule</param>
 /// <param name="P2">The seconds point that makes up the capsule</param>
 /// <param name="Radius">The radius of the capsule</param>
+//TODO: With all the hittables that need to do calculations in the ctor, rewrite them similar to Quad and Camera
 public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 {
 	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
@@ -121,13 +122,10 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		return (k != -1f) && (k >= kMin) && (k <= kMax);
 	}
 
-	/// <summary>
-	///  Gets the UV coordinate for a point on the capsule's surface
-	/// </summary>
-	private Vector2 UV(Vector3 point)
+	private readonly Matrix4x4 uvMatrix = CreateUvMatrix(P1, P2);
+	private static Matrix4x4 CreateUvMatrix(Vector3 p1, Vector3 p2)
 	{
-		//PERF: Cache these and the matrix?
-		Vector3 w = Normalize(P2 - P1);
+		Vector3 w = Normalize(p2 - p1);
 		Vector3 u = Normalize(Cross(w, new Vector3(0, 0, 1)));
 		Vector3 v = Normalize(Cross(u, w));
 		// Original is:
@@ -139,8 +137,15 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 				u.Z, v.Z, w.Z, 0,
 				0, 0, 0, 0
 		);
+		return mat;
+	}
 
-		Vector3 q  = Transform(point - P1, mat);
+	/// <summary>
+	///  Gets the UV coordinate for a point on the capsule's surface
+	/// </summary>
+	private Vector2 UV(Vector3 point)
+	{
+		Vector3 q  = Transform(point - P1, uvMatrix);
 		Vector2 rawUv = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
 		/*
 		 *
