@@ -46,4 +46,26 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
+		float normDotDir = Dot(ray.Direction, Normal);
+		float t;
+		//If the ray is going parallel to the plane (through it), then the normal and ray direction will be perpendicular
+		if (Abs(normDotDir) <= 0.001f) //Approx for ==0
+		{
+			return false;
+		}
+		else
+		{
+			//Find intersection normally
+			float d = -Dot(Point, Normal);
+			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+		}
+
+		//Assert ranges
+		return (t >= kMin) && (t <= kMax);
+	}
 }

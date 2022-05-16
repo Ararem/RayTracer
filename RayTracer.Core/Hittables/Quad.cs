@@ -105,4 +105,38 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		float normDotDir = Dot(Normal, ray.Direction);
+		float t;
+		//If the ray is going parallel to the plane (along it), then the normal and ray direction will be perpendicular
+		if (MathF.Abs(normDotDir) <= 0.001f) //Approx for ==0
+		{
+			return false;
+		}
+		else
+		{
+			//Find intersection normally
+			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
+		}
+
+		//Assert K ranges
+		if ((t < kMin) || (t > kMax)) return false;
+
+		Vector3 worldPoint = ray.PointAt(t);
+		Vector3 localPoint = worldPoint - Origin;
+
+		// Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
+		// float   u   = uvn.X, v = uvn.Y;
+		//Inlined code above, since we don't need the Z coord, and removed the casts to `double`
+		float u = (localPoint.X * LocalToQuadMatrix.M11)  + (localPoint.Y *  LocalToQuadMatrix.M21) + (localPoint.Z *  LocalToQuadMatrix.M31) + LocalToQuadMatrix.M41;
+		float v =(localPoint.X  *  LocalToQuadMatrix.M12) + (localPoint.Y *  LocalToQuadMatrix.M22) + (localPoint.Z *  LocalToQuadMatrix.M32) + LocalToQuadMatrix.M42;
+
+		//Assert our bounds of the quad (ensure the point is inside)
+		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return false;
+
+		return true;
+	}
 }

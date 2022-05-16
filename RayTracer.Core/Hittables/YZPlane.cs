@@ -45,4 +45,20 @@ public sealed record YZPlane(float YLow, float YHigh, float ZLow, float ZHigh, f
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		//How far along the ray did it intersect with the unbounded version of this plane (bounds of +- infinity)
+		float k = (X - ray.Origin.X) / ray.Direction.X;
+		//The above code doesn't work when `ray.Direction.X == 0`, since the ray is essentially going along/parallel to the plane
+		//So we have to do a sanity check here, otherwise `k` will be NaN, and that messes up everything else
+		if ((ray.Direction.X == 0f) || float.IsNaN(k)) return false;
+		if ((k < kMin) || (k > kMax)) //Out of range for our near/far plane
+			return false;
+		Vector3 worldPoint = ray.PointAt(k);
+		float   y          = worldPoint.Y, z = worldPoint.Z;
+		//Assert our bounds
+		return !(y < YLow) && !(y > YHigh) && !(z < ZLow) && !(z > ZHigh);
+	}
 }

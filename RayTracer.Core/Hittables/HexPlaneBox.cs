@@ -79,4 +79,14 @@ public record HexPlaneBox : Hittable
 		//TODO: Uv coords are local to the face they hit
 		return closest;
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		for (int i = 0; i < sides.Length; i++)
+			if (sides[i].FastTryHit(ray, kMin, kMax))
+				return true;
+
+		return false;
+	}
 }

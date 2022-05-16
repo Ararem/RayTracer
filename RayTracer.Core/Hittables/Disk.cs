@@ -52,4 +52,31 @@ public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittab
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax){
+		//Code copied from `Plane.cs`, with a distance checker added
+		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
+		float normDotDir = Dot(ray.Direction, Normal);
+		float t;
+		//If the ray is going parallel to the plane (through it), then the normal and ray direction will be perpendicular
+		if (Abs(normDotDir) <= 0.001f) //Approx for ==0
+		{
+			return false;
+		}
+		else
+		{
+			//Find intersection normally
+			float d = -Dot(Centre, Normal);
+			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+		}
+
+		//Assert ranges
+		if ((t < kMin) || (t > kMax)) return false;
+
+		Vector3 worldPoint = ray.PointAt(t);
+
+		//Now assert radius
+		return !(DistanceSquared(Centre, worldPoint) > radiusSqr);
+	}
 }

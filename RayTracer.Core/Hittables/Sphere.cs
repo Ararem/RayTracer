@@ -76,4 +76,33 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 
 	/// <inheritdoc/>
 	public override string ToString() => $"Sphere {{Radius: {Radius}}}";
+
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax)
+	{
+		//Do some ray-sphere intersection math to find if the ray intersects
+		Vector3 rayPos = ray.Origin, rayDir = ray.Direction;
+		Vector3 oc     = rayPos - Centre;
+		float   a      = rayDir.LengthSquared();
+		float   halfB  = Dot(oc, rayDir);
+		float   c      = oc.LengthSquared() - (Radius * Radius);
+
+		float discriminant = (halfB * halfB) - (a * c);
+		if (discriminant < 0) return false; //No solutions to where ray intersects with sphere because of negative square root
+
+		float sqrtD = Sqrt(discriminant);
+
+		// Find the nearest root that lies in the acceptable range.
+		//This way we do a double check on both, prioritizing the less-positive root (as it's closer)
+		//And we only return null if neither is valid
+		float root = (-halfB - sqrtD) / a;
+		if ((root < kMin) || (kMax < root) || root is float.NaN)
+		{
+			root = (-halfB + sqrtD) / a;
+			if ((root < kMin) || (kMax < root) ||root is float.NaN) return false;
+		}
+
+		return true;
+
+	}
 }
