@@ -5,7 +5,6 @@ using static System.MathF;
 
 namespace RayTracer.Core.Hittables;
 
-//TODO: Non-infinite version of this, with UV coords
 /// <summary>
 ///  A 2D Plane in 3D space.
 /// </summary>

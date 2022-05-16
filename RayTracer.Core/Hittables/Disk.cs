@@ -5,7 +5,6 @@ using static System.MathF;
 
 namespace RayTracer.Core.Hittables;
 
-//TODO: Constraints/Bounds for planes
 /// <summary>
 ///  A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
 /// </summary>

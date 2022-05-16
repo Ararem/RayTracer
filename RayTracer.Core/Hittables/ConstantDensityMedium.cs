@@ -38,6 +38,11 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero);
 	}
 
+	/// <inheritdoc />
+	public override bool FastTryHit(Ray ray, float kMin, float kMax) => Boundary.FastTryHit(ray, kMin, kMax);
+
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume => Boundary.BoundingVolume;
+
+
 }

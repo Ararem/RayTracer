@@ -43,6 +43,5 @@ public abstract record Hittable : RenderAccessor
 	/// <returns>
 	///  If the ray hit this instance, returns <see langword="true"/>, else <see langword="false"/>
 	/// </returns>
-	public virtual bool FastTryHit(Ray ray, float kMin, float kMax) => TryHit(ray, kMin, kMax) != null;
-	#warning REMOVE THIS FAST CODE IMPLE
+	public abstract bool FastTryHit(Ray ray, float kMin, float kMax);
 }

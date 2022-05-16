@@ -3,7 +3,6 @@ using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core.Materials;
 
-//TODO: Materials should somehow be able to access
 /// <summary>
 ///  A class that defines a material that a <see cref="Hittable"/> can have
 /// </summary>

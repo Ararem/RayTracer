@@ -37,7 +37,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 		Verbose("Creating new table layout");
 		TableLayout tableLayout = new() { Padding = 10, Spacing = new Size(10, 5) };
-		//TODO: Width needs to be filled
 		//Loop over each property in RenderOptions and create an editor for it
 		Verbose("Creating property editors");
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())

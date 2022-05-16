@@ -6,7 +6,6 @@ using System.Numerics;
 
 namespace RayTracer.Core.Acceleration;
 
-//TODO: Stats tracking
 /// <summary>
 ///  Class that handles creating a Bounding Volume Hierarchy (BVH) tree for a given <see cref="Scene"/>. This can be used to accelerate ray-object
 ///  intersections by quickly discarding a <see cref="Ray"/> that will not intersect a given objects (since it doesn't intersect it's bounds)
