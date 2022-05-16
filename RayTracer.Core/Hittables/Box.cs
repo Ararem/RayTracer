@@ -16,64 +16,60 @@ namespace RayTracer.Core.Hittables;
 ///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a>
 ///  )
 /// </remarks>
-public record Box : Hittable
+/// <param name="BoxToWorldTransform">Matrix to transform box-space to world-space</param>
+/// <param name="WorldToBoxTransform">Matrix to transform world-space to box-space</param>
+public record Box(Matrix4x4 BoxToWorldTransform, Matrix4x4 WorldToBoxTransform) : Hittable
 {
+	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume {
+		get
+		{
+			//Bounding volume calculations
+			//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
+			//It's not super efficient but it should be pretty fast and simple
+			//Due to how IQ implemented his code, valid box-space is [-1..1] so just plug these coords into the matrix and we find where they will end up
+			Vector3[] corners =
+			{
+					new(-1, -1, -1),
+					new(-1, -1, 1),
+					new(-1, 1, -1),
+					new(-1, 1, 1),
+					new(1, -1, -1),
+					new(1, -1, 1),
+					new(1, 1, -1),
+					new(1, 1, 1)
+			};
+			//Transform each of the corners by our box to world matrix
+			for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], BoxToWorldTransform);
+			AxisAlignedBoundingBox boundingVolume               = AxisAlignedBoundingBox.Encompass(corners);
+			return boundingVolume;
+		}}
+
 	/// <summary>
-	/// Creates a <see cref="Box"/> from two opposing corners
+	///  Creates a <see cref="Box"/> from two opposing corners
 	/// </summary>
 	public static Box CreateFromCorners(Vector3 corner1, Vector3 corner2)
 	{
-		corner1  = Min(corner1, corner2);
+		corner1 = Min(corner1, corner2);
 		corner2 = Max(corner1, corner2);
 		Vector3 size   = corner2 - corner1;
 		Vector3 centre = (corner2 + corner1) / 2f;
 
 		Matrix4x4 matrix = Matrix4x4.CreateScale(size) * Matrix4x4.CreateTranslation(centre);
-		return new Box(matrix);
+		return Create(matrix);
 	}
 
 	/// <summary>
+	///  Creates a box from a transform matrix
 	/// </summary>
-	/// <param name="boxToWorldTransform"></param>
-	/// <exception cref="ArgumentOutOfRangeException"></exception>
-	public Box(Matrix4x4 boxToWorldTransform)
+	/// <param name="boxToWorldTransform">The matrix used to create the box</param>
+	/// <exception cref="ArgumentOutOfRangeException">The matrix used is non-invertible</exception>
+	public static Box Create(Matrix4x4 boxToWorldTransform)
 	{
-		BoxToWorldTransform = boxToWorldTransform;
 		if (!Matrix4x4.Invert(boxToWorldTransform, out Matrix4x4 worldToBoxTransform)) throw new ArgumentOutOfRangeException(nameof(boxToWorldTransform), boxToWorldTransform, "Matrix not invertible");
-		WorldToBoxTransform = worldToBoxTransform;
 
-		//Bounding volume calculations
-		//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
-		//It's not super efficient but it should be pretty fast and simple
-		//Due to how IQ implemented his code, valid box-space is [-1..1] so just plug these coords into the matrix and we find where they will end up
-		Vector3[] corners =
-		{
-				new(-1, -1, -1),
-				new(-1, -1, 1),
-				new(-1, 1, -1),
-				new(-1, 1, 1),
-				new(1, -1, -1),
-				new(1, -1, 1),
-				new(1, 1, -1),
-				new(1, 1, 1)
-		};
-		//Transform each of the corners by our box to world matrix
-		for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], boxToWorldTransform);
-		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
+		return new Box (boxToWorldTransform, worldToBoxTransform);
 	}
-
-	/// <summary>
-	///  Matrix to convert world-space to box-space
-	/// </summary>
-	public Matrix4x4 WorldToBoxTransform { get; }
-
-	/// <summary>
-	///  Matrix to convert box-space to world-space
-	/// </summary>
-	public Matrix4x4 BoxToWorldTransform { get; }
-
-	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -110,7 +106,7 @@ public record Box : Hittable
 		// ray-box intersection in box space
 		Vector3 m = new Vector3(1f) / rd;
 		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
-		if(m.X is float.NaN || m.Y is float.NaN ||m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y)||float.IsInfinity(m.Z)) return null;
+		if (m.X is float.NaN || m.Y is float.NaN || m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y) || float.IsInfinity(m.Z)) return null;
 		Vector3 s = new(
 				rd.X < 0f ? 1f : -1f,
 				rd.Y < 0f ? 1f : -1f,
@@ -186,7 +182,7 @@ public record Box : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//Same as TryHit() but with HitRecord calculation code removed
@@ -200,7 +196,7 @@ public record Box : Hittable
 		// ray-box intersection in box space
 		Vector3 m = new Vector3(1f) / rd;
 		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
-		if(m.X is float.NaN || m.Y is float.NaN ||m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y)||float.IsInfinity(m.Z)) return false;
+		if (m.X is float.NaN || m.Y is float.NaN || m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y) || float.IsInfinity(m.Z)) return false;
 		Vector3 s = new(
 				rd.X < 0f ? 1f : -1f,
 				rd.Y < 0f ? 1f : -1f,
@@ -220,6 +216,7 @@ public record Box : Hittable
 			k = kFar;
 			if ((k < kMin) || (kMax < k)) return false;
 		}
+
 		if (float.IsNaN(k)) return false;
 
 		return true;
