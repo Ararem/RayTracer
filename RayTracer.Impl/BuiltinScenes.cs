@@ -1,8 +1,10 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Environment;
-using RayTracer.Core.Hittables;
-using RayTracer.Core.Materials;
-using RayTracer.Core.Textures;
+using RayTracer.Core;
+using RayTracer.Impl.Hittables;
+using RayTracer.Impl.Lights;
+using RayTracer.Impl.Materials;
+using RayTracer.Impl.Skyboxes;
+using RayTracer.Impl.Textures;
 using System.Numerics;
 using System.Reflection;
 using static RayTracer.Core.Colour;
@@ -10,7 +12,7 @@ using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 using static System.MathF;
 
-namespace RayTracer.Core;
+namespace RayTracer.Impl;
 
 /// <summary>
 ///  Static class that contains a list of pre-made scenes

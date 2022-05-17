@@ -1,7 +1,7 @@
-using RayTracer.Core.Hittables;
+using RayTracer.Core;
 using System.Numerics;
 
-namespace RayTracer.Core.Environment;
+namespace RayTracer.Impl.Lights;
 
 /// <summary>
 ///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so

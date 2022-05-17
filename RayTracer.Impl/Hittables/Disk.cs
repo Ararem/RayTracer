@@ -1,9 +1,10 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.Numerics.Vector3;
 using static System.MathF;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)

@@ -1,7 +1,7 @@
-using RayTracer.Core.Hittables;
+using RayTracer.Core;
 using SharpNoise.Modules;
 
-namespace RayTracer.Core.Textures;
+namespace RayTracer.Impl.Textures;
 
 /// <summary>
 /// A texture that outputs a greyscale colour depending on the noise value of the noise generator <see cref="Module"/>

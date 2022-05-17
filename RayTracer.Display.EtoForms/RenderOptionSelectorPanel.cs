@@ -1,6 +1,7 @@
 using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
+using RayTracer.Impl;
 using System;
 using System.Collections.Generic;
 using System.Linq;

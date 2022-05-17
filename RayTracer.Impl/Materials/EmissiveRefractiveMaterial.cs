@@ -1,7 +1,6 @@
-using RayTracer.Core.Hittables;
-using RayTracer.Core.Textures;
+using RayTracer.Core;
 
-namespace RayTracer.Core.Materials;
+namespace RayTracer.Impl.Materials;
 
 /// <summary>
 ///  A material (such as glass) that refracts light rays going through it. This is an extended version of the <see cref="RefractiveMaterial"/>, as it

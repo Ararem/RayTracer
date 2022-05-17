@@ -1,9 +1,10 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A simple 3D box

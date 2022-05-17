@@ -1,8 +1,9 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
-using RayTracer.Core.Materials;
+using RayTracer.Impl.Materials;
 using System.Numerics;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A hittable that has a constant density (aka a volume like a cloud). Should be used in conjunction with a <see cref="VolumetricMaterial"/>

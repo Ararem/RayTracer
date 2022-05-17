@@ -1,6 +1,7 @@
-using RayTracer.Core.Hittables;
+using RayTracer.Core;
+using RayTracer.Impl.Hittables;
 
-namespace RayTracer.Core.Materials;
+namespace RayTracer.Impl.Materials;
 
 /// <summary>
 ///  A material that scatters in all directions. Should only be used when paired with a volumetric mesh, such as a <see cref="ConstantDensityMedium"/>

@@ -1,12 +1,11 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Hittables;
-using RayTracer.Core.Textures;
+using RayTracer.Core;
 using System.Numerics;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 using static System.MathF;
 
-namespace RayTracer.Core.Materials;
+namespace RayTracer.Impl.Materials;
 
 /// <summary>
 ///  A material (such as glass) that refracts light rays going through it

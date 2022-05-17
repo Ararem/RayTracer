@@ -1,9 +1,10 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A cylinder, defined by two points and a radius around the line segments of those points

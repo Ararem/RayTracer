@@ -1,7 +1,8 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A plane that spans a region along the XZ plane

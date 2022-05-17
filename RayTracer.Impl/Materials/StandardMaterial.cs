@@ -1,10 +1,9 @@
-using RayTracer.Core.Hittables;
-using RayTracer.Core.Textures;
+using RayTracer.Core;
 using System.Numerics;
 using static RayTracer.Core.RandUtils;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Materials;
+namespace RayTracer.Impl.Materials;
 
 /// <summary>
 ///  A standard material that can be

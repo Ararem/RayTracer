@@ -1,9 +1,10 @@
 using JetBrains.Annotations;
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these do not

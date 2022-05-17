@@ -1,10 +1,11 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  A capsule shape, defined by two points, and a radius

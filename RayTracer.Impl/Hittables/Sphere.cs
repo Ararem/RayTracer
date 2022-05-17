@@ -1,9 +1,10 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  Implementation of <see cref="Hittable"/> for a sphere

@@ -1,12 +1,13 @@
 using JetBrains.Annotations;
+using RayTracer.Core;
 
-namespace RayTracer.Core.Environment;
+namespace RayTracer.Impl.Skyboxes;
 
 /// <summary>
 ///  Simple default skybox that creates a blue-white gradient according to a ray's direction's Y value
 /// </summary>
 [PublicAPI]
-public sealed record DefaultSkyBox : SkyBox
+public sealed class DefaultSkyBox : SkyBox
 {
 	/// <inheritdoc/>
 	[Pure]

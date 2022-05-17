@@ -1,6 +1,6 @@
-using RayTracer.Core.Hittables;
+using RayTracer.Core;
 
-namespace RayTracer.Core.Textures;
+namespace RayTracer.Impl.Textures;
 
 /// <summary>
 ///  A texture that is a solid colour

@@ -1,9 +1,9 @@
-using RayTracer.Core.Hittables;
+using RayTracer.Core;
 using SharpNoise;
 using SharpNoise.Modules;
 using static System.MathF;
 
-namespace RayTracer.Core.Textures;
+namespace RayTracer.Impl.Textures;
 
 /// <summary>
 /// Texture that mimics the appearance of Marble.

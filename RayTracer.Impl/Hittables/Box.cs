@@ -1,9 +1,10 @@
+using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  Represents a 3-dimensional box.
@@ -16,34 +17,52 @@ namespace RayTracer.Core.Hittables;
 ///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a>
 ///  )
 /// </remarks>
-/// <param name="BoxToWorldTransform">Matrix to transform box-space to world-space</param>
-/// <param name="WorldToBoxTransform">Matrix to transform world-space to box-space</param>
-public record Box(Matrix4x4 BoxToWorldTransform, Matrix4x4 WorldToBoxTransform) : Hittable
+public class Box : Hittable
 {
-	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume {
-		get
+	/// <summary>
+	///  Creates a box from a transform matrix
+	/// </summary>
+	/// <param name="boxToWorldTransform">The matrix used to create the box</param>
+	/// <exception cref="ArgumentOutOfRangeException">The matrix used is non-invertible</exception>
+	public Box(Matrix4x4 boxToWorldTransform)
+	{
+		BoxToWorldTransform = boxToWorldTransform;
+		if (!Matrix4x4.Invert(boxToWorldTransform, out Matrix4x4 worldToBoxTransform)) throw new ArithmeticException("Could not invert Box=>World transform matrix") { Data = { ["BoxToWorldTransform"] = boxToWorldTransform } };
+		WorldToBoxTransform = worldToBoxTransform;
+
+		//Bounding volume calculations
+		//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
+		//It's not super efficient but it should be pretty fast and simple
+		//Due to how IQ implemented his code, valid box-space is [-1..1] so just plug these coords into the matrix and we find where they will end up
+		Vector3[] corners =
 		{
-			//Bounding volume calculations
-			//How i do this is I calculate where each of the corners will end up in world-space, and then create an AABB around them
-			//It's not super efficient but it should be pretty fast and simple
-			//Due to how IQ implemented his code, valid box-space is [-1..1] so just plug these coords into the matrix and we find where they will end up
-			Vector3[] corners =
-			{
-					new(-1, -1, -1),
-					new(-1, -1, 1),
-					new(-1, 1, -1),
-					new(-1, 1, 1),
-					new(1, -1, -1),
-					new(1, -1, 1),
-					new(1, 1, -1),
-					new(1, 1, 1)
-			};
-			//Transform each of the corners by our box to world matrix
-			for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], BoxToWorldTransform);
-			AxisAlignedBoundingBox boundingVolume               = AxisAlignedBoundingBox.Encompass(corners);
-			return boundingVolume;
-		}}
+				new(-1, -1, -1),
+				new(-1, -1, 1),
+				new(-1, 1, -1),
+				new(-1, 1, 1),
+				new(1, -1, -1),
+				new(1, -1, 1),
+				new(1, 1, -1),
+				new(1, 1, 1)
+		};
+		//Transform each of the corners by our box to world matrix
+		for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], BoxToWorldTransform);
+		//Wrap them in an AABB
+		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
+	}
+
+	/// <summary>
+	///  Matrix to transform box-space to world-space
+	/// </summary>
+	public Matrix4x4 BoxToWorldTransform { get; }
+
+	/// <summary>
+	///  Matrix to transform world-space to box-space
+	/// </summary>
+	public Matrix4x4 WorldToBoxTransform { get; }
+
+	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>
 	///  Creates a <see cref="Box"/> from two opposing corners
@@ -56,19 +75,7 @@ public record Box(Matrix4x4 BoxToWorldTransform, Matrix4x4 WorldToBoxTransform) 
 		Vector3 centre = (corner2 + corner1) / 2f;
 
 		Matrix4x4 matrix = Matrix4x4.CreateScale(size) * Matrix4x4.CreateTranslation(centre);
-		return Create(matrix);
-	}
-
-	/// <summary>
-	///  Creates a box from a transform matrix
-	/// </summary>
-	/// <param name="boxToWorldTransform">The matrix used to create the box</param>
-	/// <exception cref="ArgumentOutOfRangeException">The matrix used is non-invertible</exception>
-	public static Box Create(Matrix4x4 boxToWorldTransform)
-	{
-		if (!Matrix4x4.Invert(boxToWorldTransform, out Matrix4x4 worldToBoxTransform)) throw new ArgumentOutOfRangeException(nameof(boxToWorldTransform), boxToWorldTransform, "Matrix not invertible");
-
-		return new Box (boxToWorldTransform, worldToBoxTransform);
+		return new Box(matrix);
 	}
 
 	/// <inheritdoc/>
