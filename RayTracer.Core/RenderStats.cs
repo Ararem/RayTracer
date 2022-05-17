@@ -94,12 +94,12 @@ public sealed class RenderStats
 	public long AabbMisses = 0;
 
 	/// <summary>
-	///  How many times a <see cref="Ray"/> intersected with an <see cref="AxisAlignedBoundingBox"/> but did not hit the enclosed <see cref="IHittable"/>
+	///  How many times a <see cref="Ray"/> intersected with an <see cref="AxisAlignedBoundingBox"/> but did not hit the enclosed <see cref="Hittable"/>
 	/// </summary>
 	public long HittableMisses = 0;
 
 	/// <summary>
-	///  How many times a <see cref="IHittable"/> was intersected by a <see cref="Ray"/>
+	///  How many times a <see cref="Hittable"/> was intersected by a <see cref="Ray"/>
 	/// </summary>
 	public long HittableIntersections = 0;
 

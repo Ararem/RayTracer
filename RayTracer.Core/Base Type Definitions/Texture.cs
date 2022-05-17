@@ -6,7 +6,7 @@ namespace RayTracer.Core;
 ///  Base class for a texture
 /// </summary>
 [PublicAPI]
-public abstract record Texture
+public abstract class Texture
 {
 	/// <summary>
 	///  Gets the colour value for a pixel

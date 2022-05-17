@@ -51,11 +51,11 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//Assign access for all the components that need it
 		#pragma warning disable CS0618
-		foreach (IRenderAccessor light in lights) light.SetRenderer(this);
+		foreach (Light light in lights) light.Renderer=this;
 		foreach (SceneObject sceneObject in objects)
 		{
-			sceneObject.Material.SetRenderer(this);
-			sceneObject.Hittable.SetRenderer(this);
+			sceneObject.Material.Renderer = this;
+			sceneObject.Hittable.Renderer = this;
 		}
 		#pragma warning restore CS0618
 

@@ -9,9 +9,9 @@ namespace RayTracer.Core.Hittables;
 ///  A simple 3D box
 /// </summary>
 /// <remarks>Made up of 6 planes, hence the name</remarks>
-public record HexPlaneBox : IHittable
+public record HexPlaneBox : Hittable
 {
-	private readonly IHittable[] sides;
+	private readonly Hittable[] sides;
 
 	/// <summary>
 	///  Creates a new box from two bounding points
@@ -21,7 +21,7 @@ public record HexPlaneBox : IHittable
 		Min = Min(min, max);
 		Max = Max(min, max);
 
-		sides = new IHittable[6]
+		sides = new Hittable[6]
 		{
 				new XYPlane(Min.X, Max.X, Min.Y, Max.Y, Min.Z),
 				new XYPlane(Min.X, Max.X, Min.Y, Max.Y, Max.Z),

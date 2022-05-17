@@ -8,7 +8,7 @@ namespace RayTracer.Core;
 /// </summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public interface IHittable : IRenderAccessor
+public abstract class Hittable : RenderAccessor
 {
 	/// <summary>
 	///  Bounding volume that encompasses this object
@@ -17,7 +17,7 @@ public interface IHittable : IRenderAccessor
 	///  Used for accelerating renders. If an object does not support being constrained to bounds (e.g. if it's infinite in one axis), this should return
 	///  <see cref="AxisAlignedBoundingBox.Infinite"/>
 	/// </remarks>
-	public AxisAlignedBoundingBox BoundingVolume { get; }
+	public abstract AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>
 	///  Attempts to intersect the current hittable instance with a <see cref="Ray"/>
@@ -29,7 +29,7 @@ public interface IHittable : IRenderAccessor
 	///  If the ray hit this instance, returns a <see cref="HitRecord"/> containing information about where the ray intersection occured, otherwise
 	///  <see langword="null"/> if no intersection occured
 	/// </returns>
-	public HitRecord? TryHit(Ray ray, float kMin, float kMax);
+	public abstract HitRecord? TryHit(Ray ray, float kMin, float kMax);
 
 	/// <summary>
 	/// Fast version of <see cref="TryHit"/> that only checks if there was an intersection, without any extra detail
@@ -40,5 +40,5 @@ public interface IHittable : IRenderAccessor
 	/// <returns>
 	///  If the ray hit this instance, returns <see langword="true"/>, else <see langword="false"/>
 	/// </returns>
-	public bool FastTryHit(Ray ray, float kMin, float kMax);
+	public abstract bool FastTryHit(Ray ray, float kMin, float kMax);
 }

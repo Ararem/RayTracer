@@ -11,7 +11,7 @@ namespace RayTracer.Core;
 ///  <see cref="GetSkyColour"/> is interpreted as the emissive colour of a material.
 /// </remarks>
 [PublicAPI]
-public abstract record SkyBox
+public abstract class SkyBox
 {
 	/// <summary>
 	///  Gets the sky colour that would be seen by a viewer looking along a certain <paramref name="ray"/>

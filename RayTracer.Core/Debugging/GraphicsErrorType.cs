@@ -9,7 +9,7 @@ public enum GraphicsErrorType
 	///  Surface normals for an object had an incorrect magnitude (Magnitude should always be 1)
 	/// </summary>
 	/// <remarks>
-	///  Indicates an error with the <see cref="IHittable.TryHit"/> method's normal calculation code
+	///  Indicates an error with the <see cref="Hittable.TryHit"/> method's normal calculation code
 	/// </remarks>
 	/// <seealso cref="RayDirectionWrongMagnitude"/>
 	NormalsWrongMagnitude,
@@ -30,7 +30,7 @@ public enum GraphicsErrorType
 	///  <see cref="RenderOptions.KMax"/>]
 	/// </summary>
 	/// <remarks>
-	///  Indicates that the ray-object intersection code for a <see cref="IHittable"/> is incorrect (most likely it returns the closes point and does not
+	///  Indicates that the ray-object intersection code for a <see cref="Hittable"/> is incorrect (most likely it returns the closes point and does not
 	///  validate their distance along the ray)
 	/// </remarks>
 	KValueNotInRange,

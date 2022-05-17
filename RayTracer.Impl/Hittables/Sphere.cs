@@ -6,9 +6,9 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Core.Hittables;
 
 /// <summary>
-///  Implementation of <see cref="IHittable"/> for a sphere
+///  Implementation of <see cref="Hittable"/> for a sphere
 /// </summary>
-public sealed record Sphere(Vector3 Centre, float Radius) : IHittable
+public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 {
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre + new Vector3(Radius));

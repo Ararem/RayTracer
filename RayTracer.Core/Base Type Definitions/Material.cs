@@ -3,10 +3,10 @@ using JetBrains.Annotations;
 namespace RayTracer.Core;
 
 /// <summary>
-///  A class that defines a material that a <see cref="IHittable"/> can have
+///  A class that defines a material that a <see cref="Hittable"/> can have
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public interface IMaterial : IRenderAccessor
+public abstract class Material : RenderAccessor
 {
 	/// <summary>
 	///  Scatters an input ray, according to this material's properties
@@ -19,7 +19,7 @@ public interface IMaterial : IRenderAccessor
 	///  For a completely reflective material, the resulting ray would be 'flipped' around the surface <see cref="HitRecord.Normal"/>, and for a completely
 	///  diffuse object, it would be in a random direction
 	/// </remarks>
-	public Ray? Scatter(HitRecord hit);
+	public abstract Ray? Scatter(HitRecord hit);
 
 	/// <summary>
 	///  Function to override for when the material wants to do lighting calculations, based on the light from future rays
@@ -64,5 +64,5 @@ public interface IMaterial : IRenderAccessor
 	///  </code>
 	///  </para>
 	/// </example>
-	public void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
+	public abstract void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
 }

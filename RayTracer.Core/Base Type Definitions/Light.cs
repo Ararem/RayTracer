@@ -6,7 +6,7 @@ namespace RayTracer.Core;
 /// <summary>
 ///  Base class that defines a light that can be used to calculate lighting more accurately in the scene
 /// </summary>
-public abstract class Light : IRenderAccessor
+public abstract class Light : RenderAccessor
 {
 	/// <summary>
 	///  Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/>
@@ -55,13 +55,4 @@ public abstract class Light : IRenderAccessor
 	/// </summary>
 	[PublicAPI]
 	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _);
-
-	/// <inheritdoc />
-	public AsyncRenderJob Renderer { get; private set; }
-
-	/// <inheritdoc />
-	void IRenderAccessor.SetRenderer(AsyncRenderJob renderer)
-	{
-		Renderer = renderer;
-	}
 }

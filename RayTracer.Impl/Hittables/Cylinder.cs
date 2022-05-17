@@ -11,7 +11,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="P1">The point defining one of the ends of the cylinder</param>
 /// <param name="P2">The point defining one of the ends of the cylinder</param>
 /// <param name="Radius">The radius of the cylinder</param>
-public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : IHittable
+public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 {
 	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
 

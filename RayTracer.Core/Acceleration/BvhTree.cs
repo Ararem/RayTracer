@@ -35,7 +35,7 @@ public sealed class BvhTree
 		RootNode         = FromSegment_SAH(scene.SceneObjects, 0);
 	}
 
-	/// <inheritdoc cref="IHittable.TryHit"/>
+	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
 
 	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment, int depth)
@@ -162,7 +162,7 @@ public sealed class BvhTree
 	// }
 
 	/// <summary>
-	///  Compares two <see cref="IHittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
+	///  Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
 	/// </summary>
 	/// <param name="a">First hittable to compare</param>
 	/// <param name="b">Second hittable to compare</param>

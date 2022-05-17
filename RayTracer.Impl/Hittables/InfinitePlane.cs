@@ -13,7 +13,7 @@ namespace RayTracer.Core.Hittables;
 /// <remarks>
 ///  Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/>
 /// </remarks>
-public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : IHittable
+public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 {
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume => AxisAlignedBoundingBox.Infinite;
