@@ -4,10 +4,10 @@ using RayTracer.Core.Hittables;
 namespace RayTracer.Core.Materials;
 
 /// <summary>
-///  A class that defines a material that a <see cref="Hittable"/> can have
+///  A class that defines a material that a <see cref="IHittable"/> can have
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public abstract record Material : RenderAccessor
+public abstract record Material : IRenderAccessor
 {
 	/// <summary>
 	///  Scatters an input ray, according to this material's properties

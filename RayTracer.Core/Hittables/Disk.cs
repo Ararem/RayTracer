@@ -11,7 +11,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="Centre">The centre of the disk in 3D space</param>
 /// <param name="Normal">Normal direction of the disk</param>
 /// <param name="Radius">How large the radius of the disk is</param>
-public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : Hittable
+public sealed record Disk(Vector3 Centre, Vector3 Normal, float Radius) : IHittable
 {
 	private readonly float radiusSqr = Radius * Radius;
 

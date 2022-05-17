@@ -2,6 +2,7 @@
 
 ## Misc
 * Swap floats to doubles and test the performance loss (might be preferable to use doubles everywhere instead of casting all the time)
+* Separate the main project (RayTracer.Core) into two separate projects - one that defines the code and types (e.g. `AsyncRenderJob` and `Material`, and a separate one for the actual implementation (e.g. `StandardMaterial` and `XYPlane`)
 
 ## Materials/Textures
 * Implement some actual textures other than plain colours

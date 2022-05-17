@@ -53,8 +53,8 @@ public sealed class AsyncRenderJob : IDisposable
 		RenderStats = new RenderStats(renderOptions);
 
 		//Assign access for all the components that need it
-		foreach (Light light in scene.Lights) light.SetRenderer(this);
-		foreach (SceneObject sceneObject in objects)
+		foreach (IRenderAccessor light in lights) light.SetRenderer(this);
+		foreach (IRenderAccessor sceneObject in objects)
 		{
 			sceneObject.Material.SetRenderer(this);
 			sceneObject.Hittable.SetRenderer(this);

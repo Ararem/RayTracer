@@ -24,7 +24,7 @@ namespace RayTracer.Core.Hittables;
 /// </remarks>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 [PublicAPI]
-public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
+public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : IHittable
 {
 	/// <summary>
 	/// Creates a new quad from three points, as opposed to a point and two directions

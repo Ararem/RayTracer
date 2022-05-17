@@ -12,7 +12,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="ZHigh">High Z value for this plane</param>
 /// <param name="Y">Y value the plane is positioned at</param>
 /// <param name="AABBPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
-public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, float Y, float AABBPadding = 0.001f) : Hittable
+public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, float Y, float AABBPadding = 0.001f) : IHittable
 {
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(new Vector3(XLow, Y - AABBPadding, ZLow), new Vector3(XHigh, Y + AABBPadding, ZHigh));

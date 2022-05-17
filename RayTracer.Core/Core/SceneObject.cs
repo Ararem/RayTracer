@@ -12,7 +12,7 @@ namespace RayTracer.Core;
 public sealed record SceneObject(
 		// ReSharper disable once NotAccessedPositionalProperty.Global
 		string   Name,
-		Hittable Hittable,
+		IHittable Hittable,
 		Material Material
 )
 {

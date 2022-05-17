@@ -10,7 +10,7 @@ namespace RayTracer.Core.Hittables;
 /// <remarks>
 ///  This probably won't work too well with rays inside the medium, or other objects inside it, so beware...
 /// </remarks>
-public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
+public record ConstantDensityMedium(IHittable Boundary, float Density) : IHittable
 {
 	private readonly float negInvDensity = -1 / Density;
 

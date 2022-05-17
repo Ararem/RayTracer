@@ -18,7 +18,7 @@ namespace RayTracer.Core.Hittables;
 /// </remarks>
 /// <param name="BoxToWorldTransform">Matrix to transform box-space to world-space</param>
 /// <param name="WorldToBoxTransform">Matrix to transform world-space to box-space</param>
-public record Box(Matrix4x4 BoxToWorldTransform, Matrix4x4 WorldToBoxTransform) : Hittable
+public record Box(Matrix4x4 BoxToWorldTransform, Matrix4x4 WorldToBoxTransform) : IHittable
 {
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume {

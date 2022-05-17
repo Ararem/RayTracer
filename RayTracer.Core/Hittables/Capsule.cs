@@ -13,7 +13,7 @@ namespace RayTracer.Core.Hittables;
 /// <param name="P2">The seconds point that makes up the capsule</param>
 /// <param name="Radius">The radius of the capsule</param>
 //TODO: With all the hittables that need to do calculations in the ctor, rewrite them similar to Quad and Camera
-public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
+public record Capsule(Vector3 P1, Vector3 P2, float Radius) : IHittable
 {
 	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
 
