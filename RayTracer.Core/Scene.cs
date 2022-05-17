@@ -1,5 +1,3 @@
-using RayTracer.Core.Environment;
-
 namespace RayTracer.Core;
 
 /// <summary>

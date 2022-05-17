@@ -130,7 +130,7 @@ public static class BuiltinScenes
 	{
 		get
 		{
-			Material greyWallMaterial = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f);
+			IMaterial greyWallMaterial = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f);
 			return new Scene(
 					"Cornell Box", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
 					{
@@ -177,7 +177,7 @@ public static class BuiltinScenes
 
 					if ((center - new Vector3(4f, 0.2f, 0f)).Length() > 0.9)
 					{
-						Material sphereMaterial;
+						IMaterial sphereMaterial;
 
 						if (chooseMat < 0.3)
 						{

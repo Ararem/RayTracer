@@ -1,6 +1,3 @@
-using RayTracer.Core.Hittables;
-using RayTracer.Core.Materials;
-
 namespace RayTracer.Core;
 
 /// <summary>
@@ -13,7 +10,7 @@ public sealed record SceneObject(
 		// ReSharper disable once NotAccessedPositionalProperty.Global
 		string   Name,
 		IHittable Hittable,
-		Material Material
+		IMaterial Material
 )
 {
 	// /// <inheritdoc/>

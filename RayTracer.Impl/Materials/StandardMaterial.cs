@@ -14,7 +14,7 @@ namespace RayTracer.Core.Materials;
 /// </param>
 /// <param name="Emission">The texture used for the light this material emits</param>
 /// <param name="Diffusion">How 'diffuse' (random) the reflected rays are. Settings this to 0 means perfect reflections, 1 means completely diffuse</param>
-public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Diffusion) : Material
+public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Diffusion) : IMaterial
 {
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)

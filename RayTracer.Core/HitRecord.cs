@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Record containing information about when a <see cref="Core.Ray"/> intersects with a <see cref="IHittable"/>

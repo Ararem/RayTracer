@@ -1,5 +1,4 @@
 using RayTracer.Core.Acceleration;
-using RayTracer.Core.Hittables;
 
 namespace RayTracer.Core;
 

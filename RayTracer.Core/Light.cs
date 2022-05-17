@@ -1,8 +1,7 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Hittables;
 using System.Numerics;
 
-namespace RayTracer.Core.Environment;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Base class that defines a light that can be used to calculate lighting more accurately in the scene

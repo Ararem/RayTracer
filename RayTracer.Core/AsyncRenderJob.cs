@@ -3,11 +3,8 @@
 
 using RayTracer.Core.Acceleration;
 using RayTracer.Core.Debugging;
-using RayTracer.Core.Environment;
-using RayTracer.Core.Hittables;
 using Serilog;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Buffers;
 using System.Diagnostics;
@@ -53,12 +50,14 @@ public sealed class AsyncRenderJob : IDisposable
 		RenderStats = new RenderStats(renderOptions);
 
 		//Assign access for all the components that need it
+		#pragma warning disable CS0618
 		foreach (IRenderAccessor light in lights) light.SetRenderer(this);
-		foreach (IRenderAccessor sceneObject in objects)
+		foreach (SceneObject sceneObject in objects)
 		{
 			sceneObject.Material.SetRenderer(this);
 			sceneObject.Hittable.SetRenderer(this);
 		}
+		#pragma warning restore CS0618
 
 		//Calculate the bounding boxes
 		bvhTree = new BvhTree(scene, RenderStats);

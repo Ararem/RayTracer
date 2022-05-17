@@ -13,7 +13,7 @@ namespace RayTracer.Core.Materials;
 /// </summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
-public record RefractiveMaterial(float RefractiveIndex, Texture Tint, bool AlternateRefractionMode = false) : Material
+public record RefractiveMaterial(float RefractiveIndex, Texture Tint, bool AlternateRefractionMode = false) : IMaterial
 {
 	/// <summary>
 	///  Refractive index of a common material

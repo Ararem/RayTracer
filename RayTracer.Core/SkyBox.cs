@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace RayTracer.Core.Environment;
+namespace RayTracer.Core;
 
 //TODO: HDRI Skybox
 /// <summary>

@@ -1,5 +1,3 @@
-using RayTracer.Core.Hittables;
-
 namespace RayTracer.Core.Debugging;
 
 /// <summary>

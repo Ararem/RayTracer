@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using RayTracer.Core.Hittables;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;

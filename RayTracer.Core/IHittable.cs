@@ -1,14 +1,14 @@
 using JetBrains.Annotations;
 using RayTracer.Core.Acceleration;
 
-namespace RayTracer.Core.Hittables;
+namespace RayTracer.Core;
 
 /// <summary>
 ///  Base class for a hittable. Represents the surface/structure of a render-able object.
 /// </summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-public interface IHittable
+public interface IHittable : IRenderAccessor
 {
 	/// <summary>
 	///  Bounding volume that encompasses this object

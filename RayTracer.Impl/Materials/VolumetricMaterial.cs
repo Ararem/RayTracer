@@ -6,7 +6,7 @@ namespace RayTracer.Core.Materials;
 ///  A material that scatters in all directions. Should only be used when paired with a volumetric mesh, such as a <see cref="ConstantDensityMedium"/>
 /// </summary>
 /// <remarks>Scatter direction is completely random</remarks>
-public record VolumetricMaterial(Colour Albedo) : Material
+public record VolumetricMaterial(Colour Albedo) : IMaterial
 {
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit) => new Ray(hit.WorldPoint, RandUtils.RandomOnUnitSphere());
