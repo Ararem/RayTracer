@@ -17,8 +17,9 @@ public sealed class InfinitePlane : Hittable
 	/// <param name="normal">Normal of the plane</param>
 	public InfinitePlane(Vector3 point, Vector3 normal)
 	{
-		Point  = point;
-		Normal = normal;
+		Point             = point;
+		Normal            = normal;
+		negPointDotNormal = -Dot(Point, Normal);
 	}
 
 	/// <inheritdoc/>
@@ -29,6 +30,8 @@ public sealed class InfinitePlane : Hittable
 
 	/// <summary>Normal of the plane</summary>
 	public Vector3 Normal { get; }
+
+	private float negPointDotNormal;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -44,8 +47,7 @@ public sealed class InfinitePlane : Hittable
 		else
 		{
 			//Find intersection normally
-			float d = -Dot(Point, Normal);
-			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+			t = -(Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
 		}
 
 		//Assert ranges
@@ -73,8 +75,7 @@ public sealed class InfinitePlane : Hittable
 		else
 		{
 			//Find intersection normally
-			float d = -Dot(Point, Normal);
-			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+			t = -(Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
 		}
 
 		//Assert ranges
