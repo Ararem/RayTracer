@@ -7,10 +7,29 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>Implementation of <see cref="Hittable"/> for a sphere</summary>
-public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
+public sealed class Sphere : Hittable
 {
+	private readonly float radiusSqr;
+
+	/// <summary>Creates a new sphere object</summary>
+	/// <param name="centre">Centre point of the sphere</param>
+	/// <param name="radius">Radius of the sphere</param>
+	public Sphere(Vector3 centre, float radius)
+	{
+		Centre         = centre;
+		Radius         = radius;
+		BoundingVolume = new AxisAlignedBoundingBox(centre - new Vector3(radius), centre + new Vector3(radius));
+		radiusSqr      = radius * radius;
+	}
+
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Centre - new Vector3(Radius), Centre + new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>Centre of the sphere</summary>
+	public Vector3 Centre { get; init; }
+
+	/// <summary>Radius of the sphere</summary>
+	public float Radius { get; init; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -20,7 +39,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		Vector3 oc     = rayPos - Centre;
 		float   a      = rayDir.LengthSquared();
 		float   halfB  = Dot(oc, rayDir);
-		float   c      = oc.LengthSquared() - (Radius * Radius);
+		float   c      = oc.LengthSquared() - radiusSqr;
 
 		float discriminant = (halfB * halfB) - (a * c);
 		if (discriminant < 0) return null; //No solutions to where ray intersects with sphere because of negative square root
@@ -84,7 +103,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		Vector3 oc     = rayPos - Centre;
 		float   a      = rayDir.LengthSquared();
 		float   halfB  = Dot(oc, rayDir);
-		float   c      = oc.LengthSquared() - (Radius * Radius);
+		float   c      = oc.LengthSquared() - radiusSqr;
 
 		float discriminant = (halfB * halfB) - (a * c);
 		if (discriminant < 0) return false; //No solutions to where ray intersects with sphere because of negative square root

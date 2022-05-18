@@ -11,7 +11,7 @@ namespace RayTracer.Impl.Hittables;
 ///  vectors can be non-perpendicular to each other, which creates a parallelogram instead of a rectangle (however they must not be parallel)
 /// </summary>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
-public class Quad : Hittable
+public sealed class Quad : Hittable
 {
 	private Matrix4x4 localToQuadMatrix;
 	private float     negPointDotNormal;
