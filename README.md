@@ -49,4 +49,4 @@ A not-very used project that I use (rarely) to test multiple ways of doing somet
 | [Hittable](RayTracer.Core/Base%20Type%20Definitions/Hittable.cs)  | Hittables are in charge of calculating whether a given ray intersects with itself                                            |
 | [Scene](RayTracer.Core/Scene.cs)                                  | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
 | [Light](RayTracer.Core/Base%20Type%20Definitions/Light.cs)        | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
-| [Render Options](RayTracer.Core/RenderOptions.cs)                 | Stores the settings used when rendering, such as                                                                             |
+| [Render Options](RayTracer.Core/RenderOptions.cs)                 | Stores the settings used when rendering, such as render width/height, and number of passes to render                         |

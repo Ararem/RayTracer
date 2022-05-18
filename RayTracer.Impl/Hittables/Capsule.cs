@@ -13,6 +13,36 @@ namespace RayTracer.Impl.Hittables;
 public sealed class Capsule : Hittable
 {
 	/// <summary>
+	/// Halfway between <see cref="P1"/> and <see cref="P2"/>
+	/// </summary>
+	private readonly Vector3 centre;
+
+	/// <summary>
+	///  <see cref="P2"/> - <see cref="P1"/>
+	/// </summary>
+	private readonly Vector3 p2MinusP1;
+
+	/// <summary>
+	///  <see cref="p2MinusP1"/> dotted with itself (<c>Dot(p2MinusP1, p2MinusP1)</c>)
+	/// </summary>
+	private readonly float p2MinusP1Dot2;
+
+	/// <summary>
+	///  <see cref="radiusSquare"/> * <see cref="p2MinusP1Dot2"/>
+	/// </summary>
+	private readonly float radiusSqrTimesP2P1Dot2;
+
+	/// <summary>
+	///  <see cref="Radius"/> squared
+	/// </summary>
+	private readonly float radiusSquare;
+
+	/// <summary>
+	///  Matrix used to transform world points for calculating UV's
+	/// </summary>
+	private readonly Matrix4x4 uvMatrix;
+
+	/// <summary>
 	///  Creates a new capsule from two points, and a radius
 	/// </summary>
 	/// <param name="p1">The first point that makes up the capsule</param>
@@ -25,7 +55,19 @@ public sealed class Capsule : Hittable
 		Radius         = radius;
 		centre         = Lerp(p1, p2, 0.5f);
 		BoundingVolume = new AxisAlignedBoundingBox(Min(p1, p2) - new Vector3(radius), Max(p1, p2) + new Vector3(radius));
-		uvMatrix       = CreateUvMatrix(p1, p2);
+		Vector3 w = Normalize(p2 - p1);
+		Vector3 u = Normalize(Cross(w, new Vector3(0, 0, 1)));
+		Vector3 v = Normalize(Cross(u, w));
+		// Original is:
+		// Vector3 q = (point-Position1)*mat3(u, v, w);
+		// OpenGL uses column-major ordering, so `u` is the first column, the v, then w
+		uvMatrix = new Matrix4x4(
+				u.X, v.X, w.X, 0,
+				u.Y, v.Y, w.Y, 0,
+				u.Z, v.Z, w.Z, 0,
+				0, 0, 0, 0
+		);
+		;
 
 		//Cached vars
 		p2MinusP1     = P2 - P1;
@@ -36,24 +78,20 @@ public sealed class Capsule : Hittable
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
-	/// <summary>The first point that makes up the capsule</summary>
+	/// <summary>
+	/// The first point that makes up the capsule
+	/// </summary>
 	public Vector3 P1 { get; }
 
-	/// <summary>The second point that makes up the capsule</summary>
+	/// <summary>
+	/// The second point that makes up the capsule
+	/// </summary>
 	public Vector3 P2 { get; }
 
-	/// <summary>The radius of the capsule</summary>
-	public float Radius { get; }
-
-	private readonly Vector3   centre;
-	private readonly Vector3   p2MinusP1;
 	/// <summary>
-	/// <see cref="p2MinusP1"/> dotted with itself
+	/// The radius of the capsule
 	/// </summary>
-	private readonly float   p2MinusP1Dot2;
-
-	private readonly float     radiusSquare;
-	private readonly Matrix4x4 uvMatrix;
+	public float Radius { get; }
 
 	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
@@ -66,14 +104,14 @@ public sealed class Capsule : Hittable
 		float   k  = -1f;
 		Vector3 oa = ray.Origin - P1;
 
-		float bard = Dot(p2MinusP1,            ray.Direction);
-		float baoa = Dot(p2MinusP1,            oa);
+		float bard = Dot(p2MinusP1,     ray.Direction);
+		float baoa = Dot(p2MinusP1,     oa);
 		float rdoa = Dot(ray.Direction, oa);
 		float oaoa = Dot(oa,            oa);
 
 		float a = p2MinusP1Dot2 - (bard * bard);
 		float b = (p2MinusP1Dot2        * rdoa) - (baoa * bard);
-		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - (radiusSquare * p2MinusP1Dot2);
+		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - radiusSqrTimesP2P1Dot2;
 		float h = (b                    * b)    - (a    * c);
 		if (h >= 0.0)
 		{
@@ -98,18 +136,35 @@ public sealed class Capsule : Hittable
 		//If we didn't hit anything `k` will still have it's value of -1, indicating nothing was hit
 		//Not sure if it is also somehow set to negative values elsewhere when it's invalid, but I'm assuming it's fine
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
-		if ((k != -1f) && (k >= kMin) && (k <= kMax))
-		{
-			Vector3 worldPos  = ray.PointAt(k);
-			Vector3 localPos  = worldPos - centre;
-			Vector3 outNormal = CapNormal(worldPos);
-			Vector2 uv        = UV(worldPos);
-			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
+		if ((k == -1f) || (k < kMin) || (k > kMax)) return null;
 
-			return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
-		}
+		Vector3 worldPos  = ray.PointAt(k);
+		Vector3 localPos  = worldPos - centre;
+		Vector3 outNormal = CapNormal(worldPos);
+		Vector3 q         = Transform(worldPos - P1, uvMatrix);
+		Vector2 rawUv     = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
+		/*
+		 *
+		 * This block of code here translates the calculated 'raw' UV coordinate into something more compatible
+		 * I'm not sure how exactly it works, but I assume it's projecting the point onto a plane around the line segment of the cylinder
+		 * And then calculating the distance along the segment (from P1), and rotation from the origin of the plane
+		 *
+		 * This output should explain:
+		 * {
+		 *		[rawUv variable]	Min = <-3.141583, -0.9317696>, Max = <3.1415896, 3.6393933>,
+		 *		[Matrix Components]	U = <0.37139067, -0.9284767, 0>, V = <-0.6317484, -0.25269935, 0.73282814>, W = <0.68041384, 0.27216554, 0.68041384>,
+		 *		[Capsule Shape]		Dist = 2.9393876, Radius = 0.7
+		 * }
+		 * See how the rawUv's X ranges ± PI, and the Y ranges [-Radius...Dist+Radius]
+		 * So inverse lerp them into the range [0...1] and we have our UV coordinates!
+		 */
+		Vector2 uv = new(
+				(rawUv.X + PI) / 6.2831855F //MathUtils.InverseLerp(-PI, PI, rawUv.X)
+				, MathUtils.InverseLerp(-Radius, Distance(P1, P2) + Radius, rawUv.Y)
+		);
+		bool inside = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
-		return null;
+		return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
 	}
 
 	/// <inheritdoc/>
@@ -126,7 +181,7 @@ public sealed class Capsule : Hittable
 
 		float a = p2MinusP1Dot2 - (bard * bard);
 		float b = (p2MinusP1Dot2        * rdoa) - (baoa * bard);
-		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - (radiusSquare * p2MinusP1Dot2);
+		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - radiusSqrTimesP2P1Dot2;
 		float h = (b                    * b)    - (a    * c);
 		if (h >= 0.0)
 		{
@@ -152,53 +207,6 @@ public sealed class Capsule : Hittable
 		//Not sure if it is also somehow set to negative values elsewhere when it's invalid, but I'm assuming it's fine
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
 		return (k != -1f) && (k >= kMin) && (k <= kMax);
-	}
-
-	private static Matrix4x4 CreateUvMatrix(Vector3 p1, Vector3 p2)
-	{
-		Vector3 w = Normalize(p2 - p1);
-		Vector3 u = Normalize(Cross(w, new Vector3(0, 0, 1)));
-		Vector3 v = Normalize(Cross(u, w));
-		// Original is:
-		// Vector3 q = (point-Position1)*mat3(u, v, w);
-		// OpenGL uses column-major ordering, so `u` is the first column, the v, then w
-		Matrix4x4 mat = new(
-				u.X, v.X, w.X, 0,
-				u.Y, v.Y, w.Y, 0,
-				u.Z, v.Z, w.Z, 0,
-				0, 0, 0, 0
-		);
-		return mat;
-	}
-
-	/// <summary>
-	///  Gets the UV coordinate for a point on the capsule's surface
-	/// </summary>
-	private Vector2 UV(Vector3 point)
-	{
-		Vector3 q     = Transform(point - P1, uvMatrix);
-		Vector2 rawUv = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
-		/*
-		 *
-		 * This block of code here translates the calculated 'raw' UV coordinate into something more compatible
-		 * I'm not sure how exactly it works, but I assume it's projecting the point onto a plane around the line segment of the cylinder
-		 * And then calculating the distance along the segment (from P1), and rotation from the origin of the plane
-		 *
-		 * This output should explain:
-		 * {
-		 *		[rawUv variable]	Min = <-3.141583, -0.9317696>, Max = <3.1415896, 3.6393933>,
-		 *		[Matrix Components]	U = <0.37139067, -0.9284767, 0>, V = <-0.6317484, -0.25269935, 0.73282814>, W = <0.68041384, 0.27216554, 0.68041384>,
-		 *		[Capsule Shape]		Dist = 2.9393876, Radius = 0.7
-		 * }
-		 * See how the rawUv's X ranges ± PI, and the Y ranges [-Radius...Dist+Radius]
-		 * So inverse lerp them into the range [0...1] and we have our UV coordinates!
-		 */
-		Vector2 uv = new(
-				(rawUv.X + PI) / 6.2831855F //MathUtils.InverseLerp(-PI, PI, rawUv.X)
-				, MathUtils.InverseLerp(-Radius, Distance(P1, P2) + Radius, rawUv.Y)
-		);
-
-		return uv;
 	}
 
 	// compute normal
