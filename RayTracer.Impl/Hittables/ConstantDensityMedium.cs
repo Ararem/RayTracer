@@ -22,6 +22,7 @@ public sealed class ConstantDensityMedium : Hittable
 	/// </summary>
 	public ConstantDensityMedium(Hittable boundary, float density)
 	{
+		if (boundary is ConstantDensityMedium) throw new ArgumentException("Cannot create a constant density volume using another volume", nameof(boundary));
 		Boundary      = boundary;
 		Density       = density;
 		negInvDensity = -1f / density;
@@ -54,8 +55,14 @@ public sealed class ConstantDensityMedium : Hittable
 	}
 
 
+	/// <summary>
+	/// How dense the medium is. Higher values increase the change of collision
+	/// </summary>
 	public float Density { get; }
 
+	/// <summary>
+	/// The 'shape' of this medium. Can be any shape other than a <see cref="ConstantDensityMedium"/>
+	/// </summary>
 	public Hittable Boundary { get; }
 
 	/// <inheritdoc/>
