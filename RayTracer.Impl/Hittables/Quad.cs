@@ -14,6 +14,7 @@ namespace RayTracer.Impl.Hittables;
 public class Quad : Hittable
 {
 	private Matrix4x4 localToQuadMatrix;
+	private float     negPointDotNormal;
 
 	/// <summary>
 	///  Creates a new quad using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these
@@ -35,10 +36,11 @@ public class Quad : Hittable
 	/// </remarks>
 	public Quad(Vector3 origin, Vector3 u, Vector3 v)
 	{
-		Origin = origin;
-		U      = u;
-		V      = v;
-		Normal = Normalize(Cross(u, v));
+		Origin            = origin;
+		U                 = u;
+		V                 = v;
+		Normal            = Normalize(Cross(u, v));
+		negPointDotNormal = -Dot(Origin, Normal);
 
 		//This UV/World space conversion code is essentially just transforming points between two different coordinate systems
 		//So from World Coords (X,Y,Z) ==> Quad (UV) Coords (U,V,N)
@@ -47,12 +49,10 @@ public class Quad : Hittable
 		//If we have a vector that's the length and direction of our U side, it's (1, 0, 0) in quad coords
 		//In world coords it's just the U vector
 		//This StackOverflow answer was helpful in creating the matrix: https://stackoverflow.com/questions/31257325/converting-points-into-another-coordinate-system
-
-		Vector3 n = Normalize(Cross(u, v));
 		Matrix4x4 quadToWorld = new(
 				u.X, u.Y, u.Z, 0,
 				v.X, v.Y, v.Z, 0,
-				n.X, n.Y, n.Z, 0,
+				Normal.X, Normal.Y, Normal.Z, 0,
 				0, 0, 0, 1
 		);
 
@@ -93,7 +93,7 @@ public class Quad : Hittable
 		else
 		{
 			//Find intersection normally
-			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
+			t = (Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
 		}
 
 		//Assert K ranges
@@ -130,7 +130,7 @@ public class Quad : Hittable
 		else
 		{
 			//Find intersection normally
-			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
+			t = (Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
 		}
 
 		//Assert K ranges
@@ -141,7 +141,7 @@ public class Quad : Hittable
 
 		// Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
 		// float   u   = uvn.X, v = uvn.Y;
-		//Inlined code above, since we don't need the Z coord, and removed the casts to `double`
+		//Inlined code above, since we don't need the Z (normal) coord, and removed the casts to `double`
 		float u = (localPoint.X * localToQuadMatrix.M11) + (localPoint.Y * localToQuadMatrix.M21) + (localPoint.Z * localToQuadMatrix.M31) + localToQuadMatrix.M41;
 		float v = (localPoint.X * localToQuadMatrix.M12) + (localPoint.Y * localToQuadMatrix.M22) + (localPoint.Z * localToQuadMatrix.M32) + localToQuadMatrix.M42;
 
