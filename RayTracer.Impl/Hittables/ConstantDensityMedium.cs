@@ -28,6 +28,9 @@ public sealed class ConstantDensityMedium : Hittable
 		negInvDensity = -1f / density;
 	}
 
+	/// <summary>
+	/// -1 / <see cref="Density"/>
+	/// </summary>
 	private readonly float negInvDensity;
 
 	/// <inheritdoc/>
