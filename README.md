@@ -21,16 +21,29 @@ at it directly)
     * If using the `EtoForms` runner, everything is controlled from the UI
 4. Once the render is complete, the image should be saved to a file (where depends on which runner), and ***might*** open in your image viewer
    program\*  
-   \**i test it on POP OS!*
+   \**Opening in default programs is complicated; I test it on POP OS!*
 
-## API Explanation
+## Project Explanation
 
-| File/Type                                                 | What it does                                                                                                                 |
-|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| [Async Render Job](RayTracer.Core/Core/AsyncRenderJob.cs) | The renderer - handles recursive ray tracing, colour calculation, lighting, etc                                              | 
-| [Camera](RayTracer.Core/Core/Camera.cs)                   | Handles generation of view rays                                                                                              |
-| [Materials](RayTracer.Core/Materials)                     | Materials handle how the light scatters when the object is hit, as well as changes in colour when rays bounce                |
-| [Textures](RayTracer.Core/Textures)                       | Textures return a colour when an input hit is passed in (this allows for textures based on world-space coordinates and UV's) |
-| [Hittable](RayTracer.Core/Hittables)                      | Hittables are in charge of calculating whether a given ray intersects with itself                                            |
-| [Scene](RayTracer.Core/Core/Scene.cs)                     | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
-| [Light](RayTracer.Core/Environment/Light.cs)              | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
+### LibEternal
+Helper library that contains non-project-specific code (e.g. logging related helper classes)
+### RayTracer.Core
+Main Ray-Tracing library, contains all the code that is needed to be able to create/render scenes. Doesn't contain any actual implementations for anything like scenes or hittables (shapes)
+### RayTracer.Impl
+Library containing the implementations for [RayTracer.Core](#-raytracer.core). Contains materials, hittables, textures, some builtin scenes, lights and skyboxes
+### RayTracer.Display.SpectreConsole
+Console-based implementation of the 'engine' - allows selection of some of the builtin scenes from RayTracer.Impl
+
+
+## Important types
+
+| Type                                                          | What it does                                                                                                                 |
+|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| [Async Render Job](RayTracer.Core/AsyncRenderJob.cs)          | The renderer - handles recursive ray tracing, colour calculation, lighting, etc                                              | 
+| [Camera](RayTracer.Core/Camera.cs)                            | Handles generation of view rays                                                                                              |
+| [Materials](RayTracer.Core/Base Type Definitions/Material.cs) | Materials handle how the light scatters when the object is hit, as well as changes in colour when rays bounce                |
+| [Textures](RayTracer.Core/Base Type Definitions/Texture.cs)   | Textures return a colour when an input hit is passed in (this allows for textures based on world-space coordinates and UV's) |
+| [Hittable](RayTracer.Core/Base Type Definitions/Hittable.cs)  | Hittables are in charge of calculating whether a given ray intersects with itself                                            |
+| [Scene](RayTracer.Core/Scene.cs)                              | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
+| [Light](RayTracer.Core/Base Type Definitions/Light.cs)        | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
+| [Render Options](RayTracer.Core/RenderOptions.cs)             | Stores the settings used when rendering, such as                                                                             |
