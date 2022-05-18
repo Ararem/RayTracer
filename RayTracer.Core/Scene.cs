@@ -6,7 +6,7 @@ namespace RayTracer.Core;
 /// <param name="SceneObjects">Array containing all the objects in the scene</param>
 /// <param name="Lights">Array containing all the light sources in the scene</param>
 /// <param name="SkyBox">SkyBox (sky light) for the scene</param>
-public sealed record Scene(string Name, Camera Camera, SceneObject[] SceneObjects, Light[] Lights, SkyBox SkyBox)
+public sealed record Scene(string Name, Camera Camera, SceneObject[] SceneObjects, Light[] Lights, ISkyBox SkyBox)
 {
 	/// <inheritdoc/>
 	public override string ToString() => $"{Name} - {SceneObjects.Length} objects";
