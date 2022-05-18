@@ -1,8 +1,12 @@
+#region
+
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
 using static System.MathF;
 using static System.Numerics.Vector3;
+
+#endregion
 
 namespace RayTracer.Impl.Hittables;
 
@@ -49,6 +53,23 @@ public class Box : Hittable
 		for (int i = 0; i < corners.Length; i++) corners[i] = Transform(corners[i], BoxToWorldTransform);
 		//Wrap them in an AABB
 		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
+
+		//Cache some values for later in TryHit()
+		boxToWorldRow1 = new Vector3(
+				BoxToWorldTransform.M11,
+				BoxToWorldTransform.M12,
+				BoxToWorldTransform.M13
+		);
+		boxToWorldRow2 = new Vector3(
+				BoxToWorldTransform.M21,
+				BoxToWorldTransform.M22,
+				BoxToWorldTransform.M23
+		);
+		boxToWorldRow3 = new Vector3(
+				BoxToWorldTransform.M31,
+				BoxToWorldTransform.M32,
+				BoxToWorldTransform.M33
+		);
 	}
 
 	/// <summary>
@@ -63,6 +84,21 @@ public class Box : Hittable
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>
+	///  First row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
+	/// </summary>
+	private readonly Vector3 boxToWorldRow1;
+
+	/// <summary>
+	///  Second row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
+	/// </summary>
+	private readonly Vector3 boxToWorldRow2;
+
+	/// <summary>
+	///  Third row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
+	/// </summary>
+	private readonly Vector3 boxToWorldRow3;
 
 	/// <summary>
 	///  Creates a <see cref="Box"/> from two opposing corners
@@ -143,34 +179,19 @@ public class Box : Hittable
 		int     faceIndex;
 		if ((t1.X > t1.Y) && (t1.X > t1.Z))
 		{
-			Vector3 v = new(
-					BoxToWorldTransform.M11,
-					BoxToWorldTransform.M12,
-					BoxToWorldTransform.M13
-			);
-			normal    = v * s.X;
+			normal    = boxToWorldRow1 * s.X;
 			uv        = new Vector2(ro.Y, ro.Z) + (new Vector2(rd.Y, rd.Z) * t1.X);
 			faceIndex = (1 + (int)s.X) / 2;
 		}
 		else if (t1.Y > t1.Z)
 		{
-			Vector3 v = new(
-					BoxToWorldTransform.M21,
-					BoxToWorldTransform.M22,
-					BoxToWorldTransform.M23
-			);
-			normal    = v * s.Y;
+			normal    = boxToWorldRow2 * s.Y;
 			uv        = new Vector2(ro.Z, ro.Z) + (new Vector2(rd.Z, rd.X) * t1.Y);
 			faceIndex = (5 + (int)s.Y) / 2;
 		}
 		else
 		{
-			Vector3 v = new(
-					BoxToWorldTransform.M31,
-					BoxToWorldTransform.M32,
-					BoxToWorldTransform.M33
-			);
-			normal    = v * s.Z;
+			normal    = boxToWorldRow3 * s.Z;
 			uv        = new Vector2(ro.X, ro.Y) + (new Vector2(rd.X, rd.Y) * t1.Z);
 			faceIndex = (9 + (int)s.Z) / 2;
 		}
@@ -183,7 +204,7 @@ public class Box : Hittable
 		_ = uv;
 		_ = faceIndex;
 
-		//TODO: UV's
+		//TODO: UV's may be similar to capsule in that they're based off the dimensions of the cube?
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
