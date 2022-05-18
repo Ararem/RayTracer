@@ -5,9 +5,7 @@ using static System.MathF;
 
 namespace RayTracer.Impl.Textures;
 
-/// <summary>
-///  Texture that mimics the appearance of Marble.
-/// </summary>
+/// <summary>Texture that mimics the appearance of Marble.</summary>
 /// <param name="Scale">How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</param>
 /// <param name="NoiseScale">Same as <see cref="Scale"/>, but only affects the noise pattern</param>
 /// <param name="NoiseStrength">How much the noise contributes to the output colour</param>

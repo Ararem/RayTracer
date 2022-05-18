@@ -5,12 +5,8 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Impl.Materials;
 
-/// <summary>
-///  A standard material that can be
-/// </summary>
-/// <param name="Albedo">
-///  The albedo (colour) texture of this material
-/// </param>
+/// <summary>A standard material that can be</summary>
+/// <param name="Albedo">The albedo (colour) texture of this material</param>
 /// <param name="Emission">The texture used for the light this material emits</param>
 /// <param name="Diffusion">How 'diffuse' (random) the reflected rays are. Settings this to 0 means perfect reflections, 1 means completely diffuse</param>
 public sealed record StandardMaterial(Texture Albedo, Texture Emission, float Diffusion) : IMaterial

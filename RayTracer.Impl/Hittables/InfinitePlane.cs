@@ -6,17 +6,13 @@ using static System.MathF;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  A 2D Plane in 3D space.
-/// </summary>
+/// <summary>A 2D Plane in 3D space.</summary>
 /// <remarks>
 ///  Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/>
 /// </remarks>
 public sealed class InfinitePlane : Hittable
 {
-	/// <summary>
-	///  A 2D Plane in 3D space.
-	/// </summary>
+	/// <summary>A 2D Plane in 3D space.</summary>
 	/// <param name="point">A point on the plane</param>
 	/// <param name="normal">Normal of the plane</param>
 	public InfinitePlane(Vector3 point, Vector3 normal)

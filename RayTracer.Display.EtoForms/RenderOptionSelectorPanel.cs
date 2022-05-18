@@ -10,14 +10,10 @@ using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
 
-/// <summary>
-///  Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance
-/// </summary>
+/// <summary>Panel that allows modification of the settings of a <see cref="RenderOptions"/> instance</summary>
 internal sealed class RenderOptionSelectorPanel : Panel
 {
-	/// <summary>
-	///  Creates a new <see cref="RenderOptionSelectorPanel"/> panel
-	/// </summary>
+	/// <summary>Creates a new <see cref="RenderOptionSelectorPanel"/> panel</summary>
 	/// <param name="click"></param>
 	/// <param name="options">
 	///  Optional initial value for the render options. If <see langword="null"/>, will be set to
@@ -114,6 +110,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class IntEditor : PropertyEditorView
 	{
+		private readonly NumericStepper stepper;
+
 		/// <inheritdoc/>
 		public IntEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
@@ -134,8 +132,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			TableCell.Control = stepper;
 		}
 
-		private readonly NumericStepper stepper;
-
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
 		{
@@ -150,6 +146,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class EnumEditor<T> : PropertyEditorView where T : struct, Enum
 	{
+		private readonly EnumDropDown<T> dropDown;
+
 		/// <inheritdoc/>
 		public EnumEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
@@ -164,8 +162,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			};
 			TableCell.Control = dropDown;
 		}
-
-		private readonly EnumDropDown<T> dropDown;
 
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
@@ -182,6 +178,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class FloatEditor : PropertyEditorView
 	{
+		private readonly NumericStepper stepper;
+
 		/// <inheritdoc/>
 		public FloatEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
@@ -208,8 +206,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			TableCell.Control = stepper;
 		}
 
-		private readonly NumericStepper stepper;
-
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
 		{
@@ -231,14 +227,10 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 	private readonly DropDown sceneSelectDropdown;
 
-	/// <summary>
-	///  List of all the property editors for the <see cref="RenderOptions"/>
-	/// </summary>
+	/// <summary>List of all the property editors for the <see cref="RenderOptions"/></summary>
 	private readonly List<PropertyEditorView> renderOptionsPropertyEditors = new();
 
-	/// <summary>
-	///  Base class for an editor view for editing a property of a <see cref="RenderOptions"/> instance
-	/// </summary>
+	/// <summary>Base class for an editor view for editing a property of a <see cref="RenderOptions"/> instance</summary>
 	private abstract class PropertyEditorView : IDisposable
 	{
 		//We use a panel instead of RenderOptions as a target since the options being selected can change
@@ -270,14 +262,10 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		}
 	}
 
-	/// <summary>
-	///  The render options displayed by this instance
-	/// </summary>
+	/// <summary>The render options displayed by this instance</summary>
 	public RenderOptions RenderOptions { get; }
 
-	/// <summary>
-	///  The scene displayed by this instance
-	/// </summary>
+	/// <summary>The scene displayed by this instance</summary>
 	public Scene Scene { get; private set; }
 
 	/// <inheritdoc/>

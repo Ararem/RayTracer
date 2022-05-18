@@ -10,18 +10,14 @@ namespace RayTracer.Core.Acceleration;
 /// <param name="Max">Second corner of the box</param>
 public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 {
-	/// <summary>
-	///  An <see cref="AxisAlignedBoundingBox"/> that represents an unbounded AABB
-	/// </summary>
+	/// <summary>An <see cref="AxisAlignedBoundingBox"/> that represents an unbounded AABB</summary>
 	/// <remarks>
 	///  This isn't truly infinite, as <see cref="float.PositiveInfinity"/> and <see cref="float.NegativeInfinity"/> may not work, however this is necessary
 	///  for computation of <see cref="BvhTree">BVH Trees</see>
 	/// </remarks>
 	public static AxisAlignedBoundingBox Infinite { get; } = new(new Vector3(float.NegativeInfinity), new Vector3(float.PositiveInfinity));
 
-	/// <summary>
-	///  Tries to see if the given ray will intersect with the bounding box or not.
-	/// </summary>
+	/// <summary>Tries to see if the given ray will intersect with the bounding box or not.</summary>
 	/// <param name="ray">The ray to check for intersections along</param>
 	/// <param name="kMin">Lower bound for distance along the ray</param>
 	/// <param name="kMax">Upper bound for distance along the ray</param>
@@ -97,9 +93,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 		return true;
 	}
 
-	/// <summary>
-	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/>
-	/// </summary>
+	/// <summary>Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="points"/></summary>
 	/// <param name="points">Array of sub boxes to surround</param>
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <paramref name="points"/></returns>
 	public static AxisAlignedBoundingBox Encompass(params Vector3[] points)
@@ -114,9 +108,7 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 		return new AxisAlignedBoundingBox(min, max);
 	}
 
-	/// <summary>
-	///  Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/>
-	/// </summary>
+	/// <summary>Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/></summary>
 	/// <param name="subBoxes">Array of sub boxes to surround</param>
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <paramref name="subBoxes"/></returns>
 	public static AxisAlignedBoundingBox Encompass(params AxisAlignedBoundingBox[] subBoxes)

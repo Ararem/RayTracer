@@ -7,16 +7,12 @@ using static System.MathF;
 
 namespace RayTracer.Impl.Materials;
 
-/// <summary>
-///  A material (such as glass) that refracts light rays going through it
-/// </summary>
+/// <summary>A material (such as glass) that refracts light rays going through it</summary>
 /// <param name="RefractiveIndex">Refractive index of the material to simulate</param>
 /// <param name="Tint">Texture to tint the rays by</param>
 public record RefractiveMaterial(float RefractiveIndex, Texture Tint, bool AlternateRefractionMode = false) : IMaterial
 {
-	/// <summary>
-	///  Refractive index of a common material
-	/// </summary>
+	/// <summary>Refractive index of a common material</summary>
 	[PublicAPI] public const float AirIndex = 1f, GlassIndex = 1.5f, DiamondIndex = 2.4f;
 
 	/// <inheritdoc/>

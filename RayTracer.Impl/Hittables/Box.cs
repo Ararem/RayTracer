@@ -10,22 +10,26 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  Represents a 3-dimensional box.
-/// </summary>
+/// <summary>Represents a 3-dimensional box.</summary>
 /// <remarks>
 ///  This box is unusual in the sense that it has a <see cref="Matrix4x4"/> to contain rotation, translation and scaling, instead of separate parameters
 ///  for each. In order to position a <see cref="Box"/>, use the <see cref="Matrix4x4"/><c>.CreateXXX</c> methods (like
 ///  <see cref="Matrix4x4.CreateScale(System.Numerics.Vector3)"/>). When combining these matrices, make sure to multiply them in the order
 ///  <c>Translate * Rotate * Scale</c>, or you may get unintended results (see
-///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a>
-///  )
+///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a> )
 /// </remarks>
 public sealed class Box : Hittable
 {
-	/// <summary>
-	///  Creates a box from a transform matrix
-	/// </summary>
+	/// <summary>First row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals</summary>
+	private readonly Vector3 boxToWorldRow1;
+
+	/// <summary>Second row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals</summary>
+	private readonly Vector3 boxToWorldRow2;
+
+	/// <summary>Third row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals</summary>
+	private readonly Vector3 boxToWorldRow3;
+
+	/// <summary>Creates a box from a transform matrix</summary>
 	/// <param name="boxToWorldTransform">The matrix used to create the box</param>
 	/// <exception cref="ArgumentOutOfRangeException">The matrix used is non-invertible</exception>
 	public Box(Matrix4x4 boxToWorldTransform)
@@ -72,37 +76,16 @@ public sealed class Box : Hittable
 		);
 	}
 
-	/// <summary>
-	///  Matrix to transform box-space to world-space
-	/// </summary>
+	/// <summary>Matrix to transform box-space to world-space</summary>
 	public Matrix4x4 BoxToWorldTransform { get; }
 
-	/// <summary>
-	///  Matrix to transform world-space to box-space
-	/// </summary>
+	/// <summary>Matrix to transform world-space to box-space</summary>
 	public Matrix4x4 WorldToBoxTransform { get; }
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
-	/// <summary>
-	///  First row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
-	/// </summary>
-	private readonly Vector3 boxToWorldRow1;
-
-	/// <summary>
-	///  Second row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
-	/// </summary>
-	private readonly Vector3 boxToWorldRow2;
-
-	/// <summary>
-	///  Third row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals
-	/// </summary>
-	private readonly Vector3 boxToWorldRow3;
-
-	/// <summary>
-	///  Creates a <see cref="Box"/> from two opposing corners
-	/// </summary>
+	/// <summary>Creates a <see cref="Box"/> from two opposing corners</summary>
 	public static Box CreateFromCorners(Vector3 corner1, Vector3 corner2)
 	{
 		corner1 = Min(corner1, corner2);

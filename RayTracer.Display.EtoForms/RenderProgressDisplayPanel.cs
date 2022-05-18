@@ -25,6 +25,44 @@ internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const int DepthImageWidth = 100;
 
+	/// <summary>Image used for the depth buffer</summary>
+	private readonly Bitmap depthBufferBitmap;
+
+	/// <summary>Graphics used for the depth buffer</summary>
+	private readonly Graphics depthBufferGraphics;
+
+	private readonly ImageView depthBufferImageView;
+	private readonly Pen       depthBufferPen = new(Colors.Gray);
+
+	/// <summary>The actual preview image buffer</summary>
+	private readonly Bitmap previewImage;
+
+	/// <summary>Container that draws a border and title around the preview image</summary>
+	private readonly GroupBox previewImageContainer;
+
+	/// <summary>The control that holds the preview image</summary>
+	private readonly DragZoomImageView previewImageView;
+
+	/// <summary>Render job we are displaying the progress for</summary>
+	private readonly AsyncRenderJob renderJob;
+
+	/// <summary>Container that has a title and border around the stats table</summary>
+	private readonly GroupBox statsContainer;
+
+	private readonly Timer updatePreviewTimer;
+
+	/// <summary>Time (real-world) at which the last frame update occurred</summary>
+	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
+
+	/// <summary>Render stats from the last time we updated the preview</summary>
+	private RenderStats prevStats;
+
+	/// <summary>How long the last update took to complete (since we can't display how long the current one will take)</summary>
+	private TimeSpan prevUpdateDuration;
+
+	/// <summary>Table that contains the various stats</summary>
+	private TableLayout statsTable;
+
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
 		this.renderJob = renderJob;
@@ -75,67 +113,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private static int UpdatePeriod => 1000 / 20; //20 FPS
 
 	/// <summary>
-	///  Image used for the depth buffer
-	/// </summary>
-	private readonly Bitmap depthBufferBitmap;
-
-	/// <summary>
-	///  Graphics used for the depth buffer
-	/// </summary>
-	private readonly Graphics depthBufferGraphics;
-
-	private readonly ImageView depthBufferImageView;
-	private readonly Pen       depthBufferPen = new(Colors.Gray);
-
-	/// <summary>
-	///  The actual preview image buffer
-	/// </summary>
-	private readonly Bitmap previewImage;
-
-	/// <summary>
-	///  Container that draws a border and title around the preview image
-	/// </summary>
-	private readonly GroupBox previewImageContainer;
-
-	/// <summary>
-	///  The control that holds the preview image
-	/// </summary>
-	private readonly DragZoomImageView previewImageView;
-
-	/// <summary>
-	///  Render job we are displaying the progress for
-	/// </summary>
-	private readonly AsyncRenderJob renderJob;
-
-	/// <summary>
-	///  Container that has a title and border around the stats table
-	/// </summary>
-	private readonly GroupBox statsContainer;
-
-	private readonly Timer updatePreviewTimer;
-
-	/// <summary>
-	///  Time (real-world) at which the last frame update occurred
-	/// </summary>
-	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
-
-	/// <summary>
-	///  Render stats from the last time we updated the preview
-	/// </summary>
-	private RenderStats prevStats;
-
-	/// <summary>
-	///  How long the last update took to complete (since we can't display how long the current one will take)
-	/// </summary>
-	private TimeSpan prevUpdateDuration;
-
-	/// <summary>
-	///  Table that contains the various stats
-	/// </summary>
-	private TableLayout statsTable;
-
-	/// <summary>
-	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
+	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the
+	///  main thread
 	/// </summary>
 	private void UpdateAllPreviews()
 	{

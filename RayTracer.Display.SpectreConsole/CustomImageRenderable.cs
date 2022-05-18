@@ -11,35 +11,24 @@ namespace RayTracer.Display.SpectreConsole;
 
 //I had to modify this from the Spectre.Console one because it wouldn't let me use Rgb24, and wouldn't let me pass in the image myself
 
-/// <summary>
-///  Represents a renderable image.
-/// </summary>
+/// <summary>Represents a renderable image.</summary>
 [PublicAPI]
 public sealed class CustomImageRenderable : Renderable
 {
-	/// <summary>
-	///  Initializes a new instance of the <see cref="CustomImageRenderable"/> class.
-	/// </summary>
+	/// <summary>Initializes a new instance of the <see cref="CustomImageRenderable"/> class.</summary>
 	/// <param name="image">The image for rendering</param>
 	public CustomImageRenderable(Image<Rgb24> image)
 	{
 		Image = image;
 	}
 
-	/// <summary>
-	///  Gets the maximum width allowed (in chars)
-	/// </summary>
+	/// <summary>Gets the maximum width allowed (in chars)</summary>
 	public int? MaxConsoleWidth { get; set; }
 
-	/// <summary>
-	///  Gets or sets the <see cref="IResampler"/> that should
-	///  be used when scaling the image. Defaults to bicubic sampling.
-	/// </summary>
+	/// <summary>Gets or sets the <see cref="IResampler"/> that should be used when scaling the image. Defaults to bicubic sampling.</summary>
 	public IResampler? Resampler { get; set; }
 
-	/// <summary>
-	///  Image that is to be rendered
-	/// </summary>
+	/// <summary>Image that is to be rendered</summary>
 	public Image<Rgb24> Image { get; }
 
 	/// <inheritdoc/>

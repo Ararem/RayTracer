@@ -15,17 +15,13 @@ public static class TaskWatcher
 
 	[UsedImplicitly] private static Timer watcherTimer = null!;
 
-	/// <summary>
-	///  Allows you to 'watch' a task for errors while discarding it. Useful when you want async events but are only given a sync invoker.
-	/// </summary>
+	/// <summary>Allows you to 'watch' a task for errors while discarding it. Useful when you want async events but are only given a sync invoker.</summary>
 	/// <param name="task"></param>
 	/// <param name="exitOnError"></param>
 	/// <remarks>To use, simply call the async method you want to watch, and then call <see cref="Watch"/> on the returned task object</remarks>
 	public static void Watch(Task task, bool exitOnError) => WatchedTasks.Add((task, exitOnError));
 
-	/// <summary>
-	///  Initializes the task watcher. Make sure to only call this once
-	/// </summary>
+	/// <summary>Initializes the task watcher. Make sure to only call this once</summary>
 	internal static void Init()
 	{
 		const int period = 500;

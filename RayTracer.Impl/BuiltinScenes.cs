@@ -14,15 +14,11 @@ using static System.MathF;
 
 namespace RayTracer.Impl;
 
-/// <summary>
-///  Static class that contains a list of pre-made scenes
-/// </summary>
+/// <summary>Static class that contains a list of pre-made scenes</summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public static class BuiltinScenes
 {
-	/// <summary>
-	///  Testing scene
-	/// </summary>
+	/// <summary>Testing scene</summary>
 	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 2f, 1.5f), new Vector3(.0f, .0f, .0f), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
@@ -32,9 +28,7 @@ public static class BuiltinScenes
 			new SingleColourSkyBox(Black)
 	);
 
-	/// <summary>
-	///  Fancy scene containing (hopefully) every type of shape, light and material
-	/// </summary>
+	/// <summary>Fancy scene containing (hopefully) every type of shape, light and material</summary>
 	public static Scene Demo
 	{
 		get
@@ -97,9 +91,7 @@ public static class BuiltinScenes
 		}
 	}
 
-	/// <summary>
-	///  Simple scene with a single sphere at (0, 0, 0)
-	/// </summary>
+	/// <summary>Simple scene with a single sphere at (0, 0, 0)</summary>
 	public static Scene Sphere => new(
 			"A lonely Sphere", Camera.Create(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
@@ -109,9 +101,7 @@ public static class BuiltinScenes
 			new DefaultSkyBox()
 	);
 
-	/// <summary>
-	///  Simple scene with two spheres at (+-1, 0, 0)
-	/// </summary>
+	/// <summary>Simple scene with two spheres at (+-1, 0, 0)</summary>
 	public static Scene RgbSpheres => new(
 			"RGB Spheres", Camera.Create(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, .00002f, 5f), new SceneObject[]
 			{
@@ -124,9 +114,7 @@ public static class BuiltinScenes
 			new DefaultSkyBox()
 	);
 
-	/// <summary>
-	///  The good 'ol cornell box, as is traditional for raytracing
-	/// </summary>
+	/// <summary>The good 'ol cornell box, as is traditional for raytracing</summary>
 	public static Scene CornellBox
 	{
 		get
@@ -159,9 +147,7 @@ public static class BuiltinScenes
 	}
 
 
-	/// <summary>
-	///  Cover for RayTracing in a weekend, chapter one
-	/// </summary>
+	/// <summary>Cover for RayTracing in a weekend, chapter one</summary>
 	public static Scene RtInAWeekendCover1
 	{
 		get
@@ -226,9 +212,7 @@ public static class BuiltinScenes
 		}
 	}
 
-	/// <summary>
-	///  Gets all the builtin scenes
-	/// </summary>
+	/// <summary>Gets all the builtin scenes</summary>
 	public static IEnumerable<Scene> GetAll()
 	{
 		return typeof(BuiltinScenes)

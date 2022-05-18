@@ -1,8 +1,6 @@
 namespace RayTracer.Core;
 
-/// <summary>
-///  A scene that contains objects, which can be rendered by a <see cref="Camera"/>
-/// </summary>
+/// <summary>A scene that contains objects, which can be rendered by a <see cref="Camera"/></summary>
 /// <param name="Name">The name you wish to call your scene</param>
 /// <param name="Camera">The camera that will be used to render the scene</param>
 /// <param name="SceneObjects">Array containing all the objects in the scene</param>

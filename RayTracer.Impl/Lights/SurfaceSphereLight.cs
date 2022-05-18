@@ -4,9 +4,8 @@ using System.Numerics;
 namespace RayTracer.Impl.Lights;
 
 /// <summary>
-///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the
-///  <see cref="Radius"/> - points are randomly chosen inside on sphere centred at <see cref="Position"/> with a radius of
-///  <see cref="Radius"/>.
+///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the <see cref="Radius"/> -
+///  points are randomly chosen inside on sphere centred at <see cref="Position"/> with a radius of <see cref="Radius"/>.
 /// </summary>
 /// <param name="Position">Where the light source is located in world-space</param>
 /// <param name="Colour">Colour of the emitted light</param>

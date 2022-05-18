@@ -4,7 +4,8 @@ using RayTracer.Impl.Hittables;
 namespace RayTracer.Impl.Materials;
 
 /// <summary>
-///  A material that scatters in all directions. Should only be used when paired with a volumetric mesh, such as a <see cref="ConstantDensityMedium"/>
+///  A material that scatters in all directions. Should only be used when paired with a volumetric mesh, such as a
+///  <see cref="ConstantDensityMedium"/>
 /// </summary>
 /// <remarks>Scatter direction is completely random</remarks>
 public record VolumetricMaterial(Colour Albedo) : IMaterial

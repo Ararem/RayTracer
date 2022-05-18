@@ -11,9 +11,12 @@ namespace RayTracer.Core.Acceleration;
 /// </summary>
 public sealed class BvhTree
 {
-	/// <summary>
-	///  Creates a new BVH tree for the specified scene
-	/// </summary>
+	private readonly RenderStats renderStats;
+
+	/// <summary>Root <see cref="BvhNode"/> for this BVH Tree</summary>
+	public readonly BvhNode RootNode;
+
+	/// <summary>Creates a new BVH tree for the specified scene</summary>
 	/// <param name="scene">Scene to create the BVH tree for</param>
 	/// <param name="renderStats">Object used for tracking render statistics</param>
 	public BvhTree(Scene scene, RenderStats renderStats)
@@ -27,13 +30,6 @@ public sealed class BvhTree
 		this.renderStats = renderStats;
 		RootNode         = FromSegment_SAH(scene.SceneObjects, 0);
 	}
-
-	private readonly RenderStats renderStats;
-
-	/// <summary>
-	///  Root <see cref="BvhNode"/> for this BVH Tree
-	/// </summary>
-	public readonly BvhNode RootNode;
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
@@ -161,9 +157,7 @@ public sealed class BvhTree
 	// 	return node;
 	// }
 
-	/// <summary>
-	///  Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis
-	/// </summary>
+	/// <summary>Compares two <see cref="Hittable">Hittables</see> (by comparing their extremes). Used for splitting the scene along an axis</summary>
 	/// <param name="a">First hittable to compare</param>
 	/// <param name="b">Second hittable to compare</param>
 	/// <param name="getAxis">Function to get the given axis value to compare along (e.g. <c>v => v.X</c>)</param>

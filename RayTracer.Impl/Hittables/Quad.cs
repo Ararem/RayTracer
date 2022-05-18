@@ -7,18 +7,18 @@ namespace RayTracer.Impl.Hittables;
 
 /// <summary>
 ///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>,
-///  <see cref="V"/>) for the sides of the quad (these do not
-///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which
-///  creates a parallelogram instead of a rectangle (however they must not be parallel)
+///  <see cref="V"/>) for the sides of the quad (these do not need to be normalized, as their length is used to infer the size of the quad). The two side
+///  vectors can be non-perpendicular to each other, which creates a parallelogram instead of a rectangle (however they must not be parallel)
 /// </summary>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 public class Quad : Hittable
 {
+	private Matrix4x4 localToQuadMatrix;
+
 	/// <summary>
 	///  Creates a new quad using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these
-	///  do not
-	///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which
-	///  creates a parallelogram instead of a rectangle (however they must not be parallel)
+	///  do not need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other,
+	///  which creates a parallelogram instead of a rectangle (however they must not be parallel)
 	/// </summary>
 	/// <remarks>
 	///  The quad is assumed to be in the shape
@@ -59,9 +59,7 @@ public class Quad : Hittable
 		if (!Matrix4x4.Invert(quadToWorld, out localToQuadMatrix)) throw new ArithmeticException("Could not invert Quad to world transformation matrix (UV coords were probably parallel)");
 	}
 
-	/// <summary>
-	///  Normal direction of the quad
-	/// </summary>
+	/// <summary>Normal direction of the quad</summary>
 	public Vector3 Normal { get; } //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
 
 	/// <inheritdoc/>
@@ -69,19 +67,13 @@ public class Quad : Hittable
 		//AxisAlignedBoundingBox.Encompass(A,B,C);
 		AxisAlignedBoundingBox.Infinite;
 
-	/// <summary>
-	///  The 'origin' point of the quad -
-	/// </summary>
+	/// <summary>The 'origin' point of the quad -</summary>
 	public Vector3 Origin { get; init; }
 
 	public Vector3 U { get; init; }
 	public Vector3 V { get; init; }
 
-	private Matrix4x4 localToQuadMatrix;
-
-	/// <summary>
-	///  Creates a new quad from three points, as opposed to a point and two directions
-	/// </summary>
+	/// <summary>Creates a new quad from three points, as opposed to a point and two directions</summary>
 	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
 	/// <param name="oPlusU">Position of the point that corresponds to <see cref="Origin"/> + <see cref="U"/>. Used to calculate the <see cref="U"/> vector</param>
 	/// <param name="oPlusV">Position of the point that corresponds to <see cref="Origin"/> + <see cref="V"/>. Used to calculate the <see cref="V"/> vector</param>

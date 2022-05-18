@@ -17,6 +17,11 @@ namespace RayTracer.Display.EtoForms;
 //TODO: Add some styling - custom fonts most important
 public sealed class MainForm : Form
 {
+	private readonly RenderOptionSelectorPanel? selectorPanel = null;
+	private readonly Label                      titleLabel;
+	private          StackLayoutItem            displayedWindowItem;
+	private          AsyncRenderJob?            renderJob = null;
+
 	public MainForm()
 	{
 		Verbose("MainForm.Ctor()");
@@ -78,11 +83,6 @@ public sealed class MainForm : Form
 		selectorPanel               = new RenderOptionSelectorPanel((_, _) => StartRenderButtonClicked());
 		displayedWindowItem.Control = selectorPanel;
 	}
-
-	private readonly RenderOptionSelectorPanel? selectorPanel = null;
-	private readonly Label                      titleLabel;
-	private          StackLayoutItem            displayedWindowItem;
-	private          AsyncRenderJob?            renderJob = null;
 
 	private void StartRenderButtonClicked()
 	{

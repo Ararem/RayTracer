@@ -1,8 +1,6 @@
 namespace RayTracer.Core.Acceleration;
 
-/// <summary>
-///  Implementation of <see cref="BvhNode"/> for two sub-nodes
-/// </summary>
+/// <summary>Implementation of <see cref="BvhNode"/> for two sub-nodes</summary>
 /// <param name="NodeA">First sub-node</param>
 /// <param name="NodeB">Second sub-node</param>
 /// <param name="RenderStats"><see cref="RenderStats"/> object used to track statistics for this node</param>

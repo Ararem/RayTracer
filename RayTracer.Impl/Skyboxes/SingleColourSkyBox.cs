@@ -3,15 +3,11 @@ using RayTracer.Core;
 
 namespace RayTracer.Impl.Skyboxes;
 
-/// <summary>
-///  A skybox that is a single colour
-/// </summary>
+/// <summary>A skybox that is a single colour</summary>
 [PublicAPI]
 public class SingleColourSkyBox : SkyBox
 {
-	/// <summary>
-	///  A skybox that is a single colour
-	/// </summary>
+	/// <summary>A skybox that is a single colour</summary>
 	/// <param name="colour">The colour of the sky</param>
 	public SingleColourSkyBox(Colour colour)
 	{

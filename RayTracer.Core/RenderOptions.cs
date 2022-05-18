@@ -3,9 +3,7 @@ using RayTracer.Core.Debugging;
 
 namespace RayTracer.Core;
 
-/// <summary>
-///  Record used to configure how a renderer renders a <see cref="Scene"/>
-/// </summary>
+/// <summary>Record used to configure how a renderer renders a <see cref="Scene"/></summary>
 /// <param name="Width">How many pixels wide the image should be</param>
 /// <param name="Height">How many pixels high the image should be</param>
 /// <param name="KMin">
@@ -40,8 +38,6 @@ public sealed record RenderOptions(
 		//TODO: Max depth for calculating lighting?
 )
 {
-	/// <summary>
-	///  Default render options
-	/// </summary>
+	/// <summary>Default render options</summary>
 	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, -1, 100, 10);
 }

@@ -3,9 +3,7 @@ using RayTracer.Core;
 
 namespace RayTracer.Impl.Skyboxes;
 
-/// <summary>
-///  Simple default skybox that creates a blue-white gradient according to a ray's direction's Y value
-/// </summary>
+/// <summary>Simple default skybox that creates a blue-white gradient according to a ray's direction's Y value</summary>
 [PublicAPI]
 public sealed class DefaultSkyBox : SkyBox
 {

@@ -6,14 +6,12 @@ using static System.MathF;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
-/// </summary>
+/// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 public sealed class Disk : Hittable
 {
-	/// <summary>
-	///  A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)
-	/// </summary>
+	private readonly float radiusSqr;
+
+	/// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 	/// <param name="centre">The centre of the disk in 3D space</param>
 	/// <param name="normal">Normal direction of the disk</param>
 	/// <param name="radius">How large the radius of the disk is</param>
@@ -38,8 +36,6 @@ public sealed class Disk : Hittable
 
 	/// <summary>How large the radius of the disk is</summary>
 	public float Radius { get; }
-
-	private readonly float radiusSqr;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

@@ -1,8 +1,6 @@
 namespace RayTracer.Core.Acceleration;
 
-/// <summary>
-///  Bvh node for a singular object
-/// </summary>
+/// <summary>Bvh node for a singular object</summary>
 public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats RenderStats) : BvhNode(RenderStats)
 {
 	/// <inheritdoc/>

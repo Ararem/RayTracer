@@ -6,9 +6,7 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  Implementation of <see cref="Hittable"/> for a sphere
-/// </summary>
+/// <summary>Implementation of <see cref="Hittable"/> for a sphere</summary>
 public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 {
 	/// <inheritdoc/>

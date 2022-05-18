@@ -12,9 +12,8 @@ namespace RayTracer.Impl.Materials;
 /// <param name="DirectEmission">Option for enabling direct emission (see remarks)</param>
 /// <remarks>
 ///  Note on in/direct emission: Direct emission is when the light ray has only travelled through this object, e.g. the ray is directly from the camera,
-///  pointing at this object.
-///  Indirect emission is when the ray has already bounced off another object, such as a wall. Indirect emission is much more nice to look at, since it
-///  doesn't blow up the object's colour completely, but still gives a nice glow to it's surroundings.
+///  pointing at this object. Indirect emission is when the ray has already bounced off another object, such as a wall. Indirect emission is much more
+///  nice to look at, since it doesn't blow up the object's colour completely, but still gives a nice glow to it's surroundings.
 /// </remarks>
 public sealed record EmissiveRefractiveMaterial(float RefractiveIndex, Texture Tint, Texture Emission, bool DirectEmission = false, bool AlternateRefractionMode = false) : RefractiveMaterial(RefractiveIndex, Tint, AlternateRefractionMode)
 {

@@ -29,29 +29,19 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 {
 #region Markup Styles
 
-	/// <summary>
-	///  Most important - style for the app title text
-	/// </summary>
+	/// <summary>Most important - style for the app title text</summary>
 	private const string AppTitleMarkup = "bold red underline";
 
-	/// <summary>
-	///  Markup for the title of an <see cref="IRenderable"/>
-	/// </summary>
+	/// <summary>Markup for the title of an <see cref="IRenderable"/></summary>
 	private const string TitleMarkup = "bold blue";
 
-	/// <summary>
-	///  Markup for the heading of a table
-	/// </summary>
+	/// <summary>Markup for the heading of a table</summary>
 	private const string HeadingMarkup = "italic blue";
 
-	/// <summary>
-	///  Markup for when displaying a scene name/selection
-	/// </summary>
+	/// <summary>Markup for when displaying a scene name/selection</summary>
 	private const string SceneMarkup = "italic";
 
-	/// <summary>
-	///  Markup for the "Rendering..." animation
-	/// </summary>
+	/// <summary>Markup for the "Rendering..." animation</summary>
 	private const string RenderingAnimationMarkup = "italic green";
 
 	private const string StatsCategoryMarkup  = "bold";
@@ -59,9 +49,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 
 #endregion
 
-	/// <summary>
-	///  Displays and confirms the settings passed in by the user
-	/// </summary>
+	/// <summary>Displays and confirms the settings passed in by the user</summary>
 	/// <returns>The confirmed scene and render options, to use for render execution</returns>
 	private static (Scene Scene, RenderOptions Options) ConfirmSettings(CommandContext context, Settings settings)
 	{
@@ -95,9 +83,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		return (scene, renderOptions);
 	}
 
-	/// <summary>
-	///  Creates a little live display for while the render is running
-	/// </summary>
+	/// <summary>Creates a little live display for while the render is running</summary>
 	private static async Task DisplayProgress(AsyncRenderJob renderJob)
 	{
 		const int interval = 1000; //How long between updates of the live display
@@ -344,9 +330,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 	#endregion
 	}
 
-	/// <summary>
-	///  Function to be called once a render job is finished. Also returns the rendered image
-	/// </summary>
+	/// <summary>Function to be called once a render job is finished. Also returns the rendered image</summary>
 	private static Image<Rgb24> FinalizeRenderJob(AsyncRenderJob renderJob)
 	{
 		Image<Rgb24> image = renderJob.Image;

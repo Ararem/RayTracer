@@ -7,12 +7,12 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-	  <DebugType>full</DebugType>
-	  <DocumentationFile>bin\Debug\net6.0\RayTracer.Impl.xml</DocumentationFile>
+		<DebugType>full</DebugType>
+		<DocumentationFile>bin\Debug\net6.0\RayTracer.Impl.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 </Project>

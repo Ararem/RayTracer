@@ -9,34 +9,22 @@ public static class Styles
 {
 	public const int GeneralFontSize = 10;
 
-	/// <summary>
-	///  Style for the title of the application
-	/// </summary>
+	/// <summary>Style for the title of the application</summary>
 	public const string AppTitle = nameof(AppTitle);
 
-	/// <summary>
-	///  General textual control; e.g. button, label, description
-	/// </summary>
+	/// <summary>General textual control; e.g. button, label, description</summary>
 	public const string GeneralTextual = nameof(GeneralTextual);
 
-	/// <summary>
-	///  General textual control, bolded; e.g. button, label, description
-	/// </summary>
+	/// <summary>General textual control, bolded; e.g. button, label, description</summary>
 	public const string GeneralTextualBold = nameof(GeneralTextualBold);
 
-	/// <summary>
-	///  General textual control, italicised; e.g. button, label, description
-	/// </summary>
+	/// <summary>General textual control, italicised; e.g. button, label, description</summary>
 	public const string GeneralTextualItalic = nameof(GeneralTextualItalic);
 
-	/// <summary>
-	///  General textual control, italicised; e.g. button, label, description
-	/// </summary>
+	/// <summary>General textual control, italicised; e.g. button, label, description</summary>
 	public const string GeneralTextualUnderline = nameof(GeneralTextualUnderline);
 
-	/// <summary>
-	///  Consistent text width - monospace font
-	/// </summary>
+	/// <summary>Consistent text width - monospace font</summary>
 	public const string ConsistentTextWidth = nameof(ConsistentTextWidth);
 
 	internal static void RegisterStyles()

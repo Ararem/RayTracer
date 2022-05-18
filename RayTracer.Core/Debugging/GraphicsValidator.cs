@@ -5,21 +5,15 @@ using System.Numerics;
 namespace RayTracer.Core.Debugging;
 
 //TODO: I don't really like how this is made a static class, perhaps refactor this into an instance class and store in AsyncRenderJob
-/// <summary>
-///  Static class for validating graphics
-/// </summary>
+/// <summary>Static class for validating graphics</summary>
 public static class GraphicsValidator
 {
-	/// <summary>
-	///  Threshold for how close floats need to be to considered 'equal' (cause of floating point errors)
-	/// </summary>
+	/// <summary>Threshold for how close floats need to be to considered 'equal' (cause of floating point errors)</summary>
 	private const float MagnitudeEqualityError = 0.01f;
 
 #region Storing errors
 
-	/// <summary>
-	///  Dictionary that stores how many times each error type has occurred, on a per-object basis
-	/// </summary>
+	/// <summary>Dictionary that stores how many times each error type has occurred, on a per-object basis</summary>
 	//TODO: Figure out how to make this properly readonly, preferably without having to copy the dictionary
 	public static readonly ConcurrentDictionary<GraphicsErrorType, ConcurrentDictionary<object, ulong>> Errors = new();
 
@@ -37,9 +31,7 @@ public static class GraphicsValidator
 	// 	return copy;
 	// }
 
-	/// <summary>
-	///  Records that a certain type of <paramref name="error"/> occurred on an <paramref name="erroringObject"/>
-	/// </summary>
+	/// <summary>Records that a certain type of <paramref name="error"/> occurred on an <paramref name="erroringObject"/></summary>
 	public static void RecordError(GraphicsErrorType error, object erroringObject)
 	{
 		ArgumentNullException.ThrowIfNull(erroringObject);
@@ -56,9 +48,7 @@ public static class GraphicsValidator
 
 #region Validation Methods
 
-	/// <summary>
-	///  Checks a given direction vector has a correct magnitude (of 1)
-	/// </summary>
+	/// <summary>Checks a given direction vector has a correct magnitude (of 1)</summary>
 	/// <returns>
 	///  <see langword="true"/> if the vector had a correct magnitude, else <see langword="false"/>. If false is returned, the vector needs to be
 	///  normalized
@@ -69,29 +59,20 @@ public static class GraphicsValidator
 			//Don't have to sqrt it because 1 squared is 1
 			!(Math.Abs(direction.LengthSquared() - 1f) > MagnitudeEqualityError);
 
-	/// <summary>
-	///  Checks a given UV coordinate is valid
-	/// </summary>
-	/// <returns>
-	///  <see langword="true"/> if the UV was valid, else <see langword="false"/>. If false is returned, the UV coordinate needs to be
-	///  corrected
-	/// </returns>
+	/// <summary>Checks a given UV coordinate is valid</summary>
+	/// <returns><see langword="true"/> if the UV was valid, else <see langword="false"/>. If false is returned, the UV coordinate needs to be corrected</returns>
 	[Pure]
 	public static bool CheckUVCoordValid(Vector2 uv) => CheckValueRange(uv.X, 0, 1) && CheckValueRange(uv.Y, 0, 1);
 
-	/// <summary>
-	///  Checks a given RGB colour value is valid
-	/// </summary>
+	/// <summary>Checks a given RGB colour value is valid</summary>
 	/// <returns>
-	///  <see langword="true"/> if the colour was valid, else <see langword="false"/>. If false is returned, the colour coordinate needs to be
-	///  corrected (clamped)
+	///  <see langword="true"/> if the colour was valid, else <see langword="false"/>. If false is returned, the colour coordinate needs to be corrected
+	///  (clamped)
 	/// </returns>
 	[Pure]
 	public static bool CheckColourValid(Colour col) => CheckValueRange(col.R, 0, 1) && CheckValueRange(col.G, 0, 1) && CheckValueRange(col.B, 0, 1);
 
-	/// <summary>
-	///  Checks a value is in the correct range
-	/// </summary>
+	/// <summary>Checks a value is in the correct range</summary>
 	[Pure]
 	public static bool CheckValueRange(float k, float kMin, float kMax) => (k >= kMin) && (k <= kMax);
 

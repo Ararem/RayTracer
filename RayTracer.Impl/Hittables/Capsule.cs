@@ -7,44 +7,28 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  A capsule shape, defined by two points, and a radius
-/// </summary>
+/// <summary>A capsule shape, defined by two points, and a radius</summary>
 public sealed class Capsule : Hittable
 {
-	/// <summary>
-	/// Halfway between <see cref="P1"/> and <see cref="P2"/>
-	/// </summary>
+	/// <summary>Halfway between <see cref="P1"/> and <see cref="P2"/></summary>
 	private readonly Vector3 centre;
 
-	/// <summary>
-	///  <see cref="P2"/> - <see cref="P1"/>
-	/// </summary>
+	/// <summary><see cref="P2"/> - <see cref="P1"/></summary>
 	private readonly Vector3 p2MinusP1;
 
-	/// <summary>
-	///  <see cref="p2MinusP1"/> dotted with itself (<c>Dot(p2MinusP1, p2MinusP1)</c>)
-	/// </summary>
+	/// <summary><see cref="p2MinusP1"/> dotted with itself (<c>Dot(p2MinusP1, p2MinusP1)</c>)</summary>
 	private readonly float p2MinusP1Dot2;
 
-	/// <summary>
-	///  <see cref="radiusSquare"/> * <see cref="p2MinusP1Dot2"/>
-	/// </summary>
+	/// <summary><see cref="radiusSquare"/> * <see cref="p2MinusP1Dot2"/></summary>
 	private readonly float radiusSqrTimesP2P1Dot2;
 
-	/// <summary>
-	///  <see cref="Radius"/> squared
-	/// </summary>
+	/// <summary><see cref="Radius"/> squared</summary>
 	private readonly float radiusSquare;
 
-	/// <summary>
-	///  Matrix used to transform world points for calculating UV's
-	/// </summary>
+	/// <summary>Matrix used to transform world points for calculating UV's</summary>
 	private readonly Matrix4x4 uvMatrix;
 
-	/// <summary>
-	///  Creates a new capsule from two points, and a radius
-	/// </summary>
+	/// <summary>Creates a new capsule from two points, and a radius</summary>
 	/// <param name="p1">The first point that makes up the capsule</param>
 	/// <param name="p2">The seconds point that makes up the capsule</param>
 	/// <param name="radius">The radius of the capsule</param>
@@ -78,19 +62,13 @@ public sealed class Capsule : Hittable
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
-	/// <summary>
-	/// The first point that makes up the capsule
-	/// </summary>
+	/// <summary>The first point that makes up the capsule</summary>
 	public Vector3 P1 { get; }
 
-	/// <summary>
-	/// The second point that makes up the capsule
-	/// </summary>
+	/// <summary>The second point that makes up the capsule</summary>
 	public Vector3 P2 { get; }
 
-	/// <summary>
-	/// The radius of the capsule
-	/// </summary>
+	/// <summary>The radius of the capsule</summary>
 	public float Radius { get; }
 
 	/// <inheritdoc/>

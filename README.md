@@ -9,7 +9,7 @@ the camera), spawning new rays each bounce until a limit is reached, whereupon t
 Since each material can *completely* modify how the colour changes, this allows for some fancy materials that (while technically unrealistic) look
 much better than simply using raw emission and albedo -
 see [Refractive Material In/Direct Emission Comparison](Renders/Refractive%20Material%20Indirect%20Emission%20Comparison) (only emits when not looking
-at it directly). 
+at it directly).
 
 ## How to run
 
@@ -26,17 +26,33 @@ at it directly).
 ## Project Explanation
 
 ### LibEternal
+
 Helper library that contains non-project-specific code (e.g. logging related helper classes)
+
 ### RayTracer.Core
-Main Ray-Tracing library, contains all the code that is needed to be able to create/render scenes. Doesn't contain any actual implementations for anything like scenes or hittables (shapes)
+
+Main Ray-Tracing library, contains all the code that is needed to be able to create/render scenes. Doesn't contain any actual implementations for
+anything like scenes or hittables (shapes)
+
 ### RayTracer.Impl
-Library containing the implementations for [RayTracer.Core](#raytracercore). Contains materials, hittables, textures, some builtin scenes, lights and skyboxes
+
+Library containing the implementations for [RayTracer.Core](#raytracercore). Contains materials, hittables, textures, some builtin scenes, lights and
+skyboxes
+
 ### RayTracer.Display.SpectreConsole
-Console-based implementation of the 'engine' - allows selection of some of the builtin scenes from [RayTracer.Impl](#raytracerimpl). Render options are passed in via command line arguments (run with `--help` to see them), scene is selected using arrow keys.
+
+Console-based implementation of the 'engine' - allows selection of some of the builtin scenes from [RayTracer.Impl](#raytracerimpl). Render options
+are passed in via command line arguments (run with `--help` to see them), scene is selected using arrow keys.
+
 ### RayTracer.Display.EtoForms
-Same as [RayTracer.Display.SpectreConsole](#raytracerdisplayspectreconsole) but with a proper GUI. Render options and scene are selected using GUI controls shown when the app starts. Also implements a logger to the console.
+
+Same as [RayTracer.Display.SpectreConsole](#raytracerdisplayspectreconsole) but with a proper GUI. Render options and scene are selected using GUI
+controls shown when the app starts. Also implements a logger to the console.
+
 ### RayTracer.Benchmarks
-A not-very used project that I use (rarely) to test multiple ways of doing something to see which is the most efficient/fastest. This is for development/debugging only, you probably should just ignore & unload it
+
+A not-very used project that I use (rarely) to test multiple ways of doing something to see which is the most efficient/fastest. This is for
+development/debugging only, you probably should just ignore & unload it
 
 ## Important types
 

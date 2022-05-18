@@ -12,14 +12,13 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>
 ///  A hittable that has a constant density (aka a volume like a cloud). Should be used in conjunction with a <see cref="VolumetricMaterial"/>
 /// </summary>
-/// <remarks>
-///  This probably won't work too well with rays inside the medium, or other objects inside it, so beware...
-/// </remarks>
+/// <remarks>This probably won't work too well with rays inside the medium, or other objects inside it, so beware...</remarks>
 public sealed class ConstantDensityMedium : Hittable
 {
-	/// <summary>
-	///  Default constructor
-	/// </summary>
+	/// <summary>-1 / <see cref="Density"/></summary>
+	private readonly float negInvDensity;
+
+	/// <summary>Default constructor</summary>
 	public ConstantDensityMedium(Hittable boundary, float density)
 	{
 		if (boundary is ConstantDensityMedium) throw new ArgumentException("Cannot create a constant density volume using another volume", nameof(boundary));
@@ -27,11 +26,6 @@ public sealed class ConstantDensityMedium : Hittable
 		Density       = density;
 		negInvDensity = -1f / density;
 	}
-
-	/// <summary>
-	/// -1 / <see cref="Density"/>
-	/// </summary>
-	private readonly float negInvDensity;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -58,14 +52,10 @@ public sealed class ConstantDensityMedium : Hittable
 	}
 
 
-	/// <summary>
-	/// How dense the medium is. Higher values increase the change of collision
-	/// </summary>
+	/// <summary>How dense the medium is. Higher values increase the change of collision</summary>
 	public float Density { get; }
 
-	/// <summary>
-	/// The 'shape' of this medium. Can be any shape other than a <see cref="ConstantDensityMedium"/>
-	/// </summary>
+	/// <summary>The 'shape' of this medium. Can be any shape other than a <see cref="ConstantDensityMedium"/></summary>
 	public Hittable Boundary { get; }
 
 	/// <inheritdoc/>

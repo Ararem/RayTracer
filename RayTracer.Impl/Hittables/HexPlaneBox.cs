@@ -5,15 +5,13 @@ using static System.Numerics.Vector3;
 
 namespace RayTracer.Impl.Hittables;
 
-/// <summary>
-///  A simple 3D box
-/// </summary>
+/// <summary>A simple 3D box</summary>
 /// <remarks>Made up of 6 planes, hence the name</remarks>
 public class HexPlaneBox : Hittable
 {
-	/// <summary>
-	///  Creates a new box from two bounding points
-	/// </summary>
+	private readonly Hittable[] sides;
+
+	/// <summary>Creates a new box from two bounding points</summary>
 	public HexPlaneBox(Vector3 min, Vector3 max)
 	{
 		Min = Min(min, max);
@@ -33,20 +31,14 @@ public class HexPlaneBox : Hittable
 		BoundingVolume = new AxisAlignedBoundingBox(Min, Max);
 	}
 
-	/// <summary>
-	///  Min XYZ values for the box
-	/// </summary>
+	/// <summary>Min XYZ values for the box</summary>
 	public Vector3 Min { get; }
 
-	/// <summary>
-	///  Max XYZ values for the box
-	/// </summary>
+	/// <summary>Max XYZ values for the box</summary>
 	public Vector3 Max { get; }
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
-
-	private readonly Hittable[] sides;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
