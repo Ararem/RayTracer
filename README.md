@@ -40,13 +40,13 @@ A not-very used project that I use (rarely) to test multiple ways of doing somet
 
 ## Important types
 
-| Type                                                          | What it does                                                                                                                 |
-|---------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| [Async Render Job](RayTracer.Core/AsyncRenderJob.cs)          | The renderer - handles recursive ray tracing, colour calculation, lighting, etc                                              | 
-| [Camera](RayTracer.Core/Camera.cs)                            | Handles generation of view rays                                                                                              |
-| [Materials](RayTracer.Core/Base Type Definitions/Material.cs) | Materials handle how the light scatters when the object is hit, as well as changes in colour when rays bounce                |
-| [Textures](RayTracer.Core/Base Type Definitions/Texture.cs)   | Textures return a colour when an input hit is passed in (this allows for textures based on world-space coordinates and UV's) |
-| [Hittable](RayTracer.Core/Base Type Definitions/Hittable.cs)  | Hittables are in charge of calculating whether a given ray intersects with itself                                            |
-| [Scene](RayTracer.Core/Scene.cs)                              | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
-| [Light](RayTracer.Core/Base Type Definitions/Light.cs)        | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
-| [Render Options](RayTracer.Core/RenderOptions.cs)             | Stores the settings used when rendering, such as                                                                             |
+| Type                                                              | What it does                                                                                                                 |
+|-------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| [Async Render Job](RayTracer.Core/AsyncRenderJob.cs)              | The renderer - handles recursive ray tracing, colour calculation, lighting, etc                                              | 
+| [Camera](RayTracer.Core/Camera.cs)                                | Handles generation of view rays                                                                                              |
+| [Materials](RayTracer.Core/Base%20Type%20Definitions/Material.cs) | Materials handle how the light scatters when the object is hit, as well as changes in colour when rays bounce                |
+| [Textures](RayTracer.Core/Base%20Type%20Definitions/Texture.cs)   | Textures return a colour when an input hit is passed in (this allows for textures based on world-space coordinates and UV's) |
+| [Hittable](RayTracer.Core/Base%20Type%20Definitions/Hittable.cs)  | Hittables are in charge of calculating whether a given ray intersects with itself                                            |
+| [Scene](RayTracer.Core/Scene.cs)                                  | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
+| [Light](RayTracer.Core/Base%20Type%20Definitions/Light.cs)        | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
+| [Render Options](RayTracer.Core/RenderOptions.cs)                 | Stores the settings used when rendering, such as                                                                             |
