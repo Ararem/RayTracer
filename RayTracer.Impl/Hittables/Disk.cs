@@ -17,11 +17,12 @@ public sealed class Disk : Hittable
 	/// <param name="radius">How large the radius of the disk is</param>
 	public Disk(Vector3 centre, Vector3 normal, float radius)
 	{
-		Centre         = centre;
-		Normal         = normal;
-		Radius         = radius;
-		radiusSqr      = radius * radius;
-		BoundingVolume = new AxisAlignedBoundingBox(centre - new Vector3(radius), centre + new Vector3(radius));
+		Centre           = centre;
+		Normal           = normal;
+		Radius           = radius;
+		radiusSqr        = radius * radius;
+		BoundingVolume   = new AxisAlignedBoundingBox(centre - new Vector3(radius), centre + new Vector3(radius));
+		negCentreDotNorm = -Dot(Centre, Normal);
 	}
 
 	//TODO: Very inefficient, need to make AABB smaller and more compact
@@ -37,7 +38,13 @@ public sealed class Disk : Hittable
 	/// <summary>How large the radius of the disk is</summary>
 	public float Radius { get; }
 
+	/// <summary>
+	///-Dot(<see cref="Centre"/>, <see cref="Normal"/>)
+	/// </summary>
+	private readonly float negCentreDotNorm;
+
 	/// <inheritdoc/>
+	//TODO: Disk UV's
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Code copied from `Plane.cs`, with a distance checker added
@@ -52,8 +59,7 @@ public sealed class Disk : Hittable
 		else
 		{
 			//Find intersection normally
-			float d = -Dot(Centre, Normal);
-			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+			t = -(Dot(ray.Origin, Normal) + negCentreDotNorm) / normDotDir;
 		}
 
 		//Assert ranges
@@ -74,8 +80,6 @@ public sealed class Disk : Hittable
 	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
-		//Code copied from `Plane.cs`, with a distance checker added
-		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
 		float normDotDir = Dot(ray.Direction, Normal);
 		float t;
 		//If the ray is going parallel to the plane (through it), then the normal and ray direction will be perpendicular
@@ -86,8 +90,7 @@ public sealed class Disk : Hittable
 		else
 		{
 			//Find intersection normally
-			float d = -Dot(Centre, Normal);
-			t = -(Dot(ray.Origin, Normal) + d) / normDotDir;
+			t = -(Dot(ray.Origin, Normal) + negCentreDotNorm) / normDotDir;
 		}
 
 		//Assert ranges
@@ -96,6 +99,6 @@ public sealed class Disk : Hittable
 		Vector3 worldPoint = ray.PointAt(t);
 
 		//Now assert radius
-		return !(DistanceSquared(Centre, worldPoint) > radiusSqr);
+		return DistanceSquared(Centre, worldPoint) <= radiusSqr;
 	}
 }
