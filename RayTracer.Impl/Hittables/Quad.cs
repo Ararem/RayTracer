@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
@@ -7,48 +6,40 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>
-///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these do not
-///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which creates a parallelogram instead of a rectangle (however they must not be parallel)
+///  Bounded version of <see cref="InfinitePlane"/>. Created using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>,
+///  <see cref="V"/>) for the sides of the quad (these do not
+///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which
+///  creates a parallelogram instead of a rectangle (however they must not be parallel)
 /// </summary>
-/// <remarks>
-///  The quad is assumed to be in the shape
-///  <code>
-/// O+V ----------+     ^
-///   |           |    | |
-///   |           |    | |
-///   |           |    |V|
-///   O --------- O+U  | |
-///                    | |
-///    =====U=====>    | |
-/// </code>
-///  The arrows in the above diagram show how the direction vectors U and V are interpreted.
-/// </remarks>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
-[PublicAPI]
-public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
+public class Quad : Hittable
 {
 	/// <summary>
-	/// Creates a new quad from three points, as opposed to a point and two directions
+	///  Creates a new quad using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these
+	///  do not
+	///  need to be normalized, as their length is used to infer the size of the quad). The two side vectors can be non-perpendicular to each other, which
+	///  creates a parallelogram instead of a rectangle (however they must not be parallel)
 	/// </summary>
-	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
-	/// <param name="oPlusU">Position of the point that corresponds to <see cref="Origin"/> + <see cref="U"/>. Used to calculate the <see cref="U"/> vector</param>
-	/// <param name="oPlusV">Position of the point that corresponds to <see cref="Origin"/> + <see cref="V"/>. Used to calculate the <see cref="V"/> vector</param>
-	/// <returns>A new quad that has corners at the given input points</returns>
-	public static Quad CreateFromPoints(Vector3 o, Vector3 oPlusU, Vector3 oPlusV) => new (o, oPlusU - o, oPlusV - o);
-	private Matrix4x4 LocalToQuadMatrix { get; } = GetLocalToQuadMatrix(U, V);
-
-	/// <summary>
-	///  Normal direction of the quad
-	/// </summary>
-	public Vector3 Normal { get; } = Normalize(Cross(U, V)); //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
-
-	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Broken
-		//AxisAlignedBoundingBox.Encompass(A,B,C);
-		AxisAlignedBoundingBox.Infinite;
-
-	private static Matrix4x4 GetLocalToQuadMatrix(Vector3 u, Vector3 v)
+	/// <remarks>
+	///  The quad is assumed to be in the shape
+	///  <code>
+	/// O+V ----------+     ^
+	///   |           |    | |
+	///   |           |    | |
+	///   |           |    |V|
+	///   O --------- O+U  | |
+	///                    | |
+	///    =====U=====>    | |
+	/// </code>
+	///  The arrows in the above diagram show how the direction vectors U and V are interpreted.
+	/// </remarks>
+	public Quad(Vector3 origin, Vector3 u, Vector3 v)
 	{
+		Origin = origin;
+		U      = u;
+		V      = v;
+		Normal = Normalize(Cross(u, v));
+
 		//This UV/World space conversion code is essentially just transforming points between two different coordinate systems
 		//So from World Coords (X,Y,Z) ==> Quad (UV) Coords (U,V,N)
 		//First step we need to get the matrix that converts Quad coords => World Coords
@@ -58,17 +49,44 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 		//This StackOverflow answer was helpful in creating the matrix: https://stackoverflow.com/questions/31257325/converting-points-into-another-coordinate-system
 
 		Vector3 n = Normalize(Cross(u, v));
-        Matrix4x4 quadToWorld = new(
-          u.X, u.Y, u.Z, 0,
-          v.X, v.Y, v.Z, 0,
-          n.X, n.Y, n.Z, 0,
-          0, 0, 0, 1
-        );
+		Matrix4x4 quadToWorld = new(
+				u.X, u.Y, u.Z, 0,
+				v.X, v.Y, v.Z, 0,
+				n.X, n.Y, n.Z, 0,
+				0, 0, 0, 1
+		);
 
-        if (!Matrix4x4.Invert(quadToWorld, out Matrix4x4 worldToQuad)) throw new ArithmeticException("Could not invert Quad to world transformation matrix (UV coords were probably parallel)");
+		if (!Matrix4x4.Invert(quadToWorld, out localToQuadMatrix)) throw new ArithmeticException("Could not invert Quad to world transformation matrix (UV coords were probably parallel)");
+	}
 
-        return worldToQuad;
-    }
+	/// <summary>
+	///  Normal direction of the quad
+	/// </summary>
+	public Vector3 Normal { get; } //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
+
+	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Quad AABB is Broken
+		//AxisAlignedBoundingBox.Encompass(A,B,C);
+		AxisAlignedBoundingBox.Infinite;
+
+	/// <summary>
+	///  The 'origin' point of the quad -
+	/// </summary>
+	public Vector3 Origin { get; init; }
+
+	public Vector3 U { get; init; }
+	public Vector3 V { get; init; }
+
+	private Matrix4x4 localToQuadMatrix;
+
+	/// <summary>
+	///  Creates a new quad from three points, as opposed to a point and two directions
+	/// </summary>
+	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
+	/// <param name="oPlusU">Position of the point that corresponds to <see cref="Origin"/> + <see cref="U"/>. Used to calculate the <see cref="U"/> vector</param>
+	/// <param name="oPlusV">Position of the point that corresponds to <see cref="Origin"/> + <see cref="V"/>. Used to calculate the <see cref="V"/> vector</param>
+	/// <returns>A new quad that has corners at the given input points</returns>
+	public static Quad CreateFromPoints(Vector3 o, Vector3 oPlusU, Vector3 oPlusV) => new(o, oPlusU - o, oPlusV - o);
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -95,8 +113,8 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 		// Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
 		// float   u   = uvn.X, v = uvn.Y;
 		//Inlined code above, since we don't need the Z coord, and removed the casts to `double`
-		float   u   = (localPoint.X * LocalToQuadMatrix.M11)  + (localPoint.Y *  LocalToQuadMatrix.M21) + (localPoint.Z *  LocalToQuadMatrix.M31) + LocalToQuadMatrix.M41;
-		float   v   =(localPoint.X  *  LocalToQuadMatrix.M12) + (localPoint.Y *  LocalToQuadMatrix.M22) + (localPoint.Z *  LocalToQuadMatrix.M32) + LocalToQuadMatrix.M42;
+		float u = (localPoint.X * localToQuadMatrix.M11) + (localPoint.Y * localToQuadMatrix.M21) + (localPoint.Z * localToQuadMatrix.M31) + localToQuadMatrix.M41;
+		float v = (localPoint.X * localToQuadMatrix.M12) + (localPoint.Y * localToQuadMatrix.M22) + (localPoint.Z * localToQuadMatrix.M32) + localToQuadMatrix.M42;
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null;
@@ -107,7 +125,7 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		float normDotDir = Dot(Normal, ray.Direction);
@@ -132,8 +150,8 @@ public record Quad(Vector3 Origin, Vector3 U, Vector3 V) : Hittable
 		// Vector3 uvn = Transform(localPoint, LocalToQuadMatrix);
 		// float   u   = uvn.X, v = uvn.Y;
 		//Inlined code above, since we don't need the Z coord, and removed the casts to `double`
-		float u = (localPoint.X * LocalToQuadMatrix.M11)  + (localPoint.Y *  LocalToQuadMatrix.M21) + (localPoint.Z *  LocalToQuadMatrix.M31) + LocalToQuadMatrix.M41;
-		float v =(localPoint.X  *  LocalToQuadMatrix.M12) + (localPoint.Y *  LocalToQuadMatrix.M22) + (localPoint.Z *  LocalToQuadMatrix.M32) + LocalToQuadMatrix.M42;
+		float u = (localPoint.X * localToQuadMatrix.M11) + (localPoint.Y * localToQuadMatrix.M21) + (localPoint.Z * localToQuadMatrix.M31) + localToQuadMatrix.M41;
+		float v = (localPoint.X * localToQuadMatrix.M12) + (localPoint.Y * localToQuadMatrix.M22) + (localPoint.Z * localToQuadMatrix.M32) + localToQuadMatrix.M42;
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return false;

@@ -47,7 +47,7 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//How far along the ray did it intersect with the unbounded version of this plane (bounds of +- infinity)

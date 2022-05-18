@@ -18,9 +18,9 @@ public class SingleColourSkyBox : SkyBox
 		Colour = colour;
 	}
 
-	/// <inheritdoc/>
-	public override Colour GetSkyColour(Ray ray) => Colour;
-
 	/// <summary>The colour of the sky</summary>
 	public Colour Colour { get; init; }
+
+	/// <inheritdoc/>
+	public override Colour GetSkyColour(Ray ray) => Colour;
 }

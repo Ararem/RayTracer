@@ -64,8 +64,8 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 		 */
 		Vector3 invD = Vector3.One / ray.Direction;
 		{
-			float t0  = (Min.X - ray.Origin.X) * invD.X;
-			float t1  = (Max.X - ray.Origin.X) * invD.X;
+			float t0 = (Min.X - ray.Origin.X) * invD.X;
+			float t1 = (Max.X - ray.Origin.X) * invD.X;
 			if (invD.X < 0.0f)
 				(t1, t0) = (t0, t1);
 			kMin = t0 > kMin ? t0 : kMin;

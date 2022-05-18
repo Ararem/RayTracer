@@ -43,7 +43,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		foreach (PropertyInfo prop in typeof(RenderOptions).GetProperties())
 		{
 			PropertyEditorView editorView;
-			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name, Style = Appearance.Styles.GeneralTextual};
+			Label              label = new() { ID = $"{prop.Name} label", Text = prop.Name, Style = Appearance.Styles.GeneralTextual };
 
 			TableCell labelCell  = new(label);
 			TableCell editorCell = new();
@@ -96,11 +96,11 @@ internal sealed class RenderOptionSelectorPanel : Panel
 		Verbose("Creating StackPanelLayout for content");
 		Content = new StackLayout
 		{
-				Items       =
+				Items =
 				{
-						new StackLayoutItem(tableLayout, HorizontalAlignment.Stretch),
+						new StackLayoutItem(tableLayout,         HorizontalAlignment.Stretch),
 						new StackLayoutItem(sceneSelectDropdown, HorizontalAlignment.Stretch),
-						new StackLayoutItem(startRenderButton, HorizontalAlignment.Stretch)
+						new StackLayoutItem(startRenderButton,   HorizontalAlignment.Stretch)
 				},
 				Orientation = Orientation.Vertical,
 				Spacing     = 10,
@@ -114,15 +114,13 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class IntEditor : PropertyEditorView
 	{
-		private readonly NumericStepper stepper;
-
 		/// <inheritdoc/>
 		public IntEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
 			const int min = int.MinValue;
 			const int max = int.MaxValue;
 			// if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
-				// min = 0;
+			// min = 0;
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
@@ -135,6 +133,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			};
 			TableCell.Control = stepper;
 		}
+
+		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
@@ -150,8 +150,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class EnumEditor<T> : PropertyEditorView where T : struct, Enum
 	{
-		private readonly EnumDropDown<T> dropDown;
-
 		/// <inheritdoc/>
 		public EnumEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
@@ -166,6 +164,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			};
 			TableCell.Control = dropDown;
 		}
+
+		private readonly EnumDropDown<T> dropDown;
 
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()
@@ -182,8 +182,6 @@ internal sealed class RenderOptionSelectorPanel : Panel
 
 	private sealed class FloatEditor : PropertyEditorView
 	{
-		private readonly NumericStepper stepper;
-
 		/// <inheritdoc/>
 		public FloatEditor(RenderOptionSelectorPanel target, PropertyInfo prop, TableCell tableCell) : base(target, prop, tableCell)
 		{
@@ -196,7 +194,7 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			//Honestly why the hell do I have to do this microsoft????
 			//Just apply it to the field, property and parameter, please for the love of god
 			// if (typeof(RenderOptions).GetConstructors()[0].GetParameters().FirstOrDefault(p => p.Name == prop.Name)?.GetCustomAttribute<NonNegativeValueAttribute>() is not null)
-				// min = 0f;
+			// min = 0f;
 
 			Verbose("{Property}: Min = {Min}, Max = {Max}", prop, min, max);
 
@@ -209,6 +207,8 @@ internal sealed class RenderOptionSelectorPanel : Panel
 			};
 			TableCell.Control = stepper;
 		}
+
+		private readonly NumericStepper stepper;
 
 		/// <inheritdoc/>
 		internal override void UpdateDisplayedFromTarget()

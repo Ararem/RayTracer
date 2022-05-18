@@ -20,14 +20,13 @@ namespace RayTracer.Impl;
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public static class BuiltinScenes
 {
-
 	/// <summary>
 	///  Testing scene
 	/// </summary>
 	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 2f, 1.5f), new Vector3(.0f, .0f, .0f), UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					new ("Test", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(Black, new MarbleTexture(), 0f))
+					new("Test", new Sphere(new Vector3(0, -0.001f, 0), 1), new StandardMaterial(Black, new MarbleTexture(), 0f))
 			},
 			Array.Empty<Light>(),
 			new SingleColourSkyBox(Black)
@@ -144,10 +143,10 @@ public static class BuiltinScenes
 
 							new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
 
-							new("Small Box", Box.Create(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-							new("Tall Box", Box.Create(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
-							new ("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, White, Blue*0.1f, true)),
-							new ("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White)),
+							new("Small Box", Box.Create(Matrix4x4.CreateScale(165, 165, 165)                                                                                      * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+							new("Tall Box", Box.Create(Matrix4x4.CreateScale(165,  330, 165)                                                                                      * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), Black, 1f)),
+							new("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, White, Blue * 0.1f, true)),
+							new("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, White))
 					},
 					new Light[]
 					{

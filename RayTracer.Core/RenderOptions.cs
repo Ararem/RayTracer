@@ -23,7 +23,10 @@ namespace RayTracer.Core;
 ///  Maximum number of threads that can run at a time. Set to `-1` for no limit, or any other positive integer for that
 ///  many threads (0 is invalid)
 /// </param>
-/// <param name="Passes">How many samples to average, to create a less noisy image. If equal to <c>-1</c>, the renderer will render infinitely until manually stopped</param>
+/// <param name="Passes">
+///  How many samples to average, to create a less noisy image. If equal to <c>-1</c>, the renderer will render infinitely until
+///  manually stopped
+/// </param>
 /// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
 public sealed record RenderOptions(
 		[NonNegativeValue] int     Width,
@@ -31,7 +34,7 @@ public sealed record RenderOptions(
 		[NonNegativeValue] float   KMin,
 		[NonNegativeValue] float   KMax,
 		int                        ConcurrencyLevel,
-		int     Passes,
+		int                        Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
 		//TODO: Max depth for calculating lighting?

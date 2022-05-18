@@ -15,6 +15,7 @@ using System.Threading;
 using static RayTracer.Core.MathUtils;
 using static Serilog.Log;
 using Size = Eto.Drawing.Size;
+
 // using NetFabric.Hyperlinq;
 
 namespace RayTracer.Display.EtoForms;
@@ -23,66 +24,6 @@ namespace RayTracer.Display.EtoForms;
 internal sealed class RenderProgressDisplayPanel : Panel
 {
 	private const int DepthImageWidth = 100;
-
-	/// <summary>
-	///  Image used for the depth buffer
-	/// </summary>
-	private readonly Bitmap depthBufferBitmap;
-
-	/// <summary>
-	///  Graphics used for the depth buffer
-	/// </summary>
-	private readonly Graphics depthBufferGraphics;
-
-	private readonly ImageView depthBufferImageView;
-	private readonly Pen       depthBufferPen = new(Colors.Gray);
-
-	/// <summary>
-	///  The actual preview image buffer
-	/// </summary>
-	private readonly Bitmap previewImage;
-
-	/// <summary>
-	///  Container that draws a border and title around the preview image
-	/// </summary>
-	private readonly GroupBox previewImageContainer;
-
-	/// <summary>
-	///  The control that holds the preview image
-	/// </summary>
-	private readonly DragZoomImageView previewImageView;
-
-	/// <summary>
-	///  Render job we are displaying the progress for
-	/// </summary>
-	private readonly AsyncRenderJob renderJob;
-
-	/// <summary>
-	///  Container that has a title and border around the stats table
-	/// </summary>
-	private readonly GroupBox statsContainer;
-
-	private readonly Timer updatePreviewTimer;
-
-	/// <summary>
-	///  Time (real-world) at which the last frame update occurred
-	/// </summary>
-	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
-
-	/// <summary>
-	///  How long the last update took to complete (since we can't display how long the current one will take)
-	/// </summary>
-	private TimeSpan prevUpdateDuration;
-
-	/// <summary>
-	///  Render stats from the last time we updated the preview
-	/// </summary>
-	private RenderStats prevStats;
-
-	/// <summary>
-	///  Table that contains the various stats
-	/// </summary>
-	private TableLayout statsTable;
 
 	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
 	{
@@ -131,7 +72,67 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
 	}
 
-	private static int UpdatePeriod => 1000/20; //20 FPS
+	private static int UpdatePeriod => 1000 / 20; //20 FPS
+
+	/// <summary>
+	///  Image used for the depth buffer
+	/// </summary>
+	private readonly Bitmap depthBufferBitmap;
+
+	/// <summary>
+	///  Graphics used for the depth buffer
+	/// </summary>
+	private readonly Graphics depthBufferGraphics;
+
+	private readonly ImageView depthBufferImageView;
+	private readonly Pen       depthBufferPen = new(Colors.Gray);
+
+	/// <summary>
+	///  The actual preview image buffer
+	/// </summary>
+	private readonly Bitmap previewImage;
+
+	/// <summary>
+	///  Container that draws a border and title around the preview image
+	/// </summary>
+	private readonly GroupBox previewImageContainer;
+
+	/// <summary>
+	///  The control that holds the preview image
+	/// </summary>
+	private readonly DragZoomImageView previewImageView;
+
+	/// <summary>
+	///  Render job we are displaying the progress for
+	/// </summary>
+	private readonly AsyncRenderJob renderJob;
+
+	/// <summary>
+	///  Container that has a title and border around the stats table
+	/// </summary>
+	private readonly GroupBox statsContainer;
+
+	private readonly Timer updatePreviewTimer;
+
+	/// <summary>
+	///  Time (real-world) at which the last frame update occurred
+	/// </summary>
+	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
+
+	/// <summary>
+	///  Render stats from the last time we updated the preview
+	/// </summary>
+	private RenderStats prevStats;
+
+	/// <summary>
+	///  How long the last update took to complete (since we can't display how long the current one will take)
+	/// </summary>
+	private TimeSpan prevUpdateDuration;
+
+	/// <summary>
+	///  Table that contains the various stats
+	/// </summary>
+	private TableLayout statsTable;
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the main thread
@@ -157,8 +158,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		finally
 		{
-			prevStats = new RenderStats(stats);
-			prevFrameTime   = DateTime.Now;
+			prevStats     = new RenderStats(stats);
+			prevFrameTime = DateTime.Now;
 			Invalidate();
 			updatePreviewTimer.Change(UpdatePeriod, -1);
 		}
@@ -166,10 +167,10 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateImagePreview()
 	{
-		using BitmapData data         = previewImage.Lock();
-		int              xSize        = previewImage.Width, ySize = previewImage.Height;
-		ImageFrame<Rgb24>     renderBuffer = renderJob.ImageBuffer;
-		IntPtr           offset       = data.Data;
+		using BitmapData  data         = previewImage.Lock();
+		int               xSize        = previewImage.Width, ySize = previewImage.Height;
+		ImageFrame<Rgb24> renderBuffer = renderJob.ImageBuffer;
+		IntPtr            offset       = data.Data;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
 				//Otherwise here be dragons
@@ -190,7 +191,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 		const string percentFormat  = "p1";
 		const string smallNumFormat = "n3";
-		const string numFormat  = "n0";
+		const string numFormat      = "n0";
 		const int    leftAlign      = 15;
 		const int    rightAlign     = 10;
 		const int    smallNum       = 1000;
@@ -301,21 +302,21 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		}
 		{
 			long total = renderJob.RenderOptions.Passes,
-				rend  = renderStats.PassesRendered,
-				rem   = total - rend;
-			long        progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
+				rend   = renderStats.PassesRendered,
+				rem    = total - rend;
+			long progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
 			//Calculate fraction of the passes that was rendered between updates
-			float passFrac     = (float)progress                                                                           / renderStats.TotalTruePixels;
+			float passFrac     = (float)progress                                                        / renderStats.TotalTruePixels;
 			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
 			if (passFrac - prevPassFrac < 0) passFrac++; //This just ensures we don't get negatives when calculating the delta (from pass overflow)
 			float  fracDelta = passFrac - prevPassFrac;
-			double tRatio  = TimeSpan.FromSeconds(1) / deltaT;
+			double tRatio    = TimeSpan.FromSeconds(1) / deltaT;
 
 			stringStats.Add(
 					("Passes", new (string Name, string Value, string? Delta)[]
 					{
 							("Rendered", FormatNumWithPercentage(rend,     total), FormatFloatDelta(passFrac, prevPassFrac, deltaT, "passes/s")),
-							("Remaining", FormatNumWithPercentage(rem,     total), $"{FormatFloat(1f/(float)(fracDelta * tRatio))} sec/pass"),
+							("Remaining", FormatNumWithPercentage(rem,     total), $"{FormatFloat(1f / (float)(fracDelta * tRatio))} sec/pass"),
 							("Progress", FormatNumWithPercentage(progress, renderStats.TotalTruePixels), null),
 							("Total", FormatNum(total), null)
 					})
@@ -335,12 +336,12 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Absorbed", FormatNumWithPercentage(abs,    total), FormatNumDelta(abs,    prevStats.MaterialAbsorbedCount, deltaT, unit)),
 							("Exceeded", FormatNumWithPercentage(exceed, total), FormatNumDelta(exceed, prevStats.BounceLimitExceeded,   deltaT, unit)),
 							("Sky", FormatNumWithPercentage(sky,         total), FormatNumDelta(sky,    prevStats.SkyRays,               deltaT, unit)),
-							("Total", FormatNum(total), FormatNumDelta(total,                         prevStats.RayCount,              deltaT, unit))
+							("Total", FormatNum(total), FormatNumDelta(total,                           prevStats.RayCount,              deltaT, unit))
 					})
 			);
 		}
 		{
-			Scene  scene = renderJob.Scene;
+			Scene scene = renderJob.Scene;
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
@@ -361,7 +362,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Depth Max", FormatNum(renderJob.RenderOptions.MaxDepth), null),
 							("Near Plane", FormatFloat(renderJob.RenderOptions.KMin), null),
 							("Far Plane", FormatFloat(renderJob.RenderOptions.KMax), null),
-							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null),
+							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null)
 					})
 			);
 		}
@@ -370,9 +371,9 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("BVH", new (string Name, string Value, string? Delta)[]
 					{
-							("AABB Misses", FormatNum(renderStats.AabbMisses), FormatNumDelta(renderStats.AabbMisses, prevStats.AabbMisses, deltaT, unit)),
-							("Hittable Misses", FormatNum(renderStats.HittableMisses), FormatNumDelta(renderStats.HittableMisses, prevStats.HittableMisses, deltaT, unit)),
-							("Hittable Intersections", FormatNum(renderStats.HittableIntersections), FormatNumDelta(renderStats.HittableIntersections, prevStats.HittableIntersections, deltaT, unit)),
+							("AABB Misses", FormatNum(renderStats.AabbMisses), FormatNumDelta(renderStats.AabbMisses,                                  prevStats.AabbMisses,            deltaT, unit)),
+							("Hittable Misses", FormatNum(renderStats.HittableMisses), FormatNumDelta(renderStats.HittableMisses,                      prevStats.HittableMisses,        deltaT, unit)),
+							("Hittable Intersections", FormatNum(renderStats.HittableIntersections), FormatNumDelta(renderStats.HittableIntersections, prevStats.HittableIntersections, deltaT, unit))
 					})
 			);
 		}
@@ -383,7 +384,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("UI", new (string Name, string Value, string? Delta)[]
 					{
 							("𝚫T", FormatTimeSmall(deltaT), null),
-							("FPS", $"{FormatFloat(fps)} {'(' + (fps/targetFps).ToString(percentFormat) + ')',rightAlign}", null),
+							("FPS", $"{FormatFloat(fps)} {'(' + (fps / targetFps).ToString(percentFormat) + ')',rightAlign}", null),
 							("Target", $"{FormatFloat(targetFps)} FPS", null),
 							("Upd Duration", FormatTimeSmall(prevUpdateDuration                                               * 1000) + " ms", null),
 							("Delay", FormatTimeSmall((deltaT - prevUpdateDuration - TimeSpan.FromMilliseconds(UpdatePeriod)) * 1000) + " ms", null)

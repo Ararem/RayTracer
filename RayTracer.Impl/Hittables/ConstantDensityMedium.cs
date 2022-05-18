@@ -11,9 +11,22 @@ namespace RayTracer.Impl.Hittables;
 /// <remarks>
 ///  This probably won't work too well with rays inside the medium, or other objects inside it, so beware...
 /// </remarks>
-public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
+public class ConstantDensityMedium : Hittable
 {
-	private readonly float negInvDensity = -1 / Density;
+	/// <summary>
+	///  A hittable that has a constant density (aka a volume like a cloud). Should be used in conjunction with a <see cref="VolumetricMaterial"/>
+	/// </summary>
+	/// <remarks>
+	///  This probably won't work too well with rays inside the medium, or other objects inside it, so beware...
+	/// </remarks>
+	public ConstantDensityMedium(Hittable boundary, float density)
+	{
+		Boundary      = boundary;
+		Density       = density;
+		negInvDensity = -1f / density;
+	}
+
+	private readonly float negInvDensity;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -39,11 +52,12 @@ public record ConstantDensityMedium(Hittable Boundary, float Density) : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax) => Boundary.FastTryHit(ray, kMin, kMax);
 
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume => Boundary.BoundingVolume;
 
-
+	public Hittable Boundary { get; }
+	public float    Density  { get; }
 }

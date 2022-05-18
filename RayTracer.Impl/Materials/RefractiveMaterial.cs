@@ -75,7 +75,7 @@ public record RefractiveMaterial(float RefractiveIndex, Texture Tint, bool Alter
 					-Sqrt(Abs(1.0f - refractedRayPerpendicular.LengthSquared())) * hit.Normal;
 			standard = refractedRayPerpendicular + refractedRayParallel;
 
-			alternate  = Normalize((Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal))));
+			alternate = Normalize((Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal))));
 
 			outDirection = AlternateRefractionMode ? alternate : standard;
 		}

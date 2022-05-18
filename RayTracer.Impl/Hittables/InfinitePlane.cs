@@ -9,15 +9,30 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>
 ///  A 2D Plane in 3D space.
 /// </summary>
-/// <param name="Point">A point on the plane</param>
-/// <param name="Normal">Normal of the plane</param>
 /// <remarks>
 ///  Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/>
 /// </remarks>
-public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
+public sealed class InfinitePlane : Hittable
 {
+	/// <summary>
+	///  A 2D Plane in 3D space.
+	/// </summary>
+	/// <param name="point">A point on the plane</param>
+	/// <param name="normal">Normal of the plane</param>
+	public InfinitePlane(Vector3 point, Vector3 normal)
+	{
+		Point  = point;
+		Normal = normal;
+	}
+
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume => AxisAlignedBoundingBox.Infinite;
+
+	/// <summary>A point on the plane</summary>
+	public Vector3 Point { get; }
+
+	/// <summary>Normal of the plane</summary>
+	public Vector3 Normal { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -48,7 +63,7 @@ public sealed record InfinitePlane(Vector3 Point, Vector3 Normal) : Hittable
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm

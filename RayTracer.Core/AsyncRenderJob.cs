@@ -39,8 +39,8 @@ public sealed class AsyncRenderJob : IDisposable
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
 
-		Image                          = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
-		ImageBuffer                          =Image.Frames.RootFrame!;
+		Image                                = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		ImageBuffer                          = Image.Frames.RootFrame!;
 		RenderOptions                        = renderOptions;
 		rawColourBuffer                      = new Colour[renderOptions.Width * renderOptions.Height];
 		sampleCountBuffer                    = new int[renderOptions.Width    * renderOptions.Height];
@@ -51,7 +51,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//Assign access for all the components that need it
 		#pragma warning disable CS0618
-		foreach (Light light in lights) light.Renderer=this;
+		foreach (Light light in lights) light.Renderer = this;
 		foreach (SceneObject sceneObject in objects)
 		{
 			sceneObject.Material.Renderer = this;
@@ -201,7 +201,7 @@ public sealed class AsyncRenderJob : IDisposable
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
 					return MathF.Sin(x / 40f) * MathF.Sin(y / 40f) < 0 ? Colour.Black : Colour.Purple;
 				case GraphicsDebugVisualisation.LocalCoordDebugTexture:
-					return MathF.Sin(hit.LocalPoint.X  *40f) * MathF.Sin(hit.LocalPoint.Y *40f) * MathF.Sin(hit.LocalPoint.Z *40f) < 0 ? Colour.Black : Colour.Purple;
+					return MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0 ? Colour.Black : Colour.Purple;
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]
@@ -388,7 +388,8 @@ public sealed class AsyncRenderJob : IDisposable
 	///  Use this for simple shadow-like checks, to see if <i>anything</i> lies in between the light source and target point. Note that this will return
 	///  <see langword="true"/> as soon as an intersection is hit, and does not take into account a material's properties (such as transparency), just
 	///  geometry.
-	/// </remarks>s
+	/// </remarks>
+	/// s
 	public bool AnyIntersectionFast(Ray ray, float kMin, float kMax) => bvhTree.RootNode.FastTryHit(ray, kMin, kMax);
 
 	/// <summary>
@@ -466,7 +467,7 @@ public sealed class AsyncRenderJob : IDisposable
 		int i = Compress2DIndex(x, y, RenderOptions.Width);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
-		rawColourBuffer[i]   = newSampleColour;
+		rawColourBuffer[i] = newSampleColour;
 		//Have to clamp the colour here or we get funky things in the image later
 		Colour finalColour = newSampleColour;
 		#else
@@ -476,9 +477,9 @@ public sealed class AsyncRenderJob : IDisposable
 		#endif
 
 		//Have to clamp the colour here or we get funky things in the image later
-		finalColour       = Colour.Clamp01(finalColour);
+		finalColour = Colour.Clamp01(finalColour);
 		//Sqrt for gamma=2 correction
-		finalColour       = Colour.Sqrt(finalColour);
+		finalColour = Colour.Sqrt(finalColour);
 		Rgb24 rgb24 = (Rgb24)finalColour;
 		ImageBuffer[x, y] = rgb24;
 	}
@@ -490,7 +491,8 @@ public sealed class AsyncRenderJob : IDisposable
 	private readonly SkyBox        skybox;
 	private readonly SceneObject[] objects;
 	private readonly Light[]       lights;
-	private readonly BvhTree       bvhTree;
+
+	private readonly BvhTree bvhTree;
 	// ReSharper restore PrivateFieldCanBeConvertedToLocalVariable
 
 	/// <summary>
@@ -520,7 +522,7 @@ public sealed class AsyncRenderJob : IDisposable
 	public ImageFrame<Rgb24> ImageBuffer { get; }
 
 	/// <summary>
-	///	Image for the final render output
+	///  Image for the final render output
 	/// </summary>
 	public Image<Rgb24> Image { get; }
 

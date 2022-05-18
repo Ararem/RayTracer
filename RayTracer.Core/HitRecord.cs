@@ -15,7 +15,7 @@ namespace RayTracer.Core;
 public readonly record struct HitRecord(
 		Ray     Ray,
 		Vector3 WorldPoint,
-		Vector3 LocalPoint,
+		Vector3 LocalPoint, //TODO: Remove LocalPoint? Perhaps also WorldPoint since it can be found from the ray and K value
 		Vector3 Normal,
 		float   K,
 		bool    OutsideFace,

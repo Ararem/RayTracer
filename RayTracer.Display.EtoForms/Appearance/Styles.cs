@@ -59,7 +59,7 @@ public static class Styles
 		Style.Add(GeneralTextualItalic, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Italic); });
 
 		Verbose("Registering style {Style}", GeneralTextualBold);
-		Style.Add(GeneralTextualBold, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize,FontStyle.Bold); });
+		Style.Add(GeneralTextualBold, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Bold); });
 
 		Verbose("Registering style {Style}", GeneralTextualUnderline);
 		Style.Add(GeneralTextualUnderline, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.None, FontDecoration.Underline); });

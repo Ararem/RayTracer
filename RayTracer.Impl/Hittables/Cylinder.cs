@@ -9,15 +9,36 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>
 ///  A cylinder, defined by two points and a radius around the line segments of those points
 /// </summary>
-/// <param name="P1">The point defining one of the ends of the cylinder</param>
-/// <param name="P2">The point defining one of the ends of the cylinder</param>
-/// <param name="Radius">The radius of the cylinder</param>
-public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
+public class Cylinder : Hittable
 {
-	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
+	/// <summary>
+	///  A cylinder, defined by two points and a radius around the line segments of those points
+	/// </summary>
+	/// <param name="p1">The point defining one of the ends of the cylinder</param>
+	/// <param name="p2">The point defining one of the ends of the cylinder</param>
+	/// <param name="radius">The radius of the cylinder</param>
+	public Cylinder(Vector3 p1, Vector3 p2, float radius)
+	{
+		P1             = p1;
+		P2             = p2;
+		Radius         = radius;
+		centre         = Lerp(p1, p2, 0.5f);
+		BoundingVolume = new AxisAlignedBoundingBox(Min(p1, p2) - new Vector3(radius), Max(p1, p2) + new Vector3(radius));
+	}
 
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>The point defining one of the ends of the cylinder</summary>
+	public Vector3 P1 { get; }
+
+	/// <summary>The point defining one of the ends of the cylinder</summary>
+	public Vector3 P2 { get; }
+
+	/// <summary>The radius of the cylinder</summary>
+	public float Radius { get; }
+
+	private readonly Vector3 centre; //Halfway between P1 and P2
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -78,7 +99,7 @@ public record Cylinder(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		}
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//XYZ are XYZ of normal, W is k value along ray of intersection

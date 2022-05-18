@@ -1,9 +1,9 @@
 ﻿using Eto;
+using Eto.Forms;
 using RayTracer.Display.EtoForms.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using static Serilog.Log;
-using Application = Eto.Forms.Application;
 using Logger = RayTracer.Core.Logger;
 using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
 
@@ -52,7 +52,7 @@ internal static class Program
 		Debug("Application is {Application}", application);
 
 		Verbose("Hooking up unhandled exception event");
-		application.UnhandledException      += EtoUnhandledException;
+		application.UnhandledException += EtoUnhandledException;
 		Verbose("Created new application object");
 
 		Debug("Application is {Application}", application);

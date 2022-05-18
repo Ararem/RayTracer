@@ -13,14 +13,10 @@ using System.Threading.Tasks;
 using static Serilog.Log;
 
 namespace RayTracer.Display.EtoForms;
+
 //TODO: Add some styling - custom fonts most important
 public sealed class MainForm : Form
 {
-	private readonly RenderOptionSelectorPanel? selectorPanel = null;
-	private readonly Label                      titleLabel;
-	private          StackLayoutItem            displayedWindowItem;
-	private          AsyncRenderJob?            renderJob = null;
-
 	public MainForm()
 	{
 		Verbose("MainForm.Ctor()");
@@ -33,7 +29,7 @@ public sealed class MainForm : Form
 		Padding = 10;
 
 		Verbose("Creating UI elements");
-		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle};
+		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle };
 		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
@@ -83,6 +79,11 @@ public sealed class MainForm : Form
 		displayedWindowItem.Control = selectorPanel;
 	}
 
+	private readonly RenderOptionSelectorPanel? selectorPanel = null;
+	private readonly Label                      titleLabel;
+	private          StackLayoutItem            displayedWindowItem;
+	private          AsyncRenderJob?            renderJob = null;
+
 	private void StartRenderButtonClicked()
 	{
 		//Assume that the sender is the same selector panel we have stored
@@ -116,10 +117,10 @@ public sealed class MainForm : Form
 		renderJob.GetAwaiter().OnCompleted(
 				() =>
 				{
-					string     path            = Path.GetFullPath("./image.png");
+					string path = Path.GetFullPath("./image.png");
 
 					//Save to the path
-					FileStream imageFileStream = new (path, FileMode.Truncate, FileAccess.Write, FileShare.Read);
+					FileStream imageFileStream = new(path, FileMode.Truncate, FileAccess.Write, FileShare.Read);
 					renderJob.Image.Save(imageFileStream, new PngEncoder());
 					imageFileStream.Dispose();
 
@@ -128,11 +129,11 @@ public sealed class MainForm : Form
 							new ProcessStartInfo
 							{
 									//What command we run depends on what platform
-									FileName  = EtoEnvironment.Platform switch
+									FileName = EtoEnvironment.Platform switch
 									{
-											{IsWindows:true} => "explorer.exe",
-											{IsLinux:true} => "xdg-open",
-											_=> throw new PlatformNotSupportedException("Cannot locate file opener command on platform")
+											{ IsWindows: true } => "explorer.exe",
+											{ IsLinux  : true } => "xdg-open",
+											_                   => throw new PlatformNotSupportedException("Cannot locate file opener command on platform")
 									},
 									Arguments = $"\"{path}\"",
 									//These flags stop the image display program's console from attaching to ours (because that's yuck!)
@@ -156,6 +157,7 @@ public sealed class MainForm : Form
 							foreach ((object? obj, ulong count) in dict)
 								Warning("\t{Object} = {Count}", obj, count);
 						}
+
 						Error("{@Dict}", GraphicsValidator.Errors);
 					}
 				}

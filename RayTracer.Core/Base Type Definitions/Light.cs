@@ -14,7 +14,8 @@ public abstract class Light : RenderAccessor
 	/// <param name="hit">The information about the hit to calculate the lighting for</param>
 	/// <returns>The amount of light received by the <paramref name="hit"/>, from this light source</returns>
 	/// <remarks>
-	///  When checking for shadowing, you would most likely use <see cref="AsyncRenderJob.AnyIntersectionFast"/> between the point hit and the position of the light
+	///  When checking for shadowing, you would most likely use <see cref="AsyncRenderJob.AnyIntersectionFast"/> between the point hit and the position of
+	///  the light
 	///  source (see example below)
 	/// </remarks>
 	/// <example>
@@ -37,7 +38,8 @@ public abstract class Light : RenderAccessor
 	public abstract Colour CalculateLight(HitRecord hit);
 
 	/// <summary>
-	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to the computed
+	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to
+	///  the computed
 	///  shadow ray
 	/// </summary>
 	[PublicAPI]

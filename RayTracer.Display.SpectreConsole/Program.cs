@@ -7,7 +7,7 @@ using System.Diagnostics;
 try
 {
 	#endif
-	var app = new CommandApp<RunCommand>();
+	CommandApp<RunCommand> app = new CommandApp<RunCommand>();
 	app.Configure(
 			config =>
 			{

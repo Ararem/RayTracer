@@ -73,7 +73,7 @@ public sealed record XYPlane(float XLow, float XHigh, float YLow, float YHigh, f
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//How far along the ray did it intersect with the unbounded version of this plane (x/y bounds of +- infinity)

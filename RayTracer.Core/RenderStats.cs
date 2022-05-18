@@ -9,11 +9,6 @@ namespace RayTracer.Core;
 public sealed class RenderStats
 {
 	/// <summary>
-	///  How many threads are currently rendering the scene
-	/// </summary>
-	public int ThreadsRunning = 0;
-
-	/// <summary>
 	///  Constructor for creating a new <see cref="RenderStats"/> object
 	/// </summary>
 	/// <param name="options">Render options, used to assign and calculate some of the values</param>
@@ -25,7 +20,7 @@ public sealed class RenderStats
 	}
 
 	/// <summary>
-	/// Copy constructor
+	///  Copy constructor
 	/// </summary>
 	public RenderStats(RenderStats original)
 	{
@@ -44,6 +39,11 @@ public sealed class RenderStats
 		TotalRawPixels        = original.TotalRawPixels;
 		TotalTruePixels       = original.TotalTruePixels;
 	}
+
+	/// <summary>
+	///  How many threads are currently rendering the scene
+	/// </summary>
+	public int ThreadsRunning = 0;
 
 	/// <inheritdoc/>
 	public override string ToString() => $"{nameof(RawPixelsRendered)}: {RawPixelsRendered}, {nameof(PassesRendered)}: {PassesRendered}, {nameof(MaterialScatterCount)}: {MaterialScatterCount}, {nameof(MaterialAbsorbedCount)}: {MaterialAbsorbedCount}, {nameof(AabbMisses)}: {AabbMisses}, {nameof(HittableMisses)}: {HittableMisses}, {nameof(HittableIntersections)}: {HittableIntersections}, {nameof(SkyRays)}: {SkyRays}, {nameof(BounceLimitExceeded)}: {BounceLimitExceeded}, {nameof(RayCount)}: {RayCount}, {nameof(RawRayDepthCounts)}: {RawRayDepthCounts}, {nameof(ThreadsRunning)}: {ThreadsRunning}, {nameof(TotalRawPixels)}: {TotalRawPixels}, {nameof(TotalTruePixels)}: {TotalTruePixels}";

@@ -10,16 +10,39 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>
 ///  A capsule shape, defined by two points, and a radius
 /// </summary>
-/// <param name="P1">The first point that makes up the capsule</param>
-/// <param name="P2">The seconds point that makes up the capsule</param>
-/// <param name="Radius">The radius of the capsule</param>
-//TODO: With all the hittables that need to do calculations in the ctor, rewrite them similar to Quad and Camera
-public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
+public class Capsule : Hittable
 {
-	private readonly Vector3 centre = Lerp(P1, P2, 0.5f); //Halfway between P1 and P2
+	/// <summary>
+	///  A capsule shape, defined by two points, and a radius
+	/// </summary>
+	/// <param name="p1">The first point that makes up the capsule</param>
+	/// <param name="p2">The seconds point that makes up the capsule</param>
+	/// <param name="radius">The radius of the capsule</param>
+	public Capsule(Vector3 p1, Vector3 p2, float radius)
+	{
+		P1             = p1;
+		P2             = p2;
+		Radius         = radius;
+		centre         = Lerp(p1, p2, 0.5f);
+		BoundingVolume = new AxisAlignedBoundingBox(Min(p1, p2) - new Vector3(radius), Max(p1, p2) + new Vector3(radius));
+		uvMatrix       = CreateUvMatrix(p1, p2);
+	}
 
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(Min(P1, P2) - new Vector3(Radius), Max(P1, P2) + new Vector3(Radius));
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>The first point that makes up the capsule</summary>
+	public Vector3 P1 { get; }
+
+	/// <summary>The second point that makes up the capsule</summary>
+	public Vector3 P2 { get; }
+
+	/// <summary>The radius of the capsule</summary>
+	public float Radius { get; }
+
+	private readonly Vector3 centre;
+
+	private readonly Matrix4x4 uvMatrix;
 
 	/// <inheritdoc/>
 	[SuppressMessage("ReSharper", "IdentifierTypo")]
@@ -123,7 +146,6 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		return (k != -1f) && (k >= kMin) && (k <= kMax);
 	}
 
-	private readonly Matrix4x4 uvMatrix = CreateUvMatrix(P1, P2);
 	private static Matrix4x4 CreateUvMatrix(Vector3 p1, Vector3 p2)
 	{
 		Vector3 w = Normalize(p2 - p1);
@@ -146,7 +168,7 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 	/// </summary>
 	private Vector2 UV(Vector3 point)
 	{
-		Vector3 q  = Transform(point - P1, uvMatrix);
+		Vector3 q     = Transform(point - P1, uvMatrix);
 		Vector2 rawUv = new(Atan2(q.Y, q.X) /*Atan(q.Y / q.X)*/, q.Z);
 		/*
 		 *
@@ -163,10 +185,10 @@ public record Capsule(Vector3 P1, Vector3 P2, float Radius) : Hittable
 		 * See how the rawUv's X ranges ± PI, and the Y ranges [-Radius...Dist+Radius]
 		 * So inverse lerp them into the range [0...1] and we have our UV coordinates!
 		 */
-		Vector2 uv = new (
-				(rawUv.X + PI) /6.2831855F //MathUtils.InverseLerp(-PI, PI, rawUv.X)
-				, MathUtils.InverseLerp(-Radius, Distance(P1, P2)+Radius, rawUv.Y)
-				);
+		Vector2 uv = new(
+				(rawUv.X + PI) / 6.2831855F //MathUtils.InverseLerp(-PI, PI, rawUv.X)
+				, MathUtils.InverseLerp(-Radius, Distance(P1, P2) + Radius, rawUv.Y)
+		);
 
 		return uv;
 	}

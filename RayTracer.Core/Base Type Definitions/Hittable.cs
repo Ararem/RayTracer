@@ -7,7 +7,7 @@ namespace RayTracer.Core;
 ///  Base class for a hittable. Represents the surface/structure of a render-able object.
 /// </summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
-[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
+[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors | ImplicitUseTargetFlags.Members)]
 public abstract class Hittable : RenderAccessor
 {
 	/// <summary>
@@ -32,7 +32,7 @@ public abstract class Hittable : RenderAccessor
 	public abstract HitRecord? TryHit(Ray ray, float kMin, float kMax);
 
 	/// <summary>
-	/// Fast version of <see cref="TryHit"/> that only checks if there was an intersection, without any extra detail
+	///  Fast version of <see cref="TryHit"/> that only checks if there was an intersection, without any extra detail
 	/// </summary>
 	/// <param name="ray">The ray to check for intersection with</param>
 	/// <param name="kMin">Minimum distance along the ray to check for intersections</param>

@@ -11,7 +11,7 @@ namespace RayTracer.Core.Debugging;
 public static class GraphicsValidator
 {
 	/// <summary>
-	/// Threshold for how close floats need to be to considered 'equal' (cause of floating point errors)
+	///  Threshold for how close floats need to be to considered 'equal' (cause of floating point errors)
 	/// </summary>
 	private const float MagnitudeEqualityError = 0.01f;
 

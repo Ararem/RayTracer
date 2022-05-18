@@ -30,18 +30,18 @@ public sealed record SurfaceSphereLight(Vector3 Position, float Radius, Colour C
 	public override Colour CalculateLight(HitRecord hit)
 	{
 		//See if there's anything in between us and the object
-		Ray   shadowRay    = Ray.FromPoints(hit.WorldPoint, Position); //Hit towards centre of light
+		Ray         shadowRay    = Ray.FromPoints(hit.WorldPoint, Position); //Hit towards centre of light
 		const float kMin         = 0.0001f;
-		float kMax         = Vector3.Distance(hit.WorldPoint, Position) - Radius; //Subtract radius to get the point on the side closest to the hit
-		bool  intersection = Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
+		float       kMax         = Vector3.Distance(hit.WorldPoint, Position) - Radius; //Subtract radius to get the point on the side closest to the hit
+		bool        intersection = Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
 		if (!intersection) //Returns false if no intersection found, meaning unrestricted path
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
-			if (dot < 0) dot = -dot;                                                           //Backfaces give negative dot product
-			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                      //Account for how much the surface points towards our light
-			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, shadowRay.PointAt(kMax));                    //Normally formula uses R^2, so don't bother rooting here to save performance
-			float distScale = (BrightnessBaselineRadius * BrightnessBaselineRadius) / distSqr; // Inverse square law
+			if (dot < 0) dot = -dot;                                                            //Backfaces give negative dot product
+			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                       //Account for how much the surface points towards our light
+			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, shadowRay.PointAt(kMax)); //Normally formula uses R^2, so don't bother rooting here to save performance
+			float distScale = (BrightnessBaselineRadius * BrightnessBaselineRadius) / distSqr;  // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);
 			colour    *= MathUtils.Lerp(1, distScale, DistanceImportance); //Account for inverse square law
 			return colour;

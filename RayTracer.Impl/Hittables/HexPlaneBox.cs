@@ -1,6 +1,5 @@
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
@@ -10,10 +9,8 @@ namespace RayTracer.Impl.Hittables;
 ///  A simple 3D box
 /// </summary>
 /// <remarks>Made up of 6 planes, hence the name</remarks>
-public record HexPlaneBox : Hittable
+public class HexPlaneBox : Hittable
 {
-	private readonly Hittable[] sides;
-
 	/// <summary>
 	///  Creates a new box from two bounding points
 	/// </summary>
@@ -49,19 +46,7 @@ public record HexPlaneBox : Hittable
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
-
-	/// <summary>
-	///  Record method implementation
-	/// </summary>
-	/// <param name="Min"></param>
-	/// <param name="Max"></param>
-	[SuppressMessage("ReSharper", "ParameterHidesMember")]
-	[SuppressMessage("ReSharper", "InconsistentNaming")]
-	public void Deconstruct(out Vector3 Min, out Vector3 Max)
-	{
-		Min = this.Min;
-		Max = this.Max;
-	}
+	private readonly Hittable[] sides;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -81,7 +66,7 @@ public record HexPlaneBox : Hittable
 		return closest;
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		for (int i = 0; i < sides.Length; i++)

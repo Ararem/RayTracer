@@ -6,6 +6,9 @@ namespace RayTracer.Core.Acceleration;
 public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats RenderStats) : BvhNode(RenderStats)
 {
 	/// <inheritdoc/>
+	public override AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
+
+	/// <inheritdoc/>
 	public override (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax)
 	{
 		//Skip early if AABB miss
@@ -30,9 +33,6 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats Re
 		}
 	}
 
-	/// <inheritdoc />
-	public override bool FastTryHit(Ray ray, float kMin, float kMax) => SceneObject.Hittable.FastTryHit(ray, kMin, kMax);
-
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingBox { get; } = SceneObject.Hittable.BoundingVolume;
+	public override bool FastTryHit(Ray ray, float kMin, float kMax) => SceneObject.Hittable.FastTryHit(ray, kMin, kMax);
 }

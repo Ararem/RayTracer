@@ -258,10 +258,10 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		renderStatsTable.AddRow("",                                        $"{FormatI(passesRemaining,                      totalPasses)} remaining");
 		renderStatsTable.AddRow("",                                        $"{totalPasses.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
-		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatL(renderJob.RenderStats.MaterialScatterCount,       rayCount)} scattered");
-		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.MaterialAbsorbedCount,        rayCount)} absorbed");
-		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.BounceLimitExceeded, rayCount)} exceeded");
-		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.SkyRays,             rayCount)} sky");
+		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Rays[/]",         $"{FormatL(renderJob.RenderStats.MaterialScatterCount,  rayCount)} scattered");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.MaterialAbsorbedCount, rayCount)} absorbed");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.BounceLimitExceeded,   rayCount)} exceeded");
+		renderStatsTable.AddRow("",                                        $"{FormatL(renderJob.RenderStats.SkyRays,               rayCount)} sky");
 		renderStatsTable.AddRow("",                                        $"{rayCount.ToString(numFormat),numAlign}          total");
 		renderStatsTable.AddRow("",                                        "");
 		renderStatsTable.AddRow($"[{StatsCategoryMarkup}]Scene[/]",        $"[{SceneMarkup}]{renderJob.Scene}[/]");
@@ -279,7 +279,7 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 		// renderStatsTable.AddRow("",                                        $"Ansi: ({AnsiConsole.Console.Profile.Width}x{AnsiConsole.Console.Profile.Height})");
 		//Because we'll probably have a crazy sized depth buffer, group the indices together
 		List<(Range range, long count)> depths = new();
-		BarChart                         chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
+		BarChart                        chart  = new() { Width = 45, MaxValue = null, ShowValues = false };
 		//Group the raw buffer into our aggregated one
 		float grouping = 0.5f; //How many depths to combine into a group
 		int   rawIndex = 0;    //Where we are in the raw (ungrouped) index buffer
@@ -377,8 +377,8 @@ internal sealed class RunCommand : AsyncCommand<RunCommand.Settings>
 			}
 
 			//Build the rows. Each row represents the erroring object, and the error counts for it
-			var    row            = new IRenderable[allErrorTypes.Length + 1];
-			Markup noErrorsMarkup = new("[dim italic green]N/A[/]"); //The error never occurred for this object
+			IRenderable[] row            = new IRenderable[allErrorTypes.Length + 1];
+			Markup        noErrorsMarkup = new("[dim italic green]N/A[/]"); //The error never occurred for this object
 			foreach (object obj in allObjects)
 			{
 				//Fill the array with error messages so that I can tell when i mess up, also saves the app from crashing if that happens (because the default is null)

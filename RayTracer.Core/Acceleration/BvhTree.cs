@@ -12,13 +12,6 @@ namespace RayTracer.Core.Acceleration;
 public sealed class BvhTree
 {
 	/// <summary>
-	///  Root <see cref="BvhNode"/> for this BVH Tree
-	/// </summary>
-	public readonly BvhNode RootNode;
-
-	private readonly RenderStats renderStats;
-
-	/// <summary>
 	///  Creates a new BVH tree for the specified scene
 	/// </summary>
 	/// <param name="scene">Scene to create the BVH tree for</param>
@@ -34,6 +27,13 @@ public sealed class BvhTree
 		this.renderStats = renderStats;
 		RootNode         = FromSegment_SAH(scene.SceneObjects, 0);
 	}
+
+	private readonly RenderStats renderStats;
+
+	/// <summary>
+	///  Root <see cref="BvhNode"/> for this BVH Tree
+	/// </summary>
+	public readonly BvhNode RootNode;
 
 	/// <inheritdoc cref="Hittable.TryHit"/>
 	public (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax) => RootNode.TryHit(ray, kMin, kMax);
@@ -110,7 +110,7 @@ public sealed class BvhTree
 		string indent = new(' ', depth);
 		Log.Verbose("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
 
-		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)], depth + 1);
+		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)],   depth + 1);
 		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..], depth + 1);
 
 		return new BinaryBvhNode(leftNode, rightNode, renderStats);

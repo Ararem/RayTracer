@@ -13,8 +13,7 @@ public static class TaskWatcher
 	private static readonly ConcurrentBag<(Task Task, bool ExitOnError)> WatchedTasks    = new();
 	private static readonly ConcurrentBag<(Task Task, bool ExitOnError)> NotYetCompleted = new();
 
-	[UsedImplicitly]
-	private static Timer watcherTimer = null!;
+	[UsedImplicitly] private static Timer watcherTimer = null!;
 
 	/// <summary>
 	///  Allows you to 'watch' a task for errors while discarding it. Useful when you want async events but are only given a sync invoker.

@@ -17,6 +17,8 @@ namespace RayTracer.Core;
 
 internal static class Logger
 {
+	private static readonly Process CurrentProcess = Process.GetCurrentProcess();
+
 	internal static void Init()
 	{
 		#if DEBUG_LOG
@@ -51,6 +53,4 @@ internal static class Logger
 
 		Log.Information("Logger Initialized");
 	}
-
-	private static readonly Process CurrentProcess = Process.GetCurrentProcess();
 }

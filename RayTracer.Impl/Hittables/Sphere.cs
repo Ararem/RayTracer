@@ -36,7 +36,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		if ((root < kMin) || (kMax < root) || root is float.NaN)
 		{
 			root = (-halfB + sqrtD) / a;
-			if ((root < kMin) || (kMax < root)||root is float.NaN) return null;
+			if ((root < kMin) || (kMax < root) || root is float.NaN) return null;
 		}
 
 		float   k             = root;                            //How far along the ray we had to go to hit the sphere
@@ -78,7 +78,7 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 	/// <inheritdoc/>
 	public override string ToString() => $"Sphere {{Radius: {Radius}}}";
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		//Do some ray-sphere intersection math to find if the ray intersects
@@ -100,10 +100,9 @@ public sealed record Sphere(Vector3 Centre, float Radius) : Hittable
 		if ((root < kMin) || (kMax < root) || root is float.NaN)
 		{
 			root = (-halfB + sqrtD) / a;
-			if ((root < kMin) || (kMax < root) ||root is float.NaN) return false;
+			if ((root < kMin) || (kMax < root) || root is float.NaN) return false;
 		}
 
 		return true;
-
 	}
 }

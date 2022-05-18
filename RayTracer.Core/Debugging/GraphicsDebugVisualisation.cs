@@ -48,7 +48,7 @@ public enum GraphicsDebugVisualisation
 	ScatterDirection,
 
 	/// <summary>
-	/// Whenever a ray hits an object, display a debug texture based on the point's position in local-space
+	///  Whenever a ray hits an object, display a debug texture based on the point's position in local-space
 	/// </summary>
-	LocalCoordDebugTexture,
+	LocalCoordDebugTexture
 }
