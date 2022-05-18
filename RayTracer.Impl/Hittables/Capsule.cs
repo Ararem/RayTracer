@@ -51,12 +51,12 @@ public sealed class Capsule : Hittable
 				u.Z, v.Z, w.Z, 0,
 				0, 0, 0, 0
 		);
-		;
 
 		//Cached vars
-		p2MinusP1     = P2 - P1;
-		p2MinusP1Dot2 = Dot(p2MinusP1, p2MinusP1);
-		radiusSquare  = Radius * Radius;
+		p2MinusP1              = P2 - P1;
+		p2MinusP1Dot2          = Dot(p2MinusP1, p2MinusP1);
+		radiusSquare           = Radius       * Radius;
+		radiusSqrTimesP2P1Dot2 = radiusSquare * p2MinusP1Dot2;
 	}
 
 	/// <inheritdoc/>
