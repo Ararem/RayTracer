@@ -26,6 +26,11 @@ public sealed class Capsule : Hittable
 		centre         = Lerp(p1, p2, 0.5f);
 		BoundingVolume = new AxisAlignedBoundingBox(Min(p1, p2) - new Vector3(radius), Max(p1, p2) + new Vector3(radius));
 		uvMatrix       = CreateUvMatrix(p1, p2);
+
+		//Cached vars
+		p2MinusP1     = P2 - P1;
+		p2MinusP1Dot2 = Dot(p2MinusP1, p2MinusP1);
+		radiusSquare  = Radius * Radius;
 	}
 
 	/// <inheritdoc/>
@@ -40,8 +45,14 @@ public sealed class Capsule : Hittable
 	/// <summary>The radius of the capsule</summary>
 	public float Radius { get; }
 
-	private readonly Vector3 centre;
+	private readonly Vector3   centre;
+	private readonly Vector3   p2MinusP1;
+	/// <summary>
+	/// <see cref="p2MinusP1"/> dotted with itself
+	/// </summary>
+	private readonly float   p2MinusP1Dot2;
 
+	private readonly float     radiusSquare;
 	private readonly Matrix4x4 uvMatrix;
 
 	/// <inheritdoc/>
@@ -53,25 +64,23 @@ public sealed class Capsule : Hittable
 		 * and the line of the points P1 & P2. Then I would assume it solves the quadratic for when the distance == radius, and returns that as K.
 		 */
 		float   k  = -1f;
-		Vector3 ba = P2         - P1;
 		Vector3 oa = ray.Origin - P1;
 
-		float baba = Dot(ba,            ba);
-		float bard = Dot(ba,            ray.Direction);
-		float baoa = Dot(ba,            oa);
+		float bard = Dot(p2MinusP1,            ray.Direction);
+		float baoa = Dot(p2MinusP1,            oa);
 		float rdoa = Dot(ray.Direction, oa);
 		float oaoa = Dot(oa,            oa);
 
-		float a = baba - (bard * bard);
-		float b = (baba        * rdoa) - (baoa * bard);
-		float c = (baba        * oaoa) - (baoa * baoa) - (Radius * Radius * baba);
-		float h = (b           * b)    - (a    * c);
+		float a = p2MinusP1Dot2 - (bard * bard);
+		float b = (p2MinusP1Dot2        * rdoa) - (baoa * bard);
+		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - (radiusSquare * p2MinusP1Dot2);
+		float h = (b                    * b)    - (a    * c);
 		if (h >= 0.0)
 		{
 			float t = (-b - Sqrt(h)) / a;
 			float y = baoa + (t * bard);
 			// body
-			if ((y > 0.0) && (y < baba))
+			if ((y > 0.0) && (y < p2MinusP1Dot2))
 			{
 				k = t;
 			}
@@ -80,8 +89,8 @@ public sealed class Capsule : Hittable
 			{
 				Vector3 oc = y <= 0.0 ? oa : ray.Origin - P2;
 				b = Dot(ray.Direction, oc);
-				c = Dot(oc, oc) - (Radius * Radius);
-				h = (b                    * b) - c;
+				c = Dot(oc, oc) - radiusSquare;
+				h = (b * b)     - c;
 				if (h > 0.0) k = -b - Sqrt(h);
 			}
 		}
@@ -93,7 +102,7 @@ public sealed class Capsule : Hittable
 		{
 			Vector3 worldPos  = ray.PointAt(k);
 			Vector3 localPos  = worldPos - centre;
-			Vector3 outNormal = CapNormal(worldPos, P1, P2, Radius);
+			Vector3 outNormal = CapNormal(worldPos);
 			Vector2 uv        = UV(worldPos);
 			bool    inside    = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
@@ -104,28 +113,27 @@ public sealed class Capsule : Hittable
 	}
 
 	/// <inheritdoc/>
+	[SuppressMessage("ReSharper", "IdentifierTypo")]
 	public override bool FastTryHit(Ray ray, float kMin, float kMax)
 	{
 		float   k  = -1f;
-		Vector3 ba = P2         - P1;
 		Vector3 oa = ray.Origin - P1;
 
-		float baba = Dot(ba,            ba);
-		float bard = Dot(ba,            ray.Direction);
-		float baoa = Dot(ba,            oa);
+		float bard = Dot(p2MinusP1,     ray.Direction);
+		float baoa = Dot(p2MinusP1,     oa);
 		float rdoa = Dot(ray.Direction, oa);
 		float oaoa = Dot(oa,            oa);
 
-		float a = baba - (bard * bard);
-		float b = (baba        * rdoa) - (baoa * bard);
-		float c = (baba        * oaoa) - (baoa * baoa) - (Radius * Radius * baba);
-		float h = (b           * b)    - (a    * c);
+		float a = p2MinusP1Dot2 - (bard * bard);
+		float b = (p2MinusP1Dot2        * rdoa) - (baoa * bard);
+		float c = (p2MinusP1Dot2        * oaoa) - (baoa * baoa) - (radiusSquare * p2MinusP1Dot2);
+		float h = (b                    * b)    - (a    * c);
 		if (h >= 0.0)
 		{
 			float t = (-b - Sqrt(h)) / a;
 			float y = baoa + (t * bard);
 			// body
-			if ((y > 0.0) && (y < baba))
+			if ((y > 0.0) && (y < p2MinusP1Dot2))
 			{
 				k = t;
 			}
@@ -134,8 +142,8 @@ public sealed class Capsule : Hittable
 			{
 				Vector3 oc = y <= 0.0 ? oa : ray.Origin - P2;
 				b = Dot(ray.Direction, oc);
-				c = Dot(oc, oc) - (Radius * Radius);
-				h = (b                    * b) - c;
+				c = Dot(oc, oc) - radiusSquare;
+				h = (b * b)     - c;
 				if (h > 0.0) k = -b - Sqrt(h);
 			}
 		}
@@ -194,17 +202,17 @@ public sealed class Capsule : Hittable
 	}
 
 	// compute normal
-	private static Vector3 CapNormal(Vector3 pos, Vector3 a, Vector3 b, float r)
+	private Vector3 CapNormal(Vector3 pos)
 	{
-		Vector3 ba = b   - a;
-		Vector3 pa = pos - a;
-		float   h  = Math.Clamp(Dot(pa, ba) / Dot(ba, ba), 0f, 1f);
-		return (pa - (h * ba)) / r;
+		Vector3 pa = pos - P1;
+		float   h  = Math.Clamp(Dot(pa, p2MinusP1) / p2MinusP1Dot2, 0f, 1f);
+		return (pa - (h * p2MinusP1)) / Radius;
 	}
 }
 
 #region Original ShaderToy Code
 
+// ReSharper disable CommentTypo
 /*
 // The MIT License
 // Copyright © 2016 Inigo Quilez
