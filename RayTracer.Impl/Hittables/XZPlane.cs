@@ -5,16 +5,48 @@ using System.Numerics;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>A plane that spans a region along the XZ plane</summary>
-/// <param name="XLow">Low X value for this plane</param>
-/// <param name="XHigh">High X value for this plane</param>
-/// <param name="ZLow">Low Z value for this plane</param>
-/// <param name="ZHigh">High Z value for this plane</param>
-/// <param name="Y">Y value the plane is positioned at</param>
-/// <param name="AABBPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
-public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, float Y, float AABBPadding = 0.001f) : Hittable
+public sealed class XZPlane : Hittable
 {
+	/// <summary>A plane that spans a region along the XZ plane</summary>
+	/// <param name="xLow">Low X value for this plane</param>
+	/// <param name="xHigh">High X value for this plane</param>
+	/// <param name="zLow">Low Z value for this plane</param>
+	/// <param name="zHigh">High Z value for this plane</param>
+	/// <param name="y">Y value the plane is positioned at</param>
+	/// <param name="aabbPadding">How much to pad the computed AABB by (since the plane is infinitely thin)</param>
+	public XZPlane(float xLow, float xHigh, float zLow, float zHigh, float y, float aabbPadding = 0.001f)
+	{
+		XLow           = xLow;
+		XHigh          = xHigh;
+		ZLow           = zLow;
+		ZHigh          = zHigh;
+		Y              = y;
+		AABBPadding    = aabbPadding;
+		BoundingVolume = new AxisAlignedBoundingBox(new Vector3(xLow, y - aabbPadding, zLow), new Vector3(xHigh, y + aabbPadding, zHigh));
+		centre         = new Vector3((XLow + XHigh) / 2f, Y, (ZLow + ZHigh) / 2f);
+	}
+
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = new(new Vector3(XLow, Y - AABBPadding, ZLow), new Vector3(XHigh, Y + AABBPadding, ZHigh));
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
+
+	/// <summary>Low X value for this plane</summary>
+	public float XLow { get; init; }
+
+	/// <summary>High X value for this plane</summary>
+	public float XHigh { get; init; }
+
+	/// <summary>Low Z value for this plane</summary>
+	public float ZLow { get; init; }
+
+	/// <summary>High Z value for this plane</summary>
+	public float ZHigh { get; init; }
+
+	/// <summary>Y value the plane is positioned at</summary>
+	public float Y { get; init; }
+
+	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
+	public float AABBPadding { get; init; }
+	private readonly Vector3 centre;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -32,15 +64,14 @@ public sealed record XZPlane(float XLow, float XHigh, float ZLow, float ZHigh, f
 		if ((x < XLow) || (x > XHigh) || (z < ZLow) || (z > ZHigh))
 			return null;
 
-		Vector3 centre     = new((XLow + XHigh) / 2f, Y, (ZLow + ZHigh) / 2f); //Average high/low points
 		Vector3 localPoint = worldPoint - centre;
 
 		Vector2 uv = new((x - XLow) / (XHigh - XLow), (z - ZLow) / (ZHigh - ZLow));
 		Vector3 outwardNormal =
 				//See XYPlane.cs for explanation of this
 				ray.Origin.Y < Y
-						? new Vector3(0, -1, 0)
-						: new Vector3(0, 1,  0);
+						? -Vector3.UnitY
+						: Vector3.UnitY;
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
 	}
