@@ -18,6 +18,7 @@
 # Models/Shapes
 
 * Import 3D models
+* Optimise `TryHit()` functions to cache as much as possible in the `.ctor`, instead of recalculating each time (e.g. `Capsule` and `ba`, `baba`)
 
 ## Debugging/Development
 

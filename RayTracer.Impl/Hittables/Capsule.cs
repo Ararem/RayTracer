@@ -10,10 +10,10 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>
 ///  A capsule shape, defined by two points, and a radius
 /// </summary>
-public class Capsule : Hittable
+public sealed class Capsule : Hittable
 {
 	/// <summary>
-	///  A capsule shape, defined by two points, and a radius
+	///  Creates a new capsule from two points, and a radius
 	/// </summary>
 	/// <param name="p1">The first point that makes up the capsule</param>
 	/// <param name="p2">The seconds point that makes up the capsule</param>
