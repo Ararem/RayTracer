@@ -21,7 +21,7 @@ namespace RayTracer.Impl.Hittables;
 ///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a>
 ///  )
 /// </remarks>
-public class Box : Hittable
+public sealed class Box : Hittable
 {
 	/// <summary>
 	///  Creates a box from a transform matrix
@@ -127,7 +127,7 @@ public class Box : Hittable
 		 * 5. (Important) I've combined everything into one input matrix, meaning the `rad`/`halfLengths` vector no longer exists, as it's contained in the matrix transform now
 		 */
 
-		// Calcs intersection and exit distances, normal, face and UVs
+		// Calculates intersection and exit distances, normal, face and UVs
 		// row is the ray origin in world space
 		// rdw is the ray direction in world space
 		// txx is the world-to-box transformation
