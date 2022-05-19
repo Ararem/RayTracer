@@ -4,18 +4,16 @@ using System.Numerics;
 namespace RayTracer.Impl.Lights;
 
 /// <summary>
-///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so
-///  the light will be equally bright at any distance away from it's <see cref="Position"/>
+///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points closer to the light will be brigther
 /// </summary>
-public sealed class SizedPointLight : Light
+public sealed class PointLight : Light
 {
 	/// <summary>
-	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so
-	///  the light will be equally bright at any distance away from it's <see cref="Position"/>
+	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points closer to the light will be brigther
 	/// </summary>
 	/// <param name="position">Where the light source is located in world-space</param>
 	/// <param name="colour">Colour of the emitted light</param>
-	/// <param name="radius">Colour of the emitted light</param>
+	/// <param name="radius">Distance at which brightness is 100%</param>
 	/// <param name="distanceScaleLimit">
 	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
 	///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
@@ -28,7 +26,7 @@ public sealed class SizedPointLight : Light
 	///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
 	///  and 1 means the distance is accounted for following the inverse-square law.
 	/// </param>
-	public SizedPointLight(Vector3 position, Colour colour, float radius, float distanceScaleLimit = 10f, float surfaceDirectionImportance = 1f, float distanceImportance = 1f)
+	public PointLight(Vector3 position, Colour colour, float radius, float distanceScaleLimit = 10f, float surfaceDirectionImportance = 1f, float distanceImportance = 1f)
 	{
 		Position                   = position;
 		Colour                     = colour;
@@ -44,7 +42,7 @@ public sealed class SizedPointLight : Light
 	/// <summary>Colour of the emitted light</summary>
 	public Colour Colour { get;  }
 
-	/// <summary>Colour of the emitted light</summary>
+	/// <summary>Radius of the light (distance at which brightness is 100%)</summary>
 	public float Radius { get;  }
 
 	/// <summary>
