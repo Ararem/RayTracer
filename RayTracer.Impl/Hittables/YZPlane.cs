@@ -29,22 +29,22 @@ public sealed class YZPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low Y value for this plane</summary>
-	public float YLow { get; init; }
+	public float YLow { get;  }
 
 	/// <summary>High Y value for this plane</summary>
-	public float YHigh { get; init; }
+	public float YHigh { get;  }
 
 	/// <summary>Low Z value for this plane</summary>
-	public float ZLow { get; init; }
+	public float ZLow { get;  }
 
 	/// <summary>High Z value for this plane</summary>
-	public float ZHigh { get; init; }
+	public float ZHigh { get;  }
 
 	/// <summary>X value the plane is positioned at</summary>
-	public float X { get; init; }
+	public float X { get;  }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
-	public float AABBPadding { get; init; }
+	public float AABBPadding { get;  }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -88,6 +88,6 @@ public sealed class YZPlane : Hittable
 		Vector3 worldPoint = ray.PointAt(k);
 		float   y          = worldPoint.Y, z = worldPoint.Z;
 		//Assert our bounds
-		return !(y < YLow) && !(y > YHigh) && !(z < ZLow) && !(z > ZHigh);
+		return (y >= YLow) && (y <= YHigh) && (z >= ZLow) && (z <= ZHigh);
 	}
 }
