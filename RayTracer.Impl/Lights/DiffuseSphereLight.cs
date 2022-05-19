@@ -40,6 +40,8 @@ public sealed class DiffuseSphereLight : Light
 		DistanceScaleLimit         = distanceScaleLimit;
 		SurfaceDirectionImportance = surfaceDirectionImportance;
 		DistanceImportance         = distanceImportance;
+
+		brightnessBaselineRadiusSquare = brightnessBaselineRadius * brightnessBaselineRadius;
 	}
 
 	/// <summary>Where the light source is located in world-space</summary>
@@ -72,6 +74,8 @@ public sealed class DiffuseSphereLight : Light
 	/// </summary>
 	public float DistanceImportance { get; }
 
+	private readonly float brightnessBaselineRadiusSquare;
+
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
 	{
@@ -84,7 +88,7 @@ public sealed class DiffuseSphereLight : Light
 			if (dot < 0) dot = -dot;                                                           //Backfaces give negative dot product
 			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                      //Account for how much the surface points towards our light
 			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos);                    //Normally formula uses R^2, so don't bother rooting here to save performance
-			float distScale = (BrightnessBaselineRadius * BrightnessBaselineRadius) / distSqr; // Inverse square law
+			float distScale = brightnessBaselineRadiusSquare / distSqr; // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);
 			colour    *= MathUtils.Lerp(1, distScale, DistanceImportance); //Account for inverse square law
 			return colour;

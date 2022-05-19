@@ -36,7 +36,6 @@ public abstract class Light : RenderAccessor
 	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to
 	///  the computed shadow ray
 	/// </summary>
-	[PublicAPI]
 	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay)
 	{
 		//Find ray between the hit and the light
@@ -47,6 +46,5 @@ public abstract class Light : RenderAccessor
 	}
 
 	/// <summary>Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/></summary>
-	[PublicAPI]
 	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _);
 }
