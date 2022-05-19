@@ -3,28 +3,74 @@ using System.Numerics;
 
 namespace RayTracer.Impl.Lights;
 
+//TODO: Combine with DiffuseSphere light and add diffusion parameter
 /// <summary>
 ///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the <see cref="Radius"/> -
 ///  points are randomly chosen inside on sphere centred at <see cref="Position"/> with a radius of <see cref="Radius"/>.
 /// </summary>
-/// <param name="Position">Where the light source is located in world-space</param>
-/// <param name="Colour">Colour of the emitted light</param>
-/// <param name="BrightnessBaselineRadius">The radius at which the brightness is considered baseline (1)</param>
-/// <param name="Radius">How large of an area the light occupies (radius at which points will be chosen for shadow testing)</param>
-/// <param name="DistanceScaleLimit">
-///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
-///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
-/// </param>
-/// <param name="SurfaceDirectionImportance">
-///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
-///  and 1 means the direction is accounted for as normal.
-/// </param>
-/// <param name="DistanceImportance">
-///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
-///  and 1 means the distance is accounted for following the inverse-square law.
-/// </param>
-public sealed record SurfaceSphereLight(Vector3 Position, float Radius, Colour Colour, float BrightnessBaselineRadius, float DistanceScaleLimit = 10f, float SurfaceDirectionImportance = 1f, float DistanceImportance = 1f) : Light
+public sealed class SurfaceSphereLight : Light
 {
+	/// <summary>
+	///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the <see cref="Radius"/> -
+	///  points are randomly chosen inside on sphere centred at <see cref="Position"/> with a radius of <see cref="Radius"/>.
+	/// </summary>
+	/// <param name="position">Where the light source is located in world-space</param>
+	/// <param name="colour">Colour of the emitted light</param>
+	/// <param name="brightnessBaselineRadius">The radius at which the brightness is considered baseline (1)</param>
+	/// <param name="radius">How large of an area the light occupies (radius at which points will be chosen for shadow testing)</param>
+	/// <param name="distanceScaleLimit">
+	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
+	///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
+	/// </param>
+	/// <param name="surfaceDirectionImportance">
+	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
+	///  and 1 means the direction is accounted for as normal.
+	/// </param>
+	/// <param name="distanceImportance">
+	///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
+	///  and 1 means the distance is accounted for following the inverse-square law.
+	/// </param>
+	public SurfaceSphereLight(Vector3 position, float radius, Colour colour, float brightnessBaselineRadius, float distanceScaleLimit = 10f, float surfaceDirectionImportance = 1f, float distanceImportance = 1f)
+	{
+		Position                   = position;
+		Radius                     = radius;
+		Colour                     = colour;
+		BrightnessBaselineRadius   = brightnessBaselineRadius;
+		DistanceScaleLimit         = distanceScaleLimit;
+		SurfaceDirectionImportance = surfaceDirectionImportance;
+		DistanceImportance         = distanceImportance;
+	}
+
+	/// <summary>Where the light source is located in world-space</summary>
+	public Vector3 Position { get;  }
+
+	/// <summary>How large of an area the light occupies (radius at which points will be chosen for shadow testing)</summary>
+	public float Radius { get;  }
+
+	/// <summary>Colour of the emitted light</summary>
+	public Colour Colour { get;  }
+
+	/// <summary>The radius at which the brightness is considered baseline (1)</summary>
+	public float BrightnessBaselineRadius { get;  }
+
+	/// <summary>
+	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
+	///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
+	/// </summary>
+	public float DistanceScaleLimit { get;  }
+
+	/// <summary>
+	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
+	///  and 1 means the direction is accounted for as normal.
+	/// </summary>
+	public float SurfaceDirectionImportance { get;  }
+
+	/// <summary>
+	///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
+	///  and 1 means the distance is accounted for following the inverse-square law.
+	/// </summary>
+	public float DistanceImportance { get;  }
+
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
 	{
