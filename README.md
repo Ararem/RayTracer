@@ -66,3 +66,4 @@ development/debugging only, you probably should just ignore & unload it
 | [Scene](RayTracer.Core/Scene.cs)                                  | Scenes store a record of a group of objects and lights, as well as the camera and skybox                                     |
 | [Light](RayTracer.Core/Base%20Type%20Definitions/Light.cs)        | Lights increase the brightness of a hit, normally by checking shadow rays                                                    |
 | [Render Options](RayTracer.Core/RenderOptions.cs)                 | Stores the settings used when rendering, such as render width/height, and number of passes to render                         |
+| [Builtin Scenes](RayTracer.Impl/BuiltinScenes.cs)                 | Static class containing properties that store pre-made scenes.                                                               |
