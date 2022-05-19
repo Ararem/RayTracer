@@ -26,10 +26,10 @@ public sealed class Sphere : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Centre of the sphere</summary>
-	public Vector3 Centre { get; init; }
+	public Vector3 Centre { get; }
 
 	/// <summary>Radius of the sphere</summary>
-	public float Radius { get; init; }
+	public float Radius { get;}
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

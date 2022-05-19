@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 namespace RayTracer.Core;
 
 /// <summary>A class that defines a material that a <see cref="Hittable"/> can have</summary>
-[UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
 public abstract class Material : RenderAccessor
 {
 	/// <summary>Scatters an input ray, according to this material's properties</summary>

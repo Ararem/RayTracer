@@ -5,7 +5,7 @@ namespace RayTracer.Impl.Skyboxes;
 
 /// <summary>A skybox that is a single colour</summary>
 [PublicAPI]
-public class SingleColourSkyBox : ISkyBox
+public class SingleColourSkyBox : SkyBox
 {
 	/// <summary>A skybox that is a single colour</summary>
 	/// <param name="colour">The colour of the sky</param>
@@ -18,5 +18,5 @@ public class SingleColourSkyBox : ISkyBox
 	public Colour Colour { get; init; }
 
 	/// <inheritdoc/>
-	public virtual Colour GetSkyColour(Ray ray) => Colour;
+	public override Colour GetSkyColour(Ray ray) => Colour;
 }

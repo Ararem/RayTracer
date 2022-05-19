@@ -43,34 +43,34 @@ public sealed class DiffuseSphereLight : Light
 	}
 
 	/// <summary>Where the light source is located in world-space</summary>
-	public Vector3 Position { get; init; }
+	public Vector3 Position { get; }
 
 	/// <summary>How large of an area the light occupies (radius in which points will be chosen for shadow testing)</summary>
-	public float DiffusionRadius { get; init; }
+	public float DiffusionRadius { get; }
 
 	/// <summary>Colour of the emitted light</summary>
-	public Colour Colour { get; init; }
+	public Colour Colour { get; }
 
 	/// <summary>The radius at which the brightness is considered baseline (1)</summary>
-	public float BrightnessBaselineRadius { get; init; }
+	public float BrightnessBaselineRadius { get; }
 
 	/// <summary>
 	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
 	///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
 	/// </summary>
-	public float DistanceScaleLimit { get; init; }
+	public float DistanceScaleLimit { get; }
 
 	/// <summary>
 	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
 	///  and 1 means the direction is accounted for as normal.
 	/// </summary>
-	public float SurfaceDirectionImportance { get; init; }
+	public float SurfaceDirectionImportance { get; }
 
 	/// <summary>
 	///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
 	///  and 1 means the distance is accounted for following the inverse-square law.
 	/// </summary>
-	public float DistanceImportance { get; init; }
+	public float DistanceImportance { get; }
 
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)

@@ -30,22 +30,22 @@ public sealed class XZPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low X value for this plane</summary>
-	public float XLow { get; init; }
+	public float XLow { get;  }
 
 	/// <summary>High X value for this plane</summary>
-	public float XHigh { get; init; }
+	public float XHigh { get;  }
 
 	/// <summary>Low Z value for this plane</summary>
-	public float ZLow { get; init; }
+	public float ZLow { get;  }
 
 	/// <summary>High Z value for this plane</summary>
-	public float ZHigh { get; init; }
+	public float ZHigh { get;  }
 
 	/// <summary>Y value the plane is positioned at</summary>
-	public float Y { get; init; }
+	public float Y { get;  }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
-	public float AABBPadding { get; init; }
+	public float AABBPadding { get;  }
 	private readonly Vector3 centre;
 
 	/// <inheritdoc/>

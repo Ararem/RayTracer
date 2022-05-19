@@ -478,7 +478,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 	// ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 	private readonly Camera        camera;
-	private readonly ISkyBox        skybox;
+	private readonly SkyBox        skybox;
 	private readonly SceneObject[] objects;
 	private readonly Light[]       lights;
 
