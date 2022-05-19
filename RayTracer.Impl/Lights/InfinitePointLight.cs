@@ -7,14 +7,25 @@ namespace RayTracer.Impl.Lights;
 ///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so
 ///  the light will be equally bright at any distance away from it's <see cref="Position"/>
 /// </summary>
-/// <param name="Position">Where the light source is located in world-space</param>
-/// <param name="Colour">Colour of the emitted light</param>
-/// <param name="SurfaceDirectionImportance">
-///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
-///  and 1 means the direction is accounted for as normal.
-/// </param>
-public sealed record InfinitePointLight(Vector3 Position, Colour Colour, float SurfaceDirectionImportance = 1f) : Light
+public sealed class InfinitePointLight : Light
 {
+	/// <summary>
+	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light does not take distance into account, so
+	///  the light will be equally bright at any distance away from it's <see cref="Position"/>
+	/// </summary>
+	/// <param name="position">Where the light source is located in world-space</param>
+	/// <param name="colour">Colour of the emitted light</param>
+	/// <param name="surfaceDirectionImportance">
+	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
+	///  and 1 means the direction is accounted for as normal.
+	/// </param>
+	public InfinitePointLight(Vector3 position, Colour colour, float surfaceDirectionImportance = 1f)
+	{
+		Position                   = position;
+		Colour                     = colour;
+		SurfaceDirectionImportance = surfaceDirectionImportance;
+	}
+
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
 	{
@@ -32,4 +43,17 @@ public sealed record InfinitePointLight(Vector3 Position, Colour Colour, float S
 			return Colour.Black;
 		}
 	}
+
+	/// <summary>Where the light source is located in world-space</summary>
+	public Vector3 Position { get; }
+
+	/// <summary>Colour of the emitted light</summary>
+	public Colour Colour { get; }
+
+	/// <summary>
+	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
+	///  and 1 means the direction is accounted for as normal.
+	/// </summary>
+	public float SurfaceDirectionImportance { get; }
+
 }
