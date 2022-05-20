@@ -6,14 +6,7 @@ using static System.MathF;
 namespace RayTracer.Impl.Textures;
 
 /// <summary>Texture that mimics the appearance of Marble.</summary>
-/// <param name="Scale">How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</param>
-/// <param name="NoiseScale">Same as <see cref="Scale"/>, but only affects the noise pattern</param>
-/// <param name="NoiseStrength">How much the noise contributes to the output colour</param>
-/// <param name="DropoffPower">
-///  Value that controls how much values are biased. Should be &lt;1. Noise values are raised to this power before being processed into a colour.
-///  Increasing this increases the 'sharpness' of the texture and how thin the accent lines are
-/// </param>
-public sealed record MarbleTexture(float Scale = .15f, float NoiseScale = 6f, float NoiseStrength = 3f, float DropoffPower = 1 / 6f) : Texture
+public sealed class MarbleTexture : Texture
 {
 	private static readonly Module Noise =
 			new Perlin
@@ -24,11 +17,42 @@ public sealed record MarbleTexture(float Scale = .15f, float NoiseScale = 6f, fl
 					OctaveCount = 5
 			};
 
+	/// <summary>Texture that mimics the appearance of Marble.</summary>
+	/// <param name="scale">How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</param>
+	/// <param name="noiseScale">Same as <see cref="Scale"/>, but only affects the noise pattern</param>
+	/// <param name="noiseStrength">How much the noise contributes to the output colour</param>
+	/// <param name="dropoffPower">
+	///  Value that controls how much values are biased. Should be &lt;1. Noise values are raised to this power before being processed into a colour.
+	///  Increasing this increases the 'sharpness' of the texture and how thin the accent lines are
+	/// </param>
+	public MarbleTexture(float scale = .15f, float noiseScale = 6f, float noiseStrength = 3f, float dropoffPower = 1 / 6f)
+	{
+		Scale         = scale;
+		NoiseScale    = noiseScale;
+		NoiseStrength = noiseStrength;
+		DropoffPower  = dropoffPower;
+	}
+
 	/// <summary>The texture used for the dark regions of marble (the accent)</summary>
-	public Colour AccentColour { get; init; } = new(0, 0, 0);
+	public Colour AccentColour { get;  } = new(0, 0, 0);
 
 	/// <summary>The texture used for the 'light' sections of marble. Defaults to a slightly warm white</summary>
-	public Colour BaseColour { get; init; } = new(1, 1, .95f);
+	public Colour BaseColour { get;  } = new(1, 1, .95f);
+
+	/// <summary>How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</summary>
+	public float Scale { get;  }
+
+	/// <summary>Same as <see cref="Scale"/>, but only affects the noise pattern</summary>
+	public float NoiseScale { get;  }
+
+	/// <summary>How much the noise contributes to the output colour</summary>
+	public float NoiseStrength { get;  }
+
+	/// <summary>
+	///  Value that controls how much values are biased. Should be &lt;1. Noise values are raised to this power before being processed into a colour.
+	///  Increasing this increases the 'sharpness' of the texture and how thin the accent lines are
+	/// </summary>
+	public float DropoffPower { get;  }
 
 	/// <inheritdoc/>
 	public override Colour GetColour(HitRecord hit)
