@@ -11,7 +11,7 @@ public sealed class PointLight : Light
 {
 	/// <summary>
 	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points
-	///  closer to the light will be brigther
+	///  closer to the light will be brighter
 	/// </summary>
 	/// <param name="position">Where the light source is located in world-space</param>
 	/// <param name="colour">Colour of the emitted light</param>

@@ -22,7 +22,7 @@ public static class BuiltinScenes
 	public static Scene Testing => new(
 			"Testing", Camera.Create(new Vector3(0f, 0f, 5f), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
 			{
-					new("Test", new Quad(new Vector3(0,   0,       0), UnitX, UnitY), new StandardMaterial(Red,              0f)),
+					new("Test", new Quad(new Vector3(0,   0,       0), UnitX, UnitY), new StandardMaterial(Red,              0f))
 					// new("Test", new Sphere(new Vector3(0, 0, 0), .5f), new StandardMaterial(new SolidColourTexture(Red), 0f))
 			},
 			Array.Empty<Light>(),

@@ -36,10 +36,11 @@ public sealed class Quad : Hittable
 	/// </remarks>
 	public Quad(Vector3 origin, Vector3 u, Vector3 v)
 	{
-		Origin            = origin;
-		U                 = u;
-		V                 = v;
-		Normal            = Normalize(Cross(u, v));
+		Origin         = origin;
+		U              = u;
+		V              = v;
+		Normal         = Normalize(Cross(u, v));
+		BoundingVolume = AxisAlignedBoundingBox.Encompass(Origin, Origin + U, Origin + V, Origin + U + V).WithPadding(.0001f);
 
 		//This UV/World space conversion code is essentially just transforming points between two different coordinate systems
 		//So from World Coords (X,Y,Z) ==> Quad (UV) Coords (U,V,N)
@@ -62,9 +63,7 @@ public sealed class Quad : Hittable
 	public Vector3 Normal { get; } //Cross of the two side directions, giving a vector perpendicular to both (which is the normal)
 
 	/// <inheritdoc/>
-	public override AxisAlignedBoundingBox BoundingVolume { get; } = //WARN: Quad AABB is Broken
-		//AxisAlignedBoundingBox.Encompass(A,B,C);
-		AxisAlignedBoundingBox.Infinite;
+	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>The 'origin' point of the quad - the <see cref="U"/> and <see cref="V"/> vectors are treated as originating from this point</summary>
 	public Vector3 Origin { get;  }

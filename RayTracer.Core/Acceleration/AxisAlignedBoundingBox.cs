@@ -108,6 +108,13 @@ public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 		return new AxisAlignedBoundingBox(min, max);
 	}
 
+	/// <summary>
+	/// Returns a copy of this instance with specified extra padding
+	/// </summary>
+	/// <param name="padding"></param>
+	/// <returns></returns>
+	public AxisAlignedBoundingBox WithPadding(float padding) => new (Min - new Vector3(padding), Max + new Vector3(padding));
+
 	/// <summary>Returns an <see cref="AxisAlignedBoundingBox"/> that encompasses all the <paramref name="subBoxes"/></summary>
 	/// <param name="subBoxes">Array of sub boxes to surround</param>
 	/// <returns>An <see cref="AxisAlignedBoundingBox"/> whose volume contains all the <paramref name="subBoxes"/></returns>
