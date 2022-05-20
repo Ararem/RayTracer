@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
@@ -33,12 +34,15 @@ public sealed class Disk : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>The centre of the disk in 3D space</summary>
+	[PublicAPI]
 	public Vector3 Centre { get; }
 
 	/// <summary>Normal direction of the disk</summary>
+	[PublicAPI]
 	public Vector3 Normal { get; }
 
 	/// <summary>How large the radius of the disk is</summary>
+	[PublicAPI]
 	public float Radius { get; }
 
 	/// <inheritdoc/>

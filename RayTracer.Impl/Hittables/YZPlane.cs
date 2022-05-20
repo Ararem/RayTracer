@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
@@ -29,21 +30,27 @@ public sealed class YZPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low Y value for this plane</summary>
-	public float YLow { get; }
+	[PublicAPI]
+public float YLow { get; }
 
 	/// <summary>High Y value for this plane</summary>
-	public float YHigh { get; }
+	[PublicAPI]
+public float YHigh { get; }
 
 	/// <summary>Low Z value for this plane</summary>
-	public float ZLow { get; }
+	[PublicAPI]
+public float ZLow { get; }
 
 	/// <summary>High Z value for this plane</summary>
-	public float ZHigh { get; }
+	[PublicAPI]
+public float ZHigh { get; }
 
 	/// <summary>X value the plane is positioned at</summary>
-	public float X { get; }
+	[PublicAPI]
+public float X { get; }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
+	[PublicAPI]
 	public float AABBPadding { get; }
 
 	/// <inheritdoc/>

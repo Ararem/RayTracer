@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
@@ -32,22 +33,28 @@ public sealed class XZPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low X value for this plane</summary>
-	public float XLow { get; }
+	[PublicAPI]
+public float XLow { get; }
 
 	/// <summary>High X value for this plane</summary>
-	public float XHigh { get; }
+	[PublicAPI]
+public float XHigh { get; }
 
 	/// <summary>Low Z value for this plane</summary>
-	public float ZLow { get; }
+	[PublicAPI]
+public float ZLow { get; }
 
 	/// <summary>High Z value for this plane</summary>
-	public float ZHigh { get; }
+	[PublicAPI]
+public float ZHigh { get; }
 
 	/// <summary>Y value the plane is positioned at</summary>
-	public float Y { get; }
+	[PublicAPI]
+public float Y { get; }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
-	public float AABBPadding { get; }
+	[PublicAPI]
+public float AABBPadding { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

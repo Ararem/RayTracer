@@ -1,5 +1,6 @@
 #region
 
+using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using RayTracer.Impl.Materials;
@@ -53,9 +54,11 @@ public sealed class ConstantDensityMedium : Hittable
 
 
 	/// <summary>How dense the medium is. Higher values increase the change of collision</summary>
+	[PublicAPI]
 	public float Density { get; }
 
 	/// <summary>The 'shape' of this medium. Can be any shape other than a <see cref="ConstantDensityMedium"/></summary>
+	[PublicAPI]
 	public Hittable Boundary { get; }
 
 	/// <inheritdoc/>
