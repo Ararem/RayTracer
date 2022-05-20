@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using RayTracer.Core;
 
 namespace RayTracer.Impl.Textures;
@@ -13,7 +12,6 @@ public sealed class SolidColourTexture : Texture
 	}
 
 	/// <summary>Colour of the texture</summary>
-	[PublicAPI]
 	public Colour Colour { get; }
 
 	/// <inheritdoc/>
