@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core;
 using RayTracer.Core.Acceleration;
 using System.Numerics;
@@ -14,7 +15,6 @@ namespace RayTracer.Impl.Hittables;
 public sealed class Quad : Hittable
 {
 	private readonly Matrix4x4 localToQuadMatrix;
-	private readonly float     negPointDotNormal;
 
 	/// <summary>
 	///  Creates a new quad using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these
@@ -40,7 +40,6 @@ public sealed class Quad : Hittable
 		U                 = u;
 		V                 = v;
 		Normal            = Normalize(Cross(u, v));
-		negPointDotNormal = -Dot(Origin, Normal);
 
 		//This UV/World space conversion code is essentially just transforming points between two different coordinate systems
 		//So from World Coords (X,Y,Z) ==> Quad (UV) Coords (U,V,N)
@@ -73,10 +72,12 @@ public sealed class Quad : Hittable
 	/// <summary>
 	/// The side vector of the first side of the quad
 	/// </summary>
+	[PublicAPI]
 	public Vector3 U { get;  }
 	/// <summary>
 	/// The side vector of the second side of the quad
 	/// </summary>
+	[PublicAPI]
 	public Vector3 V { get;  }
 
 	/// <summary>Creates a new quad from three points, as opposed to a point and two directions</summary>
@@ -99,7 +100,8 @@ public sealed class Quad : Hittable
 		else
 		{
 			//Find intersection normally
-			t = (Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
+			//Note to future me: DON'T OPTIMISE LIKE WITH OTHER PLANAR SHAPES, IT DOESN'T WORK
+			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
 		}
 
 		//Assert K ranges
@@ -117,7 +119,7 @@ public sealed class Quad : Hittable
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null;
 
-		Vector2 uv      = new(u, v);
+		Vector2 uv      = new (u, v) ;
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
 
 		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
@@ -136,7 +138,7 @@ public sealed class Quad : Hittable
 		else
 		{
 			//Find intersection normally
-			t = (Dot(ray.Origin, Normal) + negPointDotNormal) / normDotDir;
+			t = -Dot(Normal, ray.Origin - Origin) / normDotDir;
 		}
 
 		//Assert K ranges

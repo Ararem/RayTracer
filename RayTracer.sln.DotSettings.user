@@ -9,7 +9,7 @@
   &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Private.CoreLib.dll" /&gt;
   &lt;Assembly Path="/home/rowan/.nuget/packages/sixlabors.imagesharp/1.0.4/lib/netcoreapp3.1/SixLabors.ImageSharp.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=4dabaa2e_002Ddd3e_002D46aa_002D9a63_002Df16d1810c18f_0023RayTracer_002EDisplay_002EEtoForms/@EntryIndexedValue">True</s:Boolean>
+	
 	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=86809c08_002Db10a_002D4aa2_002D8893_002D6e04eabadba4_0023RayTracer_002EDisplay_002ESpectreConsole/@EntryIndexedValue">True</s:Boolean>
 	
 	
