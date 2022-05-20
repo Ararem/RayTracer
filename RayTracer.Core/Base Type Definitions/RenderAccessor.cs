@@ -1,6 +1,9 @@
+using JetBrains.Annotations;
+
 namespace RayTracer.Core;
 
 /// <summary>Interface defining an object that requires access to a renderer</summary>
+[PublicAPI]
 public abstract class RenderAccessor
 {
 	/// <summary>Accessor for the current renderer</summary>

@@ -1,7 +1,10 @@
+using JetBrains.Annotations;
+
 namespace RayTracer.Core.Acceleration;
 
 /// <summary>Interface defining a node on a <see cref="BvhTree"/></summary>
 /// <param name="RenderStats">Render statistics used to track things...</param>
+[PublicAPI]
 public abstract record BvhNode(RenderStats RenderStats)
 {
 	/// <summary>Bounding box that encompasses this <see cref="BvhNode"/> and all it's children nodes (if any)</summary>

@@ -1,6 +1,9 @@
+using JetBrains.Annotations;
+
 namespace RayTracer.Core;
 
 /// <summary>Base class for a texture</summary>
+[PublicAPI]
 public abstract class Texture
 {
 	/// <summary>Gets the colour value for a pixel</summary>

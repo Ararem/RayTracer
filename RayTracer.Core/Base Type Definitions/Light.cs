@@ -1,8 +1,10 @@
+using JetBrains.Annotations;
 using System.Numerics;
 
 namespace RayTracer.Core;
 
 /// <summary>Base class that defines a light that can be used to calculate lighting more accurately in the scene</summary>
+[PublicAPI]
 public abstract class Light : RenderAccessor
 {
 	/// <summary>Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/></summary>

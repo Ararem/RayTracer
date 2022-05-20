@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Numerics;
 
 namespace RayTracer.Core.Acceleration;
@@ -8,6 +9,7 @@ namespace RayTracer.Core.Acceleration;
 /// </summary>
 /// <param name="Min">First corner of the box</param>
 /// <param name="Max">Second corner of the box</param>
+[PublicAPI]
 public sealed record AxisAlignedBoundingBox(Vector3 Min, Vector3 Max)
 {
 	/// <summary>An <see cref="AxisAlignedBoundingBox"/> that represents an unbounded AABB</summary>

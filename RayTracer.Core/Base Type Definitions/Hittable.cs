@@ -1,9 +1,11 @@
+using JetBrains.Annotations;
 using RayTracer.Core.Acceleration;
 
 namespace RayTracer.Core;
 
 /// <summary>Base class for a hittable. Represents the surface/structure of a render-able object.</summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
+[PublicAPI]
 public abstract class Hittable : RenderAccessor
 {
 	/// <summary>Bounding volume that encompasses this object</summary>
