@@ -12,13 +12,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-	  <DebugSymbols>true</DebugSymbols>
-	  <DebugType>full</DebugType>
-	  <DocumentationFile>bin\Release\net6.0\RayTracer.Impl.xml</DocumentationFile>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<DocumentationFile>bin\Release\net6.0\RayTracer.Impl.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 </Project>

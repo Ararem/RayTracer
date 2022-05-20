@@ -11,18 +11,14 @@ public sealed class SolidColourTexture : Texture
 		Colour = colour;
 	}
 
-	/// <summary>
-	/// Colour of the texture
-	/// </summary>
+	/// <summary>Colour of the texture</summary>
 	public Colour Colour { get; }
 
 	/// <inheritdoc/>
 	public override Colour GetColour(HitRecord _) => Colour;
 
-	/// <summary>
-	/// Converts a colour to a solid texture of that colour
-	/// </summary>
+	/// <summary>Converts a colour to a solid texture of that colour</summary>
 	/// <param name="colour"></param>
 	/// <returns></returns>
-	public static implicit operator SolidColourTexture(Colour colour) => new (colour);
+	public static implicit operator SolidColourTexture(Colour colour) => new(colour);
 }

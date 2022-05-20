@@ -52,13 +52,13 @@ public sealed class StandardMaterial : Material
 	}
 
 	/// <summary>The albedo (colour) texture of this material</summary>
-	public Texture Albedo { get;  }
+	public Texture Albedo { get; }
 
 	/// <summary>The texture used for the light this material emits</summary>
-	public Texture Emission { get;  }
+	public Texture Emission { get; }
 
 	/// <summary>How 'diffuse' (random) the reflected rays are. Settings this to 0 means perfect reflections, 1 means completely diffuse</summary>
-	public float Diffusion { get;  }
+	public float Diffusion { get; }
 
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)

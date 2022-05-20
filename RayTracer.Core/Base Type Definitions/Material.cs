@@ -1,5 +1,3 @@
-using JetBrains.Annotations;
-
 namespace RayTracer.Core;
 
 /// <summary>A class that defines a material that a <see cref="Hittable"/> can have</summary>

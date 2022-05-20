@@ -34,10 +34,10 @@ public sealed class EmissiveRefractiveMaterial : RefractiveMaterial
 	}
 
 	/// <summary>Texture for the colour of the emitted light</summary>
-	public Texture Emission { get;  }
+	public Texture Emission { get; }
 
 	/// <summary>Option for enabling direct emission (see remarks)</summary>
-	public bool DirectEmission { get;  }
+	public bool DirectEmission { get; }
 
 	/// <inheritdoc/>
 	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)

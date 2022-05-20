@@ -25,15 +25,13 @@ public class RefractiveMaterial : Material
 	}
 
 	/// <summary>Refractive index of the material to simulate</summary>
-	public float RefractiveIndex { get;  }
+	public float RefractiveIndex { get; }
 
 	/// <summary>Texture to tint the rays by</summary>
-	public Texture Tint { get;  }
+	public Texture Tint { get; }
 
-	/// <summary>
-	/// Optional flag that enables an alternate mode of calculating refractions
-	/// </summary>
-	public bool AlternateRefractionMode { get;  }
+	/// <summary>Optional flag that enables an alternate mode of calculating refractions</summary>
+	public bool AlternateRefractionMode { get; }
 
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit)

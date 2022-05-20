@@ -4,12 +4,14 @@ using System.Numerics;
 namespace RayTracer.Impl.Lights;
 
 /// <summary>
-///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points closer to the light will be brigther
+///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points
+///  closer to the light will be brigther
 /// </summary>
 public sealed class PointLight : Light
 {
 	/// <summary>
-	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points closer to the light will be brigther
+	///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points
+	///  closer to the light will be brigther
 	/// </summary>
 	/// <param name="position">Where the light source is located in world-space</param>
 	/// <param name="colour">Colour of the emitted light</param>
@@ -37,31 +39,31 @@ public sealed class PointLight : Light
 	}
 
 	/// <summary>Where the light source is located in world-space</summary>
-	public Vector3 Position { get;  }
+	public Vector3 Position { get; }
 
 	/// <summary>Colour of the emitted light</summary>
-	public Colour Colour { get;  }
+	public Colour Colour { get; }
 
 	/// <summary>Radius of the light (distance at which brightness is 100%)</summary>
-	public float Radius { get;  }
+	public float Radius { get; }
 
 	/// <summary>
 	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
 	///  realistic (as it follows nature better), but it can cause scene noise from excessively bright pixels being reflected.
 	/// </summary>
-	public float DistanceScaleLimit { get;  }
+	public float DistanceScaleLimit { get; }
 
 	/// <summary>
 	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
 	///  and 1 means the direction is accounted for as normal.
 	/// </summary>
-	public float SurfaceDirectionImportance { get;  }
+	public float SurfaceDirectionImportance { get; }
 
 	/// <summary>
 	///  Value that affects how important it is for the surface to be close to the light source ([0...1]). 0 means the distance is not taken into account,
 	///  and 1 means the distance is accounted for following the inverse-square law.
 	/// </summary>
-	public float DistanceImportance { get;  }
+	public float DistanceImportance { get; }
 
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
@@ -84,5 +86,4 @@ public sealed class PointLight : Light
 			return Colour.Black;
 		}
 	}
-
 }

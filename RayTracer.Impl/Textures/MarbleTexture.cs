@@ -34,25 +34,25 @@ public sealed class MarbleTexture : Texture
 	}
 
 	/// <summary>The texture used for the dark regions of marble (the accent)</summary>
-	public Colour AccentColour { get;  } = new(0, 0, 0);
+	public Colour AccentColour { get; } = new(0, 0, 0);
 
 	/// <summary>The texture used for the 'light' sections of marble. Defaults to a slightly warm white</summary>
-	public Colour BaseColour { get;  } = new(1, 1, .95f);
+	public Colour BaseColour { get; } = new(1, 1, .95f);
 
 	/// <summary>How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</summary>
-	public float Scale { get;  }
+	public float Scale { get; }
 
 	/// <summary>Same as <see cref="Scale"/>, but only affects the noise pattern</summary>
-	public float NoiseScale { get;  }
+	public float NoiseScale { get; }
 
 	/// <summary>How much the noise contributes to the output colour</summary>
-	public float NoiseStrength { get;  }
+	public float NoiseStrength { get; }
 
 	/// <summary>
 	///  Value that controls how much values are biased. Should be &lt;1. Noise values are raised to this power before being processed into a colour.
 	///  Increasing this increases the 'sharpness' of the texture and how thin the accent lines are
 	/// </summary>
-	public float DropoffPower { get;  }
+	public float DropoffPower { get; }
 
 	/// <inheritdoc/>
 	public override Colour GetColour(HitRecord hit)

@@ -7,6 +7,8 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>A plane that spans a region along the XZ plane</summary>
 public sealed class XZPlane : Hittable
 {
+	private readonly Vector3 centre;
+
 	/// <summary>A plane that spans a region along the XZ plane</summary>
 	/// <param name="xLow">Low X value for this plane</param>
 	/// <param name="xHigh">High X value for this plane</param>
@@ -30,23 +32,22 @@ public sealed class XZPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low X value for this plane</summary>
-	public float XLow { get;  }
+	public float XLow { get; }
 
 	/// <summary>High X value for this plane</summary>
-	public float XHigh { get;  }
+	public float XHigh { get; }
 
 	/// <summary>Low Z value for this plane</summary>
-	public float ZLow { get;  }
+	public float ZLow { get; }
 
 	/// <summary>High Z value for this plane</summary>
-	public float ZHigh { get;  }
+	public float ZHigh { get; }
 
 	/// <summary>Y value the plane is positioned at</summary>
-	public float Y { get;  }
+	public float Y { get; }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
-	public float AABBPadding { get;  }
-	private readonly Vector3 centre;
+	public float AABBPadding { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

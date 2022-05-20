@@ -29,7 +29,7 @@ public sealed class Sphere : Hittable
 	public Vector3 Centre { get; }
 
 	/// <summary>Radius of the sphere</summary>
-	public float Radius { get;}
+	public float Radius { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

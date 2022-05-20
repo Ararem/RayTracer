@@ -8,11 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.13.1"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 </Project>

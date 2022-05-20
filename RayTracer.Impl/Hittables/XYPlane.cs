@@ -7,6 +7,8 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>A plane that spans a region along the XY plane</summary>
 public sealed class XYPlane : Hittable
 {
+	private readonly Vector3 centre;
+
 	/// <summary>Creates a new plane from the specified corner points</summary>
 	/// <param name="xLow">Low X value for this plane</param>
 	/// <param name="xHigh">High X value for this plane</param>
@@ -30,24 +32,22 @@ public sealed class XYPlane : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Low X value for this plane</summary>
-	public float XLow { get;  }
+	public float XLow { get; }
 
 	/// <summary>High X value for this plane</summary>
-	public float XHigh { get;  }
+	public float XHigh { get; }
 
 	/// <summary>Low Y value for this plane</summary>
-	public float YLow { get;  }
+	public float YLow { get; }
 
 	/// <summary>High Y value for this plane</summary>
-	public float YHigh { get;  }
+	public float YHigh { get; }
 
 	/// <summary>Z value the plane is positioned at</summary>
-	public float Z { get;  }
+	public float Z { get; }
 
 	/// <summary>How much to pad the computed AABB by (since the plane is infinitely thin)</summary>
-	public float AABBPadding { get;  }
-
-	private readonly Vector3 centre;
+	public float AABBPadding { get; }
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)

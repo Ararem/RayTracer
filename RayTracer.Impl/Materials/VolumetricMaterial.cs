@@ -20,9 +20,7 @@ public sealed class VolumetricMaterial : Material
 		Albedo = albedo;
 	}
 
-	/// <summary>
-	/// Colour of the material
-	/// </summary>
+	/// <summary>Colour of the material</summary>
 	public Colour Albedo { get; }
 
 	/// <inheritdoc/>

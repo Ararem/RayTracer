@@ -9,6 +9,7 @@ Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical co
 
 
 ```
+
 |        Method |        Job | Toolchain |     Mean |     Error |    StdDev |
 |-------------- |----------- |---------- |---------:|----------:|----------:|
 |       Method1 | DefaultJob |   Default | 2.131 ns | 0.0774 ns | 0.1134 ns |

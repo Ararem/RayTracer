@@ -9,6 +9,9 @@ namespace RayTracer.Impl.Hittables;
 /// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 public sealed class Disk : Hittable
 {
+	/// <summary>-Dot(<see cref="Centre"/>, <see cref="Normal"/>)</summary>
+	private readonly float negCentreDotNorm;
+
 	private readonly float radiusSqr;
 
 	/// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
@@ -37,11 +40,6 @@ public sealed class Disk : Hittable
 
 	/// <summary>How large the radius of the disk is</summary>
 	public float Radius { get; }
-
-	/// <summary>
-	///-Dot(<see cref="Centre"/>, <see cref="Normal"/>)
-	/// </summary>
-	private readonly float negCentreDotNorm;
 
 	/// <inheritdoc/>
 	//TODO: Disk UV's

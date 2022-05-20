@@ -26,6 +26,18 @@ public sealed class InfinitePointLight : Light
 		SurfaceDirectionImportance = surfaceDirectionImportance;
 	}
 
+	/// <summary>Where the light source is located in world-space</summary>
+	public Vector3 Position { get; }
+
+	/// <summary>Colour of the emitted light</summary>
+	public Colour Colour { get; }
+
+	/// <summary>
+	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
+	///  and 1 means the direction is accounted for as normal.
+	/// </summary>
+	public float SurfaceDirectionImportance { get; }
+
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
 	{
@@ -43,17 +55,4 @@ public sealed class InfinitePointLight : Light
 			return Colour.Black;
 		}
 	}
-
-	/// <summary>Where the light source is located in world-space</summary>
-	public Vector3 Position { get; }
-
-	/// <summary>Colour of the emitted light</summary>
-	public Colour Colour { get; }
-
-	/// <summary>
-	///  Value that affects how important it is for the surface to point towards the light source ([0...1]). 0 means the direction is not taken into account,
-	///  and 1 means the direction is accounted for as normal.
-	/// </summary>
-	public float SurfaceDirectionImportance { get; }
-
 }

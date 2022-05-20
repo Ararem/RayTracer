@@ -13,8 +13,8 @@ namespace RayTracer.Impl.Hittables;
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
 public sealed class Quad : Hittable
 {
-	private Matrix4x4 localToQuadMatrix;
-	private float     negPointDotNormal;
+	private readonly Matrix4x4 localToQuadMatrix;
+	private readonly float     negPointDotNormal;
 
 	/// <summary>
 	///  Creates a new quad using an origin (<see cref="Origin"/>) point, and two vectors (<see cref="U"/>, <see cref="V"/>) for the sides of the quad (these

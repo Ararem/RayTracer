@@ -10,6 +10,8 @@ namespace RayTracer.Impl.Lights;
 /// </summary>
 public sealed class DiffuseSphereLight : Light
 {
+	private readonly float brightnessBaselineRadiusSquare;
+
 	/// <summary>
 	///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the
 	///  <see cref="DiffusionRadius"/> - points are randomly chosen inside a sphere centred at <see cref="Position"/> with a radius of
@@ -74,8 +76,6 @@ public sealed class DiffuseSphereLight : Light
 	/// </summary>
 	public float DistanceImportance { get; }
 
-	private readonly float brightnessBaselineRadiusSquare;
-
 	/// <inheritdoc/>
 	public override Colour CalculateLight(HitRecord hit)
 	{
@@ -85,10 +85,10 @@ public sealed class DiffuseSphereLight : Light
 		{
 			Colour colour    = Colour;
 			float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
-			if (dot < 0) dot = -dot;                                                           //Backfaces give negative dot product
-			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);                      //Account for how much the surface points towards our light
-			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos);                    //Normally formula uses R^2, so don't bother rooting here to save performance
-			float distScale = brightnessBaselineRadiusSquare / distSqr; // Inverse square law
+			if (dot < 0) dot = -dot;                                        //Backfaces give negative dot product
+			colour *= MathUtils.Lerp(1, dot, SurfaceDirectionImportance);   //Account for how much the surface points towards our light
+			float distSqr   = Vector3.DistanceSquared(hit.WorldPoint, pos); //Normally formula uses R^2, so don't bother rooting here to save performance
+			float distScale = brightnessBaselineRadiusSquare / distSqr;     // Inverse square law
 			distScale =  MathF.Min(distScale, DistanceScaleLimit);
 			colour    *= MathUtils.Lerp(1, distScale, DistanceImportance); //Account for inverse square law
 			return colour;

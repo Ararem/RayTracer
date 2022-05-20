@@ -12,6 +12,8 @@ namespace RayTracer.Impl.Hittables;
 /// </remarks>
 public sealed class InfinitePlane : Hittable
 {
+	private readonly float negPointDotNormal;
+
 	/// <summary>A 2D Plane in 3D space.</summary>
 	/// <param name="point">A point on the plane</param>
 	/// <param name="normal">Normal of the plane</param>
@@ -30,8 +32,6 @@ public sealed class InfinitePlane : Hittable
 
 	/// <summary>Normal of the plane</summary>
 	public Vector3 Normal { get; }
-
-	private float negPointDotNormal;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
