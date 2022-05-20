@@ -5,12 +5,7 @@ public enum GraphicsErrorType
 {
 	/// <summary>Surface normals for an object had an incorrect magnitude (Magnitude should always be 1)</summary>
 	/// <remarks>Indicates an error with the <see cref="Hittable.TryHit"/> method's normal calculation code</remarks>
-	/// <seealso cref="RayDirectionWrongMagnitude"/>
 	NormalsWrongMagnitude,
-
-	/// <summary>The<see cref="Ray.Direction"/> of a <see cref="Ray"/> has a magnitude not equal to 1</summary>
-	/// <seealso cref="NormalsWrongMagnitude"/>
-	RayDirectionWrongMagnitude,
 
 	/// <summary>Given UV coordinates were not valid</summary>
 	UVInvalid,
