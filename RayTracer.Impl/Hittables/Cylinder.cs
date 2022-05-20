@@ -18,11 +18,8 @@ public sealed class Cylinder : Hittable
 	/// <summary><see cref="p2MinusP1"/> dotted with itself</summary>
 	private readonly float p2MinusP1Dot2;
 
-	/// <summary><see cref="radiusSquare"/> * <see cref="p2MinusP1Dot2"/></summary>
+	/// <summary><see cref="Radius"/>^2 * <see cref="p2MinusP1Dot2"/></summary>
 	private readonly float radiusSqrTimesP2P1Dot2;
-
-	/// <summary><see cref="Radius"/> squared</summary>
-	private readonly float radiusSquare;
 
 	/// <summary>A cylinder, defined by two points and a radius around the line segments of those points</summary>
 	/// <param name="p1">The point defining one of the ends of the cylinder</param>
@@ -39,8 +36,7 @@ public sealed class Cylinder : Hittable
 		//Cached vars
 		p2MinusP1              = P2 - P1;
 		p2MinusP1Dot2          = Dot(p2MinusP1, p2MinusP1);
-		radiusSquare           = Radius       * Radius;
-		radiusSqrTimesP2P1Dot2 = radiusSquare * p2MinusP1Dot2;
+		radiusSqrTimesP2P1Dot2 = Radius * Radius * p2MinusP1Dot2;
 	}
 
 	/// <inheritdoc/>

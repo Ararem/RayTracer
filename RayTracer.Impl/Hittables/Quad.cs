@@ -67,11 +67,17 @@ public sealed class Quad : Hittable
 		//AxisAlignedBoundingBox.Encompass(A,B,C);
 		AxisAlignedBoundingBox.Infinite;
 
-	/// <summary>The 'origin' point of the quad -</summary>
-	public Vector3 Origin { get; init; }
+	/// <summary>The 'origin' point of the quad - the <see cref="U"/> and <see cref="V"/> vectors are treated as originating from this point</summary>
+	public Vector3 Origin { get;  }
 
-	public Vector3 U { get; init; }
-	public Vector3 V { get; init; }
+	/// <summary>
+	/// The side vector of the first side of the quad
+	/// </summary>
+	public Vector3 U { get;  }
+	/// <summary>
+	/// The side vector of the second side of the quad
+	/// </summary>
+	public Vector3 V { get;  }
 
 	/// <summary>Creates a new quad from three points, as opposed to a point and two directions</summary>
 	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
