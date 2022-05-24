@@ -38,7 +38,6 @@ public sealed class DiffuseSphereLight : Light
 		Position                   = position;
 		DiffusionRadius            = diffusionRadius;
 		Colour                     = colour;
-		BrightnessBaselineRadius   = brightnessBaselineRadius;
 		DistanceScaleLimit         = distanceScaleLimit;
 		SurfaceDirectionImportance = surfaceDirectionImportance;
 		DistanceImportance         = distanceImportance;
@@ -54,9 +53,6 @@ public sealed class DiffuseSphereLight : Light
 
 	/// <summary>Colour of the emitted light</summary>
 	public Colour Colour { get; }
-
-	/// <summary>The radius at which the brightness is considered baseline (1)</summary>
-	public float BrightnessBaselineRadius { get; }
 
 	/// <summary>
 	///  Limit for how large the brightness increase can get when very close to the light source. Having this at a higher value means the scene is more
