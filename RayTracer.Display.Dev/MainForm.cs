@@ -202,9 +202,10 @@ public sealed class MainForm : Form
 				));
 
 		await renderJob.StartOrGetRenderAsync();
+		await Task.Delay(3000);
 	}
 
-	private static int UpdatePeriod => 1000 / 20; //20 FPS
+	private static int UpdatePeriod => 1000 / 60; //60 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the
