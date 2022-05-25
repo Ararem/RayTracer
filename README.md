@@ -49,6 +49,10 @@ are passed in via command line arguments (run with `--help` to see them), scene 
 Same as [RayTracer.Display.SpectreConsole](#raytracerdisplayspectreconsole) but with a proper GUI. Render options and scene are selected using GUI
 controls shown when the app starts. Also implements a logger to the console.
 
+### RayTracer.Display.Dev
+
+A copy of [RayTracer.Display.EtoForms](#raytracerdisplayetoforms) but modified for ease of development. It's meant to be hardcoded and modifiable at runtime through [Hot Reload](https://devblogs.microsoft.com/dotnet/introducing-net-hot-reload/). You'll probably only want to use this when you're prototyping/designing implementations of hittables, materials, etc.
+
 ### RayTracer.Benchmarks
 
 A not-very used project that I use (rarely) to test multiple ways of doing something to see which is the most efficient/fastest. This is for

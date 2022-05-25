@@ -1,0 +1,39 @@
+﻿<Project Sdk="Eto.Forms/2.6.1">
+
+	<!--
+	  Set the BuildPlatform property to the Eto platform you wish to build for.
+	  The default is the platform you are building on.
+	  Valid values: Wpf, Windows, Mac64, XamMac2, Gtk, Direct2D
+	-->
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ApplicationIcon>Appearance/icon.ico</ApplicationIcon>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Appearance\icon.png" />
+		<EmbeddedResource Include="Appearance\icon.png" />
+		<None Remove="Appearance\icon.ico" />
+		<EmbeddedResource Include="Appearance\icon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Impl\RayTracer.Impl.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.2" />
+		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9" />
+		<PackageReference Include="Serilog" Version="2.10.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+		<PackageReference Include="NetFabric.Hyperlinq.Analyzer" Version="2.0.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>
