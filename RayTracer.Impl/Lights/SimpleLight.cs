@@ -1,12 +1,14 @@
 using JetBrains.Annotations;
 using RayTracer.Core;
 using System.Numerics;
+using static System.MathF;
 
 namespace RayTracer.Impl.Lights;
 
 //TODO: Cone/Spot lights
 /// <summary>
-/// Simple light that can be coloured, positioned and have it's brightness falloff adjusted. Supports overriding for diffuse lights that cover a volume
+///  Simple light that can be coloured, positioned and have it's brightness falloff adjusted. Supports overriding for diffuse lights that cover a
+///  volume
 /// </summary>
 public class SimpleLight : Light
 {
@@ -18,10 +20,43 @@ public class SimpleLight : Light
 
 	/// <summary>How large of a radius the light should illuminate</summary>
 	/// <remarks>
-	///  The exact way this is used depends on what function is used to calculate attenuation (see <see cref="DistanceAttenuationFunc"/>). By convention however, the
-	///  light <i>should</i> be significantly attenuated after this point to the point where it is not noticeable
+	///  The exact way this is used depends on what function is used to calculate attenuation (see <see cref="DistanceAttenuationFunc"/>). By convention
+	///  however, the light <i>should</i> be significantly attenuated after this point to the point where it is not noticeable
 	/// </remarks>
 	public float Radius { get; init; } = 1f;
+
+	/// <summary>Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.</summary>
+	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
+	[PublicAPI]
+	public virtual Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
+
+	/// <inheritdoc/>
+	public override Colour CalculateLight(HitRecord hit)
+	{
+		//Choose a point to test for intersection
+		//Only applicable to diffuse lights, but doesn't harm point lights
+		Vector3 pointToCheck = ChooseIntersectTestPosition(hit);
+
+		//Check intersection
+		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay, out float distance);
+		if (intersection) return Colour.Black;      //Another object blocks the light ray
+		if (distance > Radius) return Colour.Black; //Outside the radius of the light
+
+		Colour colour = Colour;
+
+		//Account for how much the surface points towards our light
+		float dot        = Vector3.Dot(shadowRay.Direction, hit.Normal);
+		if (dot < 0) dot = -dot; //Backfaces give negative dot product
+		// dot = MathUtils.Lerp(1, dot, SurfaceDirectionImportance);
+		colour *= dot;
+
+		//Also account for distance attenuation
+		float normalisedDist = distance / Radius;
+		float distScale      = DistanceAttenuationFunc(this, normalisedDist);
+		colour *= distScale;
+
+		return colour;
+	}
 
 	// /// <summary>
 	// /// Float parameter that controls how important it is for the
@@ -31,58 +66,55 @@ public class SimpleLight : Light
 
 #region Attenuation things
 
-	/// <summary>Attenuation goes from [<c>0..1</c>] linearly for <c>d=[0..Radius]</c></summary>
+	/// <summary>Attenuation goes from [<c>0..1</c>] linearly for <c>d=[0..1]</c></summary>
 	[PublicAPI]
-	public static DistanceAttenuationDelegate LinearDistanceAttenuation() => static delegate(SimpleLight light, float distance)
-	{
-		//Simple linear y=mx+c curve going through (0,1) and (Radius, 0)
-		float attenuation = 1 - (distance / light.Radius);
-		attenuation = MathF.Max(attenuation, 0); //Make sure it stays above 0 so we don't get -ve light
-		return attenuation;
-	};
+	public static DistanceAttenuationDelegate LinearDistanceAttenuation() => static (_, normDist) => 1 - normDist;
 
-	public static DistanceAttenuationDelegate
+	/// <summary>Returns an attenuation delegate that drops off using a power.</summary>
+	/// <param name="power">The power the function is raised to - controls the sharpness of the dropoff</param>
+	/// <param name="stayHighInitially">
+	///  Whether the function should initially stay high before sharply dropping off, or if it should drop off initially then
+	///  stay relatively stable.
+	/// </param>
+	/// <footer>
+	///  <a href="https://www.desmos.com/calculator/6ijnkp3k36">Demo on desmos</a>
+	/// </footer>
+	[PublicAPI]
+	public static DistanceAttenuationDelegate PowerDistanceAttenuation(float power, bool stayHighInitially = false)
+	{
+		// ReSharper disable CommentTypo
+		if (!stayHighInitially)
+			return (_, normDist) => Pow(1 - normDist, power); //\left(1-x\right)^{z}
+		else
+			return (_, normDist) => 1 - Pow(normDist, power); //1-\left(x\right)^{z}
+		// ReSharper restore CommentTypo
+	}
+
+	/// <summary>Simplified form of the logistics curve</summary>
+	/// <param name="steepness">Steepness of the curve</param>
+	/// <param name="midpoint">Midpoint of the curve</param>
+	/// <footer>
+	///  <a href="https://www.desmos.com/calculator/knlg7ab2t0">Demo on desmos</a>
+	/// </footer>
+	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float midpoint, float steepness) => (_, normDist) => 1f / (1 + Pow(E, steepness * (normDist - midpoint)));
+
+	/// <summary>Standard form of the logistics curve</summary>
+	/// <param name="l">Maximum value of the curve</param>
+	/// <param name="k">Steepness of the curve</param>
+	/// <param name="x0">Midpoint of the curve</param>
+	/// <footer>
+	///  <a href="https://www.desmos.com/calculator/knlg7ab2t0">Demo on desmos</a>
+	/// </footer>
+	[PublicAPI]
+	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float l, float k, float x0) => (_, normDist) => l / (1f + Pow(E, -k * (normDist - x0)));
 
 	/// <inheritdoc cref="DistanceAttenuationDelegate"/>
 	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = LinearDistanceAttenuation();
 
-	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="distance"/></summary>
-	public delegate float DistanceAttenuationDelegate(SimpleLight light, float distance);
+	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="normDistance"/></summary>
+	/// <param name="light">Light object</param>
+	/// <param name="normDistance">Normalized <c>[0...1]</c> distance between the light and the point</param>
+	public delegate float DistanceAttenuationDelegate(SimpleLight light, float normDistance);
 
 #endregion
-
-	/// <summary>
-	/// Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.
-	/// </summary>
-	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
-	public virtual Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
-
-	/// <inheritdoc />
-	public override Colour CalculateLight(HitRecord hit)
-	{
-		//Choose a point to test for intersection
-		//Only applicable to diffuse lights, but doesn't harm point lights
-		Vector3 pointToCheck = ChooseIntersectTestPosition(hit);
-
-		//Check intersection
-		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay, out float distance);
-		if(intersection) return Colour.Black; //Another object blocks the light ray
-		if(distance > Radius) return  Colour.Black; //Outside the radius of the light
-
-		Colour colour    = Colour;
-
-		//Account for how much the surface points towards our light
-		float  dot       = Vector3.Dot(shadowRay.Direction, hit.Normal);
-		if (dot < 0) dot = -dot;                                        //Backfaces give negative dot product
-		// dot = MathUtils.Lerp(1, dot, SurfaceDirectionImportance);
-		colour *= dot;
-
-		//Also account for distance attenuation
-		float dist           = Vector3.Distance(hit.WorldPoint, pointToCheck);
-		float normalisedDist = dist / Radius;
-		float distScale      = DistanceAttenuationFunc(this, normalisedDist);
-		colour *= distScale;
-
-		return colour;
-	}
 }

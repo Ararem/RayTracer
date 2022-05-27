@@ -42,16 +42,8 @@ public static class BuiltinScenes
 							{
 									Position                = new Vector3(555 /2f),
 									Colour                  = White,
-									Radius                  = 500f,
-									#if !true
-									DistanceAttenuationFunc = SimpleLight.InverseSquareDistanceAttenuation(
-											(float)0.0000656931581298,
-											(float)0,
-											(float)0.999946350027
-											)
-									#else
-									DistanceAttenuationFunc=SimpleLight.LinearDistanceAttenuation()
-#endif
+									Radius                  = 350f,
+									DistanceAttenuationFunc=SimpleLight.PowerDistanceAttenuation(2f)
 							}
 					},
 					new SingleColourSkyBox(Black)
