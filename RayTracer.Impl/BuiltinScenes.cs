@@ -19,15 +19,45 @@ namespace RayTracer.Impl;
 public static class BuiltinScenes
 {
 	/// <summary>Testing scene</summary>
-	public static Scene Testing => new(
-			"Testing", Camera.Create(new Vector3(0f, 0f, 5f), Zero, UnitY, 90, 16f / 9f, 0f, 7f), new SceneObject[]
-			{
-					new("Test", new Quad(new Vector3(0,   0,       0), UnitX, UnitY), new StandardMaterial(Red,              0f)),
-					new("Test", new Sphere(new Vector3(0, 0, 0), .5f), new StandardMaterial(new SolidColourTexture(Red), 0f))
-			},
-			Array.Empty<Light>(),
-			new DefaultSkyBox()
-	);
+	public static Scene Testing
+	{
+		get
+		{
+			Material greyWallMaterial = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f);
+			return new Scene(
+					"Cornell Box", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
+					{
+							new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.5f,   0.1f, 0.1f), 1f)),
+							new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.1f, 0.5f, 0.1f), 1f)),
+							new("Back", new XYPlane(0, 555, 0, 555, 555), greyWallMaterial),
+							new("Top", new XZPlane(0,    555, 0, 555, 555), greyWallMaterial),
+							new("Bottom", new XZPlane(0, 555, 0, 555, 0), greyWallMaterial),
+
+							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
+							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
+					},
+					new Light[]
+					{
+							new SimpleLight
+							{
+									Position                = new Vector3(555 /2f),
+									Colour                  = White,
+									Radius                  = 500f,
+									#if !true
+									DistanceAttenuationFunc = SimpleLight.InverseSquareDistanceAttenuation(
+											(float)0.0000656931581298,
+											(float)0,
+											(float)0.999946350027
+											)
+									#else
+									DistanceAttenuationFunc=SimpleLight.LinearDistanceAttenuation()
+#endif
+							}
+					},
+					new SingleColourSkyBox(Black)
+			);
+		}
+	}
 
 	/// <summary>Fancy scene containing (hopefully) every type of shape, light and material</summary>
 	public static Scene Demo

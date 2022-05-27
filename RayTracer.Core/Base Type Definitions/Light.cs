@@ -37,15 +37,22 @@ public abstract class Light : RenderAccessor
 	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to
 	///  the computed shadow ray
 	/// </summary>
-	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay)
+	/// <param name="hit">Hit information</param>
+	/// <param name="position">A point on the surface of the light</param>
+	/// <param name="shadowRay">Computed shadow ray (<paramref name="hit"/> --> <paramref name="position"/>)</param>
+	/// <param name="distance">Distance between the two points</param>
+	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay, out float distance)
 	{
 		//Find ray between the hit and the light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
 		const float kMin = 0.0001f;
-		float       kMax = Vector3.Distance(position, hit.WorldPoint);
+		float       kMax = distance = Vector3.Distance(position, hit.WorldPoint);
 		return Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
 	}
 
 	/// <summary>Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/></summary>
-	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _);
+	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _, out _);
+
+	/// <summary>Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/></summary>
+	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay) => CheckIntersection(hit, position, out shadowRay, out _);
 }

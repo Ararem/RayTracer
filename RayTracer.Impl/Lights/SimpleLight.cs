@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using RayTracer.Core;
 using System.Numerics;
 
@@ -13,7 +14,7 @@ public class SimpleLight : Light
 	public Colour Colour { get; init; } = Colour.White;
 
 	/// <summary>The 3D position of the light in world-space</summary>
-	public Vector3 Position { get; }
+	public Vector3 Position { get; init; }
 
 	/// <summary>How large of a radius the light should illuminate</summary>
 	/// <remarks>
@@ -31,6 +32,7 @@ public class SimpleLight : Light
 #region Attenuation things
 
 	/// <summary>Attenuation goes from [<c>0..1</c>] linearly for <c>d=[0..Radius]</c></summary>
+	[PublicAPI]
 	public static DistanceAttenuationDelegate LinearDistanceAttenuation() => static delegate(SimpleLight light, float distance)
 	{
 		//Simple linear y=mx+c curve going through (0,1) and (Radius, 0)
@@ -39,37 +41,10 @@ public class SimpleLight : Light
 		return attenuation;
 	};
 
-	/// <summary>Inverse square <c>y = a/([x+b]^2 + c)</c>. Not very realistic but easier to make it look nice</summary>
-	/// <footer>
-	///  <a href="https://www.desmos.com/calculator/tewo922hrz">See desmos graph for visualisation</a> <br/>
-	///  <a href="https://www.desmos.com/calculator/tk2nat0ywx">Alternate graph with regression</a>
-	/// </footer>
-	public static DistanceAttenuationDelegate InverseSquareDistanceAttenuation(float a, float b, float c = 0f)
-	{
-		if (a < 0)
-		{
-			throw new ArgumentOutOfRangeException(nameof(a), a, "`a` must be > 0");
-		}
-
-		if (b < 0)
-		{
-			throw new ArgumentOutOfRangeException(nameof(b), b, "`b` must be > 0");
-		}
-
-		if (c < 0)
-		{
-			throw new ArgumentOutOfRangeException(nameof(c), c, "`c` must be > 0");
-		}
-
-		return (_, distance) => a / (MathF.Pow(distance + b, 2) + c);
-	}
-
-	/// <summary>Physically accurate attenuation that follows 1/(x^2). Will result in extreme brightness very close to the light (small distance) as the function approaches infinity</summary>
-	/// <returns></returns>
-	public static DistanceAttenuationDelegate RealInverseSquareDistanceAttenuation() => static (_, distance) => 1f / (distance * distance);
+	public static DistanceAttenuationDelegate
 
 	/// <inheritdoc cref="DistanceAttenuationDelegate"/>
-	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = RealInverseSquareDistanceAttenuation();
+	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = LinearDistanceAttenuation();
 
 	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="distance"/></summary>
 	public delegate float DistanceAttenuationDelegate(SimpleLight light, float distance);
@@ -90,8 +65,9 @@ public class SimpleLight : Light
 		Vector3 pointToCheck = ChooseIntersectTestPosition(hit);
 
 		//Check intersection
-		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay);
-		if(intersection) return Colour.Black;
+		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay, out float distance);
+		if(intersection) return Colour.Black; //Another object blocks the light ray
+		if(distance > Radius) return  Colour.Black; //Outside the radius of the light
 
 		Colour colour    = Colour;
 
@@ -102,8 +78,9 @@ public class SimpleLight : Light
 		colour *= dot;
 
 		//Also account for distance attenuation
-		float dist      = Vector3.Distance(hit.WorldPoint, pointToCheck);
-		float distScale = DistanceAttenuationFunc(this, dist);
+		float dist           = Vector3.Distance(hit.WorldPoint, pointToCheck);
+		float normalisedDist = dist / Radius;
+		float distScale      = DistanceAttenuationFunc(this, normalisedDist);
 		colour *= distScale;
 
 		return colour;
