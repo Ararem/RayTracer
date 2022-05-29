@@ -21,9 +21,14 @@ public class SimpleLight : Light
 	/// <summary>How large of a radius the light should illuminate</summary>
 	/// <remarks>
 	///  The exact way this is used depends on what function is used to calculate attenuation (see <see cref="DistanceAttenuationFunc"/>). By convention
-	///  however, the light <i>should</i> be significantly attenuated after this point to the point where it is not noticeable
+	///  however, the light <i>should</i> be significantly attenuated after this point to the point where it is not noticeable. For certain functions (such as <see cref="LinearDistanceAttenuation"/>, it is necessary to set the <see cref="CutoffRadius"/> as well, since the function goes below zero)
 	/// </remarks>
-	public float Radius { get; init; } = 1f;
+	public float AttenuationRadius { get; init; } = 1f;
+
+	/// <summary>
+	/// The radius at which the light does not illuminate anymore. After this distance, the light will be forcibly clamped to <see cref="RayTracer.Core.Colour.Black"/>. This will be necessary to set for <see cref="DistanceAttenuationFunc">attenuation delegates</see> that go below zero or only work in the range [0..<see cref="AttenuationRadius"/>]
+	/// </summary>
+	public float CutoffRadius { get; init; } = float.PositiveInfinity;
 
 	/// <summary>Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.</summary>
 	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
@@ -40,7 +45,7 @@ public class SimpleLight : Light
 		//Check intersection
 		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay, out float distance);
 		if (intersection) return Colour.Black;      //Another object blocks the light ray
-		if (distance > Radius) return Colour.Black; //Outside the radius of the light
+		if (distance               > CutoffRadius) return Colour.Black; //Outside the radius of the light
 
 		Colour colour = Colour;
 
@@ -51,9 +56,9 @@ public class SimpleLight : Light
 		colour *= dot;
 
 		//Also account for distance attenuation
-		float normalisedDist = distance / Radius;
-		float distScale      = DistanceAttenuationFunc(this, normalisedDist);
-		colour *= distScale;
+		float distScale      = DistanceAttenuationFunc(this, distance);
+		distScale =  Max(distScale, 0); //Clamp in case the function goes below 0
+		colour    *= distScale;
 
 		return colour;
 	}
@@ -66,7 +71,7 @@ public class SimpleLight : Light
 
 #region Attenuation things
 
-	/// <summary>Attenuation goes from [<c>0..1</c>] linearly for <c>d=[0..1]</c></summary>
+	/// <summary>Attenuation goes from [<c>0..1</c>] linearly for <c>d=[0..AttenuationRadius]</c></summary>
 	[PublicAPI]
 	public static DistanceAttenuationDelegate LinearDistanceAttenuation() => static (_, normDist) => 1 - normDist;
 
@@ -96,6 +101,7 @@ public class SimpleLight : Light
 	/// <footer>
 	///  <a href="https://www.desmos.com/calculator/knlg7ab2t0">Demo on desmos</a>
 	/// </footer>
+	[PublicAPI]
 	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float midpoint, float steepness) => (_, normDist) => 1f / (1 + Pow(E, steepness * (normDist - midpoint)));
 
 	/// <summary>Standard form of the logistics curve</summary>
@@ -111,10 +117,10 @@ public class SimpleLight : Light
 	/// <inheritdoc cref="DistanceAttenuationDelegate"/>
 	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = LinearDistanceAttenuation();
 
-	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="normDistance"/></summary>
+	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="normalisedDistance"/></summary>
 	/// <param name="light">Light object</param>
-	/// <param name="normDistance">Normalized <c>[0...1]</c> distance between the light and the point</param>
-	public delegate float DistanceAttenuationDelegate(SimpleLight light, float normDistance);
+	/// <param name="normalisedDistance">Normalized <c>[0...1]</c> distance between the light and the point</param>
+	public delegate float DistanceAttenuationDelegate(SimpleLight light, float normalisedDistance);
 
 #endregion
 }
