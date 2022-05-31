@@ -56,7 +56,7 @@ public class SimpleLight : Light
 		colour *= dot;
 
 		//Also account for distance attenuation
-		float distScale      = DistanceAttenuationFunc(this, distance);
+		float distScale      = DistanceAttenuationFunc(this, distance / AttenuationRadius);
 		distScale =  Max(distScale, 0); //Clamp in case the function goes below 0
 		colour    *= distScale;
 
@@ -96,17 +96,17 @@ public class SimpleLight : Light
 	}
 
 	/// <summary>Simplified form of the logistics curve</summary>
-	/// <param name="steepness">Steepness of the curve</param>
+	/// <param name="steepness">Steepness of the curve. Note that this should be <i>positive</i> despite the fact that the curve is an inverted logistics curve (it is translated negatively internally) </param>
 	/// <param name="midpoint">Midpoint of the curve</param>
 	/// <footer>
 	///  <a href="https://www.desmos.com/calculator/knlg7ab2t0">Demo on desmos</a>
 	/// </footer>
 	[PublicAPI]
-	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float midpoint, float steepness) => (_, normDist) => 1f / (1 + Pow(E, steepness * (normDist - midpoint)));
+	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float midpoint = .5f, float steepness = 16f) => (_, normDist) => 1f / (1 + Pow(E, steepness * (normDist - midpoint)));
 
 	/// <summary>Standard form of the logistics curve</summary>
 	/// <param name="l">Maximum value of the curve</param>
-	/// <param name="k">Steepness of the curve</param>
+	/// <param name="k">Steepness of the curve. Should be negative</param>
 	/// <param name="x0">Midpoint of the curve</param>
 	/// <footer>
 	///  <a href="https://www.desmos.com/calculator/knlg7ab2t0">Demo on desmos</a>
@@ -114,8 +114,14 @@ public class SimpleLight : Light
 	[PublicAPI]
 	public static DistanceAttenuationDelegate LogisticsCurveDistanceAttenuation(float l, float k, float x0) => (_, normDist) => l / (1f + Pow(E, -k * (normDist - x0)));
 
+	/// <summary>
+	/// Attenuation decays exponentially with distance; <c>y=e^(-ax)</c>
+	/// </summary>
+	/// <param name="a">How fast the decay is. Higher values increase dropoff speed. Should be &gt;0</param>
+	public static DistanceAttenuationDelegate ExponentialDecayDistanceAttenuation(float a) => (_, normDist) => Pow(E, a * -normDist);
+
 	/// <inheritdoc cref="DistanceAttenuationDelegate"/>
-	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = LinearDistanceAttenuation();
+	public DistanceAttenuationDelegate DistanceAttenuationFunc { get; init; } = ExponentialDecayDistanceAttenuation(5);
 
 	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="normalisedDistance"/></summary>
 	/// <param name="light">Light object</param>
