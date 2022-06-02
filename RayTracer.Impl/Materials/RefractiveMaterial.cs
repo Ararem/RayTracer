@@ -34,7 +34,7 @@ public class RefractiveMaterial : Material
 	public bool AlternateRefractionMode { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
 	{
 		Vector3 unitDirection = Normalize(hit.Ray.Direction);
 
@@ -44,11 +44,13 @@ public class RefractiveMaterial : Material
 		//Eta is the refractive index for the first material (that the ray is in before it refracts)
 		//Eta Prime is the refractive index of the second material (the one that the ray will be inside once it refracts)
 
-		//If the hit is 'front-facing', we know that it's from the outside of the sphere, so the first material is air
-		//Likewise, the reverse is true - if it's not front-facing then it's leaving the sphere so air is second
-		//There's also the assumption that air is the default material, but this isn't too important
 		float eta, etaPrime;
-		if (hit.OutsideFace)
+		//TODO: Make this work by pulling it from other refractive materials?
+		//If the ray is going from the outside (air or another material) into the inside (this material),
+		//Use the air index as the first refractive index
+		bool outsideGoingInside = (previousHits.Count     == 0) //Direct ray from camera - has to be "from the air"
+				|| (previousHits[^1].sceneObject.Material != this); //If previous hit was also this object then we know it's the other way around
+		if (outsideGoingInside)
 		{
 			eta      = AirIndex;
 			etaPrime = RefractiveIndex;

@@ -61,7 +61,7 @@ public sealed class StandardMaterial : Material
 	public float Diffusion { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
 	{
 		Vector3 diffuse                           = RandomInUnitSphere(); //Pick a random scatter direction
 		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)

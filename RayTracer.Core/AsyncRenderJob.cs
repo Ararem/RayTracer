@@ -182,7 +182,7 @@ public sealed class AsyncRenderJob : IDisposable
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]
-					Vector3 scat = sceneObject.Material.Scatter(hit)?.Direction ?? -Vector3.One;
+					Vector3 scat = sceneObject.Material.Scatter(hit, ArraySegment<(SceneObject, HitRecord)>.Empty)?.Direction ?? -Vector3.One;
 					Vector3 n    = (scat + Vector3.One) / 2f;
 					return (Colour)n;
 				}
@@ -212,9 +212,10 @@ public sealed class AsyncRenderJob : IDisposable
 			Interlocked.Increment(ref RenderStats.RayCount);
 			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
 			{
-				HitRecord hit = maybeHit;
+				ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
+				HitRecord                                                    hit      = maybeHit;
 				//See if the material scatters the ray
-				Ray? maybeNewRay = sceneObject.Material.Scatter(hit);
+				Ray? maybeNewRay = sceneObject.Material.Scatter(hit, prevHits);
 
 				if (maybeNewRay is null)
 				{

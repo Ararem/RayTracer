@@ -25,7 +25,7 @@ public static class BuiltinScenes
 		{
 			Material greyWallMaterial = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f);
 			return new Scene(
-					"Cornell Box", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
+					"Testing", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
 					{
 							new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.5f,   0.1f, 0.1f), 1f)),
 							new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.1f, 0.5f, 0.1f), 1f)),
@@ -35,16 +35,18 @@ public static class BuiltinScenes
 
 							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
 							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
+
+							new("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 200), new RefractiveMaterial(3f, new SolidColourTexture(White), true)),
 					},
 					new Light[]
 					{
 							new SimpleLight
 							{
-									Position                = new Vector3(555 /2f),
+									Position                = new Vector3(555/2f,540,555/2f),
 									Colour                  = White,
 									AttenuationRadius                  = 350f,
-									// DistanceAttenuationFunc=SimpleLight.ExponentialDecayDistanceAttenuation(5f)
-									DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
+									DistanceAttenuationFunc=SimpleLight.ExponentialDecayDistanceAttenuation(1f)
+									// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
 							}
 					},
 					new SingleColourSkyBox(Black)
