@@ -8,6 +8,7 @@ namespace RayTracer.Impl.Lights;
 ///  Represents a light source at a certain <see cref="Position"/> in world-space. The light has an artificial size defined by the <see cref="Radius"/> -
 ///  points are randomly chosen inside on sphere centred at <see cref="Position"/> with a radius of <see cref="Radius"/>.
 /// </summary>
+[Obsolete("Should be replaced by SimpleLight and it's inheritors")]
 public sealed class SurfaceSphereLight : Light
 {
 	/// <summary>

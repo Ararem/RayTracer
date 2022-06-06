@@ -7,6 +7,8 @@ namespace RayTracer.Impl.Lights;
 ///  Represents an infinitely small light source at a certain <see cref="Position"/> in world-space. The light takes distance into account, so points
 ///  closer to the light will be brighter
 /// </summary>
+[Obsolete("Should be replaced by SimpleLight and it's inheritors")]
+
 public sealed class PointLight : Light
 {
 	/// <summary>

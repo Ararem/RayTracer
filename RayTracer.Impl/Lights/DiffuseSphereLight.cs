@@ -8,6 +8,8 @@ namespace RayTracer.Impl.Lights;
 ///  <see cref="DiffusionRadius"/> - points are randomly chosen inside a sphere centred at <see cref="Position"/> with a radius of
 ///  <see cref="DiffusionRadius"/>.
 /// </summary>
+[Obsolete("Should be replaced by SimpleLight and it's inheritors")]
+
 public sealed class DiffuseSphereLight : Light
 {
 	private readonly float brightnessBaselineRadiusSquare;
