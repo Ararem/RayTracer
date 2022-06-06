@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise" />
+  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
+    <file url="file:///run/user/1000/gvfs/mtp:host=Android_Android_5fac3119/Internal shared storage/.galleryvault_DoNotDelete_1577679163/backup/file_action_log.db" charset="UTF-16" />
+  </component>
 </project>
