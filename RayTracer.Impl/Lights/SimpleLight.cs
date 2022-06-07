@@ -32,6 +32,7 @@ public class SimpleLight : Light
 
 	/// <summary>Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.</summary>
 	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
+	/// <remarks>Can be overridden for lights that cover a volume, e.g. area and diffuse lights</remarks>
 	[PublicAPI]
 	public virtual Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
 
