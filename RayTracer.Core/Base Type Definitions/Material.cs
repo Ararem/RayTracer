@@ -17,45 +17,41 @@ public abstract class Material : RenderAccessor
 	public abstract Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
 
 	/// <summary>Function to override for when the material wants to do lighting calculations, based on the light from future rays</summary>
-	/// <param name="colour">
+	/// <param name="previousRayColour">
 	///  The colour information for the future bounces that were made. Modify this to vary how your material behaves
-	///  colour-wise/lighting-wise
+	///  previousRayColour-wise/lighting-wise. This is the colour from
 	/// </param>
 	/// <param name="hit">Information such as where the ray hit, surface normals etc</param>
 	/// <param name="previousHits">Collection of the previous hits between the camera and the current hit</param>
 	/// <remarks>
 	///  Use the <paramref name="hit"/> to evaluation world information, such as where on a texture map the point corresponds to, and make changes to the
-	///  <paramref name="colour"/> using that information
+	///  <paramref name="previousRayColour"/> using that information
 	/// </remarks>
 	/// <example>
 	///  <para>
-	///   A simple implementation that multiplies by the colour red, treating the object as completely red:
+	///   <b>
+	///    <i>Note that only the method body is shown here. Some of the names may have changed, however the general idea remains the same</i>
+	///   </b>
+	///  </para>
+	///  <para>
+	///   A simple implementation that multiplies by the previousRayColour red, treating the object as completely red:
 	///   <code>
-	///  public override void DoColourThings(ref Colour colour, in MeshHit meshHit, int depth)
-	///  {
-	///  	colour *= Colour.Red;
-	///  }
+	///  	return previousRayColour * Colour.Red;
 	///  </code>
 	///  </para>
 	///  <para>
 	///   A simple implementation that adds blue light, simulating a blue light-emitting light-source:
 	///   <code>
-	///  public override void DoColourThings(ref Colour colour, in MeshHit meshHit, int depth)
-	///  {
-	///  	colour += Colour.Blue;
-	///  }
+	///  	return previousRayColour + Colour.Blue;
 	///  </code>
 	///  </para>
 	///  <para>
 	///   A simple implementation that adds half-white light and multiplies red, simulating a dim white light-emitting object that reflects red light
 	///   <code>
-	///  public override void DoColourThings(ref Colour colour, in MeshHit meshHit, int depth)
-	///  {
-	/// 		//Only 30% white is added so it's not too bright, but all red is reflected
-	///  	colour = (colour * Colour.Red) + (Colour.White * 0.3f);
-	///  }
+	/// 	//Only 30% white is added so it's not too bright, but all red is reflected
+	///  	return  (previousRayColour * Colour.Red) + (Colour.White * 0.3f);
 	///  </code>
 	///  </para>
 	/// </example>
-	public abstract void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
+	public abstract Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
 }

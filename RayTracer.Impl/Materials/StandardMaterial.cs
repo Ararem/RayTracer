@@ -78,5 +78,5 @@ public sealed class StandardMaterial : Material
 	}
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => colour = (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
+	public override void CalculateColour(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => colour = (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
 }

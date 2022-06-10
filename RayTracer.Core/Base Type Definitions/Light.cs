@@ -41,7 +41,7 @@ public abstract class Light : RenderAccessor
 	/// <param name="position">A point on the surface of the light</param>
 	/// <param name="shadowRay">Computed shadow ray (<paramref name="hit"/> --> <paramref name="position"/>)</param>
 	/// <param name="distance">Distance between the two points</param>
-	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay, out float distance)
+	public bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay, out float distance)
 	{
 		//Find ray between the hit and the light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
@@ -51,8 +51,8 @@ public abstract class Light : RenderAccessor
 	}
 
 	/// <summary>Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/></summary>
-	protected bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _, out _);
+	public bool CheckIntersection(HitRecord hit, Vector3 position) => CheckIntersection(hit, position, out _, out _);
 
 	/// <summary>Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/></summary>
-	protected bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay) => CheckIntersection(hit, position, out shadowRay, out _);
+	public bool CheckIntersection(HitRecord hit, Vector3 position, out Ray shadowRay) => CheckIntersection(hit, position, out shadowRay, out _);
 }

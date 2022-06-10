@@ -259,7 +259,7 @@ public sealed class AsyncRenderJob : IDisposable
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
 			float depthScalar                              = 3f / (depth + 3);
 			for (int i = 0; i < lights.Length; i++) colour += lights[i].CalculateLight(hit) * depthScalar;
-			sceneObject.Material.DoColourThings(ref colour, hit, prevHits);
+			sceneObject.Material.CalculateColour(ref colour, hit, prevHits);
 
 			finalColour = colour;
 		}
@@ -326,7 +326,7 @@ public sealed class AsyncRenderJob : IDisposable
 					//So we can have materials that emit light, ones that amplify light, ones that change the colour of the light, anything really
 					//So we pass in the colour that we obtained from the future bounces, and let the material directly modify it to get the resulting colour
 					Colour colour = futureBounces;
-					material.DoColourThings(ref colour, hit);
+					material.CalculateColour(ref colour, hit);
 					return colour;
 				}
 				//No object was hit (at least not in the range), so return the skybox colour
