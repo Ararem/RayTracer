@@ -31,7 +31,19 @@ public abstract class Light : RenderAccessor
 	/// }
 	///  </code>
 	/// </example>
-	public abstract Colour CalculateLight(HitRecord hit);
+	public Colour CalculateLight(HitRecord hit) => CalculateLight(hit, out _);
+
+	/// <inheritdoc cref="CalculateLight(RayTracer.Core.HitRecord)"/>
+	/// <param name="ray">Output calculated ray for the light ray</param>
+	#pragma warning disable CS1573
+	public abstract Colour CalculateLight(HitRecord hit, out Ray ray);
+	#pragma warning restore CS1573
+
+	/// <summary>Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.</summary>
+	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
+	/// <remarks>Can be overridden for lights that cover a volume, e.g. area and diffuse lights</remarks>
+	[PublicAPI]
+	public abstract Vector3 ChooseIntersectTestPosition(HitRecord hit);
 
 	/// <summary>
 	///  Returns if there is an intersection between a <paramref name="hit"/> and another <paramref name="position"/>. This overload also allows access to

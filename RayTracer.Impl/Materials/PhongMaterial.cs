@@ -35,9 +35,10 @@ public class PhongMaterial : Material
 		Colour ambientColour = (Ambient * TEMP_AMBIENT_COLOUR);
 		Colour diffuseColour = Colour.Black;
 		Colour specularColour = Colour.Black;
+		//Loop over the lights
 		for (int i = 0; i < lights.Count; i++)
 		{
-			Vector3 directionTowardsLight          = Ray.FromPoints(hit.WorldPoint, lights[i].CHOOSE_POSITION()).Direction;
+			Vector3 directionTowardsLight          = .Direction;
 			Vector3 reflectedDirectionTowardsLight = Reflect(directionTowardsLight, hit.Normal);
 			diffuseColour += (Diffuse  * Dot(hit.Normal,                     directionTowardsLight)) * ;
 			float   specularAmount                 = (Specular * Dot(reflectedDirectionTowardsLight, -hit.Ray.Direction)); //Flip ray direction because we want away from the hit

@@ -1,33 +1,22 @@
-using Eto;
 using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
 using RayTracer.Impl;
-using SixLabors.ImageSharp.Formats.Png;
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using static Serilog.Log;
 using Eto.Containers;
-using Eto.Drawing;
-using Eto.Forms;
 using LibEternal.Core.ObjectPools;
-using RayTracer.Core;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
-using static Serilog.Log;
 using Size = Eto.Drawing.Size;
 
 

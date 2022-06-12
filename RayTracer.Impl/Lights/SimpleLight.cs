@@ -30,31 +30,19 @@ public class SimpleLight : Light
 	/// </summary>
 	public float CutoffRadius { get; init; } = float.PositiveInfinity;
 
-	/// <summary>Returns an position in world-space, that is used to check if there is an intersection between the hit and the returned point.</summary>
-	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
-	/// <remarks>Can be overridden for lights that cover a volume, e.g. area and diffuse lights</remarks>
-	[PublicAPI]
-	public virtual Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
-
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit)
+	public override Colour CalculateLight(HitRecord hit, out Ray ray)
 	{
 		//Choose a point to test for intersection
 		//Only applicable to diffuse lights, but doesn't harm point lights
 		Vector3 pointToCheck = ChooseIntersectTestPosition(hit);
 
 		//Check intersection
-		bool intersection = CheckIntersection(hit, pointToCheck, out Ray shadowRay, out float distance);
+		bool intersection = CheckIntersection(hit, pointToCheck, out ray, out float distance);
 		if (intersection) return Colour.Black;      //Another object blocks the light ray
 		if (distance               > CutoffRadius) return Colour.Black; //Outside the radius of the light
 
 		Colour colour = Colour;
-
-		//Account for how much the surface points towards our light
-		float dot        = Vector3.Dot(shadowRay.Direction, hit.Normal);
-		if (dot < 0) dot = -dot; //Backfaces give negative dot product
-		// dot = MathUtils.Lerp(1, dot, SurfaceDirectionImportance);
-		colour *= dot;
 
 		//Also account for distance attenuation
 		float distScale      = DistanceAttenuationFunc(this, distance / AttenuationRadius);
@@ -64,11 +52,8 @@ public class SimpleLight : Light
 		return colour;
 	}
 
-	// /// <summary>
-	// /// Float parameter that controls how important it is for the
-	// /// </summary>
-	// public float SurfaceDirectionImportance { get; init; }
-
+	/// <inheritdoc />
+	public override Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
 
 #region Attenuation things
 
