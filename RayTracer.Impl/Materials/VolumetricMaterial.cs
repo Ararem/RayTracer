@@ -24,8 +24,8 @@ public sealed class VolumetricMaterial : Material
 	public Colour Albedo { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => new Ray(hit.WorldPoint, RandUtils.RandomOnUnitSphere());
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits) => new Ray(hit.WorldPoint, RandUtils.RandomOnUnitSphere());
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => colour * Albedo;
+	public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<HitRecord> previousHits) => colour * Albedo;
 }

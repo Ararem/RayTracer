@@ -20,6 +20,11 @@ namespace RayTracer.Impl.Hittables;
 /// </remarks>
 public sealed class Box : Hittable
 {
+	/// <summary>
+	/// Material used to render this box instance
+	/// </summary>
+	public Material Material { get; set; }
+
 	/// <summary>First row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals</summary>
 	private readonly Vector3 boxToWorldRow1;
 
@@ -191,7 +196,7 @@ public sealed class Box : Hittable
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero, Material);
 	}
 
 	/// <inheritdoc/>
