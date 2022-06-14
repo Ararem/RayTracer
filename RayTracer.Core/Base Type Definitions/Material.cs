@@ -14,7 +14,7 @@ public abstract class Material : RenderAccessor
 	///  For a completely reflective material, the resulting ray would be 'flipped' around the surface <see cref="HitRecord.Normal"/>, and for a completely
 	///  diffuse object, it would be in a random direction
 	/// </remarks>
-	public abstract Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
+	public abstract Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits);
 
 	/// <summary>Function to override for when the material wants to do lighting calculations, based on the light from future rays</summary>
 	/// <param name="previousRayColour">
@@ -53,5 +53,5 @@ public abstract class Material : RenderAccessor
 	///  </code>
 	///  </para>
 	/// </example>
-	public abstract Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits);
+	public abstract Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> previousHits);
 }
