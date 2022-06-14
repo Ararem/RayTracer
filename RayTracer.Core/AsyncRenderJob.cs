@@ -12,7 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static RayTracer.Core.MathUtils;
-using PrevHitPool = System.Buffers.ArrayPool<(RayTracer.Core.SceneObject sceneObject, RayTracer.Core.HitRecord hitRecord)>;
+using PrevHitPool = System.Buffers.ArrayPool<RayTracer.Core.HitRecord>;
 
 namespace RayTracer.Core;
 
@@ -35,12 +35,12 @@ public sealed class AsyncRenderJob : IDisposable
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
 
-		Image                                = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
-		ImageBuffer                          = Image.Frames.RootFrame!;
-		RenderOptions                        = renderOptions;
-		rawColourBuffer                      = new Colour[renderOptions.Width * renderOptions.Height];
-		sampleCountBuffer                    = new int[renderOptions.Width    * renderOptions.Height];
-		Scene                                = scene;
+		Image             = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		ImageBuffer       = Image.Frames.RootFrame!;
+		RenderOptions     = renderOptions;
+		rawColourBuffer   = new Colour[renderOptions.Width * renderOptions.Height];
+		sampleCountBuffer = new int[renderOptions.Width    * renderOptions.Height];
+		Scene             = scene;
 
 		RenderStats = new RenderStats(renderOptions);
 
@@ -49,7 +49,6 @@ public sealed class AsyncRenderJob : IDisposable
 		foreach (Light light in Scene.Lights) light.Renderer = this;
 		foreach (SceneObject sceneObject in Scene.SceneObjects)
 		{
-			sceneObject.Material.Renderer = this;
 			sceneObject.Hittable.Renderer = this;
 		}
 		#pragma warning restore CS0618
@@ -141,7 +140,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
 		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, hit))
+		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is { } hit)
 			switch (RenderOptions.DebugVisualisation)
 			{
 				case GraphicsDebugVisualisation.Normals:
@@ -184,7 +183,7 @@ public sealed class AsyncRenderJob : IDisposable
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]
-					Vector3 scat = sceneObject.Material.Scatter(hit, ArraySegment<(SceneObject, HitRecord)>.Empty)?.Direction ?? -Vector3.One;
+					Vector3 scat = hit.Material.Scatter(hit, ArraySegment<HitRecord>.Empty)?.Direction ?? -Vector3.One;
 					Vector3 n    = (scat + Vector3.One) / 2f;
 					return (Colour)n;
 				}
@@ -202,8 +201,8 @@ public sealed class AsyncRenderJob : IDisposable
 
 	private Colour InitialCalculateRayColourRecursive(Ray ray)
 	{
-		(SceneObject sceneObject, HitRecord hitRecord)[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
-		ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> segment = new(array, 0, 0);
+		HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
+		ArraySegment<HitRecord> segment = new(array, 0, 0);
 		return InternalCalculateRayColourRecursive(ray, 0, segment);
 	}
 
@@ -215,7 +214,7 @@ public sealed class AsyncRenderJob : IDisposable
 	/// </param>
 	/// <param name="prevHitsSegment">Array segment that contains the previous hits</param>
 	/// <returns></returns>
-	private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHitsSegment)
+	private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsSegment)
 	{
 		//Don't go too deep
 		if (depth > RenderOptions.MaxDepth)
@@ -226,10 +225,10 @@ public sealed class AsyncRenderJob : IDisposable
 		//TODO: Depth tracking
 
 		Interlocked.Increment(ref RenderStats.RayCount);
-		if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, hit))
+		if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
 		{
 			//See if the material scatters the ray
-			Ray? maybeNewRay = sceneObject.Material.Scatter(hit, prevHitsSegment);
+			Ray? maybeNewRay = hit.Material.Scatter(hit, prevHitsSegment);
 
 			if (maybeNewRay is not { } newRay)
 			{
@@ -242,8 +241,8 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				//Otherwise, the material scattered, creating a new ray, render recursively again
 				Interlocked.Increment(ref RenderStats.MaterialScatterCount);
-				prevHitsSegment.Array![prevHitsSegment.Count] = (sceneObject, hit);                                                                 //Update the hit buffer from this hit
-				ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Expend the segment to include our new element
+				prevHitsSegment.Array![prevHitsSegment.Count] = hit;                                                                 //Update the hit buffer from this hit
+				ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Expend the segment to include our new element
 				return InternalCalculateRayColourRecursive(newRay, depth + 1, newSegment);
 			}
 		}
@@ -259,7 +258,7 @@ public sealed class AsyncRenderJob : IDisposable
 	{
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
 		//This stores the hit information, as well as what object was intersected with (at that hit)
-		(SceneObject Object, HitRecord Hit)[] materialHitArray = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth + 1);
+		HitRecord[] materialHitArray = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth + 1);
 		Colour                                finalColour      = NoColour;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)
@@ -267,12 +266,11 @@ public sealed class AsyncRenderJob : IDisposable
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
 			Interlocked.Increment(ref RenderStats.RayCount);
-			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is var (sceneObject, maybeHit))
+			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
 			{
-				ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
-				HitRecord                                                    hit      = maybeHit;
+				ArraySegment<HitRecord> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
 				//See if the material scatters the ray
-				Ray? maybeNewRay = sceneObject.Material.Scatter(hit, prevHits);
+				Ray? maybeNewRay = hit.Material.Scatter(hit, prevHits);
 
 				if (maybeNewRay is null)
 				{
@@ -287,7 +285,7 @@ public sealed class AsyncRenderJob : IDisposable
 					//Otherwise, the material scattered, creating a new ray
 					ray = (Ray)maybeNewRay;
 					Interlocked.Increment(ref RenderStats.MaterialScatterCount);
-					materialHitArray[depth] = (sceneObject, hit);
+					materialHitArray[depth] = hit;
 				}
 			}
 			//No object was hit (at least not in the range), so return the skybox colour
@@ -307,14 +305,14 @@ public sealed class AsyncRenderJob : IDisposable
 		depth--;
 		for (; depth >= 0; depth--)
 		{
-			(SceneObject sceneObject, HitRecord hit) = materialHitArray[depth];
-			ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
+			HitRecord               hit      = materialHitArray[depth];
+			ArraySegment<HitRecord> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
 			//This makes the lights have less of an effect the deeper they are
 			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
 			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
-			float depthScalar                              = 3f / (depth + 3);
+			float depthScalar                                         = 3f / (depth + 3);
 			for (int i = 0; i < Scene.Lights.Length; i++) finalColour += Scene.Lights[i].CalculateLight(hit) * depthScalar;
-			finalColour = sceneObject.Material.CalculateColour(finalColour, hit, prevHits);
+			finalColour = hit.Material.CalculateColour(finalColour, hit, prevHits);
 		}
 
 		PrevHitPool.Shared.Return(materialHitArray);
@@ -409,7 +407,7 @@ public sealed class AsyncRenderJob : IDisposable
 	/// <param name="ray">The ray to check for intersections</param>
 	/// <param name="kMin">Lower bound for K along the ray</param>
 	/// <param name="kMax">Upper bound for K along the ray</param>
-	public (SceneObject Object, HitRecord HitRecord)? TryFindClosestHit(Ray ray, float kMin, float kMax)
+	public HitRecord? TryFindClosestHit(Ray ray, float kMin, float kMax)
 	{
 		//I love how simple this is
 		//Like I just need to validate the result and that's it
@@ -452,7 +450,7 @@ public sealed class AsyncRenderJob : IDisposable
 			return null; //Skip because we can't consider it valid
 		}
 
-		return (obj, hit);
+		return hit;
 	}
 
 	/// <summary>
@@ -495,9 +493,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 #region Internal state
 
-	/// <summary>
-	/// <see cref="RayTracer.Core.Acceleration.BvhTree"/> that was constructed for this render's <see cref="Scene"/>
-	/// </summary>
+	/// <summary><see cref="RayTracer.Core.Acceleration.BvhTree"/> that was constructed for this render's <see cref="Scene"/></summary>
 	public BvhTree BvhTree { get; }
 
 	/// <summary>Stopwatch used to time how long has elapsed since the rendering started</summary>
