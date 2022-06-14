@@ -7,7 +7,7 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>Implementation of <see cref="Hittable"/> for a sphere</summary>
-public sealed class Sphere : Hittable
+public sealed class Sphere : SingleMaterialHittable
 {
 	private readonly float radiusSqr;
 
@@ -66,7 +66,7 @@ public sealed class Sphere : Hittable
 		//This forces the normal to always be going against the ray
 		Vector3   normal = inside ? -outwardNormal : outwardNormal;
 		Vector2   uv     = GetSphereUV(outwardNormal);
-		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv);
+		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv, Material);
 		return hit;
 	}
 

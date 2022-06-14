@@ -10,7 +10,6 @@ namespace RayTracer.Core;
 /// <param name="K">Distance along the ray at which the intersection occured</param>
 /// <param name="OutsideFace">If the object was hit on the outside of it's surface, as opposed to it's inside</param>
 /// <param name="UV">UV coordinate of the hit (for texture mapping)</param>
-/// <param name="SceneObject">The object in the scene that was hit</param>
 /// <param name="Material"><see cref="RayTracer.Core.Material"/> that will be used to render this hit</param>
 /// <param name="ShaderData">Optional object containing information to be passed into the shader, may be useful communicating between the <see cref="Hittable"/> and the <see cref="Material"/> on a per-hit basis</param>
 public readonly record struct HitRecord(
@@ -21,7 +20,6 @@ public readonly record struct HitRecord(
 		float       K,
 		bool        OutsideFace,
 		Vector2     UV,
-		SceneObject SceneObject,
 		Material    Material,
 		object? ShaderData = null
 );

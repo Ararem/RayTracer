@@ -34,7 +34,7 @@ public class RefractiveMaterial : Material
 	public bool AlternateRefractionMode { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
 		Vector3 unitDirection = Normalize(hit.Ray.Direction);
 
@@ -49,7 +49,7 @@ public class RefractiveMaterial : Material
 		//If the ray is going from the outside (air or another material) into the inside (this material),
 		//Use the air index as the first refractive index
 		bool outsideGoingInside = (previousHits.Count     == 0) //Direct ray from camera - has to be "from the air"
-				|| (previousHits[^1].sceneObject.Material != this); //If previous hit was also this object then we know it's the other way around
+				|| (previousHits[^1].Material != this); //If previous hit was also this object then we know it's the other way around
 		if (outsideGoingInside)
 		{
 			eta      = AirIndex;
@@ -100,5 +100,5 @@ public class RefractiveMaterial : Material
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => previousRayColour * Tint.GetColour(hit);
+	public override Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> arraySegment) => previousRayColour * Tint.GetColour(hit);
 }

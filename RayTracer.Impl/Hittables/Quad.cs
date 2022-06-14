@@ -12,7 +12,7 @@ namespace RayTracer.Impl.Hittables;
 ///  vectors can be non-perpendicular to each other, which creates a parallelogram instead of a rectangle (however they must not be parallel)
 /// </summary>
 //I'm using this answer as reference https://stackoverflow.com/a/21114992
-public sealed class Quad : Hittable
+public sealed class Quad : SingleMaterialHittable
 {
 	private readonly Matrix4x4 localToQuadMatrix;
 
@@ -121,7 +121,7 @@ public sealed class Quad : Hittable
 		Vector2 uv      = new (u, v) ;
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, Material);
 	}
 
 	/// <inheritdoc/>

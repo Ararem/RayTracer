@@ -61,7 +61,7 @@ public sealed class StandardMaterial : Material
 	public float Diffusion { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
 		Vector3 diffuse                           = RandomInUnitSphere(); //Pick a random scatter direction
 		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
@@ -78,5 +78,5 @@ public sealed class StandardMaterial : Material
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
+	public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<HitRecord> previousHits) => (colour * Albedo.GetColour(hit)) + Emission.GetColour(hit);
 }

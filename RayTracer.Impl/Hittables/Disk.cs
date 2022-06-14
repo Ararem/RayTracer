@@ -7,7 +7,7 @@ using static System.MathF;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
-public sealed class Disk : Hittable
+public sealed class Disk : SingleMaterialHittable
 {
 	/// <summary>-Dot(<see cref="Centre"/>, <see cref="Normal"/>)</summary>
 	private readonly float negCentreDotNorm;
@@ -72,7 +72,7 @@ public sealed class Disk : Hittable
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, Material);
 	}
 
 	/// <inheritdoc/>

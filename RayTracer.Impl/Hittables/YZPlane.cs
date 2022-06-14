@@ -5,7 +5,7 @@ using System.Numerics;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>A plane that spans a region along the XY plane</summary>
-public sealed class YZPlane : Hittable
+public sealed class YZPlane : SingleMaterialHittable
 {
 	/// <summary>A plane that spans a region along the XY plane</summary>
 	/// <param name="yLow">Low Y value for this plane</param>
@@ -72,7 +72,7 @@ public sealed class YZPlane : Hittable
 						? -Vector3.UnitX
 						: Vector3.UnitX;
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
-		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv);
+		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, Material);
 	}
 
 	/// <inheritdoc/>

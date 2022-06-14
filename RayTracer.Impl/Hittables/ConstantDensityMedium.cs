@@ -13,8 +13,10 @@ namespace RayTracer.Impl.Hittables;
 ///  A hittable that has a constant density (aka a volume like a cloud). Should be used in conjunction with a <see cref="VolumetricMaterial"/>
 /// </summary>
 /// <remarks>This probably won't work too well with rays inside the medium, or other objects inside it, so beware...</remarks>
-public sealed class ConstantDensityMedium : Hittable
+public sealed class ConstantDensityMedium
 {
+	#error FIX CDM Shader communication & material things
+
 	/// <summary>-1 / <see cref="Density"/></summary>
 	private readonly float negInvDensity;
 
@@ -48,7 +50,7 @@ public sealed class ConstantDensityMedium : Hittable
 		Vector3    normal     = RandUtils.RandomOnUnitSphere(); //Arbitrary
 		const bool frontFace  = true;                           //Arbitrary too
 
-		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, normal, hit1.K + randomHitDistance, frontFace, Vector2.Zero, Material);
 	}
 
 

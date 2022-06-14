@@ -27,10 +27,10 @@ public class PhongMaterial : Material
 	public static Colour TEMP_AMBIENT_COLOUR => Colour.White;
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits) => TODO_IMPLEMENT_ME;
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits) => TODO_IMPLEMENT_ME;
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits, IList<Light> lights)
+	public override Colour CalculateColour(HitRecord hit, ArraySegment<HitRecord> previousHits, IList<Light> lights)
 	{
 		Colour ambientColour = (Ambient * TEMP_AMBIENT_COLOUR);
 		Colour diffuseColour = Colour.Black;
