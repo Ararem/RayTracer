@@ -65,53 +65,53 @@ public static class BuiltinScenes
 
 			//Ground plane
 			{
-				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY){Material =  new StandardMaterial(new MarbleTexture(), new SolidColourTexture(Black), .5f)}));
+				objects.Add(new SceneObject("Ground", new InfinitePlane(new Vector3(0, -0.001f, 0), UnitY) { Material = new StandardMaterial(new MarbleTexture(), new SolidColourTexture(Black), .5f) }));
 			}
 			{
 				//Demonstrates axis-aligned planes and semi-diffuse materials
 				Vector3 low = new(-7, 0, -2), high = new(-5, 2.8f, -.5f);
-				objects.Add(new SceneObject("XY", new XYPlane(low.X, high.X, low.Y, high.Y, low.Z){Material =  new StandardMaterial(new Colour(1f,  .5f, .5f), .5f)}));
-				objects.Add(new SceneObject("YZ", new YZPlane(low.Y, high.Y, low.Z, high.Z, low.X){Material =  new StandardMaterial(new Colour(.5f, 1f,  .5f), .5f)}));
-				objects.Add(new SceneObject("XZ", new XZPlane(low.X, high.X, low.Z, high.Z, low.Y){Material =  new StandardMaterial(new Colour(.5f, .5f, 1f),  Black, .5f)}));
+				objects.Add(new SceneObject("XY", new XYPlane(low.X, high.X, low.Y, high.Y, low.Z) { Material = new StandardMaterial(new Colour(1f,  .5f, .5f), .5f) }));
+				objects.Add(new SceneObject("YZ", new YZPlane(low.Y, high.Y, low.Z, high.Z, low.X) { Material = new StandardMaterial(new Colour(.5f, 1f,  .5f), .5f) }));
+				objects.Add(new SceneObject("XZ", new XZPlane(low.X, high.X, low.Z, high.Z, low.Y) { Material = new StandardMaterial(new Colour(.5f, .5f, 1f),  Black, .5f) }));
 
 				//Demonstrates emission from material
-				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f){Material =  new StandardMaterial(Black, White * 0.8f, 0f)}));
+				objects.Add(new SceneObject("Planes Sphere Light", new Sphere(((low + high) / 2f) - UnitY, .5f) { Material = new StandardMaterial(Black, White * 0.8f, 0f) }));
 			}
 			{
 				//Demonstrates reflective materials
-				objects.Add(new SceneObject("Lonely Sphere", new Sphere(new Vector3(-1, 3f, -2), 1f){Material =  new StandardMaterial(new Colour(165 / 255f, 42 / 255f, 42 / 255f), 0f)}));
+				objects.Add(new SceneObject("Lonely Sphere", new Sphere(new Vector3(-1, 3f, -2), 1f) { Material = new StandardMaterial(new Colour(165 / 255f, 42 / 255f, 42 / 255f), 0f) }));
 				//Demonstrates refractive materials
-				objects.Add(new SceneObject("Capsule", new Capsule(new Vector3(-2, .7f, -3), new Vector3(0, 1.5f, -1f), .7f){Material =  new RefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(new Colour(0.27058825F, 0.77254903F, 1F)))}));
+				objects.Add(new SceneObject("Capsule", new Capsule(new Vector3(-2, .7f, -3), new Vector3(0, 1.5f, -1f), .7f) { Material = new RefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(new Colour(0.27058825F, 0.77254903F, 1F))) }));
 			}
 
 			{
 				//Infinite point light
 				//By changing the radii and attenuation function, we make this an 'infinite' light that has the same brightness regardless of distance
-				lights.Add(new SimpleLight{Position = new Vector3(-1, 5, -2), Colour = Red * .25f, AttenuationRadius = float.PositiveInfinity, CutoffRadius = float.PositiveInfinity, DistanceAttenuationFunc = static (_,_) => 1f});
+				lights.Add(new SimpleLight { Position = new Vector3(-1, 5, -2), Colour = Red * .25f, AttenuationRadius = float.PositiveInfinity, CutoffRadius = float.PositiveInfinity, DistanceAttenuationFunc = static (_, _) => 1f });
 				//Position this slightly above the light so it doesn't affect the shadow calculations
-				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f){Material =  new StandardMaterial(Black, Red, 0f)}));
+				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f) { Material = new StandardMaterial(Black, Red, 0f) }));
 
 				//Same but with a sized (area) light
 				lights.Add(new PointLight(new Vector3(-5, 1f, -7f), Green, 1.5f));
-				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f){Material =   new StandardMaterial(Black, Green, 0f)}));
-				objects.Add(new SceneObject("Sized Light Blocker",    new Sphere(new Vector3(-5, .6f, -7f), .2f){Material =    new StandardMaterial(Black, 0f)}));
+				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f) { Material = new StandardMaterial(Black, Green, 0f) }));
+				objects.Add(new SceneObject("Sized Light Blocker",    new Sphere(new Vector3(-5, .6f,  -7f), .2f) { Material  = new StandardMaterial(Black, 0f) }));
 
 				//Same but the light is diffuse
 				lights.Add(new DiffuseSphereLight(new Vector3(3, 1f, -7f), .3f, Blue, 2f));
-				objects.Add(new SceneObject("Diffuse Light Visualiser", new Sphere(new Vector3(3, 1.1f, -7f), .1f){Material =   new StandardMaterial(Black, Blue, 0f)}));
-				objects.Add(new SceneObject("Diffuse Light Blocker",    new Sphere(new Vector3(3, .6f, -7f), .3f){Material =   new StandardMaterial(Black, 0f)}));
+				objects.Add(new SceneObject("Diffuse Light Visualiser", new Sphere(new Vector3(3, 1.1f, -7f), .1f) { Material = new StandardMaterial(Black, Blue, 0f) }));
+				objects.Add(new SceneObject("Diffuse Light Blocker",    new Sphere(new Vector3(3, .6f,  -7f), .3f) { Material = new StandardMaterial(Black, 0f) }));
 			}
 
 			{
 				//Cuboids
 				objects.Add(new SceneObject("Smoke Box", new ConstantDensityMedium(new Box(new Vector3(-4, 0, 0), new Vector3(-1, 1, 2)), 2f, Black)));
-				objects.Add(new SceneObject("Hex Box",   Box.CreateFromCorners(new Vector3(-3, 0.75f, 0.5f), new Vector3(-2, 1.25f, 1.5f)),                  new StandardMaterial(Orange * .5f, 1f)));
+				objects.Add(new SceneObject("Hex Box",   new Box(new Vector3(-3, 0.75f, 0.5f), new Vector3(-2, 1.25f, 1.5f)) { Material = new StandardMaterial(Orange * .5f, 1f) }));
 			}
 
 			{
 				//Bounded planar objects
-				objects.Add(new SceneObject("Disk", new Disk(new Vector3(5, .5f, 1), Normalize(new Vector3(-1, 1, -1)), .7f),      new StandardMaterial(Purple * .6f, .3f)));
-				objects.Add(new SceneObject("Quad", new Quad(new Vector3(2, 0,   1), new Vector3(0, 1, -1), new Vector3(1, 0, 0)), new StandardMaterial(Yellow * .6f, .1f)));
+				objects.Add(new SceneObject("Disk", new Disk(new Vector3(5, .5f, 1), Normalize(new Vector3(-1, 1, -1)), .7f) { Material      = new StandardMaterial(Purple * .6f, .3f) }));
+				objects.Add(new SceneObject("Quad", new Quad(new Vector3(2, 0,   1), new Vector3(0, 1, -1), new Vector3(1, 0, 0)) { Material = new StandardMaterial(Yellow * .6f, .1f) }));
 			}
 
 			return new Scene("Demo", camera, objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
@@ -122,7 +122,7 @@ public static class BuiltinScenes
 	public static Scene Sphere => new(
 			"A lonely Sphere", Camera.Create(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
-					new("Sphere", new Sphere(Zero, .1f), new StandardMaterial(Red, 1f))
+					new("Sphere", new Sphere(Zero, .1f) { Material = new StandardMaterial(Red, 1f) })
 			},
 			Array.Empty<Light>(),
 			new DefaultSkyBox()
@@ -132,9 +132,9 @@ public static class BuiltinScenes
 	public static Scene RgbSpheres => new(
 			"RGB Spheres", Camera.Create(new Vector3(0, 0, 5), Zero, UnitY, 5, 16f / 9f, .00002f, 5f), new SceneObject[]
 			{
-					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f), new StandardMaterial(Lerp(Red,   White, 0.5f), 1f)),
-					new("Sphere 2", new Sphere(new Vector3(0),     .1f), new StandardMaterial(Lerp(Green, White, 0.5f), 1f)),
-					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f), new StandardMaterial(Lerp(Blue,  White, 0.5f), 1f))
+					new("Sphere 1", new Sphere(new Vector3(0.1f),  .1f) { Material = new StandardMaterial(Lerp(Red,   White, 0.5f), 1f) }),
+					new("Sphere 2", new Sphere(new Vector3(0),     .1f) { Material = new StandardMaterial(Lerp(Green, White, 0.5f), 1f) }),
+					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f) { Material = new StandardMaterial(Lerp(Blue,  White, 0.5f), 1f) })
 					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
 			},
 			Array.Empty<Light>(),
@@ -150,18 +150,18 @@ public static class BuiltinScenes
 			return new Scene(
 					"Cornell Box", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 40f, 1f / 1f, 0f, 1f), new SceneObject[]
 					{
-							new("Left", new YZPlane(0,  555, 0, 555, 0), new StandardMaterial(new Colour(0.5f,   0.1f, 0.1f), 1f)),
-							new("Right", new YZPlane(0, 555, 0, 555, 555), new StandardMaterial(new Colour(0.1f, 0.5f, 0.1f), 1f)),
-							new("Back", new XYPlane(0, 555, 0, 555, 555), greyWallMaterial),
-							new("Top", new XZPlane(0,    555, 0, 555, 555), greyWallMaterial),
-							new("Bottom", new XZPlane(0, 555, 0, 555, 0), greyWallMaterial),
+							new("Left", new YZPlane(0,  555, 0, 555, 0) { Material    = new StandardMaterial(new Colour(0.5f, 0.1f, 0.1f), 1f) }),
+							new("Right", new YZPlane(0, 555, 0, 555, 555) { Material  = new StandardMaterial(new Colour(0.1f, 0.5f, 0.1f), 1f) }),
+							new("Back", new XYPlane(0, 555, 0, 555, 555) { Material   = greyWallMaterial }),
+							new("Top", new XZPlane(0,    555, 0, 555, 555) { Material = greyWallMaterial }),
+							new("Bottom", new XZPlane(0, 555, 0, 555, 0) { Material   = greyWallMaterial }),
 
-							new("Light", new XZPlane(213, 343, 227, 332, 554.9f), new StandardMaterial(White, White, 1f)),
+							new("Light", new XZPlane(213, 343, 227, 332, 554.9f) { Material = new StandardMaterial(White, White, 1f) }),
 
-							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
-							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)), new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)),
-							new("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100), new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White), new SolidColourTexture(Blue * 0.1f), true)),
-							new("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100), new RefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White)))
+							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)){Material = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)}),
+							new("Tall Box", new Box(Matrix4x4.CreateScale(165, 330, 165) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f, 377.5f)){Material =new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f)}),
+							new("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100){Material = new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White), new SolidColourTexture(Blue * 0.1f), true)}),
+							new("Tall Box Sphere", new Sphere(new Vector3(347.5f, 430f, 377.5f), 100){Material = new RefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White))})
 					},
 					new Light[]
 					{
@@ -226,15 +226,15 @@ public static class BuiltinScenes
 							sphereMaterial = new RefractiveMaterial(RandomFloat(1f, 5f), new SolidColourTexture(tint));
 						}
 
-						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f), sphereMaterial));
+						objects.Add(new SceneObject($"Sphere ({a},{b})", new Sphere(center, 0.2f){Material = sphereMaterial}));
 					}
 				}
 			}
 
-			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1), new RefractiveMaterial(1.5f, new SolidColourTexture(White))));
-			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1), new StandardMaterial(new Colour(.4f, .2f, .1f), 1f)));
-			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1), new StandardMaterial(new Colour(.7f, .6f, .5f), 0f)));
-			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY),       new StandardMaterial(new Colour(0.5f),          Black, 1f)));
+			objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1){Material = new RefractiveMaterial(1.5f, new SolidColourTexture(White))}));
+			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1){Material = new StandardMaterial(new Colour(.4f, .2f, .1f), 1f)}));
+			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1){Material = new StandardMaterial(new Colour(.7f, .6f, .5f), 0f)}));
+			objects.Add(new SceneObject("Ground",   new InfinitePlane(Zero, UnitY){Material =       new StandardMaterial(new Colour(0.5f), Black, 1f)}));
 			return new Scene("RayTracing Chapter 1", Camera.Create(new Vector3(13, 2, 3), Zero, UnitY, 20, 16f / 9f, 0f, 10f), objects.ToArray(), lights.ToArray(), new DefaultSkyBox());
 		}
 	}
