@@ -18,16 +18,17 @@ public sealed class ConstantDensityMedium : Hittable
 	private readonly float negInvDensity;
 
 	/// <summary>Default constructor</summary>
-	public ConstantDensityMedium(Hittable boundary, float density)
+	public ConstantDensityMedium(Hittable boundary, float density, Colour colour)
 	{
 		if (boundary is ConstantDensityMedium) throw new ArgumentException("Cannot create a constant density volume using another volume", nameof(boundary));
 		Boundary      = boundary;
 		Density       = density;
 		negInvDensity = -1f / density;
-		Material      = new VolumetricMaterial(Colour.HalfGrey, density);
+		InternalMaterial      = new VolumetricMaterial(colour, density);
 	}
 
-	public VolumetricMaterial Material { get; }
+	public  Material           Material => InternalMaterial;
+	private readonly VolumetricMaterial InternalMaterial;
 
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
@@ -71,7 +72,7 @@ public sealed class ConstantDensityMedium : Hittable
 	///  <see cref="ConstantDensityMedium"/>
 	/// </summary>
 	/// <remarks>Scatter direction is completely random</remarks>
-	public sealed class VolumetricMaterial : Material
+	private sealed class VolumetricMaterial : Material
 	{
 		/// <summary>Colour of the material</summary>
 		public readonly Colour Albedo;
