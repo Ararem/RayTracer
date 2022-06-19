@@ -307,11 +307,6 @@ public sealed class AsyncRenderJob : IDisposable
 		{
 			HitRecord               hit      = materialHitArray[depth];
 			ArraySegment<HitRecord> prevHits = new(materialHitArray, 0, depth); //Shouldn't include the current hit
-			//This makes the lights have less of an effect the deeper they are
-			//I find this makes dark scenes a little less noisy (especially cornell box), and makes it so that scenes don't get super bright when you render with a high depth
-			//(Because otherwise the `+=lightColour` would just drown out the actual material's reflections colour after a few hundred bounces
-			float depthScalar                                         = 3f / (depth + 3);
-			for (int i = 0; i < Scene.Lights.Length; i++) finalColour += Scene.Lights[i].CalculateLight(hit) * depthScalar;
 			finalColour = hit.Material.CalculateColour(finalColour, hit, prevHits);
 		}
 

@@ -233,5 +233,13 @@ public readonly struct Colour : IFormattable
 					(byte)(byte.MaxValue * c.B)
 			);
 
+	/// <summary>
+	/// Deconstructs a colour into it's components
+	/// </summary>
+	/// <param name="r"></param>
+	/// <param name="g"></param>
+	/// <param name="b"></param>
+	public void Deconstruct(out float r, out float g, out float b) => (r, g, b) = (R, G, B);
+
 #endregion
 }

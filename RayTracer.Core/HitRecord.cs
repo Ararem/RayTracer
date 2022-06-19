@@ -23,3 +23,20 @@ public readonly record struct HitRecord(
 		Material    Material,
 		object? ShaderData = null
 );
+
+/// <summary>
+/// Exception class for when the <see cref="HitRecord.ShaderData"/> is invalid
+/// </summary>
+public class InvalidShaderDataException : Exception
+{
+	/// <summary>
+	/// Actual value that was supplied as the <see cref="HitRecord.ShaderData"/> value
+	/// </summary>
+	public object? ActualValue { get; }
+
+	/// <inheritdoc />
+	public InvalidShaderDataException(object? actualValue, string? message = null, Exception? innerException = null) : base(message, innerException)
+	{
+		ActualValue  = actualValue;
+	}
+}
