@@ -30,6 +30,17 @@ public sealed class ConstantDensityMedium : Hittable
 	public  Material           Material => InternalMaterial;
 	private readonly VolumetricMaterial InternalMaterial;
 
+	/// <inheritdoc />
+	public override AsyncRenderJob Renderer
+	{
+		get => base.Renderer;
+		set
+		{
+			Material.Renderer = value;
+			base.Renderer     = value;
+		}
+	}
+
 	/// <inheritdoc/>
 	public override HitRecord? TryHit(Ray ray, float kMin, float kMax)
 	{

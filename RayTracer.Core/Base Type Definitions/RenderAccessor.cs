@@ -12,6 +12,6 @@ public abstract class RenderAccessor
 	{
 		get;
 		[Obsolete($"Setting the renderer should not be done manually outside of {nameof(AsyncRenderJob)}")]
-		internal set;
+		set;
 	} = null!; //Set from AsyncRenderJob
 }

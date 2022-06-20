@@ -54,4 +54,20 @@ public abstract class Material : RenderAccessor
 	///  </para>
 	/// </example>
 	public abstract Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> previousHits);
+
+	public Colour CalculateSimpleColourFromLights(HitRecord hit)
+	{
+		Colour sum = Colour.Black;
+
+
+		for (int i = 0; i < Renderer
+							.Scene
+							.Lights
+							.Length; i++)
+		{
+			sum += Renderer.Scene.Lights[i].CalculateLight(hit);
+		}
+
+		return sum;
+	}
 }

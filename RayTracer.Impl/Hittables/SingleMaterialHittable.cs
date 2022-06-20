@@ -13,4 +13,14 @@ public abstract class SingleMaterialHittable : Hittable
 	/// </summary>
 	public Material Material { get; init; } = BuiltinMaterials.DefaultDiffuseMaterial;
 
+	/// <inheritdoc />
+	public override AsyncRenderJob Renderer
+	{
+		get => base.Renderer;
+		set
+		{
+			Material.Renderer = value;
+			base.Renderer     = value;
+		}
+	}
 }
