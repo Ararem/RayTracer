@@ -40,12 +40,12 @@ public static class BuiltinScenes
 					},
 					new Light[]
 					{
-							new SimpleLight
+							new PointLight
 							{
 									Position                = new Vector3(555 / 2f, 540, 555 / 2f),
 									Colour                  = White,
 									AttenuationRadius       = 350f,
-									DistanceAttenuationFunc = SimpleLight.ExponentialDecayDistanceAttenuation(1f)
+									DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(1f)
 									// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
 							}
 					},
@@ -87,17 +87,18 @@ public static class BuiltinScenes
 			{
 				//Infinite point light
 				//By changing the radii and attenuation function, we make this an 'infinite' light that has the same brightness regardless of distance
-				lights.Add(new SimpleLight { Position = new Vector3(-1, 5, -2), Colour = Red * .25f, AttenuationRadius = float.PositiveInfinity, CutoffRadius = float.PositiveInfinity, DistanceAttenuationFunc = static (_, _) => 1f });
+				lights.Add(new PointLight { Position = new Vector3(-1, 5, -2), Colour = Red * .25f, AttenuationRadius = float.PositiveInfinity, CutoffRadius = float.PositiveInfinity, DistanceAttenuationFunc = static (_, _) => 1f });
 				//Position this slightly above the light so it doesn't affect the shadow calculations
 				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f) { Material = new StandardMaterial(Black, Red, 0f) }));
 
 				//Same but with a sized (area) light
-				lights.Add(new PointLight(new Vector3(-5, 1f, -7f), Green, 1.5f));
+				lights.Add(new PointLight { Position = new Vector3(-5, 1f, -7f), Colour = Green, AttenuationRadius = 1.5f });
 				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f) { Material = new StandardMaterial(Black, Green, 0f) }));
 				objects.Add(new SceneObject("Sized Light Blocker",    new Sphere(new Vector3(-5, .6f,  -7f), .2f) { Material  = new StandardMaterial(Black, 0f) }));
 
 				//Same but the light is diffuse
-				lights.Add(new DiffuseSphereLight(new Vector3(3, 1f, -7f), .3f, Blue, 2f));
+				lights.Add(new DiffuseSphereLight{Position = new Vector3(3, 1f, -7f), DiffusionRadius = .3f, Colour=Blue, AttenuationRadius=2f
+			});
 				objects.Add(new SceneObject("Diffuse Light Visualiser", new Sphere(new Vector3(3, 1.1f, -7f), .1f) { Material = new StandardMaterial(Black, Blue, 0f) }));
 				objects.Add(new SceneObject("Diffuse Light Blocker",    new Sphere(new Vector3(3, .6f,  -7f), .3f) { Material = new StandardMaterial(Black, 0f) }));
 			}
@@ -166,8 +167,7 @@ public static class BuiltinScenes
 					new Light[]
 					{
 							//Centre ceiling light
-							new DiffuseSphereLight(new Vector3((213 + 343) / 2f, 554 - 50, (227 + 332) / 2f), 40, White * 0.5f, 150, 1.5f)
-					},
+							new DiffuseSphereLight{Position = new Vector3((213 + 343) / 2f, 554 - 50, (227 + 332) / 2f), DiffusionRadius = 40, Colour = White * 0.5f, AttenuationRadius = 150} },
 					new SingleColourSkyBox(Black)
 			);
 		}
@@ -215,7 +215,7 @@ public static class BuiltinScenes
 						else if (chooseMat < 0.655)
 						{
 							Colour             colour = RandomColour(HalfGrey, White);
-							SurfaceSphereLight light  = new(center, 0.4f, colour, 1f);
+							DiffuseSphereLight light  = new() {Position = center, Colour = colour, AttenuationRadius = 1f, DiffusionRadius = .4f};
 							lights.Add(light);
 							sphereMaterial = new StandardMaterial(White, 0f);
 						}

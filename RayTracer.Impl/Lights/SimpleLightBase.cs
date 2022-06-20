@@ -10,7 +10,7 @@ namespace RayTracer.Impl.Lights;
 ///  Simple light that can be coloured, positioned and have it's brightness falloff adjusted. Supports overriding for diffuse lights that cover a
 ///  volume
 /// </summary>
-public class SimpleLight : Light
+public abstract class SimpleLightBase : Light
 {
 	/// <summary>Colour of the emitted light</summary>
 	public Colour Colour { get; init; } = Colour.White;
@@ -51,9 +51,6 @@ public class SimpleLight : Light
 
 		return colour;
 	}
-
-	/// <inheritdoc />
-	public override Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
 
 #region Attenuation things
 
@@ -112,7 +109,7 @@ public class SimpleLight : Light
 	/// <summary>Delegate used to calculate how much the intensity of the light should be attenuated at a given <paramref name="normalisedDistance"/></summary>
 	/// <param name="light">Light object</param>
 	/// <param name="normalisedDistance">Normalized <c>[0...1]</c> distance between the light and the point</param>
-	public delegate float DistanceAttenuationDelegate(SimpleLight light, float normalisedDistance);
+	public delegate float DistanceAttenuationDelegate(SimpleLightBase light, float normalisedDistance);
 
 #endregion
 }
