@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using static RayTracer.Core.MathUtils;
 using PrevHitPool = System.Buffers.ArrayPool<RayTracer.Core.HitRecord>;
 
@@ -162,24 +163,37 @@ public sealed class AsyncRenderJob : IDisposable
 					//Have to ensure it's >0 or else all functions return 1
 					// ReSharper disable once UnusedVariable
 					#pragma warning disable CS0219
-					const float a = .200f;
+					const float a = .00200f;
 					#pragma warning restore CS0219
 					// ReSharper disable once JoinDeclarationAndInitializer
 					float val;
 					float z = hit.K - RenderOptions.KMin;
 
-					val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
-					// val   = MathF.Pow(MathF.E, -a * z);                    //Exponential
+					// val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
+					val   = MathF.Pow(MathF.E, -a * z);                    //Exponential
 					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
 					// val   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
 					// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
 					return new Colour(val);
 				}
+					static Colour RandomColourFromMaterialHash(Material m, bool offset){
+						int        hash  = m.GetHashCode();
+						Span<byte> bytes = stackalloc byte[sizeof(int)];
+						BitConverter.TryWriteBytes(bytes, hash);
+
+						int   o  = offset ? 1 : 0;
+						float rh = bytes[o+0] /255f;
+						float gh = bytes[o+1] /255f;
+						float bh = bytes[o+2] /255f;
+						return new Colour(rh, gh, bh);
+					}
 				//Debug texture based on X/Y pixel coordinates
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
-					return MathF.Sin(x / 40f) * MathF.Sin(y / 40f) < 0 ? Colour.Black : Colour.Purple;
+					return RandomColourFromMaterialHash(hit.Material,MathF.Sin(x / 2f) * MathF.Sin(y / 2f) < 0) ;
+				case GraphicsDebugVisualisation.WorldCoordDebugTexture:
+					return RandomColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
 				case GraphicsDebugVisualisation.LocalCoordDebugTexture:
-					return MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0 ? Colour.Black : Colour.Purple;
+					return RandomColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]
@@ -191,6 +205,14 @@ public sealed class AsyncRenderJob : IDisposable
 					break; //Shouldn't get to here
 				case GraphicsDebugVisualisation.UVCoords:
 					return new Colour(hit.UV.X, hit.UV.Y, 1);
+				case GraphicsDebugVisualisation.EstimatedLightIntensity:
+					Colour sum = Colour.Black;
+					foreach (Light light in Scene.Lights)
+					{
+						sum += light.CalculateLight(hit);
+					}
+
+					return sum;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value");
 			}

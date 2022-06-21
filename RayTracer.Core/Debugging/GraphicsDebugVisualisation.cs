@@ -28,5 +28,13 @@ public enum GraphicsDebugVisualisation
 	ScatterDirection,
 
 	/// <summary>Whenever a ray hits an object, display a debug texture based on the point's position in local-space</summary>
-	LocalCoordDebugTexture
+	LocalCoordDebugTexture,
+
+	/// <summary>Whenever a ray hits an object, display a debug texture based on the point's position in world-space</summary>
+	WorldCoordDebugTexture,
+
+	/// <summary>
+	/// How much light is estimated to reach the hit. May be affected depending on what material is used and how that material handles lighting
+	/// </summary>
+	EstimatedLightIntensity
 }

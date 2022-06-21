@@ -57,7 +57,7 @@ public abstract class Light : RenderAccessor
 	{
 		//Find ray between the hit and the light
 		shadowRay = Ray.FromPoints(hit.WorldPoint, position);
-		const float kMin = 0.0001f;
+		const float kMin = 0.01f;
 		float       kMax = distance = Vector3.Distance(position, hit.WorldPoint);
 		return Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
 	}
