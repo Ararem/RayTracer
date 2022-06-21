@@ -75,9 +75,11 @@ public class DiffuseShapedLight : SimpleLightBase
 			//Choose points, then get ray and distance from them
 			(Vector3 p1, Vector3 p2) = ChoosePointsForIntersection();
 			Ray         r    = Ray.FromPoints(p1, p2);
-			const float kMin = 0.0001f;
-			float       kMax = Vector3.Distance(p1, p2);
 
+			float kMin = 0.0001f;
+			float kMax = Vector3.Distance(p1, p2);
+
+			//Here, we repeatedly trace out the path along the ray, to see if
 			//Try intersecting
 			HitRecord? maybeShapeHit = Shape.TryHit(r, kMin, kMax);
 			if (maybeShapeHit is not null)

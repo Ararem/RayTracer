@@ -15,7 +15,7 @@ public enum GraphicsDebugVisualisation
 	FaceDirection,
 
 	/// <summary>Output a greyscale image based on how close the intersection is to the camera.</summary>
-	Depth,
+	DistanceFromCamera,
 
 	/// <summary>UV coordinate output by the object's intersection code</summary>
 	UVCoords,
@@ -36,5 +36,11 @@ public enum GraphicsDebugVisualisation
 	/// <summary>
 	/// How much light is estimated to reach the hit. May be affected depending on what material is used and how that material handles lighting
 	/// </summary>
-	EstimatedLightIntensity
+	EstimatedLightIntensity,
+
+	/// <summary>
+	/// Undefined visualisation used for development and testing purposes, should not be used
+	/// </summary>
+	UndefinedTestVisualisation,
+	//TODO: Add how many bounces reached
 }

@@ -156,7 +156,7 @@ public sealed class AsyncRenderJob : IDisposable
 					return hit.OutsideFace ? Colour.Green : Colour.Red;
 				}
 				//Render how far away the objects are from the camera
-				case GraphicsDebugVisualisation.Depth:
+				case GraphicsDebugVisualisation.DistanceFromCamera:
 				{
 					//I have several ways for displaying the depth
 					//Changing `a` affects how steep the curve is. Higher values cause a faster drop off
@@ -213,6 +213,19 @@ public sealed class AsyncRenderJob : IDisposable
 					}
 
 					return sum;
+				case GraphicsDebugVisualisation.UndefinedTestVisualisation:
+					Vector3 v = Vector3.Zero;
+					int     i = 0;
+					foreach (Light light in Scene.Lights)
+					{
+						light.CalculateLight(hit, out Ray r);
+						v += r.Direction;
+						i++;
+					}
+					v /= i;
+
+					return (Colour)(v + Vector3.One) / 2f;
+					return Colour.Black;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value");
 			}
