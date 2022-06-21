@@ -82,7 +82,7 @@ public class DiffuseShapedLight : SimpleLightBase
 			HitRecord? maybeShapeHit = Shape.TryHit(r, kMin, kMax);
 			if (maybeShapeHit is not null)
 			{
-				if(RandUtils.RandomFloat01() < 0.001f) Log.Verbose("Intersected after {I} iterations", i);
+				// if(RandUtils.RandomFloat01() < 0.00001f) Log.Verbose("Intersected after {I} iterations", i);
 				return maybeShapeHit.Value.WorldPoint;
 			}
 		}

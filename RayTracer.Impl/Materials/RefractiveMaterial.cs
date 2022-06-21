@@ -100,5 +100,5 @@ public class RefractiveMaterial : Material
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> arraySegment) => previousRayColour * Tint.GetColour(hit);
+	public override Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> arraySegment) => (previousRayColour+ CalculateSimpleColourFromLights(hit)) * Tint.GetColour(hit);
 }

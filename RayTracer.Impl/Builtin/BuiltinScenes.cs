@@ -36,18 +36,29 @@ public static class BuiltinScenes
 							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)) { Material = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f) }),
 							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f) }),
 
-							new("Glass", new Box(Matrix4x4.CreateScale(200) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(212.5f, 265f, 147.5f))) { Material = new RefractiveMaterial(3f, new SolidColourTexture(new Colour(0.8f, 0.9f, 1f))) })
+							new("Glass", new Box(Matrix4x4.CreateScale(50) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(200f, 265f, 147.5f))) { Material = new RefractiveMaterial(3f, new SolidColourTexture(new Colour(0.8f, 0.9f, 1f))) })
 					},
 					new Light[]
 					{
-							new PointLight
+							new DiffuseShapedLight(new Box(Matrix4x4.CreateScale(51) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(200f, 265f, 147.5f))))
 							{
-									Position                = new Vector3(555 / 2f, 540, 555 / 2f),
+									Position                = new Vector3(212.5f, 265f, 147.5f),
 									Colour                  = White,
-									AttenuationRadius       = 350f,
-									DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(1f)
+									AttenuationRadius       = 250, CutoffRadius = 500,
+									// DistanceAttenuationFunc = SimpleLightBase.LinearDistanceAttenuation()
+									DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(2f)
 									// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
 							}
+							// new DiffuseSphereLight
+							// {
+							// 		Position                = new Vector3(555 / 2f, 540, 555 / 2f),
+							// 		Colour                  = White*.3f,
+							// 		AttenuationRadius       = 500, CutoffRadius = 500,
+							// 		DiffusionRadius = 50,
+							// 		DistanceAttenuationFunc = SimpleLightBase.LinearDistanceAttenuation()
+							// 		// DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(1f)
+							// 		// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
+							// }
 					},
 					new SingleColourSkyBox(Black)
 			);
