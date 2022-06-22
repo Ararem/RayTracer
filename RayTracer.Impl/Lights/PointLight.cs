@@ -1,5 +1,4 @@
 using RayTracer.Core;
-using System.Numerics;
 
 namespace RayTracer.Impl.Lights;
 
@@ -7,5 +6,5 @@ namespace RayTracer.Impl.Lights;
 public sealed class PointLight : SimpleLightBase
 {
 	/// <inheritdoc />
-	public override Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position;
+	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit) => DefaultGetShadowRayForHit(hit, Position);
 }

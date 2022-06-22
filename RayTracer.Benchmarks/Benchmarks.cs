@@ -1,5 +1,9 @@
 using BenchmarkDotNet.Attributes;
 using RayTracer.Core;
+using RayTracer.Impl;
+using RayTracer.Impl.Hittables;
+using RayTracer.Impl.Lights;
+using RayTracer.Impl.Skyboxes;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
@@ -11,36 +15,30 @@ namespace RayTracer.Benchmarks;
 [SimpleJob]
 public class Benchmarks
 {
-	public float   invNormDotDir;
-	public float   negPointDotNormal;
-	public Vector3 normal;
-	public Vector3 point;
-	public Ray     ray;
+	public DiffuseShapedLight ShapedLight;
+	public DiffuseSphereLight SphereLight;
+	public HitRecord          hit;
 
 	public Benchmarks()
 	{
-		ray               = new Ray(RandUtils.RandomInUnitCube() * 1000f, RandUtils.RandomOnUnitSphere());
-		normal            = RandUtils.RandomOnUnitSphere();
-		point             = RandUtils.RandomInUnitCube() * 1000f;
-		negPointDotNormal = -Dot(point, normal);
-	}
-
-
-	[Benchmark]
-	public float Method1()
-	{
-		return -Dot(normal, ray.Origin - point) / Dot(normal, ray.Direction);
+		Vector3 centre = RandUtils.RandomInUnitCube() * 1000;
+		float   radius = RandUtils.RandomFloat01()    * 500;
+		Sphere  sphere = new Sphere(centre, radius);
+		ShapedLight = new DiffuseShapedLight(sphere);
+		SphereLight = new DiffuseSphereLight() { Position = centre, DiffusionRadius = radius };
+		hit         = new HitRecord(new Ray(Zero, UnitX), Zero, Zero, UnitY, 0f, true, Vector2.One, null!, null);
+		AsyncRenderJob renderJob = new AsyncRenderJob(new Scene("Test", Camera.Create(Zero, Zero, UnitY, 90, 1, 1, 1), new SceneObject[]{new SceneObject("", sphere)}, new Light[]{SphereLight, ShapedLight}, new DefaultSkyBox()), RenderOptions.Default);
 	}
 
 	[Benchmark]
-	public float Method2()
+	public Colour Shaped()
 	{
-		return -(Dot(ray.Origin, normal) - Dot(point, normal)) / Dot(normal, ray.Direction);
+		return ShapedLight.CalculateLight(hit);
 	}
 
 	[Benchmark]
-	public float Method2Cached()
+	public Colour Sphere()
 	{
-		return -(Dot(ray.Origin, normal) + negPointDotNormal) / Dot(normal, ray.Direction);
+		return SphereLight.CalculateLight(hit);
 	}
 }

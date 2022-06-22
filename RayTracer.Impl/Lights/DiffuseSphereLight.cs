@@ -12,5 +12,5 @@ public class DiffuseSphereLight : SimpleLightBase
 	public float DiffusionRadius { get; init; }
 
 	/// <inheritdoc />
-	public override Vector3 ChooseIntersectTestPosition(HitRecord hit) => Position + (RandUtils.RandomInUnitSphere() * DiffusionRadius);
+	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit) => DefaultGetShadowRayForHit(hit, Position + (RandUtils.RandomInUnitSphere() * DiffusionRadius));
 }

@@ -30,22 +30,26 @@ public abstract class SimpleLightBase : Light
 	/// </summary>
 	public float CutoffRadius { get; init; } = float.PositiveInfinity;
 
-	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, out Ray ray)
-	{
-		//Choose a point to test for intersection
-		//Only applicable to diffuse lights, but doesn't harm point lights
-		Vector3 pointToCheck = ChooseIntersectTestPosition(hit);
+	/// <summary>Returns a ray and two distance bounds, that are used to check if there is an intersection between the hit and the light source</summary>
+	/// <param name="hit">Information about the hit that will be checked. May be useful for biasing towards the closest point</param>
+	/// <remarks>Can be overridden for lights that cover a volume, e.g. area and diffuse lights</remarks>
+	/// <returns>A tuple containing a <see cref="Ray"/> and two <c>k</c> values that are the (distance) bounds along the ray. If there is an intersection in the scene, and the <see cref="HitRecord.K"/> value is &gt; kMin and &lt; kMax, the hit is considered shadowed. The <c>kMax</c> value should be equal to the distance between the point on the hit object, and the closest intersection between the surface of the light source and the ray.</returns>
+	[PublicAPI]
+	protected abstract (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit);
 
+	/// <inheritdoc/>
+	public override Colour CalculateLight(HitRecord hit, out Ray shadowRay)
+	{
 		//Check intersection
-		bool intersection = CheckIntersection(hit, pointToCheck, out ray, out float distance);
-		if (intersection) return Colour.Black;      //Another object blocks the light ray
-		if (distance               > CutoffRadius) return Colour.Black; //Outside the radius of the light
+		(shadowRay, float kMin, float kMax) = GetShadowRayForHit(hit);
+		bool intersection = Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
+		if (intersection) return Colour.Black;        //Another object blocks the light ray
+		if (kMax > CutoffRadius) return Colour.Black; //Since kMax is the distance to the light, check if it's outside the radius of the light
 
 		Colour colour = Colour;
 
 		//Also account for distance attenuation
-		float distScale      = DistanceAttenuationFunc(this, distance / AttenuationRadius);
+		float distScale      = DistanceAttenuationFunc(this, kMax / AttenuationRadius);
 		distScale =  Max(distScale, 0); //Clamp in case the function goes below 0
 		colour    *= distScale;
 
@@ -112,4 +116,15 @@ public abstract class SimpleLightBase : Light
 	public delegate float DistanceAttenuationDelegate(SimpleLightBase light, float normalisedDistance);
 
 #endregion
+
+	public static (Ray ray, float kMin, float kMax) DefaultGetShadowRayForHit(HitRecord hit, Vector3 pos)
+	{
+		Ray r = Ray.FromPoints(hit.WorldPoint, pos); //The ray goes [hit object's point] ==> [point inside AABB]
+
+		//I don't think the bounds matter too much
+		const float kMin = 0.0001f;
+		float kMax = Vector3.Distance(hit.WorldPoint, pos);
+
+		return (r, kMin, kMax);
+	}
 }
