@@ -5,13 +5,13 @@ Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical co
 .NET SDK=6.0.300
   [Host]     : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
   DefaultJob : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
-  Job-RCERVS : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
+  Job-SUISCW : .NET 6.0.5 (6.0.522.21309), X64 RyuJIT
 
 
 ```
-| Method |        Job | Toolchain |     Mean |    Error |   StdDev |
-|------- |----------- |---------- |---------:|---------:|---------:|
-| Shaped | DefaultJob |   Default | 459.0 ns | 19.13 ns | 56.42 ns |
-| Sphere | DefaultJob |   Default | 259.4 ns |  4.33 ns | 11.01 ns |
-| Shaped | Job-RCERVS |  .NET 6.0 | 437.4 ns | 15.87 ns | 46.79 ns |
-| Sphere | Job-RCERVS |  .NET 6.0 | 316.8 ns |  8.79 ns | 25.91 ns |
+|      Method |        Job | Toolchain |      Mean |     Error |    StdDev |
+|------------ |----------- |---------- |----------:|----------:|----------:|
+| SumBilinear | DefaultJob |   Default | 0.5853 ns | 0.0536 ns | 0.0896 ns |
+|  DiffLinear | DefaultJob |   Default | 0.0427 ns | 0.0400 ns | 0.0375 ns |
+| SumBilinear | Job-SUISCW |  .NET 6.0 | 0.2636 ns | 0.0452 ns | 0.0768 ns |
+|  DiffLinear | Job-SUISCW |  .NET 6.0 | 0.0427 ns | 0.0076 ns | 0.0063 ns |
