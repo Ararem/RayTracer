@@ -1,10 +1,6 @@
 using RayTracer.Core;
-using Serilog;
 using System.Numerics;
-using System.Security.Cryptography;
-using static System.MathF;
 using static System.Numerics.Vector3;
-using Log = Serilog.Log;
 
 namespace RayTracer.Impl.Lights;
 
@@ -16,28 +12,42 @@ public class DiffuseSphereLight : SimpleLightBase
 
 	/// <inheritdoc/>
 	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit)
-	#if false
+			#if false
 	//=> DefaultGetShadowRayForHit(hit.WorldPoint, Position + (RandUtils.RandomInUnitSphere() * DiffusionRadius));
 	{
-		Vector3 randDir                                          = RandUtils.RandomOnUnitSphere();
+		Vector3 randDir = RandUtils.RandomOnUnitSphere();
 		if (Dot(randDir, hit.WorldPoint - Position) < 0) randDir = -randDir; //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
-		Vector3 randPos                                          = Position + (randDir * DiffusionRadius);
+		Vector3 randPos = Position + (randDir * DiffusionRadius);
 
 		return DefaultGetShadowRayForHit(randPos, hit.WorldPoint);
 	}
-	#elif true
+			#elif true
 	{
-		Vector3 randDir       = RandUtils.RandomOnUnitSphere() * DiffusionRadius;
-		Vector3 posToCheck    = Position   + randDir;
-		Vector3 hitToCheckDir = posToCheck - hit.WorldPoint;
+		Vector3 h                                                = hit.WorldPoint;
+		Vector3 randDir                                          = RandUtils.RandomOnUnitSphere() * DiffusionRadius;
+		if (Dot(randDir, hit.WorldPoint - Position) < 0) randDir = -randDir;           //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
+		Vector3 l                                                = Position + randDir; //Random point on the surface of our sphere light (gonna shadow check this)
+		Vector3 hToL                                             = l        - h;       //The sized direction vector that goes from the hit towards the point `l`
 
-		//Flip the random offset in case it's pointing away from the hit's normal - this ensures it's on the closer side to the lit object
-		//Here, we need to reflect it around the
-		if (Dot(hitToCheckDir,  hit.Normal) < 0)
+		/*
+		 * In case the direction towards the point we're checking (aka the shadow ray direction) is 'behind' the hit (aka away from the normal)
+		 * Then we flip the point around so that it's going with the normal
+		 * Helps resolve these weird self-shadowing issues (see below - the path H->L is behind the normal, so flip it to position F)
+		 *    |     L
+		 *    |  _________
+		 *    | /         \
+		 *    |/           \
+		 *<--H|            |
+		 *    |\          /
+		 * F  | \________/
+		 */
+		if (Dot(hToL, hit.Normal) < 0)
 		{
-			posToCheck = hit.WorldPoint + Reflect(hitToCheckDir, hit.Normal);
+			Vector3 hToF = -hToL; //Flip
+			l = h + hToF;         //Recalculate new position
 		}
-		(Ray ray, float kMin, float kMax) rand = DefaultGetShadowRayForHit(hit.WorldPoint, posToCheck);
+
+		(Ray ray, float kMin, float kMax) rand = DefaultGetShadowRayForHit(hit.WorldPoint, l);
 
 		// Vector3                           closestDir   = Normalize(hit.WorldPoint - Position);
 		// Vector3                           closestPoint = Position + (closestDir * DiffusionRadius);
@@ -68,7 +78,7 @@ public class DiffuseSphereLight : SimpleLightBase
 		{
 			//Here choose a random point on the sphere
 			Vector3 randUnitPoint = RandUtils.RandomOnUnitSphere();
-			Vector3 lPos           = Position + (randUnitPoint * DiffusionRadius); //Point on our sphere light, world-space
+			Vector3 lPos = Position + (randUnitPoint * DiffusionRadius); //Point on our sphere light, world-space
 			//Get the shadow ray between the hit and our random point on our light
 			(Ray ray, float kMin, float kMax) = DefaultGetShadowRayForHit(hit.WorldPoint, lPos);
 			//If there was no self-intersection, return the ray so we can shadow check in the scene
