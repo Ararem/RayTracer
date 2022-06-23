@@ -29,13 +29,13 @@ public class DiffuseSphereLight : SimpleLightBase
 	{
 		Vector3 randDir       = RandUtils.RandomOnUnitSphere() * DiffusionRadius;
 		Vector3 posToCheck    = Position   + randDir;
-		Vector3 hitToCheckPos = posToCheck - hit.WorldPoint;
+		Vector3 hitToCheckDir = posToCheck - hit.WorldPoint;
 
 		//Flip the random offset in case it's pointing away from the hit's normal - this ensures it's on the closer side to the lit object
-		if (Dot(hitToCheckPos,  hit.WorldPoint - Position) < 0)
+		//Here, we need to reflect it around the
+		if (Dot(hitToCheckDir,  hit.Normal) < 0)
 		{
-			randDir = -randDir;
-			posToCheck = Position + randDir;
+			posToCheck = hit.WorldPoint + Reflect(hitToCheckDir, hit.Normal);
 		}
 		(Ray ray, float kMin, float kMax) rand = DefaultGetShadowRayForHit(hit.WorldPoint, posToCheck);
 
