@@ -227,7 +227,7 @@ public sealed class AsyncRenderJob : IDisposable
 					return (Colour)(v + Vector3.One) / 2f;
 					return Colour.Black;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value");
+					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
 			}
 
 		//No object was intersected with

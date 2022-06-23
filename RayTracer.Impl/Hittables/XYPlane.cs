@@ -100,7 +100,7 @@ public sealed class XYPlane : SingleMaterialHittable
 						: Vector3.UnitZ;
 
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
-		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, Material);
+		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv,this, Material);
 	}
 
 	/// <inheritdoc/>

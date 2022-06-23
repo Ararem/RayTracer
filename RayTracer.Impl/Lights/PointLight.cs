@@ -6,5 +6,5 @@ namespace RayTracer.Impl.Lights;
 public sealed class PointLight : SimpleLightBase
 {
 	/// <inheritdoc />
-	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit) => DefaultGetShadowRayForHit(hit, Position);
+	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit) => DefaultGetShadowRayForHit(hit.WorldPoint, Position);
 }

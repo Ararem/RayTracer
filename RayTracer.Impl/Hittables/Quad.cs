@@ -121,7 +121,7 @@ public sealed class Quad : SingleMaterialHittable
 		Vector2 uv      = new (u, v) ;
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, Material);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv,this, Material);
 	}
 
 	/// <inheritdoc/>

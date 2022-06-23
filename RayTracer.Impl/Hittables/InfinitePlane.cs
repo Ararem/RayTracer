@@ -58,7 +58,7 @@ public sealed class InfinitePlane : SingleMaterialHittable
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, Material);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv,this, Material);
 	}
 
 	/// <inheritdoc/>

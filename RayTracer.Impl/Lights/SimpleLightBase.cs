@@ -117,13 +117,13 @@ public abstract class SimpleLightBase : Light
 
 #endregion
 
-	public static (Ray ray, float kMin, float kMax) DefaultGetShadowRayForHit(HitRecord hit, Vector3 pos)
+	public static (Ray ray, float kMin, float kMax) DefaultGetShadowRayForHit(Vector3 hitPos, Vector3 lightPos)
 	{
-		Ray r = Ray.FromPoints(hit.WorldPoint, pos); //The ray goes [hit object's point] ==> [point inside AABB]
+		Ray r = Ray.FromPoints(hitPos, lightPos); //The ray goes [hit object's point] ==> [point inside AABB]
 
 		//I don't think the bounds matter too much
-		const float kMin = 0.0001f;
-		float kMax = Vector3.Distance(hit.WorldPoint, pos);
+		const float kMin = 0.01f;
+		float       kMax = Vector3.Distance(hitPos, lightPos) -kMin;
 
 		return (r, kMin, kMax);
 	}

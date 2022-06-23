@@ -8,7 +8,7 @@ namespace RayTracer.Core;
 ///  The <see cref="Direction"/> of the ray will always be normalised upon calling the default constructor.
 /// </remarks>
 [PublicAPI]
-public readonly struct Ray
+public readonly struct Ray : IEquatable<Ray>
 {
 	/// <summary>A 3-dimensional ray, starting at the <see cref="Origin"/> and going in a certain <see cref="Direction"/></summary>
 	/// <param name="origin">The point in space where the ray starts</param>
@@ -32,4 +32,21 @@ public readonly struct Ray
 
 	/// <summary>The direction to move in when progressing along the ray</summary>
 	public Vector3 Direction { get; }
+
+#region Equality operators
+
+	/// <inheritdoc />
+	public bool Equals(Ray other) => Origin.Equals(other.Origin) && Direction.Equals(other.Direction);
+
+	/// <inheritdoc />
+	public override bool Equals(object? obj) => obj is Ray other && Equals(other);
+
+	/// <inheritdoc />
+	public override int GetHashCode() => HashCode.Combine(Origin, Direction);
+
+	public static bool operator ==(Ray left, Ray right) => left.Equals(right);
+
+	public static bool operator !=(Ray left, Ray right) => !left.Equals(right);
+
+#endregion
 }

@@ -63,7 +63,7 @@ public sealed class ConstantDensityMedium : Hittable
 		const bool frontFace  = true;                           //Arbitrary
 
 		//Here we pass in how far we travelled 'inside' the object onto the VolumetricMaterial (the shader)
-		return new HitRecord(ray, worldPoint, localPoint, normal, entryHit.K + distanceToIntersection, frontFace, Vector2.Zero, Material, distanceToIntersection);
+		return new HitRecord(ray, worldPoint, localPoint, normal, entryHit.K + distanceToIntersection, frontFace, Vector2.Zero,this, Material, distanceToIntersection);
 	}
 
 	/// <summary>How dense the medium is. Higher values increase the chance of collision</summary>

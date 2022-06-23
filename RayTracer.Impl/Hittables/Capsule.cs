@@ -142,7 +142,7 @@ public sealed class Capsule : SingleMaterialHittable
 		);
 		bool inside = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
-		return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv, Material);
+		return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv,this, Material);
 	}
 
 	/// <inheritdoc/>
