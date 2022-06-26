@@ -277,8 +277,9 @@ public sealed class AsyncRenderJob : IDisposable
 				//Otherwise, the material scattered, creating a new ray, render recursively again
 				Interlocked.Increment(ref RenderStats.MaterialScatterCount);
 				prevHitsSegment.Array![prevHitsSegment.Count] = hit;                                                                 //Update the hit buffer from this hit
-				ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Expend the segment to include our new element
-				return InternalCalculateRayColourRecursive(newRay, depth + 1, newSegment);
+				ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Extend the segment to include our new element
+				Colour future = InternalCalculateRayColourRecursive(newRay, depth + 1, newSegment);
+				return hit.Material.CalculateColour(future, hit, prevHitsSegment);
 			}
 		}
 		//No object was hit (at least not in the range), so return the skybox colour
@@ -312,7 +313,8 @@ public sealed class AsyncRenderJob : IDisposable
 					//If the new ray is null, the material did not scatter (completely absorbed the light)
 					//So it's impossible to have any future bounces, so quit the loop
 					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
-					finalColour = NoColour;
+					finalColour             = NoColour;
+					materialHitArray[depth] = hit;
 					break;
 				}
 				else

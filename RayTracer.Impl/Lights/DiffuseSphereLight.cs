@@ -12,7 +12,7 @@ public class DiffuseSphereLight : SimpleLightBase
 
 	/// <inheritdoc/>
 	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit)
-			#if false
+			#if !false
 	//=> DefaultGetShadowRayForHit(hit.WorldPoint, Position + (RandUtils.RandomInUnitSphere() * DiffusionRadius));
 	{
 		Vector3 randDir = RandUtils.RandomOnUnitSphere();
@@ -25,7 +25,7 @@ public class DiffuseSphereLight : SimpleLightBase
 	{
 		Vector3 h                                                = hit.WorldPoint;
 		Vector3 randDir                                          = RandUtils.RandomOnUnitSphere() * DiffusionRadius;
-		if (Dot(randDir, hit.WorldPoint - Position) < 0) randDir = -randDir;           //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
+		// if (Dot(randDir, hit.WorldPoint - Position) < 0) randDir = -randDir;           //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
 		Vector3 l                                                = Position + randDir; //Random point on the surface of our sphere light (gonna shadow check this)
 		Vector3 hToL                                             = l        - h;       //The sized direction vector that goes from the hit towards the point `l`
 
@@ -39,12 +39,15 @@ public class DiffuseSphereLight : SimpleLightBase
 		 *    |/           \
 		 *<--H|            |
 		 *    |\          /
-		 * F  | \________/
+		 *    | \________/
+		 * F  |
+		 *
+		 * Since this causes some weird backface lighting when the hit is outside the radius of the diffusion, just check the distance and only flip if the point is inside the sphere's radius
 		 */
-		if (Dot(hToL, hit.Normal) < 0)
+		if ((Distance(h, Position) < DiffusionRadius) && (Dot(hToL, hit.Normal) < 0))
 		{
-			Vector3 hToF = -hToL; //Flip
-			l = h + hToF;         //Recalculate new position
+			Vector3 hToF = true?-hToL:Reflect(hToL, hit.Normal); //Flip
+			// l = h + hToF;                                   //Recalculate new position
 		}
 
 		(Ray ray, float kMin, float kMax) rand = DefaultGetShadowRayForHit(hit.WorldPoint, l);
