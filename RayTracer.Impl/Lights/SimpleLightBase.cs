@@ -38,12 +38,14 @@ public abstract class SimpleLightBase : Light
 	protected abstract (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit);
 
 	/// <inheritdoc/>
-	public override Colour CalculateLight(HitRecord hit, out Ray shadowRay)
+	public override Colour CalculateLight(HitRecord hit, out Ray shadowRay, bool calculateRawColour = false)
 	{
 		//Check intersection
 		(shadowRay, float kMin, float kMax) = GetShadowRayForHit(hit);
 		bool intersection = Renderer.AnyIntersectionFast(shadowRay, kMin, kMax);
 		if (intersection) return Colour.Black;        //Another object blocks the light ray
+
+		if (calculateRawColour) return Colour; //Skip calculating the attenuation things
 		if (kMax > CutoffRadius) return Colour.Black; //Since kMax is the distance to the light, check if it's outside the radius of the light
 
 		Colour colour = Colour;

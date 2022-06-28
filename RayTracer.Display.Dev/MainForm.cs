@@ -186,7 +186,7 @@ public sealed class MainForm : Form
 		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
 				1280,1280,
 				0.00001f, float.PositiveInfinity,
-				4, 1, 100,
+				3, 1, 100,
 				GraphicsDebugVisualisation.None
 				));
 

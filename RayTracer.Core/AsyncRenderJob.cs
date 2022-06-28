@@ -206,26 +206,25 @@ public sealed class AsyncRenderJob : IDisposable
 				case GraphicsDebugVisualisation.UVCoords:
 					return new Colour(hit.UV.X, hit.UV.Y, 1);
 				case GraphicsDebugVisualisation.EstimatedLightIntensity:
+				{
 					Colour sum = Colour.Black;
 					foreach (Light light in Scene.Lights)
 					{
-						sum += light.CalculateLight(hit);
+						sum += light.CalculateLight(hit, out _);
 					}
 
 					return sum;
+				}
 				case GraphicsDebugVisualisation.UndefinedTestVisualisation:
-					Vector3 v = Vector3.Zero;
-					int     i = 0;
+				{
+					Colour sum = Colour.Black;
 					foreach (Light light in Scene.Lights)
 					{
-						light.CalculateLight(hit, out Ray r);
-						v += r.Direction;
-						i++;
+						sum += light.CalculateLight(hit, out _, true);
 					}
-					v /= i;
 
-					return (Colour)(v + Vector3.One) / 2f;
-					return Colour.Black;
+					return sum;
+				}
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
 			}
@@ -233,62 +232,62 @@ public sealed class AsyncRenderJob : IDisposable
 		//No object was intersected with
 		return NoColour;
 	}
-
-	private Colour InitialCalculateRayColourRecursive(Ray ray)
-	{
-		HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
-		ArraySegment<HitRecord> segment = new(array, 0, 0);
-		return InternalCalculateRayColourRecursive(ray, 0, segment);
-	}
-
-	/// <summary>Recursive function to calculate the colour for a ray</summary>
-	/// <param name="ray">The ray to calculate the colour from</param>
-	/// <param name="depth">
-	///  The number of times the ray has bounced. If this is 0, then the ray has never bounced, and so we can assume it's the initial ray
-	///  from the camera
-	/// </param>
-	/// <param name="prevHitsSegment">Array segment that contains the previous hits</param>
-	/// <returns></returns>
-	private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsSegment)
-	{
-		//Don't go too deep
-		if (depth > RenderOptions.MaxDepth)
-		{
-			Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
-			return NoColour;
-		}
-		//TODO: Depth tracking
-
-		Interlocked.Increment(ref RenderStats.RayCount);
-		if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
-		{
-			//See if the material scatters the ray
-			Ray? maybeNewRay = hit.Material.Scatter(hit, prevHitsSegment);
-
-			if (maybeNewRay is not { } newRay)
-			{
-				//If the new ray is null, the material did not scatter (completely absorbed the light)
-				//So it's impossible to have any future bounces, so quit and return black
-				Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
-				return NoColour;
-			}
-			else
-			{
-				//Otherwise, the material scattered, creating a new ray, render recursively again
-				Interlocked.Increment(ref RenderStats.MaterialScatterCount);
-				prevHitsSegment.Array![prevHitsSegment.Count] = hit;                                                                 //Update the hit buffer from this hit
-				ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Extend the segment to include our new element
-				Colour future = InternalCalculateRayColourRecursive(newRay, depth + 1, newSegment);
-				return hit.Material.CalculateColour(future, hit, prevHitsSegment);
-			}
-		}
-		//No object was hit (at least not in the range), so return the skybox colour
-		else
-		{
-			Interlocked.Increment(ref RenderStats.SkyRays);
-			return Scene.SkyBox.GetSkyColour(ray);
-		}
-	}
+	//
+	// private Colour InitialCalculateRayColourRecursive(Ray ray)
+	// {
+	// 	HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
+	// 	ArraySegment<HitRecord> segment = new(array, 0, 0);
+	// 	return InternalCalculateRayColourRecursive(ray, 0, segment);
+	// }
+	//
+	// /// <summary>Recursive function to calculate the colour for a ray</summary>
+	// /// <param name="ray">The ray to calculate the colour from</param>
+	// /// <param name="depth">
+	// ///  The number of times the ray has bounced. If this is 0, then the ray has never bounced, and so we can assume it's the initial ray
+	// ///  from the camera
+	// /// </param>
+	// /// <param name="prevHitsSegment">Array segment that contains the previous hits</param>
+	// /// <returns></returns>
+	// private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsSegment)
+	// {
+	// 	//Don't go too deep
+	// 	if (depth > RenderOptions.MaxDepth)
+	// 	{
+	// 		Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
+	// 		return NoColour;
+	// 	}
+	// 	//TODO: Depth tracking
+	//
+	// 	Interlocked.Increment(ref RenderStats.RayCount);
+	// 	if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
+	// 	{
+	// 		//See if the material scatters the ray
+	// 		Ray? maybeNewRay = hit.Material.Scatter(hit, prevHitsSegment);
+	//
+	// 		if (maybeNewRay is not { } newRay)
+	// 		{
+	// 			//If the new ray is null, the material did not scatter (completely absorbed the light)
+	// 			//So it's impossible to have any future bounces, so quit and return black
+	// 			Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
+	// 			return NoColour;
+	// 		}
+	// 		else
+	// 		{
+	// 			//Otherwise, the material scattered, creating a new ray, render recursively again
+	// 			Interlocked.Increment(ref RenderStats.MaterialScatterCount);
+	// 			prevHitsSegment.Array![prevHitsSegment.Count] = hit;                                                                 //Update the hit buffer from this hit
+	// 			ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Extend the segment to include our new element
+	// 			Colour future = InternalCalculateRayColourRecursive(newRay, depth + 1, newSegment);
+	// 			return hit.Material.CalculateColour(future, hit, prevHitsSegment);
+	// 		}
+	// 	}
+	// 	//No object was hit (at least not in the range), so return the skybox colour
+	// 	else
+	// 	{
+	// 		Interlocked.Increment(ref RenderStats.SkyRays);
+	// 		return Scene.SkyBox.GetSkyColour(ray);
+	// 	}
+	// }
 
 	private Colour CalculateRayColourLooped(Ray ray)
 	{
@@ -315,6 +314,7 @@ public sealed class AsyncRenderJob : IDisposable
 					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
 					finalColour             = NoColour;
 					materialHitArray[depth] = hit;
+					depth++; //Have to counteract the `depth--` further down
 					break;
 				}
 				else

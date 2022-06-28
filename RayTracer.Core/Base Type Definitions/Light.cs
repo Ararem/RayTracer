@@ -9,6 +9,8 @@ public abstract class Light : RenderAccessor
 {
 	/// <summary>Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/></summary>
 	/// <param name="hit">The information about the hit to calculate the lighting for</param>
+	/// <param name="ray">Output shadow ray that was calculated and checked</param>
+	/// <param name="calculateRawColour">Optional flag to make the method return the "raw" colour of the light for the hit. E.g. the light should not apply any distance attenuation if this is set to <see langword="true"/></param>
 	/// <returns>The amount of light received by the <paramref name="hit"/>, from this light source</returns>
 	/// <remarks>
 	///  When checking for shadowing, you would most likely use <see cref="AsyncRenderJob.AnyIntersectionFast"/> between the point hit and the position of
@@ -31,11 +33,5 @@ public abstract class Light : RenderAccessor
 	/// }
 	///  </code>
 	/// </example>
-	public Colour CalculateLight(HitRecord hit) => CalculateLight(hit, out _);
-
-	/// <inheritdoc cref="CalculateLight(RayTracer.Core.HitRecord)"/>
-	/// <param name="ray">Output calculated ray for the light ray</param>
-	#pragma warning disable CS1573
-	public abstract Colour CalculateLight(HitRecord hit, out Ray ray);
-	#pragma warning restore CS1573
+	public abstract Colour CalculateLight(HitRecord hit, out Ray ray, bool calculateRawColour = false);
 }

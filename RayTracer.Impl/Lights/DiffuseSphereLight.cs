@@ -16,10 +16,10 @@ public class DiffuseSphereLight : SimpleLightBase
 	//=> DefaultGetShadowRayForHit(hit.WorldPoint, Position + (RandUtils.RandomInUnitSphere() * DiffusionRadius));
 	{
 		Vector3 randDir = RandUtils.RandomOnUnitSphere();
-		if (Dot(randDir, hit.WorldPoint - Position) < 0) randDir = -randDir; //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
+		if (Dot(randDir, Normalize(hit.WorldPoint - Position)) < 0) randDir = -randDir; //Flip the random offset in case it's pointing away from the hit - this ensures it's on the closer side to the lit object
 		Vector3 randPos = Position + (randDir * DiffusionRadius);
 
-		return DefaultGetShadowRayForHit(randPos, hit.WorldPoint);
+		return DefaultGetShadowRayForHit(hit.WorldPoint, randPos);
 	}
 			#elif true
 	{

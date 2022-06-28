@@ -55,12 +55,15 @@ public abstract class Material : RenderAccessor
 	/// </example>
 	public abstract Colour CalculateColour(Colour previousRayColour, HitRecord hit, ArraySegment<HitRecord> previousHits);
 
+	/// <summary>
+	/// Simple helper method that calculates the light colour by summing the colour from all lights in the scene. Use this unless you want special light handling (e.g. specular highlights)
+	/// </summary>
 	public Colour CalculateSimpleColourFromLights(HitRecord hit)
 	{
 		Colour sum = Colour.Black;
 		for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
 		{
-			sum += Renderer.Scene.Lights[i].CalculateLight(hit);
+			sum += Renderer.Scene.Lights[i].CalculateLight(hit, out _);
 		}
 
 		return sum;
