@@ -30,7 +30,7 @@ public static class BuiltinScenes
 						!true?new StandardMaterial(colour, 1f)
 						:new PhongMaterial
 				{
-						AmbientColour  = new Colour(0.01f),
+						AmbientColour  = new Colour(0*0.01f),
 						DiffuseColour  = colour,
 						SpecularColour = White,
 						Shininess      = 1000f
