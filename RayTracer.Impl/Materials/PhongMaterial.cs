@@ -17,15 +17,13 @@ public class PhongMaterial : Material
 	public Colour DiffuseColour { get; init; } = Colour.HalfGrey;
 
 	/// <summary>Ambient colour reflection constant; the ratio of reflection of the ambient term present in all points in the scene rendered</summary>
-	public Colour AmbientColour { get; init; } = Colour.Black;
+	public Colour AmbientColour { get; init; } = Colour.White *0.001f;
 
 	/// <summary>
 	///  Shininess constant for this material, which is larger for surfaces that are smoother and more mirror-like. When this constant is large the specular
 	///  highlight is small.
 	/// </summary>
 	public float Shininess { get; init; }
-
-	public static Colour TEMP_AMBIENT_COLOUR => Colour.White * 0.1f;
 
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits) => null;
@@ -35,7 +33,6 @@ public class PhongMaterial : Material
 	{
 		//TODO: Proper reflections and scattering
 		//TODO: Material colour
-		Colour ambientColour  = AmbientColour * TEMP_AMBIENT_COLOUR;
 		Colour diffuseColourSum  = Colour.Black;
 		Colour specularColourSum = Colour.Black;
 
@@ -58,6 +55,6 @@ public class PhongMaterial : Material
 		 	diffuseColourSum += diffuseLightColour * DiffuseColour * diffDotProd;
 		 }
 
-		return ambientColour + diffuseColourSum + specularColourSum;
+		return AmbientColour + diffuseColourSum + specularColourSum;
 	}
 }

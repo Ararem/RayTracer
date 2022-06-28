@@ -23,16 +23,17 @@ public static class BuiltinScenes
 	{
 		get
 		{
-			// Material greyWallMaterial = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f);
-
-			static PhongMaterial Material(Colour colour)
+			static Material Material(Colour colour)
 			{
-				return new PhongMaterial
+
+				return
+						!true?new StandardMaterial(colour, 1f)
+						:new PhongMaterial
 				{
-						AmbientColour = Red,
-						DiffuseColour = Green,
-						SpecularColour = Blue,
-						Shininess     = 100f
+						AmbientColour  = new Colour(0.01f),
+						DiffuseColour  = colour,
+						SpecularColour = White,
+						Shininess      = 1000f
 
 						// DiffuseColour = colour,
 						// AmbientColour  = White,
@@ -56,22 +57,13 @@ public static class BuiltinScenes
 							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) }),
 
 							// new("Micro Box", new Box(Matrix4x4.CreateScale(50) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(237.5F, 200, 277.5F))) { Material = Material(new Colour(0.8f, 0.9f, 1f)) }),
-							// new("Light Ball", new Sphere(new Vector3(277.5F, 200, 277.5F), 50f))
+							// new("Light Ball", new Sphere(new Vector3(200f, 200f, 200f), 50f))
 					},
 					new Light[]
 					{
-							// new DiffuseShapedLight(new Box(Matrix4x4.CreateScale(50.01f) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(200f, 265f, 147.5f))))
-							// {
-							// 		Position                = new Vector3(212.5f, 265f, 147.5f),
-							// 		Colour                  = White,
-							// 		AttenuationRadius       = 250,// CutoffRadius = 500,
-							// 		// DistanceAttenuationFunc = SimpleLightBase.LinearDistanceAttenuation()
-							// 		DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(2f)
-							// 		// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
-							// }
 							new DiffuseSphereLight
 							{
-									Position          = new Vector3(277.5F, 200, 277.5F),
+									Position          = new Vector3(200F, 200F, 200F),
 									Colour            = White,
 									AttenuationRadius = 500,
 									DiffusionRadius   = 50.1f,
