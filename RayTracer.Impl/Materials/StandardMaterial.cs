@@ -63,7 +63,7 @@ public sealed class StandardMaterial : Material
 	/// <inheritdoc/>
 	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
-		Vector3 diffuse                           = RandomInUnitSphere(); //Pick a random scatter direction
+		Vector3 diffuse                           = RandomOnUnitSphere(); //Pick a random scatter direction
 		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
 		Vector3 reflect                           = Reflect(hit.Ray.Direction, hit.Normal);
 		Vector3 scatter                           = Lerp(reflect, diffuse, Diffusion);

@@ -297,6 +297,7 @@ public sealed class AsyncRenderJob : IDisposable
 		Colour                                finalColour      = NoColour;
 		//Loop for a max number of times equal to the depth
 		//And map out the ray path (don't do any colours yet)
+		//TODO: Fix this depth++/-- stuff, it's iffy
 		int depth;
 		for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
 		{
