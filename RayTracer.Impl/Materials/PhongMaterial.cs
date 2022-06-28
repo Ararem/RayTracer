@@ -45,8 +45,6 @@ public class PhongMaterial : Material
 	/// <inheritdoc/>
 	public override Colour CalculateColour(Colour previousColour, HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
-		//TODO: Proper reflections and scattering
-		//TODO: Material colour
 		Colour rawDiffuseColourSum  = Colour.Black;
 		Colour rawSpecularColourSum = Colour.Black;
 
