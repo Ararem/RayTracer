@@ -48,10 +48,10 @@ public static class BuiltinScenes
 							new("Bottom", new XZPlane(0, 555, 0, 555, 0) { Material   = greyWallMaterial }),
 
 							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) }),
-							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) })
+							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) }),
 
 							// new("Micro Box", new Box(Matrix4x4.CreateScale(50) * Matrix4x4.CreateFromYawPitchRoll(15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(237.5F, 200, 277.5F))) { Material = Material(new Colour(0.8f, 0.9f, 1f)) }),
-							// new("Light Ball", new Sphere(new Vector3(200f, 200f, 200f), 50f))
+							new("Light Ball", new Sphere(new Vector3(200f, 200f, 200f), 50f){Material = Material(Blue)})
 					},
 					new Light[]
 					{

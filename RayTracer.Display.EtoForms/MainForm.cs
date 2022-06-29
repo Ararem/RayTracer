@@ -120,7 +120,7 @@ public sealed class MainForm : Form
 					string path = Path.GetFullPath("./image.png");
 
 					//Save to the path
-					FileStream imageFileStream = new(path, FileMode.Truncate, FileAccess.Write, FileShare.Read);
+					FileStream imageFileStream = new(path, FileMode.Create, FileAccess.Write, FileShare.Read);
 					renderJob.Image.Save(imageFileStream, new PngEncoder());
 					imageFileStream.Dispose();
 

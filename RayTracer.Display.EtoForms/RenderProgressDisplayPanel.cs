@@ -324,7 +324,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
-							("Name", scene.Name, null),
+							("Name", $"{scene.Name},leftAlign", null),
 							("Object Count", FormatNum(scene.SceneObjects.Length), null),
 							("Light Count", FormatNum(scene.Lights.Length), null)
 					})
@@ -334,7 +334,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", FormatNum(renderStats.ThreadsRunning), null),
+							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1?"∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
