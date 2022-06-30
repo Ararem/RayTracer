@@ -45,41 +45,52 @@ public class PhongMaterial : Material
 	/// <inheritdoc/>
 	public override Colour CalculateColour(Colour previousColour, HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
+
 		Colour rawDiffuseColourSum  = Colour.Black;
 		Colour rawSpecularColourSum = Colour.Black;
 
-		//Loop over the lights and calculate the diffuse & specular from them
-		 for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
-		 {
-		 	Light  light       = Renderer.Scene.Lights[i];
-		 	Colour diffuseLightColour = light.CalculateLight(hit, out Ray diffuseRayTowardsLight);
-		 	Colour specularLightColour = light.CalculateLight(hit, out Ray specularRayTowardsLight, true);
-
-		 	//Specular is calculated by how much the reflected light from the light source points towards the viewer (the intersection ray)
-		 	Vector3 reflectedLightDirection = Reflect(specularRayTowardsLight.Direction, -hit.Normal);
-		 	float   specDotProd               = Dot(hit.Ray.Direction, reflectedLightDirection);
-		 	specDotProd    =  Abs(specDotProd); //Don't allow for negative dot products
-		 	rawSpecularColourSum += specularLightColour * Pow(specDotProd, Shininess);
-
-		 	//Diffuse if calculated by how much the direction to the light source aligns with the surface normal
-		 	float diffDotProd = Dot(diffuseRayTowardsLight.Direction, hit.Normal);
-		 	diffDotProd   =  Abs(diffDotProd); //Don't allow for negative dot products
-		 	rawDiffuseColourSum += diffuseLightColour * diffDotProd;
-		 }
-
-		//Now we do the same that we just did to the lights, but to the scattered ray
-		//Replace the "ray XX towards light" with the ray towards the hit, and the light colour with `previousColour`
-		//Also, we don't take into account the dot product for the diffuse calculations, since this just makes everything really dark
+		//Do a few iterations and average them, to make the colours a bit smoother
+		const int iterations = 5; //WARN: Standardise please!
+		for (int avgI = 0; avgI < iterations; avgI++)
 		{
-			//Specular is calculated by how much the reflected light points towards the viewer (the intersection ray)
-			Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
-			float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
-			specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
-			rawSpecularColourSum += previousColour * Pow(specDotProd, Shininess);
+			//Loop over the lights and calculate the diffuse & specular from them
+			for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
+			{
+				Light  light               = Renderer.Scene.Lights[i];
+				Colour diffuseLightColour  = light.CalculateLight(hit, out Ray diffuseRayTowardsLight);
+				Colour specularLightColour = light.CalculateLight(hit, out Ray specularRayTowardsLight, true);
 
-			//Diffuse if calculated by how much the direction to the light source aligns with the surface normal
-			rawDiffuseColourSum += previousColour;
+				//Specular is calculated by how much the reflected light from the light source points towards the viewer (the intersection ray)
+				Vector3 reflectedLightDirection = Reflect(specularRayTowardsLight.Direction, -hit.Normal);
+				float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
+				specDotProd = Max(0, specDotProd);
+				// specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
+				rawSpecularColourSum += specularLightColour * Pow(specDotProd, Pow(2, Shininess));
+
+				//Diffuse if calculated by how much the direction to the light source aligns with the surface normal
+				float diffDotProd = Dot(diffuseRayTowardsLight.Direction, hit.Normal);
+				diffDotProd         =  Abs(diffDotProd); //Don't allow for negative dot products
+				rawDiffuseColourSum += diffuseLightColour * diffDotProd;
+			}
+
+			//Now we do the same that we just did to the lights, but to the scattered ray
+			//Replace the "ray XX towards light" with the ray towards the hit, and the light colour with `previousColour`
+			//Also, we don't take into account the dot product for the diffuse calculations, since this just makes everything really dark
+			{
+				//Specular is calculated by how much the reflected light points towards the viewer (the intersection ray)
+				Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
+				float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
+				specDotProd = Max(0, specDotProd);
+				// specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
+				rawSpecularColourSum += previousColour * Pow(specDotProd, Pow(2, Shininess));
+
+				rawDiffuseColourSum += previousColour;
+			}
+
 		}
+
+		rawDiffuseColourSum  /= iterations;
+		rawSpecularColourSum /= iterations;
 
 		return AmbientColour + (rawDiffuseColourSum * DiffuseColour) + (rawSpecularColourSum * SpecularColour);
 	}
