@@ -98,10 +98,16 @@ public sealed class ConstantDensityMedium : Hittable
 		}
 
 		/// <inheritdoc/>
-		public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits) => new Ray(hit.WorldPoint, RandUtils.RandomOnUnitSphere());
+		public override ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+		{
+			//TODO: Allow multiple scattering
+			ArraySegment<Ray> seg = ArraySegmentPool.GetPooledSegment<Ray>(1);
+			seg[0]= new Ray(hit.WorldPoint, RandUtils.RandomOnUnitSphere());
+			return seg;
+		}
 
 		/// <inheritdoc/>
-		public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<HitRecord> previousHits)
+		public override Colour CalculateColour(ArraySegment<Colour> previousRayColours, HitRecord hit, ArraySegment<HitRecord> previousHits)
 		{
 			/*
 			 * D = 1, A = .5
@@ -124,7 +130,7 @@ public sealed class ConstantDensityMedium : Hittable
 			albedoR                           = MathF.Pow(albedoR, pow);
 			albedoG                           = MathF.Pow(albedoG, pow);
 			albedoB                           = MathF.Pow(albedoB, pow);
-			return new Colour(albedoR, albedoG, albedoB) * colour;
+			return new Colour(albedoR, albedoG, albedoB) * previousRayColours[0];
 		}
 	}
 }

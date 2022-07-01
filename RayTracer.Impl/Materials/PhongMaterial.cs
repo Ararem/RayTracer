@@ -25,8 +25,9 @@ public class PhongMaterial : Material
 	public float Shininess { get; init; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override Span<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
+		return new ;
 		//TODO: Multiple scatterings?
 		//Choose a completely random scatter direction
 		Vector3 diffuse                           = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction

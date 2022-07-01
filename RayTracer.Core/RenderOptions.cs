@@ -26,6 +26,7 @@ namespace RayTracer.Core;
 ///  manually stopped
 /// </param>
 /// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
+/// <param name="ScatterCountHint">A hint parameter that can be accessed by a <see cref="Material"/></param>
 public sealed record RenderOptions(
 		[NonNegativeValue] int     Width,
 		[NonNegativeValue] int     Height,
@@ -34,7 +35,8 @@ public sealed record RenderOptions(
 		int                        ConcurrencyLevel,
 		int                        Passes,
 		[NonNegativeValue] int     MaxDepth,
-		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
+		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
+		[NonNegativeValue] int ScatterCountHint = 1
 		//TODO: Max depth for calculating lighting?
 )
 {
