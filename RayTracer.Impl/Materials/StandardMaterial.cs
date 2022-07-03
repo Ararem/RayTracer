@@ -61,22 +61,35 @@ public sealed class StandardMaterial : Material
 	public float Diffusion { get; }
 
 	/// <inheritdoc/>
-	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
-		Vector3 diffuse                           = RandomOnUnitSphere(); //Pick a random scatter direction
-		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
-		Vector3 reflect                           = Reflect(hit.Ray.Direction, hit.Normal);
-		Vector3 scatter                           = Lerp(reflect, diffuse, Diffusion);
+		ArraySegment<Ray> seg = ArraySegmentPool.GetPooledSegment<Ray>(Renderer.RenderOptions.ScatterCountHint);
 
-		// // Catch degenerate scatter direction (when scatter magnitude is almost 0)
-		// const float thresh = (float)1e-5;
-		// if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
-		// 	scatter = hit.Normal;
+		for (int i = 0; i < seg.Count; i++)
+		{
 
-		Ray r = new(hit.WorldPoint, Normalize(scatter));
-		return r;
+			Vector3 diffuse                           = RandomOnUnitSphere(); //Pick a random scatter direction
+			if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
+			Vector3 reflect                           = Reflect(hit.Ray.Direction, hit.Normal);
+			Vector3 scatter                           = Lerp(reflect, diffuse, Diffusion);
+
+			seg[i] = new Ray(hit.WorldPoint, Normalize(scatter));
+		}
+		return seg;
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour colour, HitRecord hit, ArraySegment<HitRecord> previousHits) => ((colour+CalculateSimpleColourFromLights(hit)) * Albedo.GetColour(hit)) + Emission.GetColour(hit);
+	public override Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord hit, ArraySegment<HitRecord> previousHits)
+	{
+		Colour colour  = Colour.Black;
+		colour += CalculateSimpleColourFromLights(hit);
+		foreach ((Colour futureCol, Ray _) in futureRayInfo)
+		{
+			colour += futureCol / futureRayInfo.Count;
+		}
+
+		colour *= Albedo.GetColour(hit);
+		colour += Emission.GetColour(hit);
+		return colour;
+	}
 }

@@ -184,10 +184,11 @@ public sealed class MainForm : Form
 	{
 		// ReSharper disable once RedundantArgumentDefaultValue
 		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
-				720,720,
+				1920	,1920,
 				0.00001f, float.PositiveInfinity,
-				8, 1, 10,
-				GraphicsDebugVisualisation.None
+				8, 1, 2,
+				GraphicsDebugVisualisation.None,
+				5,5
 				));
 
 		await renderJob.StartOrGetRenderAsync();

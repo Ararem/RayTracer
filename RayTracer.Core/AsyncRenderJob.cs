@@ -239,7 +239,9 @@ public sealed class AsyncRenderJob : IDisposable
 	{
 		HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
 		ArraySegment<HitRecord> segment = new(array, 0, 0);
-		return InternalCalculateRayColourRecursive(ray, 0, segment);
+		Colour colour = InternalCalculateRayColourRecursive(ray, 0, segment);
+		PrevHitPool.Shared.Return(array);
+		return colour;
 	}
 
 	/// <summary>Recursive function to calculate the colour for a ray</summary>
@@ -248,9 +250,9 @@ public sealed class AsyncRenderJob : IDisposable
 	///  The number of times the ray has bounced. If this is 0, then the ray has never bounced, and so we can assume it's the initial ray
 	///  from the camera
 	/// </param>
-	/// <param name="prevHitsSegment">Array segment that contains the previous hits</param>
+	/// <param name="prevHitsFromCamSegment">Array segment that contains the previous hits between the camera and the last hit</param>
 	/// <returns></returns>
-	private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsSegment)
+	private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsFromCamSegment)
 	{
 		//Don't go too deep
 		if (depth > RenderOptions.MaxDepth)
@@ -264,7 +266,7 @@ public sealed class AsyncRenderJob : IDisposable
 		if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
 		{
 			//See if the material scatters the ray
-			ArraySegment<Ray> newRays = hit.Material.Scatter(hit, prevHitsSegment);
+			ArraySegment<Ray> newRays = hit.Material.Scatter(hit, prevHitsFromCamSegment);
 
 			if ((newRays.Count == 0) || (newRays == default) || newRays.Array is null)
 			{
@@ -278,15 +280,20 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				//Otherwise, the material scattered, creating some new rays, render recursively again
 				Interlocked.Add(ref RenderStats.MaterialScatterCount, newRays.Count);
-				prevHitsSegment.Array![prevHitsSegment.Count] = hit;                                           //Update the hit buffer from this hit
-				ArraySegment<HitRecord> newSegment = new(prevHitsSegment.Array, 0, prevHitsSegment.Count + 1); //Extend the segment to include our new element
+				prevHitsFromCamSegment.Array![prevHitsFromCamSegment.Count] = hit;                                           //Update the hit buffer from this hit
+				ArraySegment<HitRecord> newSegment = new(prevHitsFromCamSegment.Array, 0, prevHitsFromCamSegment.Count + 1); //Extend the segment to include our new element
 
 				//TODO: Make these segments and stuff a custom IDisposable struct, connected with LibEternal ObjectPool
 				//Here we calculate the future ray colours
-				ArraySegment<Colour> futureColours                             = GetPooledSegment<Colour>(newRays.Count);
-				for (int i = 0; i < futureColours.Count; i++) futureColours[i] = InternalCalculateRayColourRecursive(newRays[i], depth + 1, newSegment);
-				Colour colour =  hit.Material.CalculateColour(futureColours, hit, prevHitsSegment);
-				ReturnSegment(futureColours);
+				ArraySegment<(Colour Colour, Ray ray)> futureRayInfo    = GetPooledSegment<(Colour Colour, Ray ray)>(newRays.Count);
+				for (int i = 0; i < futureRayInfo.Count; i++)
+				{
+					Colour future = InternalCalculateRayColourRecursive(newRays[i], depth + 1, newSegment);
+					futureRayInfo[i] = (future, newRays[i]);
+				}
+
+				Colour colour =  hit.Material.CalculateColour(futureRayInfo, hit, prevHitsFromCamSegment);
+				ReturnSegment(futureRayInfo);
 				ReturnSegment(newRays);
 				return colour;
 			}

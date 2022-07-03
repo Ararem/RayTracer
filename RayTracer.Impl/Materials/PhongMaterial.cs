@@ -25,34 +25,31 @@ public class PhongMaterial : Material
 	public float Shininess { get; init; }
 
 	/// <inheritdoc/>
-	public override Span<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override ArraySegment<Ray> Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-		return new ;
-		//TODO: Multiple scatterings?
-		//Choose a completely random scatter direction
-		Vector3 diffuse                           = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction
-		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
-		Vector3 scatter                           = diffuse;
+		//NOTE: The first ray is specular, the rest are diffuse
+		Vector3           hitPos = currentHit.WorldPoint;
+		ArraySegment<Ray> seg    = ArraySegmentPool.GetPooledSegment<Ray>(Renderer.RenderOptions.ScatterCountHint +1);
+		seg[0] = new Ray(hitPos, Reflect(currentHit.Ray.Direction, currentHit.Normal));
+		for (int i = 1; i < seg.Count; i++)
+		{
+			Vector3 dir                           = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction
+			if (Dot(dir, currentHit.Normal) < 0) dir *= -1;                            //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
+			seg[i] = new Ray(hitPos, dir);
+		}
 
-		// // Catch degenerate scatter direction (when scatter magnitude is almost 0)
-		// const float thresh = (float)1e-5;
-		// if ((scatter.X < thresh) && (scatter.Y < thresh) && (scatter.Z < thresh))
-		// 	scatter = hit.Normal;
-
-		Ray r = new(hit.WorldPoint, Normalize(scatter));
-		return r;
+		return seg;
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(Colour previousColour, HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord hit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-
 		Colour rawDiffuseColourSum  = Colour.Black;
 		Colour rawSpecularColourSum = Colour.Black;
 
 		//Do a few iterations and average them, to make the colours a bit smoother
-		const int iterations = 5; //WARN: Standardise please!
-		for (int avgI = 0; avgI < iterations; avgI++)
+		int lightSamples = Renderer.RenderOptions.LightSampleCountHint;
+		for (int avgI = 0; avgI < lightSamples; avgI++)
 		{
 			//Loop over the lights and calculate the diffuse & specular from them
 			for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
@@ -73,25 +70,26 @@ public class PhongMaterial : Material
 				diffDotProd         =  Abs(diffDotProd); //Don't allow for negative dot products
 				rawDiffuseColourSum += diffuseLightColour * diffDotProd;
 			}
-
-			//Now we do the same that we just did to the lights, but to the scattered ray
-			//Replace the "ray XX towards light" with the ray towards the hit, and the light colour with `previousColour`
-			//Also, we don't take into account the dot product for the diffuse calculations, since this just makes everything really dark
-			{
-				//Specular is calculated by how much the reflected light points towards the viewer (the intersection ray)
-				Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
-				float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
-				specDotProd = Max(0, specDotProd);
-				// specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
-				rawSpecularColourSum += previousColour * Pow(specDotProd, Pow(2, Shininess));
-
-				rawDiffuseColourSum += previousColour;
-			}
-
 		}
 
-		rawDiffuseColourSum  /= iterations;
-		rawSpecularColourSum /= iterations;
+		rawDiffuseColourSum  /= lightSamples;
+		rawSpecularColourSum /= lightSamples;
+
+		//Now we do the same that we just did to the lights, but to the scattered rays
+		//Replace the "ray XX towards light" with the ray towards the hit, and the light colour with `previousColour`
+		//Also, we don't take into account the dot product for the diffuse calculations, since this just makes everything really dark
+		{
+			//Specular is calculated by how much the reflected light points towards the viewer (the intersection ray)
+			Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
+			float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
+			specDotProd = Max(0, specDotProd);
+			rawSpecularColourSum += futureRayInfo[0].Colour * Pow(specDotProd, Pow(2, Shininess));
+		}
+		int diffuseSamples = futureRayInfo.Count;
+		for (int i = 1; i < diffuseSamples; i++)
+		{
+			rawDiffuseColourSum += futureRayInfo[i].Colour /diffuseSamples;
+		}
 
 		return AmbientColour + (rawDiffuseColourSum * DiffuseColour) + (rawSpecularColourSum * SpecularColour);
 	}

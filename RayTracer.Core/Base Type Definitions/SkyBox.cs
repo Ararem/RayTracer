@@ -3,10 +3,10 @@ using JetBrains.Annotations;
 namespace RayTracer.Core;
 
 //TODO: HDRI Skybox
-/// <summary>Interface a skybox</summary>
+/// <summary>Base class that defines a skybox - what is seen at an infinite distance away from the world. This is essentially the "outside environment" that appears as part of the <see cref="Scene"/>, but does not need to be directly rendered</summary>
 /// <remarks>
 ///  We essentially treat the skybox as an infinitely far away object (behind everything), and uses it to calculate sky lighting. The colour returned by
-///  <see cref="SkyBox.GetSkyColour(RayTracer.Core.Ray)"/> is interpreted as the emissive colour of a material.
+///  <see cref="SkyBox.GetSkyColour(RayTracer.Core.Ray)"/> is interpreted similar to the emissive colour of a material.
 /// </remarks>
 [PublicAPI]
 public abstract class SkyBox

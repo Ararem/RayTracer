@@ -8,8 +8,8 @@ namespace RayTracer.Core;
 public abstract class Material : RenderAccessor
 {
 	/// <summary>Scatters an input ray, according to this material's properties</summary>
-	/// <param name="hit">Information such as where the ray hit the object, surface normals, etc</param>
-	/// <param name="previousHits">Collection of the previous hits between the camera and the current hit</param>
+	/// <param name="currentHit">Information such as where the ray currentHit the object, surface normals, etc</param>
+	/// <param name="prevHitsBetweenCamera">Collection of the previous hits between the camera and the current currentHit</param>
 	/// <returns>
 	///  An <see cref="ArraySegment{T}"/> containing the new rays, each of which represents the direction a light ray would be scattered in when bouncing off
 	///  this material's surface.
@@ -27,42 +27,15 @@ public abstract class Material : RenderAccessor
 	///  diffuse object, it would be in a random direction. If the resulting <see cref="ArraySegment{T}"/> has a length of <c>0</c> (or is
 	///  <see cref="ArraySegment{T}.Empty"/>), it is inferred that the material absorbed the incoming ray.
 	/// </remarks>
-	public abstract ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits);
+	public abstract ArraySegment<Ray> Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera);
 
 	/// <summary>Function to override for when the material wants to do lighting calculations, based on the light from future rays</summary>
-	/// <param name="previousRayColours">
-	///  The colour information for the future bounces that were made. Modify this to vary how your material behaves colour-wise/lighting-wise.
-	///  This is the colour from
+	/// <param name="futureRayInfo">
+	///  The colour and surface information for the future bounces that were made. This only includes the (direct) hits, i.e. those that were as a result of the intersection along the rays returned byt <see cref="Scatter"/>.
 	/// </param>
-	/// <param name="hit">Information such as where the ray hit, surface normals etc</param>
-	/// <param name="previousHits">Collection of the previous hits between the camera and the current hit</param>
-	/// <example>
-	///  <para>
-	///   <b>
-	///    <i>Note that only the method body is shown here. Some of the names may have changed, however the general idea remains the same</i>
-	///   </b>
-	///  </para>
-	///  <para>
-	///   A simple implementation that multiplies by the colour red, treating the object as completely red:
-	///   <code>
-	///  	return previousRayColours[0] * Colour.Red;
-	///  </code>
-	///  </para>
-	///  <para>
-	///   A simple implementation that adds blue light, simulating a blue light-emitting light-source:
-	///   <code>
-	///  	return previousRayColours[0] + Colour.Blue;
-	///  </code>
-	///  </para>
-	///  <para>
-	///   A simple implementation that adds half-white light and multiplies red, simulating a dim white light-emitting object that reflects red light
-	///   <code>
-	/// 	//Only 30% white is added so it's not too bright, but all red is reflected
-	///  	return  (previousRayColours[0] * Colour.Red) + (Colour.White * 0.3f);
-	///  </code>
-	///  </para>
-	/// </example>
-	public abstract Colour CalculateColour(ArraySegment<Colour> previousRayColours, HitRecord hit, ArraySegment<HitRecord> previousHits);
+	/// <param name="currentHit">Information such as where the ray currentHit, surface normals etc</param>
+	/// <param name="prevHitsBetweenCamera">Collection of the previous hits between the camera and the current currentHit</param>
+	public abstract Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera);
 
 	/// <summary>
 	///  Simple helper method that calculates the light colour by summing the colour from all lights in the scene. Use this unless you want special light
@@ -70,11 +43,17 @@ public abstract class Material : RenderAccessor
 	/// </summary>
 	public Colour CalculateSimpleColourFromLights(HitRecord hit)
 	{
-		Colour sum = Colour.Black;
-		for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
+		Colour sum     = Colour.Black;
+		int    samples = Renderer.RenderOptions.LightSampleCountHint;
+		for (int s = 0; s < samples; s++)
 		{
-			sum += Renderer.Scene.Lights[i].CalculateLight(hit, out _);
+			for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
+			{
+				sum += Renderer.Scene.Lights[i].CalculateLight(hit, out _);
+			}
 		}
+
+		sum /= samples;
 
 		return sum;
 	}
