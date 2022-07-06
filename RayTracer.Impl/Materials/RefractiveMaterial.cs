@@ -36,7 +36,7 @@ public class RefractiveMaterial : Material
 	/// <inheritdoc/>
 	public override ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
-		Vector3 unitDirection = Normalize(hit.Ray.Direction);
+		Vector3 unitDirection = Normalize(hit.IncomingRay.Direction);
 
 		float cosTheta = Min(Dot(-unitDirection, hit.Normal), 1.0f);
 		float sinTheta = Sqrt(1.0f - (cosTheta * cosTheta));

@@ -29,7 +29,7 @@ public class PhongMaterial : Material
 	{
 		ArraySegment<Ray> seg = ArraySegmentPool.GetPooledSegment<Ray>(2);
 		{
-			seg[SpecularRayIndex] = new Ray(currentHit.WorldPoint, Reflect(currentHit.Ray.Direction, currentHit.Normal));
+			seg[SpecularRayIndex] = new Ray(currentHit.WorldPoint, Reflect(currentHit.IncomingRay.Direction, currentHit.Normal));
 		}
 		{
 			Vector3 dir                              = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction
@@ -59,7 +59,7 @@ public class PhongMaterial : Material
 
 				//Specular is calculated by how much the reflected light from the light source points towards the viewer (the intersection ray)
 				Vector3 reflectedLightDirection = Reflect(specularRayTowardsLight.Direction, -hit.Normal);
-				float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
+				float   specDotProd             = Dot(hit.IncomingRay.Direction, reflectedLightDirection);
 				specDotProd = Max(0, specDotProd);
 				// specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
 				rawSpecularColourSum += specularLightColour * Pow(specDotProd, Pow(2, Shininess));
@@ -81,8 +81,8 @@ public class PhongMaterial : Material
 			(Colour Colour, Ray Ray) specularRay = futureRayInfo[SpecularRayIndex];
 			(Colour Colour, Ray Ray) diffuseRay  = futureRayInfo[DiffuseRayIndex];
 
-			Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
-			float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
+			Vector3 reflectedLightDirection = Reflect(hit.IncomingRay.Direction, -hit.Normal);
+			float   specDotProd             = Dot(hit.IncomingRay.Direction, reflectedLightDirection);
 			specDotProd          =  Max(0, specDotProd);
 			rawSpecularColourSum += specularRay.Colour * Pow(specDotProd, Pow(2, Shininess));
 
