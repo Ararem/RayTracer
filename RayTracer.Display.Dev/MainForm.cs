@@ -186,9 +186,8 @@ public sealed class MainForm : Form
 		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
 				1920	,1920,
 				0.00001f, float.PositiveInfinity,
-				8, 1, 2,
-				GraphicsDebugVisualisation.None,
-				5,5
+				4, 1, 20,
+				GraphicsDebugVisualisation.None
 				));
 
 		await renderJob.StartOrGetRenderAsync();
@@ -419,7 +418,7 @@ public sealed class MainForm : Form
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", FormatNum(renderStats.ThreadsRunning), null),
+							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1?"∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),

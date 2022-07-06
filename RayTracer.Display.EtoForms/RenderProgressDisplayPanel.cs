@@ -334,13 +334,13 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1?"∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
+							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1 ? "∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
-							("Depth Max", FormatNum(renderJob.RenderOptions.MaxDepth), null),
-							("Near Plane", FormatFloat(renderJob.RenderOptions.KMin), null),
-							("Far Plane", FormatFloat(renderJob.RenderOptions.KMax), null),
+							("Max Bounces", FormatNum(renderJob.RenderOptions.MaxDepth), null),
+							("KMin", FormatFloat(renderJob.RenderOptions.KMin), null),
+							("KMax", FormatFloat(renderJob.RenderOptions.KMax), null),
 							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null)
 					})
 			);

@@ -7,16 +7,16 @@ namespace RayTracer.Impl.Materials;
 
 public class PhongMaterial : Material
 {
+	private const int SpecularRayIndex = 0, DiffuseRayIndex = 1;
+
 	/// <summary>Specular colour reflection constant; the ratio of reflection of the specular term of incoming light,</summary>
 	public Colour SpecularColour { get; init; } = Colour.White;
 
-	/// <summary>
-	/// Colour of the diffused light
-	/// </summary>
+	/// <summary>Colour of the diffused light</summary>
 	public Colour DiffuseColour { get; init; } = Colour.HalfGrey;
 
 	/// <summary>Ambient colour reflection constant; the ratio of reflection of the ambient term present in all points in the scene rendered</summary>
-	public Colour AmbientColour { get; init; } = Colour.White *0.001f;
+	public Colour AmbientColour { get; init; } = Colour.White * 0.001f;
 
 	/// <summary>
 	///  Shininess constant for this material, which is larger for surfaces that are smoother and more mirror-like. When this constant is large the specular
@@ -27,15 +27,14 @@ public class PhongMaterial : Material
 	/// <inheritdoc/>
 	public override ArraySegment<Ray> Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-		//NOTE: The first ray is specular, the rest are diffuse
-		Vector3           hitPos = currentHit.WorldPoint;
-		ArraySegment<Ray> seg    = ArraySegmentPool.GetPooledSegment<Ray>(Renderer.RenderOptions.ScatterCountHint +1);
-		seg[0] = new Ray(hitPos, Reflect(currentHit.Ray.Direction, currentHit.Normal));
-		for (int i = 1; i < seg.Count; i++)
+		ArraySegment<Ray> seg = ArraySegmentPool.GetPooledSegment<Ray>(2);
 		{
-			Vector3 dir                           = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction
+			seg[SpecularRayIndex] = new Ray(currentHit.WorldPoint, Reflect(currentHit.Ray.Direction, currentHit.Normal));
+		}
+		{
+			Vector3 dir                              = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction
 			if (Dot(dir, currentHit.Normal) < 0) dir *= -1;                            //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
-			seg[i] = new Ray(hitPos, dir);
+			seg[DiffuseRayIndex] = new Ray(currentHit.WorldPoint, dir);
 		}
 
 		return seg;
@@ -79,16 +78,15 @@ public class PhongMaterial : Material
 		//Replace the "ray XX towards light" with the ray towards the hit, and the light colour with `previousColour`
 		//Also, we don't take into account the dot product for the diffuse calculations, since this just makes everything really dark
 		{
-			//Specular is calculated by how much the reflected light points towards the viewer (the intersection ray)
+			(Colour Colour, Ray Ray) specularRay = futureRayInfo[SpecularRayIndex];
+			(Colour Colour, Ray Ray) diffuseRay  = futureRayInfo[DiffuseRayIndex];
+
 			Vector3 reflectedLightDirection = Reflect(hit.Ray.Direction, -hit.Normal);
 			float   specDotProd             = Dot(hit.Ray.Direction, reflectedLightDirection);
-			specDotProd = Max(0, specDotProd);
-			rawSpecularColourSum += futureRayInfo[0].Colour * Pow(specDotProd, Pow(2, Shininess));
-		}
-		int diffuseSamples = futureRayInfo.Count;
-		for (int i = 1; i < diffuseSamples; i++)
-		{
-			rawDiffuseColourSum += futureRayInfo[i].Colour /diffuseSamples;
+			specDotProd          =  Max(0, specDotProd);
+			rawSpecularColourSum += specularRay.Colour * Pow(specDotProd, Pow(2, Shininess));
+
+			rawDiffuseColourSum += diffuseRay.Colour;
 		}
 
 		return AmbientColour + (rawDiffuseColourSum * DiffuseColour) + (rawSpecularColourSum * SpecularColour);
