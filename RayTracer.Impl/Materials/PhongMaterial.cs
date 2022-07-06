@@ -55,8 +55,8 @@ public class PhongMaterial : Material
 				//Specular is calculated by how much the reflected light from the light source points towards the viewer (the intersection ray)
 				Vector3 reflectedLightDirection = Reflect(specularRayTowardsLight.Direction, -currentHit.Normal);
 				float   specDotProd             = Dot(currentHit.IncomingRay.Direction, reflectedLightDirection);
-				specDotProd = Max(0, specDotProd);
-				// specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
+				// specDotProd = Max(0, specDotProd);
+				specDotProd          =  Abs(specDotProd); //Don't allow for negative dot products
 				rawSpecularColourSum += specularLightColour * Pow(specDotProd, Pow(2, Shininess));
 
 				//Diffuse if calculated by how much the direction to the light source aligns with the surface normal
@@ -75,7 +75,7 @@ public class PhongMaterial : Material
 		{
 			Vector3 reflectedLightDirection = Reflect(currentHit.IncomingRay.Direction, -currentHit.Normal);
 			float   specDotProd             = Dot(currentHit.IncomingRay.Direction, reflectedLightDirection);
-			specDotProd          =  Max(0, specDotProd);
+			specDotProd          =  Abs(specDotProd);
 			rawSpecularColourSum += futureRayColour * Pow(specDotProd, Pow(2, Shininess));
 
 			rawDiffuseColourSum += futureRayColour;

@@ -324,7 +324,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
-							("Name", $"{scene.Name},leftAlign", null),
+							("Name", $"{scene.Name,leftAlign}", null),
 							("Object Count", FormatNum(scene.SceneObjects.Length), null),
 							("Light Count", FormatNum(scene.Lights.Length), null)
 					})
