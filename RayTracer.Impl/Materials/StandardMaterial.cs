@@ -61,27 +61,21 @@ public sealed class StandardMaterial : Material
 	public float Diffusion { get; }
 
 	/// <inheritdoc/>
-	public override ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
 		Vector3 diffuse                           = RandomOnUnitSphere(); //Pick a random scatter direction
 		if (Dot(diffuse, hit.Normal) < 0) diffuse *= -1;                  //Ensure the resulting scatter is in the same direction as the normal (so it doesn't point inside the object)
 		Vector3 reflect                           = Reflect(hit.IncomingRay.Direction, hit.Normal);
 
-		return ArraySegmentPool.SegmentFromSingle(new Ray(hit.WorldPoint, Normalize(Lerp(reflect, diffuse, Diffusion))));
+		return new Ray(hit.WorldPoint, Normalize(Lerp(reflect, diffuse, Diffusion)));
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override Colour CalculateColour(Colour futureRayColour, Ray futureRay, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-		Colour colour  = Colour.Black;
-		colour += CalculateSimpleColourFromLights(hit);
-		foreach ((Colour futureCol, Ray _) in futureRayInfo)
-		{
-			colour += futureCol / futureRayInfo.Count;
-		}
-
-		colour *= Albedo.GetColour(hit);
-		colour += Emission.GetColour(hit);
+		Colour colour = CalculateSimpleColourFromLights(currentHit) + futureRayColour;
+		colour *= Albedo.GetColour(currentHit);
+		colour += Emission.GetColour(currentHit);
 		return colour;
 	}
 }

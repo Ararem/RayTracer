@@ -12,7 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static RayTracer.Core.MathUtils;
-using HitStatePool = System.Buffers.ArrayPool<(RayTracer.Core.HitRecord Hit, RayTracer.Core.Ray ScatteredRay)>;
+using PrevHitPool = System.Buffers.ArrayPool<RayTracer.Core.HitRecord>;
 
 namespace RayTracer.Core;
 
@@ -309,7 +309,7 @@ public sealed class AsyncRenderJob : IDisposable
 		{
 			//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
 			//This stores the hit state information, as well as what object was intersected with (at that hit)
-			(HitRecord Hit, Ray ScatteredRay)[] hitStateArray = HitStatePool.Shared.Rent(RenderOptions.MaxDepth + 1);
+			HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth + 1);
 			Colour                                finalColour      = NoColour;
 			//Loop for a max number of times equal to the depth
 			//And map out the ray path (don't do any colours yet)
@@ -320,7 +320,7 @@ public sealed class AsyncRenderJob : IDisposable
 				Interlocked.Increment(ref RenderStats.RayCount);
 				if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
 				{
-					ArraySegment<(HitRecord Hit, Ray ScatteredRay)> prevHits = new(hitStateArray, 0, depth); //Shouldn't include the current hit
+					ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, depth); //Shouldn't include the current hit
 					//See if the material scatters the ray
 					Ray? maybeNewRay = hit.Material.Scatter(hit, prevHits);
 
@@ -361,7 +361,7 @@ public sealed class AsyncRenderJob : IDisposable
 			{
 				HitRecord               hit      = hitStateArray[depth];
 				ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, depth); //Shouldn't include the current hit
-				finalColour = hit.Material.CalculateColour(finalColour, hit, prevHits);
+				finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[depth+1].IncomingRay, hit, prevHits);
 			}
 
 			PrevHitPool.Shared.Return(hitStateArray);

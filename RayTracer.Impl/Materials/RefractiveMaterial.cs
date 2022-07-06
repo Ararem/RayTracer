@@ -34,7 +34,7 @@ public class RefractiveMaterial : Material
 	public bool AlternateRefractionMode { get; }
 
 	/// <inheritdoc/>
-	public override ArraySegment<Ray> Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
+	public override Ray? Scatter(HitRecord hit, ArraySegment<HitRecord> previousHits)
 	{
 		Vector3 unitDirection = Normalize(hit.IncomingRay.Direction);
 
@@ -96,13 +96,11 @@ public class RefractiveMaterial : Material
 			outDirection = AlternateRefractionMode ? alternate : standard;
 		}
 
-		return ArraySegmentPool.SegmentFromSingle(new Ray(hit.WorldPoint, outDirection));
+		return new Ray(hit.WorldPoint, outDirection);
 	}
 
 	/// <inheritdoc/>
-	public override Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord hit, ArraySegment<HitRecord> arraySegment)
-	{
-		//TODO: Beer's law
-		return (futureRayInfo[0].Colour + CalculateSimpleColourFromLights(hit)) * Tint.GetColour(hit);
-	}
+	public override Colour CalculateColour(Colour futureRayColour, Ray futureRay, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera) =>
+			//TODO: Beer's law and 'slickness'
+			(futureRayColour + CalculateSimpleColourFromLights(currentHit)) * Tint.GetColour(currentHit);
 }

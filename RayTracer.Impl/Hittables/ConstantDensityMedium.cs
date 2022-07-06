@@ -98,16 +98,10 @@ public sealed class ConstantDensityMedium : Hittable
 		}
 
 		/// <inheritdoc/>
-		public override ArraySegment<Ray> Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
-		{
-			//TODO: Allow multiple scattering
-			ArraySegment<Ray> seg = ArraySegmentPool.GetPooledSegment<Ray>(1);
-			seg[0]= new Ray(currentHit.WorldPoint, RandUtils.RandomOnUnitSphere());
-			return seg;
-		}
+		public override Ray? Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera) => new Ray(currentHit.WorldPoint, RandUtils.RandomOnUnitSphere());
 
 		/// <inheritdoc/>
-		public override Colour CalculateColour(ArraySegment<(Colour Colour, Ray Ray)> futureRayInfo, HitRecord hit, ArraySegment<HitRecord> prevHitsBetweenCamera)
+		public override Colour CalculateColour(Colour futureRayColour, Ray futureRay, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 		{
 			/*
 			 * D = 1, A = .5
@@ -124,13 +118,13 @@ public sealed class ConstantDensityMedium : Hittable
 			 * out = (A) ^ (D * x) for any D
 			 */
 			//Calculate how much the colour is attenuated
-			float distanceInside = hit.ShaderData as float? ?? throw new InvalidShaderDataException(hit.ShaderData, $"currentHit.ShaderData was not a float (was {hit.ShaderData?.GetType()}: {hit.ShaderData})");
+			float distanceInside = currentHit.ShaderData as float? ?? throw new InvalidShaderDataException(currentHit.ShaderData, $"currentHit.ShaderData was not a float (was {currentHit.ShaderData?.GetType()}: {currentHit.ShaderData})");
 			float pow            = Density * distanceInside;
 			(float albedoR, float albedoG, float albedoB) = Albedo;
 			albedoR                           = MathF.Pow(albedoR, pow);
 			albedoG                           = MathF.Pow(albedoG, pow);
 			albedoB                           = MathF.Pow(albedoB, pow);
-			return new Colour(albedoR, albedoG, albedoB) * futureRayInfo[0].Colour;
+			return new Colour(albedoR, albedoG, albedoB) * futureRayColour;
 		}
 	}
 }
