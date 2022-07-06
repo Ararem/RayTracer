@@ -36,10 +36,10 @@ public sealed record RenderOptions(
 		int                        Passes,
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
-		[NonNegativeValue] int LightSampleCountHint = 1
+		[NonNegativeValue] int LightSampleCountHint = 3
 		//TODO: Max depth for calculating lighting?
 )
 {
 	/// <summary>Default render options</summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, Environment.ProcessorCount, 100, 10);
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, Environment.ProcessorCount, 100, 100);
 }

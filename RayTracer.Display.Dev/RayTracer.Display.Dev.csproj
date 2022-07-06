@@ -26,6 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Aardvark.OpenImageDenoise" Version="0.3.0" />
 		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.2" />
 		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9" />
 		<PackageReference Include="Serilog" Version="2.10.0" />

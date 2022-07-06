@@ -11,6 +11,7 @@ using static Serilog.Log;
 using Eto.Containers;
 using LibEternal.Core.ObjectPools;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Buffers;
 using System.Collections.Generic;
@@ -184,10 +185,11 @@ public sealed class MainForm : Form
 	{
 		// ReSharper disable once RedundantArgumentDefaultValue
 		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
-				1920	,1920,
+				1080	,1080,
 				0.00001f, float.PositiveInfinity,
-				4, 1, 20,
-				GraphicsDebugVisualisation.None
+				16, 1, 30,
+				GraphicsDebugVisualisation.None,
+				10
 				));
 
 		await renderJob.StartOrGetRenderAsync();
@@ -230,21 +232,22 @@ public sealed class MainForm : Form
 
 	private void UpdateImagePreview()
 	{
-		using BitmapData  data         = previewImage.Lock();
-		int               xSize        = previewImage.Width, ySize = previewImage.Height;
-		ImageFrame<Rgb24> renderBuffer = renderJob.ImageBuffer;
-		IntPtr            offset       = data.Data;
+		//TODO: Find out a more safe way to do this without using pointers and unsafe code
+		using BitmapData destPreviewImage = previewImage.Lock();
+		Buffer2D<Rgb24>  srcRenderBuffer     = renderJob.ImageBuffer.PixelBuffer;
+		IntPtr           destOffset           = destPreviewImage.Data;
+		int              xSize            = previewImage.Width, ySize = previewImage.Height;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
 				//Otherwise here be dragons
 			unsafe
 			{
-				Span<Rgb24> renderBufRow = renderBuffer.GetPixelRowSpan(y);
-				void*       destPtr      = offset.ToPointer();
+				Span<Rgb24> renderBufRow = srcRenderBuffer.DangerousGetRowSpan(y);
+				void*       destPtr      = destOffset.ToPointer();
 				Span<Rgb24> destRow      = new(destPtr, xSize);
 
 				renderBufRow.CopyTo(destRow);
-				offset += data.ScanWidth;
+				destOffset += destPreviewImage.ScanWidth;
 			}
 	}
 
@@ -481,7 +484,7 @@ public sealed class MainForm : Form
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
 			{
-				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
+				Verbose("Cell {Position} was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
 				row.Cells[0]?.Control?.Detach();
 				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
 				titleLabel = CreateHeaderLabel();
@@ -490,7 +493,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[1].Control is not Label nameLabel)
 			{
-				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
+				Verbose("Cell {Position} was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
 				row.Cells[1]?.Control?.Detach();
 				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 				nameLabel = CreateHeaderLabel();
@@ -499,7 +502,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[2].Control is not Label valueLabel)
 			{
-				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
+				Verbose("Cell {Position} was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
 				row.Cells[2]?.Control?.Detach();
 				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
 				valueLabel = CreateHeaderLabel();
@@ -508,7 +511,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[3].Control is not Label deltaLabel)
 			{
-				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
+				Verbose("Cell {Position} was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
 				row.Cells[3]?.Control?.Detach();
 				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
 				deltaLabel = CreateHeaderLabel();
@@ -536,7 +539,7 @@ public sealed class MainForm : Form
 				//Get the Labels at the correct locations, or assign them if needed
 				if (row.Cells[0].Control is not Label titleLabel)
 				{
-					Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
+					Verbose("Cell {Position} was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
 					row.Cells[0]?.Control?.Detach();
 					row.Cells[0]?.Control?.Dispose(); //Dispose the old control
 					titleLabel = new Label { Style = Appearance.Styles.GeneralTextualUnderline };
@@ -545,7 +548,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[1].Control is not Label nameLabel)
 				{
-					Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
+					Verbose("Cell {Position} was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
 					row.Cells[1]?.Control?.Detach();
 					row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 					nameLabel = new Label { Style = Appearance.Styles.GeneralTextual };
@@ -554,7 +557,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[2].Control is not Label valueLabel)
 				{
-					Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
+					Verbose("Cell {Position} was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
 					row.Cells[2]?.Control?.Detach();
 					row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
 					valueLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
@@ -563,7 +566,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[3].Control is not Label deltaLabel)
 				{
-					Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
+					Verbose("Cell {Position} was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
 					row.Cells[3]?.Control?.Detach();
 					row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
 					deltaLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };

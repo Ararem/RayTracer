@@ -71,8 +71,7 @@ public class RefractiveMaterial : Material
 			float r0 = (eta - etaPrime) / (eta + etaPrime);
 			r0 *= r0;
 			float reflectance = r0 + ((1 - r0) * Pow(1 - cosTheta, 5));
-			if (reflectance > RandomFloat01())
-				cannotRefract = true;
+			if (reflectance > RandomFloat01()) cannotRefract = true;
 		}
 
 		Vector3 outDirection;

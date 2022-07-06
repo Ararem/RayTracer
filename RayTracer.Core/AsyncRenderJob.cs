@@ -87,25 +87,33 @@ public sealed class AsyncRenderJob : IDisposable
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
 		for (int pass = 0; (RenderOptions.Passes == -1) || (pass < RenderOptions.Passes); pass++)
 		{
-			Parallel.For(
-					0, RenderStats.TotalTruePixels,
-					new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
-					() =>
-					{
-						Interlocked.Increment(ref RenderStats.ThreadsRunning);
-						return this;
-					}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
-					static (i, _, state) =>
-					{
-						(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
-						Colour col = state.RenderPixelWithVisualisations(x, y);
-						state.UpdateBuffers(x, y, col);
-						Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
+			try
+			{
+				Parallel.For(
+						0, RenderStats.TotalTruePixels,
+						new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
+						() =>
+						{
+							Interlocked.Increment(ref RenderStats.ThreadsRunning);
+							return this;
+						}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
+						static (i, loop, state) =>
+						{
+							(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
+							Colour col = state.RenderPixelWithVisualisations(x, y);
+							state.UpdateBuffers(x, y, col);
+							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
 
-						return state;
-					},
-					static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
-			);
+							return state;
+						},
+						static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
+				);
+			}
+			catch (OperationCanceledException e)
+			{
+				Log.ForContext("OperationCancelledException", e, true).Information("Render cancelled during pass {Pass}", pass);
+				break;
+			}
 
 			Interlocked.Increment(ref RenderStats.PassesRendered);
 			Log.Debug("Finished pass {Pass}", pass);

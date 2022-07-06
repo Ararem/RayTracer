@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using static Serilog.Log;
 
@@ -97,8 +98,11 @@ public sealed class MainForm : Form
 		Debug("Creating render job");
 		renderJob = new AsyncRenderJob(scene, options);
 		Debug("Starting render job");
-		Task renderTask = renderJob.StartOrGetRenderAsync();
+		CancellationTokenSource cancellationTokenSource = new();
+		Task                    renderTask              = renderJob.StartOrGetRenderAsync(cancellationTokenSource.Token);
 		TaskWatcher.Watch(renderTask, true);
+		//Add button to stop render
+		Application.Instance.MainForm.Menu.Items.Add(new Command((_, _) => cancellationTokenSource.Cancel()) { MenuText = "Stop render", ToolTip = "Ends the render, as if all the passes and pixels had been rendered (even if they have not)" });
 
 		//Create the display panel
 		//HACK: Honestly this is a really bad way to do it and I don't like it, but for some reason removing the children from the stack panel
