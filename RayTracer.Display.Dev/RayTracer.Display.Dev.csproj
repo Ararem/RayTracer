@@ -37,4 +37,18 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="OpenImageDenoise.dll" />
+	  <None Remove="tbb12.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so" />
+	  <None Remove="oidn-natives\lib\libtbb.so" />
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1" />
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1.4.3" />
+	  <None Remove="oidn-natives\lib\libtbb.so.12" />
+	  <None Remove="oidn-natives\lib\libtbb.so.12.5" />
+	</ItemGroup>
+
 </Project>

@@ -1,3 +1,5 @@
+using Aardvark.Base;
+using Aardvark.OpenImageDenoise;
 using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
@@ -15,7 +17,10 @@ using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Threading;
 using static RayTracer.Core.MathUtils;
 using Size = Eto.Drawing.Size;
@@ -170,12 +175,23 @@ public sealed class MainForm : Form
 		//TODO: Perhaps PeriodicTimer or UITimer
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
+
+		//Denoise things
+		Verbose("{X}", NativeLibrary.Load("oidn-natives/lib/libOpenImageDenoise.so"));
+		Verbose("ASD");
+
+		Aardvark.Base.Aardvark.Init();
+		Report.Verbosity = 999;
+		denoiseDevice    = new Device(DeviceFlags.CPU, 8);
 	}
+
+	private readonly Device denoiseDevice;
 
 	private async Task RenderLoop()
 	{
 		while (true)
 		{
+			//Don't refactor by inlining, else hot reload won't work
 			await Task.Run(Render);
 		}
 		// ReSharper disable once FunctionNeverReturns
@@ -233,9 +249,14 @@ public sealed class MainForm : Form
 	private void UpdateImagePreview()
 	{
 		//TODO: Find out a more safe way to do this without using pointers and unsafe code
+		MemoryStream stream = new(1_000_000);
+		renderJob.Image.SaveAsJpeg(stream);
+		PixImage<float> pixImg = new(stream);
+		denoiseDevice.Denoise(pixImg);
+
 		using BitmapData destPreviewImage = previewImage.Lock();
-		Buffer2D<Rgb24>  srcRenderBuffer     = renderJob.ImageBuffer.PixelBuffer;
-		IntPtr           destOffset           = destPreviewImage.Data;
+		Buffer2D<Rgb24>  srcRenderBuffer  = renderJob.ImageBuffer.PixelBuffer;
+		IntPtr           destOffset       = destPreviewImage.Data;
 		int              xSize            = previewImage.Width, ySize = previewImage.Height;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
