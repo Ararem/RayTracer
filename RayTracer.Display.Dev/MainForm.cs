@@ -211,7 +211,7 @@ public sealed class MainForm : Form
 				BuiltinScenes.Testing, new RenderOptions(
 						1080, 1080,
 						0.00001f, float.PositiveInfinity,
-						1, 1, 30,
+						1, 10, 30,
 						GraphicsDebugVisualisation.None,
 						10
 				)
@@ -251,9 +251,7 @@ public sealed class MainForm : Form
 			prevFrameTime = DateTime.Now;
 			Verbose("Updated previews in {Elapsed}", sw.Elapsed);
 			Invalidate();
-			Verbose("setting timer");
 			updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
-			Verbose("timer set");
 		}
 	}
 
@@ -261,7 +259,7 @@ public sealed class MainForm : Form
 	{
 		//TODO: Find out a more safe way to do this without using pointers and unsafe code
 		PixImage<float> srcPixImg      = renderJob.Image.CloneAs<RgbaVector>().ToPixImage().ToPixImage<float>(Col.Format.RGB); //Convert to PixImage<float> for denoiser
-		PixImage        denoisedPixImg = denoiseDevice.Denoise(srcPixImg, 1f);                                                 // Denoise
+		PixImage        denoisedPixImg = true?denoiseDevice.Denoise(srcPixImg):srcPixImg;                                     // Denoise
 
 		//Note to future person reading this:
 		//The reason why I had to do this conversion stuff was because .ToImage() (Pix -> ImageSharp) was failing because the format was float <Rgb>, which isn't supported
