@@ -1,28 +1,27 @@
 using Aardvark.Base;
 using Aardvark.OpenImageDenoise;
+using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
+using LibEternal.Core.ObjectPools;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
 using RayTracer.Impl;
-using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Threading.Tasks;
-using static Serilog.Log;
-using Eto.Containers;
-using LibEternal.Core.ObjectPools;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
 using System.Threading;
+using System.Threading.Tasks;
+using static Serilog.Log;
 using static RayTracer.Core.MathUtils;
+using Image = SixLabors.ImageSharp.Image;
 using Size = Eto.Drawing.Size;
 
 
@@ -31,9 +30,9 @@ namespace RayTracer.Display.Dev;
 //TODO: Add some styling - custom fonts most important
 public sealed class MainForm : Form
 {
-	private       StackLayoutItem displayedWindowItem;
-	private       Label           titleLabel;
-	private const int             DepthImageWidth = 100;
+	private const int DepthImageWidth = 100;
+
+	private readonly Device denoiseDevice;
 
 	/// <summary>Image used for the depth buffer</summary>
 	private readonly Bitmap depthBufferBitmap;
@@ -53,14 +52,11 @@ public sealed class MainForm : Form
 	/// <summary>The control that holds the preview image</summary>
 	private readonly DragZoomImageView previewImageView;
 
-	/// <summary>Render job we are displaying the progress for</summary>
-	private AsyncRenderJob renderJob;
-
 	/// <summary>Container that has a title and border around the stats table</summary>
 	private readonly GroupBox statsContainer;
 
-	private readonly Timer   updatePreviewTimer;
-	private          Command resetImageCommand;
+	private readonly Timer           updatePreviewTimer;
+	private readonly StackLayoutItem displayedWindowItem;
 
 	/// <summary>Time (real-world) at which the last frame update occurred</summary>
 	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
@@ -71,8 +67,15 @@ public sealed class MainForm : Form
 	/// <summary>How long the last update took to complete (since we can't display how long the current one will take)</summary>
 	private TimeSpan prevUpdateDuration;
 
+	/// <summary>Render job we are displaying the progress for</summary>
+	private AsyncRenderJob renderJob;
+
+	private readonly Command resetImageCommand;
+
 	/// <summary>Table that contains the various stats</summary>
 	private TableLayout statsTable;
+
+	private readonly Label titleLabel;
 
 	public MainForm()
 	{
@@ -89,7 +92,7 @@ public sealed class MainForm : Form
 		TaskWatcher.Watch(Task.Run(RenderLoop), true);
 
 		Verbose("Creating UI elements");
-		titleLabel = new Label { Text = title, Style = Appearance.Styles.AppTitle };
+		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle };
 		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
@@ -177,15 +180,19 @@ public sealed class MainForm : Form
 		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
 
 		//Denoise things
-		Verbose("{X}", NativeLibrary.Load("oidn-natives/lib/libOpenImageDenoise.so"));
-		Verbose("ASD");
-
-		Aardvark.Base.Aardvark.Init();
+		Verbose("Loading OIDN lib manually");
+		IntPtr oidnPtr = NativeLibrary.Load("oidn-natives/lib/libOpenImageDenoise.so"); //Have to manually load the lib or else it fails for some reason
+		Verbose("OIDN Pointer is {Pointer}", oidnPtr);
+		Verbose("Initializing Aardvark");
 		Report.Verbosity = 999;
-		denoiseDevice    = new Device(DeviceFlags.CPU, 8);
+		Aardvark.Base.Aardvark.Init();
+		//TODO: Serilog & Aardvark logs joined
+		Verbose("Creating new OIDN Device");
+		denoiseDevice = new Device();
+		Verbose("OIDN Device created: {Device}", denoiseDevice);
 	}
 
-	private readonly Device denoiseDevice;
+	private static int UpdatePeriod => 5000; //60 FPS
 
 	private async Task RenderLoop()
 	{
@@ -200,19 +207,19 @@ public sealed class MainForm : Form
 	private async Task Render()
 	{
 		// ReSharper disable once RedundantArgumentDefaultValue
-		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
-				1080	,1080,
-				0.00001f, float.PositiveInfinity,
-				16, 1, 30,
-				GraphicsDebugVisualisation.None,
-				10
-				));
+		renderJob = new AsyncRenderJob(
+				BuiltinScenes.Testing, new RenderOptions(
+						1080, 1080,
+						0.00001f, float.PositiveInfinity,
+						1, 1, 30,
+						GraphicsDebugVisualisation.None,
+						10
+				)
+		);
 
 		await renderJob.StartOrGetRenderAsync();
 		await Task.Delay(3000);
 	}
-
-	private static int UpdatePeriod => 1000 / 60; //60 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the
@@ -226,9 +233,10 @@ public sealed class MainForm : Form
 		 * (B) - The timer is only ever reset *after* everything's already been updated
 		 */
 		RenderStats stats = renderJob.RenderStats;
+		Verbose("Updating previews");
+		Stopwatch sw = Stopwatch.StartNew();
 		try
 		{
-			Stopwatch sw = Stopwatch.StartNew();
 			UpdateImagePreview();
 			UpdateStatsTable(stats);
 			prevUpdateDuration = sw.Elapsed;
@@ -241,21 +249,28 @@ public sealed class MainForm : Form
 		{
 			prevStats     = new RenderStats(stats);
 			prevFrameTime = DateTime.Now;
+			Verbose("Updated previews in {Elapsed}", sw.Elapsed);
 			Invalidate();
-			updatePreviewTimer.Change(UpdatePeriod, -1);
+			Verbose("setting timer");
+			updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
+			Verbose("timer set");
 		}
 	}
 
 	private void UpdateImagePreview()
 	{
 		//TODO: Find out a more safe way to do this without using pointers and unsafe code
-		MemoryStream stream = new(1_000_000);
-		renderJob.Image.SaveAsJpeg(stream);
-		PixImage<float> pixImg = new(stream);
-		denoiseDevice.Denoise(pixImg);
+		PixImage<float> srcPixImg      = renderJob.Image.CloneAs<RgbaVector>().ToPixImage().ToPixImage<float>(Col.Format.RGB); //Convert to PixImage<float> for denoiser
+		PixImage        denoisedPixImg = denoiseDevice.Denoise(srcPixImg, 1f);                                                 // Denoise
 
+		//Note to future person reading this:
+		//The reason why I had to do this conversion stuff was because .ToImage() (Pix -> ImageSharp) was failing because the format was float <Rgb>, which isn't supported
+		//https://github.com/aardvark-platform/aardvark.base/blob/master/src/Aardvark.Base.Tensors/PixImageImageSharp.fs#L364=
+		Image?             tmp              = denoisedPixImg.ToPixImage<byte>(Col.Format.RGB).ToImage();
+		using Image<Rgb24> denoisedSrcImage = tmp.CloneAs<Rgb24>();
+
+		Buffer2D<Rgb24>  srcRenderBuffer  = denoisedSrcImage.Frames.RootFrame.PixelBuffer;
 		using BitmapData destPreviewImage = previewImage.Lock();
-		Buffer2D<Rgb24>  srcRenderBuffer  = renderJob.ImageBuffer.PixelBuffer;
 		IntPtr           destOffset       = destPreviewImage.Data;
 		int              xSize            = previewImage.Width, ySize = previewImage.Height;
 		for (int y = 0; y < ySize; y++)
@@ -338,7 +353,7 @@ public sealed class MainForm : Form
 
 		List<(string Title, (string Name, string Value, string? Delta)[] NamedValues)> stringStats = new();
 		TimeSpan                                                                       deltaT      = DateTime.Now - prevFrameTime;
-{
+		{
 			TimeSpan elapsed = renderJob.Stopwatch.Elapsed;
 			TimeSpan estimatedTotalTime;
 			//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws

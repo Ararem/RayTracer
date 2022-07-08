@@ -46,6 +46,7 @@ internal static class Logger
 					.Enrich.With(new CallerContextEnricher(perfMode))
 					.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
 					.Destructure.With<DelegateDestructurer>()
+					.Destructure.With<IncludePublicFieldsDestructurer>()
 					.Destructure.AsScalar<Vector3>()
 					.Destructure.AsScalar<Vector2>()
 					.CreateLogger();

@@ -38,17 +38,29 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="OpenImageDenoise.dll" />
-	  <None Remove="tbb12.dll" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so" />
-	  <None Remove="oidn-natives\lib\libtbb.so" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so.1">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1.4.3" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so.1.4.3">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libtbb.so" />
+	  <Content Include="oidn-natives\lib\libtbb.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <None Remove="oidn-natives\lib\libtbb.so.12" />
+	  <Content Include="oidn-natives\lib\libtbb.so.12">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	  <None Remove="oidn-natives\lib\libtbb.so.12.5" />
+	  <Content Include="oidn-natives\lib\libtbb.so.12.5">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
-
 </Project>
