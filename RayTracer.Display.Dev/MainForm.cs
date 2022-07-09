@@ -187,6 +187,12 @@ public sealed class MainForm : Form
 		Report.Verbosity = 999;
 		Aardvark.Base.Aardvark.Init();
 		//TODO: Serilog & Aardvark logs joined
+		/*
+		 * TODO: Make this denoise stuff safer for other people:
+		 * 1. Add other platforms
+		 * 2. Script to update from latest release on github?
+		 * 3. Releases (OIDN) should be versioned
+		 */
 		Verbose("Creating new OIDN Device");
 		denoiseDevice = new Device();
 		Verbose("OIDN Device created: {Device}", denoiseDevice);
