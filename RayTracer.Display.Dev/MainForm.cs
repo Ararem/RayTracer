@@ -22,12 +22,14 @@ using System.Threading.Tasks;
 using static Serilog.Log;
 using static RayTracer.Core.MathUtils;
 using Image = SixLabors.ImageSharp.Image;
+using Log = Serilog.Log;
 using Size = Eto.Drawing.Size;
 
 
 namespace RayTracer.Display.Dev;
 
 //TODO: Add some styling - custom fonts most important
+//TODO: Rework this to be less dependant on state - it's kinda hacked together right now and needs some serious rethinking
 public sealed class MainForm : Form
 {
 	private const int DepthImageWidth = 100;
@@ -40,8 +42,9 @@ public sealed class MainForm : Form
 	/// <summary>Graphics used for the depth buffer</summary>
 	private readonly Graphics depthBufferGraphics;
 
-	private readonly ImageView depthBufferImageView;
-	private readonly Pen       depthBufferPen = new(Colors.Gray);
+	private readonly ImageView       depthBufferImageView;
+	private readonly Pen             depthBufferPen = new(Colors.Gray);
+	private readonly StackLayoutItem displayedWindowItem;
 
 	/// <summary>The actual preview image buffer</summary>
 	private readonly Bitmap previewImage;
@@ -52,11 +55,14 @@ public sealed class MainForm : Form
 	/// <summary>The control that holds the preview image</summary>
 	private readonly DragZoomImageView previewImageView;
 
+	private readonly Command resetImageCommand;
+
 	/// <summary>Container that has a title and border around the stats table</summary>
 	private readonly GroupBox statsContainer;
 
-	private readonly Timer           updatePreviewTimer;
-	private readonly StackLayoutItem displayedWindowItem;
+	private readonly Label titleLabel;
+
+	private readonly Timer updatePreviewTimer;
 
 	/// <summary>Time (real-world) at which the last frame update occurred</summary>
 	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
@@ -67,15 +73,33 @@ public sealed class MainForm : Form
 	/// <summary>How long the last update took to complete (since we can't display how long the current one will take)</summary>
 	private TimeSpan prevUpdateDuration;
 
+	/// <summary>One of the two render buffers used to store a copy of the image that is to be displayed.</summary>
+	/// <remarks>
+	///  If denoising is enabled, one buffer will be used to store the image currently being displayed, while the other is being processed by the
+	///  denoiser
+	/// </remarks>
+	private Image<Rgb24> renderBufferA;
+
+	/// <summary>One of the two render buffers used to store a copy of the image that is to be displayed.</summary>
+	/// <remarks>
+	///  If denoising is enabled, one buffer will be used to store the image currently being displayed, while the other is being processed by the
+	///  denoiser
+	/// </remarks>
+	private Image<Rgb24> renderBufferB;
+
+	/// <summary>
+	/// Flag that is set whenever the denoiser is processing an image. Controls when the buffers are switched and the denoiser is restarted
+	/// </summary>
+	private bool denoiseRunning = false;
+
 	/// <summary>Render job we are displaying the progress for</summary>
 	private AsyncRenderJob renderJob;
-
-	private readonly Command resetImageCommand;
 
 	/// <summary>Table that contains the various stats</summary>
 	private TableLayout statsTable;
 
-	private readonly Label titleLabel;
+	/// <summary>Flag for which render buffer should be used</summary>
+	private bool displayBufferA;
 
 	public MainForm()
 	{
@@ -196,9 +220,13 @@ public sealed class MainForm : Form
 		Verbose("Creating new OIDN Device");
 		denoiseDevice = new Device();
 		Verbose("OIDN Device created: {Device}", denoiseDevice);
+
+		//Initialize the render buffers
+		renderBufferA = new Image<Rgb24>(renderJob.Image.Width, renderJob.Image.Height, new Rgb24(0,0,0));
+		renderBufferB = new Image<Rgb24>(renderJob.Image.Width, renderJob.Image.Height, new Rgb24(0,0,0));
 	}
 
-	private static int UpdatePeriod => 5000; //60 FPS
+	private static int UpdatePeriod => 500; //60 FPS
 
 	private async Task RenderLoop()
 	{
@@ -263,17 +291,8 @@ public sealed class MainForm : Form
 
 	private void UpdateImagePreview()
 	{
-		//TODO: Find out a more safe way to do this without using pointers and unsafe code
-		PixImage<float> srcPixImg      = renderJob.Image.CloneAs<RgbaVector>().ToPixImage().ToPixImage<float>(Col.Format.RGB); //Convert to PixImage<float> for denoiser
-		PixImage        denoisedPixImg = true?denoiseDevice.Denoise(srcPixImg):srcPixImg;                                     // Denoise
-
-		//Note to future person reading this:
-		//The reason why I had to do this conversion stuff was because .ToImage() (Pix -> ImageSharp) was failing because the format was float <Rgb>, which isn't supported
-		//https://github.com/aardvark-platform/aardvark.base/blob/master/src/Aardvark.Base.Tensors/PixImageImageSharp.fs#L364=
-		Image?             tmp              = denoisedPixImg.ToPixImage<byte>(Col.Format.RGB).ToImage();
-		using Image<Rgb24> denoisedSrcImage = tmp.CloneAs<Rgb24>();
-
-		Buffer2D<Rgb24>  srcRenderBuffer  = denoisedSrcImage.Frames.RootFrame.PixelBuffer;
+		if(!denoiseRunning) Task.Run(DenoiseNextBuffer);
+		Buffer2D<Rgb24>  srcRenderBuffer  = (displayBufferA ? renderBufferA : renderBufferB).Frames.RootFrame.PixelBuffer;
 		using BitmapData destPreviewImage = previewImage.Lock();
 		IntPtr           destOffset       = destPreviewImage.Data;
 		int              xSize            = previewImage.Width, ySize = previewImage.Height;
@@ -289,6 +308,38 @@ public sealed class MainForm : Form
 				renderBufRow.CopyTo(destRow);
 				destOffset += destPreviewImage.ScanWidth;
 			}
+	}
+
+	private void DenoiseNextBuffer()
+	{
+		Verbose("Denoise start");
+		var sw = Stopwatch.StartNew();
+		denoiseRunning = true;
+		try
+		{
+			ref Image<Rgb24> targetBuffer = ref !displayBufferA ? ref renderBufferA : ref renderBufferB; //Have to make sure it's inverted so we get the buffer that's not in use
+			//TODO: Find out a more safe way to do this without using pointers and unsafe code
+			PixImage<float> srcPixImg      = renderJob.Image.CloneAs<RgbaVector>().ToPixImage().ToPixImage<float>(Col.Format.RGB); //Convert to PixImage<float> for denoiser
+			PixImage        denoisedPixImg = true ? denoiseDevice.Denoise(srcPixImg) : srcPixImg;                                  // Denoise
+
+			//Note to future person reading this:
+			//The reason why I had to do this conversion stuff was because .ToImage() (Pix -> ImageSharp) was failing because the format was float <Rgb>, which isn't supported
+			//https://github.com/aardvark-platform/aardvark.base/blob/master/src/Aardvark.Base.Tensors/PixImageImageSharp.fs#L364=
+			Image<Rgb24>           tmp          = denoisedPixImg.ToPixImage<byte>(Col.Format.RGB).ToImage().CloneAs<Rgb24>();
+
+			targetBuffer.Dispose();                                                                      //Get rid of the old image
+			targetBuffer = tmp; //Set it to the new one
+		}
+		catch (Exception e)
+		{
+			Warning(e, "Denoise failed");
+		}
+		finally
+		{
+			displayBufferA ^= true; //Toggle buffer flag
+			denoiseRunning =  false;
+		}
+		Verbose("Denoise end in {Elapsed}", sw.Elapsed);
 	}
 
 	private void UpdateStatsTable(RenderStats renderStats)
