@@ -204,6 +204,10 @@ public readonly struct Colour : IFormattable
 	/// <summary>Calculates the square root of a colour's channels</summary>
 	public static Colour Sqrt(Colour colour) => new(MathF.Sqrt(colour.R), MathF.Sqrt(colour.G), MathF.Sqrt(colour.B));
 
+
+	/// <summary>Computes the value of a colour's channels to a given power</summary>
+	public static Colour Pow(Colour colour, float pow) => new(MathF.Pow(colour.R,pow), MathF.Pow(colour.G,pow), MathF.Pow(colour.B,pow));
+
 	/// <summary>Linearly interpolates between two colours</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[Pure]
@@ -232,6 +236,14 @@ public readonly struct Colour : IFormattable
 					(byte)(byte.MaxValue * c.G),
 					(byte)(byte.MaxValue * c.B)
 			);
+
+	/// <summary>
+	/// Deconstructs a colour into it's components
+	/// </summary>
+	/// <param name="r"></param>
+	/// <param name="g"></param>
+	/// <param name="b"></param>
+	public void Deconstruct(out float r, out float g, out float b) => (r, g, b) = (R, G, B);
 
 #endregion
 }

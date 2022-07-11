@@ -26,6 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Aardvark.OpenImageDenoise" Version="0.3.0" />
 		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.2" />
 		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9" />
 		<PackageReference Include="Serilog" Version="2.10.0" />
@@ -36,4 +37,30 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so.1">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libOpenImageDenoise.so.1.4.3" />
+	  <Content Include="oidn-natives\lib\libOpenImageDenoise.so.1.4.3">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libtbb.so" />
+	  <Content Include="oidn-natives\lib\libtbb.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libtbb.so.12" />
+	  <Content Include="oidn-natives\lib\libtbb.so.12">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <None Remove="oidn-natives\lib\libtbb.so.12.5" />
+	  <Content Include="oidn-natives\lib\libtbb.so.12.5">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
 </Project>

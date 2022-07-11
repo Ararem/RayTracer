@@ -11,7 +11,7 @@ public static class MathUtils
 	/// <param name="b">Second value to blend</param>
 	/// <param name="t">How much to blend. Should be [0..1] for results in the range [<paramref name="a"/>..<paramref name="b"/>]</param>
 	[Pure]
-	public static float Lerp(float a, float b, float t) => ((1f - t) * a) + (b * t);
+	public static float Lerp(float a, float b, float t) => a + (t * (b -a));
 
 	/// <summary>Finds how far between two values a given value is.</summary>
 	[Pure]

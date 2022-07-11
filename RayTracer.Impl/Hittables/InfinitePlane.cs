@@ -10,7 +10,7 @@ namespace RayTracer.Impl.Hittables;
 /// <remarks>
 ///  Due to being 'infinite', UV coordinates for the <see cref="HitRecord"/> do not exist, and so are assigned <see cref="Vector2.Zero"/>
 /// </remarks>
-public sealed class InfinitePlane : Hittable
+public sealed class InfinitePlane : SingleMaterialHittable
 {
 	private readonly float negPointDotNormal;
 
@@ -58,7 +58,7 @@ public sealed class InfinitePlane : Hittable
 		bool    outside    = normDotDir < 0; //True if hit on the same side as the normal points to
 		Vector2 uv         = Vector2.Zero;   //A problem with uv's is that we can't really map them onto planes which are infinite
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv,this, Material);
 	}
 
 	/// <inheritdoc/>

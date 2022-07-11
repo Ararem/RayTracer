@@ -8,7 +8,7 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>A capsule shape, defined by two points, and a radius</summary>
-public sealed class Capsule : Hittable
+public sealed class Capsule : SingleMaterialHittable
 {
 	/// <summary>Halfway between <see cref="P1"/> and <see cref="P2"/></summary>
 	private readonly Vector3 centre;
@@ -142,7 +142,7 @@ public sealed class Capsule : Hittable
 		);
 		bool inside = Dot(ray.Direction, outNormal) > 0f; //If the ray is 'inside' the sphere
 
-		return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv);
+		return new HitRecord(ray, worldPos, localPos, outNormal, k, !inside, uv,this, Material);
 	}
 
 	/// <inheritdoc/>

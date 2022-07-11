@@ -40,25 +40,26 @@ public sealed class EmissiveRefractiveMaterial : RefractiveMaterial
 	public bool DirectEmission { get; }
 
 	/// <inheritdoc/>
-	public override void DoColourThings(ref Colour colour, HitRecord hit, ArraySegment<(SceneObject sceneObject, HitRecord hitRecord)> previousHits)
+	public override Colour CalculateColour(Colour futureRayColour, Ray futureRay, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-		colour *= Tint.GetColour(hit);
+		Colour colour= futureRayColour;
+		colour += CalculateSimpleColourFromLights(currentHit);
+		colour *= Tint.GetColour(currentHit);
 		//Force emit if we allow direct lighting
 		if (DirectEmission)
-			colour += Emission.GetColour(hit);
+			return colour + Emission.GetColour(currentHit);
 		//Care whether it's direct or not
 		else
-			switch (previousHits.Count)
+			switch (prevHitsBetweenCamera.Count)
 			{
 				//Direct ray from camera
 				case 0:
 				//Semi indirect - refracted through this object once before
-				case 1 when previousHits[0].sceneObject.Material == this:
-					return;
+				case 1 when prevHitsBetweenCamera[0].Material == this:
+					return colour;
 				//Indirect case
 				default:
-					colour += Emission.GetColour(hit);
-					return;
+					return colour + Emission.GetColour(currentHit);
 			}
 	}
 }

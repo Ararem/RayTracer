@@ -18,7 +18,7 @@ namespace RayTracer.Impl.Hittables;
 ///  <c>Translate * Rotate * Scale</c>, or you may get unintended results (see
 ///  <a href="https://gamedev.stackexchange.com/questions/29260/transform-matrix-multiplication-order/29265#29265">this StackOverflow answer</a> )
 /// </remarks>
-public sealed class Box : Hittable
+public sealed class Box : SingleMaterialHittable
 {
 	/// <summary>First row of the box-to-world transform matrix, cached to avoid recalculation. I think it's used to calculate normals</summary>
 	private readonly Vector3 boxToWorldRow1;
@@ -86,15 +86,24 @@ public sealed class Box : Hittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>Creates a <see cref="Box"/> from two opposing corners</summary>
-	public static Box CreateFromCorners(Vector3 corner1, Vector3 corner2)
+	public Box(Vector3 corner1, Vector3 corner2) : this(TransformMatrixFromCorners(corner1, corner2))
 	{
-		corner1 = Min(corner1, corner2);
-		corner2 = Max(corner1, corner2);
-		Vector3 size   = corner2 - corner1;
-		Vector3 centre = (corner2 + corner1) / 2f;
+	}
+
+	/// <summary>
+	/// Helper method to simplify constructor overloading. Creates a transform matrix for an axis-aligned box with the specified corners
+	/// </summary>
+	/// <param name="c1">First corner of the box</param>
+	/// <param name="c2">Second corner of the box</param>
+	private static Matrix4x4 TransformMatrixFromCorners(Vector3 c1, Vector3 c2)
+	{
+		c1 = Min(c1, c2);
+		c2 = Max(c1, c2);
+		Vector3 size   = c2 - c1;
+		Vector3 centre = (c2 + c1) / 2f;
 
 		Matrix4x4 matrix = Matrix4x4.CreateScale(size) * Matrix4x4.CreateTranslation(centre);
-		return new Box(matrix);
+		return matrix;
 	}
 
 	/// <inheritdoc/>
@@ -191,7 +200,7 @@ public sealed class Box : Hittable
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero);
+		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero,this, Material);
 	}
 
 	/// <inheritdoc/>

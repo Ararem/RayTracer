@@ -26,7 +26,7 @@ internal static class Logger
 		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},10}}::{{{CallingMethodNameProp},-10}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
 		#else
 		const PerfMode perfMode = PerfMode.SingleFrameFast;
-		const string   template = $"[{{Timestamp:HH:mm:ss}} | +{{AppTimestamp:G}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} | {{{CallingTypeNameProp},30}}::{{{CallingMethodNameProp},-20}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
+		const string   template = $"[{{Timestamp:HH:mm:ss}} | +{{AppTimestamp:G}} | {{Level:t3}} | " /*+ $"{{{ThreadNameProp},-30}} " /**/+ $"{{{ThreadIdProp},3:'#'##}} | {{{CallingTypeNameProp},30}}::{{{CallingMethodNameProp},-20}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
 		#endif
 
 		Thread.CurrentThread.Name ??= "Main Thread";
@@ -46,6 +46,7 @@ internal static class Logger
 					.Enrich.With(new CallerContextEnricher(perfMode))
 					.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
 					.Destructure.With<DelegateDestructurer>()
+					.Destructure.With<IncludePublicFieldsDestructurer>()
 					.Destructure.AsScalar<Vector3>()
 					.Destructure.AsScalar<Vector2>()
 					.CreateLogger();

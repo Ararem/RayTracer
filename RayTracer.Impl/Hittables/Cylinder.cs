@@ -7,7 +7,7 @@ using static System.Numerics.Vector3;
 namespace RayTracer.Impl.Hittables;
 
 /// <summary>A cylinder, defined by two points and a radius around the line segments of those points</summary>
-public sealed class Cylinder : Hittable
+public sealed class Cylinder : SingleMaterialHittable
 {
 	/// <summary>Centre of the cylinder, halfway between <see cref="P1"/> and <see cref="P2"/></summary>
 	private readonly Vector3 centre;
@@ -101,7 +101,7 @@ public sealed class Cylinder : Hittable
 			Vector3 localPos = worldPos - centre;
 			bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero); //TODO: UV coords
+			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero,this, Material); //TODO: UV coords
 		}
 	}
 

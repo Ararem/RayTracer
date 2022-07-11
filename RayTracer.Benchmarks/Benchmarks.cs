@@ -1,5 +1,9 @@
 using BenchmarkDotNet.Attributes;
 using RayTracer.Core;
+using RayTracer.Impl;
+using RayTracer.Impl.Hittables;
+using RayTracer.Impl.Lights;
+using RayTracer.Impl.Skyboxes;
 using System.Numerics;
 using static System.Numerics.Vector3;
 
@@ -11,36 +15,20 @@ namespace RayTracer.Benchmarks;
 [SimpleJob]
 public class Benchmarks
 {
-	public float   invNormDotDir;
-	public float   negPointDotNormal;
-	public Vector3 normal;
-	public Vector3 point;
-	public Ray     ray;
-
+	public float a = RandUtils.RandomFloat01(), b = RandUtils.RandomFloat01(), t = RandUtils.RandomFloat01();
 	public Benchmarks()
 	{
-		ray               = new Ray(RandUtils.RandomInUnitCube() * 1000f, RandUtils.RandomOnUnitSphere());
-		normal            = RandUtils.RandomOnUnitSphere();
-		point             = RandUtils.RandomInUnitCube() * 1000f;
-		negPointDotNormal = -Dot(point, normal);
-	}
-
-
-	[Benchmark]
-	public float Method1()
-	{
-		return -Dot(normal, ray.Origin - point) / Dot(normal, ray.Direction);
 	}
 
 	[Benchmark]
-	public float Method2()
+	public float SumBilinear()
 	{
-		return -(Dot(ray.Origin, normal) - Dot(point, normal)) / Dot(normal, ray.Direction);
+		return ((1f - t) * a) + (b * t);
 	}
 
 	[Benchmark]
-	public float Method2Cached()
+	public float DiffLinear()
 	{
-		return -(Dot(ray.Origin, normal) + negPointDotNormal) / Dot(normal, ray.Direction);
+		return a + (t * (b-a));
 	}
 }

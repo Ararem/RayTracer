@@ -26,6 +26,7 @@ namespace RayTracer.Core;
 ///  manually stopped
 /// </param>
 /// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
+/// <param name="LightSampleCountHint">A hint parameter that can be accessed by a <see cref="Material"/> for how many times it should cast light rays</param>
 public sealed record RenderOptions(
 		[NonNegativeValue] int     Width,
 		[NonNegativeValue] int     Height,
@@ -34,10 +35,11 @@ public sealed record RenderOptions(
 		int                        ConcurrencyLevel,
 		int                        Passes,
 		[NonNegativeValue] int     MaxDepth,
-		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None
+		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
+		[NonNegativeValue] int LightSampleCountHint = 3
 		//TODO: Max depth for calculating lighting?
 )
 {
 	/// <summary>Default render options</summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, -1, 100, 10);
+	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, Environment.ProcessorCount, 100, 100);
 }

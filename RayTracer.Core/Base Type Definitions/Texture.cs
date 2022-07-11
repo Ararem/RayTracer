@@ -2,7 +2,8 @@ using JetBrains.Annotations;
 
 namespace RayTracer.Core;
 
-/// <summary>Base class for a texture</summary>
+/// <summary>Base class for a texture. </summary>
+//TODO: Rewrite this to be generic: Vec2 for uv, Vec3 for world-space, etc
 [PublicAPI]
 public abstract class Texture
 {

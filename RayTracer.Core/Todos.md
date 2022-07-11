@@ -3,16 +3,15 @@
 ## Misc
 
 * Swap floats to doubles and test the performance loss (might be preferable to use doubles everywhere instead of casting all the time)
+* Update all docs for new API and ensure everything is correct
 ## Materials/Textures
 
 * ***IMPORTANT***: Fix refraction calculation
-* Implement phong model for shading
 * Implement some actual textures other than plain colours
     * Images
     * Procedural (Noise)
 * Add some sort of texturing to sky-boxes (HDRI images?)
 * Shaders (Materials) should be able to modify some the surface normal (see [HitRecord](HitRecord.cs))
-* Create some mechanism to allow the hittable to communicate with the material (such as how far the ray went for ConstantDensityMedium)
 
 ## Models/Shapes
 

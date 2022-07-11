@@ -1,44 +1,40 @@
-using Eto;
-using Eto.Drawing;
-using Eto.Forms;
-using RayTracer.Core;
-using RayTracer.Core.Debugging;
-using RayTracer.Impl;
-using SixLabors.ImageSharp.Formats.Png;
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Threading.Tasks;
-using static Serilog.Log;
+using Aardvark.Base;
+using Aardvark.OpenImageDenoise;
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
 using LibEternal.Core.ObjectPools;
 using RayTracer.Core;
+using RayTracer.Core.Debugging;
+using RayTracer.Impl;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
-using static RayTracer.Core.MathUtils;
+using System.Threading.Tasks;
 using static Serilog.Log;
+using static RayTracer.Core.MathUtils;
+using Image = SixLabors.ImageSharp.Image;
+using Log = Serilog.Log;
 using Size = Eto.Drawing.Size;
 
 
 namespace RayTracer.Display.Dev;
 
 //TODO: Add some styling - custom fonts most important
+//TODO: Rework this to be less dependant on state - it's kinda hacked together right now and needs some serious rethinking
 public sealed class MainForm : Form
 {
-	private       StackLayoutItem displayedWindowItem;
-	private       Label           titleLabel;
-	private const int             DepthImageWidth = 100;
+	private const int DepthImageWidth = 100;
+
+	private readonly Device denoiseDevice;
 
 	/// <summary>Image used for the depth buffer</summary>
 	private readonly Bitmap depthBufferBitmap;
@@ -46,8 +42,9 @@ public sealed class MainForm : Form
 	/// <summary>Graphics used for the depth buffer</summary>
 	private readonly Graphics depthBufferGraphics;
 
-	private readonly ImageView depthBufferImageView;
-	private readonly Pen       depthBufferPen = new(Colors.Gray);
+	private readonly ImageView       depthBufferImageView;
+	private readonly Pen             depthBufferPen = new(Colors.Gray);
+	private readonly StackLayoutItem displayedWindowItem;
 
 	/// <summary>The actual preview image buffer</summary>
 	private readonly Bitmap previewImage;
@@ -58,14 +55,14 @@ public sealed class MainForm : Form
 	/// <summary>The control that holds the preview image</summary>
 	private readonly DragZoomImageView previewImageView;
 
-	/// <summary>Render job we are displaying the progress for</summary>
-	private AsyncRenderJob renderJob;
+	private readonly Command resetImageCommand;
 
 	/// <summary>Container that has a title and border around the stats table</summary>
 	private readonly GroupBox statsContainer;
 
-	private readonly Timer   updatePreviewTimer;
-	private          Command resetImageCommand;
+	private readonly Label titleLabel;
+
+	private readonly Timer updatePreviewTimer;
 
 	/// <summary>Time (real-world) at which the last frame update occurred</summary>
 	private DateTime prevFrameTime = DateTime.Now; // Assign to `Now` cause otherwise the resulting `deltaT` is crazy high and multiplication makes it overflow later
@@ -76,8 +73,33 @@ public sealed class MainForm : Form
 	/// <summary>How long the last update took to complete (since we can't display how long the current one will take)</summary>
 	private TimeSpan prevUpdateDuration;
 
+	/// <summary>One of the two render buffers used to store a copy of the image that is to be displayed.</summary>
+	/// <remarks>
+	///  If denoising is enabled, one buffer will be used to store the image currently being displayed, while the other is being processed by the
+	///  denoiser
+	/// </remarks>
+	private Image<Rgb24> renderBufferA;
+
+	/// <summary>One of the two render buffers used to store a copy of the image that is to be displayed.</summary>
+	/// <remarks>
+	///  If denoising is enabled, one buffer will be used to store the image currently being displayed, while the other is being processed by the
+	///  denoiser
+	/// </remarks>
+	private Image<Rgb24> renderBufferB;
+
+	/// <summary>
+	/// Flag that is set whenever the denoiser is processing an image. Controls when the buffers are switched and the denoiser is restarted
+	/// </summary>
+	private bool denoiseRunning = false;
+
+	/// <summary>Render job we are displaying the progress for</summary>
+	private AsyncRenderJob renderJob;
+
 	/// <summary>Table that contains the various stats</summary>
 	private TableLayout statsTable;
+
+	/// <summary>Flag for which render buffer should be used</summary>
+	private bool displayBufferA;
 
 	public MainForm()
 	{
@@ -94,7 +116,7 @@ public sealed class MainForm : Form
 		TaskWatcher.Watch(Task.Run(RenderLoop), true);
 
 		Verbose("Creating UI elements");
-		titleLabel = new Label { Text = title, Style = Appearance.Styles.AppTitle };
+		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle };
 		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 		Content = new StackLayout
@@ -180,12 +202,37 @@ public sealed class MainForm : Form
 		//TODO: Perhaps PeriodicTimer or UITimer
 		updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateAllPreviews, 0, UpdatePeriod);
 		prevStats          = new RenderStats(renderJob.RenderOptions); //Kinda arbitrary as long as it's not null
+
+		//Denoise things
+		Verbose("Loading OIDN lib manually");
+		IntPtr oidnPtr = NativeLibrary.Load("oidn-natives/lib/libOpenImageDenoise.so"); //Have to manually load the lib or else it fails for some reason
+		Verbose("OIDN Pointer is {Pointer}", oidnPtr);
+		Verbose("Initializing Aardvark");
+		Report.Verbosity = 999;
+		Aardvark.Base.Aardvark.Init();
+		//TODO: Serilog & Aardvark logs joined
+		/*
+		 * TODO: Make this denoise stuff safer for other people:
+		 * 1. Add other platforms
+		 * 2. Script to update from latest release on github?
+		 * 3. Releases (OIDN) should be versioned
+		 */
+		Verbose("Creating new OIDN Device");
+		denoiseDevice = new Device();
+		Verbose("OIDN Device created: {Device}", denoiseDevice);
+
+		//Initialize the render buffers
+		renderBufferA = new Image<Rgb24>(renderJob.Image.Width, renderJob.Image.Height, new Rgb24(0,0,0));
+		renderBufferB = new Image<Rgb24>(renderJob.Image.Width, renderJob.Image.Height, new Rgb24(0,0,0));
 	}
+
+	private static int UpdatePeriod => 500; //60 FPS
 
 	private async Task RenderLoop()
 	{
 		while (true)
 		{
+			//Don't refactor by inlining, else hot reload won't work
 			await Task.Run(Render);
 		}
 		// ReSharper disable once FunctionNeverReturns
@@ -194,18 +241,19 @@ public sealed class MainForm : Form
 	private async Task Render()
 	{
 		// ReSharper disable once RedundantArgumentDefaultValue
-		renderJob  = new AsyncRenderJob(BuiltinScenes.Testing, new RenderOptions(
-				1080,1080,
-				0.00001f, float.PositiveInfinity,
-				4, 1, 1000,
-				GraphicsDebugVisualisation.None
-				));
+		renderJob = new AsyncRenderJob(
+				BuiltinScenes.Testing, new RenderOptions(
+						1080, 1080,
+						0.00001f, float.PositiveInfinity,
+						1, 10, 30,
+						GraphicsDebugVisualisation.None,
+						10
+				)
+		);
 
 		await renderJob.StartOrGetRenderAsync();
 		await Task.Delay(3000);
 	}
-
-	private static int UpdatePeriod => 1000 / 60; //60 FPS
 
 	/// <summary>
 	///  Updates all the previews. Important that it isn't called directly, but by <see cref="Application.Invoke{T}"/> so that it's called on the
@@ -219,9 +267,10 @@ public sealed class MainForm : Form
 		 * (B) - The timer is only ever reset *after* everything's already been updated
 		 */
 		RenderStats stats = renderJob.RenderStats;
+		Verbose("Updating previews");
+		Stopwatch sw = Stopwatch.StartNew();
 		try
 		{
-			Stopwatch sw = Stopwatch.StartNew();
 			UpdateImagePreview();
 			UpdateStatsTable(stats);
 			prevUpdateDuration = sw.Elapsed;
@@ -234,29 +283,63 @@ public sealed class MainForm : Form
 		{
 			prevStats     = new RenderStats(stats);
 			prevFrameTime = DateTime.Now;
+			Verbose("Updated previews in {Elapsed}", sw.Elapsed);
 			Invalidate();
-			updatePreviewTimer.Change(UpdatePeriod, -1);
+			updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
 		}
 	}
 
 	private void UpdateImagePreview()
 	{
-		using BitmapData  data         = previewImage.Lock();
-		int               xSize        = previewImage.Width, ySize = previewImage.Height;
-		ImageFrame<Rgb24> renderBuffer = renderJob.ImageBuffer;
-		IntPtr            offset       = data.Data;
+		if(!denoiseRunning) Task.Run(DenoiseNextBuffer);
+		Buffer2D<Rgb24>  srcRenderBuffer  = (displayBufferA ? renderBufferA : renderBufferB).Frames.RootFrame.PixelBuffer;
+		using BitmapData destPreviewImage = previewImage.Lock();
+		IntPtr           destOffset       = destPreviewImage.Data;
+		int              xSize            = previewImage.Width, ySize = previewImage.Height;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
 				//Otherwise here be dragons
 			unsafe
 			{
-				Span<Rgb24> renderBufRow = renderBuffer.GetPixelRowSpan(y);
-				void*       destPtr      = offset.ToPointer();
+				Span<Rgb24> renderBufRow = srcRenderBuffer.DangerousGetRowSpan(y);
+				void*       destPtr      = destOffset.ToPointer();
 				Span<Rgb24> destRow      = new(destPtr, xSize);
 
 				renderBufRow.CopyTo(destRow);
-				offset += data.ScanWidth;
+				destOffset += destPreviewImage.ScanWidth;
 			}
+	}
+
+	private void DenoiseNextBuffer()
+	{
+		Verbose("Denoise start");
+		var sw = Stopwatch.StartNew();
+		denoiseRunning = true;
+		try
+		{
+			ref Image<Rgb24> targetBuffer = ref !displayBufferA ? ref renderBufferA : ref renderBufferB; //Have to make sure it's inverted so we get the buffer that's not in use
+			//TODO: Find out a more safe way to do this without using pointers and unsafe code
+			PixImage<float> srcPixImg      = renderJob.Image.CloneAs<RgbaVector>().ToPixImage().ToPixImage<float>(Col.Format.RGB); //Convert to PixImage<float> for denoiser
+			PixImage        denoisedPixImg = !true ? denoiseDevice.Denoise(srcPixImg) : srcPixImg;                                  // Denoise
+
+			//Note to future person reading this:
+			//The reason why I had to do this conversion stuff was because .ToImage() (Pix -> ImageSharp) was failing because the format was float <Rgb>, which isn't supported
+			//https://github.com/aardvark-platform/aardvark.base/blob/master/src/Aardvark.Base.Tensors/PixImageImageSharp.fs#L364=
+			Image<Rgb24>           tmp          = denoisedPixImg.ToPixImage<byte>(Col.Format.RGB).ToImage().CloneAs<Rgb24>();
+
+			targetBuffer.Dispose();                                                                      //Get rid of the old image
+			targetBuffer = tmp; //Set it to the new one
+		}
+		catch (Exception e)
+		{
+			Warning(e, "Denoise failed");
+		}
+		finally
+		{
+			displayBufferA ^= true; //Toggle buffer flag
+			denoiseRunning =  false;
+		}
+		Verbose("Denoise end in {Elapsed}", sw.Elapsed);
 	}
 
 	private void UpdateStatsTable(RenderStats renderStats)
@@ -325,7 +408,6 @@ public sealed class MainForm : Form
 
 		List<(string Title, (string Name, string Value, string? Delta)[] NamedValues)> stringStats = new();
 		TimeSpan                                                                       deltaT      = DateTime.Now - prevFrameTime;
-
 		{
 			TimeSpan elapsed = renderJob.Stopwatch.Elapsed;
 			TimeSpan estimatedTotalTime;
@@ -419,7 +501,7 @@ public sealed class MainForm : Form
 			stringStats.Add(
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
-							("Name", scene.Name, null),
+							("Name", $"{scene.Name,leftAlign}", null),
 							("Object Count", FormatNum(scene.SceneObjects.Length), null),
 							("Light Count", FormatNum(scene.Lights.Length), null)
 					})
@@ -429,13 +511,13 @@ public sealed class MainForm : Form
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", FormatNum(renderStats.ThreadsRunning), null),
+							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1 ? "∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
-							("Depth Max", FormatNum(renderJob.RenderOptions.MaxDepth), null),
-							("Near Plane", FormatFloat(renderJob.RenderOptions.KMin), null),
-							("Far Plane", FormatFloat(renderJob.RenderOptions.KMax), null),
+							("Max Bounces", FormatNum(renderJob.RenderOptions.MaxDepth), null),
+							("KMin", FormatFloat(renderJob.RenderOptions.KMin), null),
+							("KMax", FormatFloat(renderJob.RenderOptions.KMax), null),
 							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null)
 					})
 			);
@@ -493,7 +575,7 @@ public sealed class MainForm : Form
 			//Get the Labels at the correct locations, or assign them if needed
 			if (row.Cells[0].Control is not Label titleLabel)
 			{
-				Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
+				Verbose("Cell {Position} was not label (was {Control}), disposing and updating", (0, 0), row.Cells[0].Control);
 				row.Cells[0]?.Control?.Detach();
 				row.Cells[0]?.Control?.Dispose(); //Dispose the old control
 				titleLabel = CreateHeaderLabel();
@@ -502,7 +584,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[1].Control is not Label nameLabel)
 			{
-				Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
+				Verbose("Cell {Position} was not name label (was {Control}), disposing and updating", (1, 0), row.Cells[1].Control);
 				row.Cells[1]?.Control?.Detach();
 				row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 				nameLabel = CreateHeaderLabel();
@@ -511,7 +593,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[2].Control is not Label valueLabel)
 			{
-				Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
+				Verbose("Cell {Position} was not value label (was {Control}), disposing and updating", (2, 0), row.Cells[2].Control);
 				row.Cells[2]?.Control?.Detach();
 				row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
 				valueLabel = CreateHeaderLabel();
@@ -520,7 +602,7 @@ public sealed class MainForm : Form
 
 			if (row.Cells[3].Control is not Label deltaLabel)
 			{
-				Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
+				Verbose("Cell {Position} was not delta label (was {Control}), disposing and updating", (3, 0), row.Cells[3].Control);
 				row.Cells[3]?.Control?.Detach();
 				row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
 				deltaLabel = CreateHeaderLabel();
@@ -548,7 +630,7 @@ public sealed class MainForm : Form
 				//Get the Labels at the correct locations, or assign them if needed
 				if (row.Cells[0].Control is not Label titleLabel)
 				{
-					Verbose("Cell [{Position}] was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
+					Verbose("Cell {Position} was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
 					row.Cells[0]?.Control?.Detach();
 					row.Cells[0]?.Control?.Dispose(); //Dispose the old control
 					titleLabel = new Label { Style = Appearance.Styles.GeneralTextualUnderline };
@@ -557,7 +639,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[1].Control is not Label nameLabel)
 				{
-					Verbose("Cell [{Position}] was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
+					Verbose("Cell {Position} was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
 					row.Cells[1]?.Control?.Detach();
 					row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
 					nameLabel = new Label { Style = Appearance.Styles.GeneralTextual };
@@ -566,7 +648,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[2].Control is not Label valueLabel)
 				{
-					Verbose("Cell [{Position}] was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
+					Verbose("Cell {Position} was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
 					row.Cells[2]?.Control?.Detach();
 					row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
 					valueLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
@@ -575,7 +657,7 @@ public sealed class MainForm : Form
 
 				if (row.Cells[3].Control is not Label deltaLabel)
 				{
-					Verbose("Cell [{Position}] was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
+					Verbose("Cell {Position} was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
 					row.Cells[3]?.Control?.Detach();
 					row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
 					deltaLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
