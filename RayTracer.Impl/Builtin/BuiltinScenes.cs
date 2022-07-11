@@ -26,7 +26,7 @@ public static class BuiltinScenes
 			return new Scene(
 					"Testing", Camera.Create(new Vector3(0,0,-5), new Vector3( 0), UnitY, 90, 16f / 9f, 0f, 1f), new SceneObject[]
 					{
-							new("Box", new Box(Matrix4x4.CreateScale(1) * Matrix4x4.CreateFromYawPitchRoll(-15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(0,.2f,0))) { Material = new StandardMaterial(HalfGrey, 0f) }),
+							new("Disk", new Disk(UnitX, Normalize(new Vector3(1,1,1)), 3f){Material = new StandardMaterial(HalfGrey, 0f)})
 					},
                     Array.Empty<Light>(),
 					new DefaultSkyBox()

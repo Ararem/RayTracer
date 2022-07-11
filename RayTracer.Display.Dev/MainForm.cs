@@ -246,7 +246,7 @@ public sealed class MainForm : Form
 						1920, 1080,
 						0.00001f, float.PositiveInfinity,
 						1, 1, 30,
-						GraphicsDebugVisualisation.None,
+						GraphicsDebugVisualisation.UVCoords,
 						3
 				)
 		);
