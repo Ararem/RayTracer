@@ -8,11 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Benchmarks", "Ray
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.EtoForms", "RayTracer.Display.EtoForms\RayTracer.Display.EtoForms.csproj", "{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibEternal.Core", "LibEternal\LibEternal.Core\LibEternal.Core.csproj", "{7998683D-54C9-49CA-9DC6-02CDBD4748E8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Impl", "RayTracer.Impl\RayTracer.Impl.csproj", "{D476E398-50B1-4D3A-9CFC-0465A2F223AC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer.Display.Dev", "RayTracer.Display.Dev\RayTracer.Display.Dev.csproj", "{F20C49FB-F1E7-41EA-930A-821A1F3A7FDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibArarem.Core", "LibArarem\LibArarem.Core\LibArarem.Core.csproj", "{20424E9C-9FE5-417C-AB91-228F48823FBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +36,6 @@ Global
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4DABAA2E-DD3E-46AA-9A63-F16D1810C18F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7998683D-54C9-49CA-9DC6-02CDBD4748E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7998683D-54C9-49CA-9DC6-02CDBD4748E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7998683D-54C9-49CA-9DC6-02CDBD4748E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7998683D-54C9-49CA-9DC6-02CDBD4748E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D476E398-50B1-4D3A-9CFC-0465A2F223AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D476E398-50B1-4D3A-9CFC-0465A2F223AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D476E398-50B1-4D3A-9CFC-0465A2F223AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -48,5 +44,9 @@ Global
 		{F20C49FB-F1E7-41EA-930A-821A1F3A7FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F20C49FB-F1E7-41EA-930A-821A1F3A7FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F20C49FB-F1E7-41EA-930A-821A1F3A7FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20424E9C-9FE5-417C-AB91-228F48823FBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20424E9C-9FE5-417C-AB91-228F48823FBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20424E9C-9FE5-417C-AB91-228F48823FBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20424E9C-9FE5-417C-AB91-228F48823FBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

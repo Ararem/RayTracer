@@ -14,11 +14,12 @@ at it directly).
 ## How to run
 
 1. Clone the `git` repo, making sure to include submodules (the repo references my helper
-   project [LibEternal](LibEternal/LibEternal.Core/LibEternal.Core.csproj))
+   project [LibArarem](LibArarem/LibArarem.Core/LibArarem.Core.csproj))
 2. Open the solution file in your IDE (I use Rider)
 3. Run the raytracer using one of the `RayTracer.Display.XXX` projects
     * If using the `SpectreConsole` runner, use command-line arguments to change render options, and select the scene using the console
     * If using the `EtoForms` runner, everything is controlled from the UI
+    * If using the `Dev` runner (which you shouldn't), everything is hardcoded in the `MainForm` class. Note that this won't save an image on completion
 4. Once the render is complete, the image should be saved to a file (where depends on which runner), and ***might*** open in your image viewer
    program\*  
    \**Opening in default programs is complicated; I test it on POP OS!*
