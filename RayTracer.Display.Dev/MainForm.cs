@@ -3,7 +3,7 @@ using Aardvark.OpenImageDenoise;
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
-using LibEternal.Core.ObjectPools;
+using LibArarem.Core.ObjectPools;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
 using RayTracer.Impl;

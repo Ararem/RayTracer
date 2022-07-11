@@ -1,7 +1,7 @@
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
-using LibEternal.Core.ObjectPools;
+using LibArarem.Core.ObjectPools;
 using RayTracer.Core;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

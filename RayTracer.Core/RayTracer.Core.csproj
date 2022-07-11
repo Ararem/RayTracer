@@ -32,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LibEternal\LibEternal.Core\LibEternal.Core.csproj" />
+		<ProjectReference Include="../LibArarem/LibArarem.Core/LibArarem.Core.csproj" />
 	</ItemGroup>
 
 </Project>

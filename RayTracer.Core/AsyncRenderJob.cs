@@ -290,7 +290,7 @@ public sealed class AsyncRenderJob : IDisposable
 	// 			prevHitsFromCamSegment.Array![prevHitsFromCamSegment.Count] = hit;                                           //Update the hit buffer from this hit
 	// 			ArraySegment<HitRecord> newSegment = new(prevHitsFromCamSegment.Array, 0, prevHitsFromCamSegment.Count + 1); //Extend the segment to include our new element
 	//
-	// 			//TODO: Make these segments and stuff a custom IDisposable struct, connected with LibEternal ObjectPool
+	// 			//TODO: Make these segments and stuff a custom IDisposable struct, connected with LibArarem ObjectPool
 	// 			//Here we calculate the future ray colours
 	// 			ArraySegment<(Colour Colour, Ray ray)> futureRayInfo    = GetPooledSegment<(Colour Colour, Ray ray)>(newRays.Count);
 	// 			for (int i = 0; i < futureRayInfo.Count; i++)
