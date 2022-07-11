@@ -1,0 +1,3 @@
+[submodule "LibArarem"]
+	path = LibArarem
+	url = https://github.com/Ararem/LibArarem.git
