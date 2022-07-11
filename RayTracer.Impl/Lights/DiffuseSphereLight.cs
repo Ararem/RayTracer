@@ -15,6 +15,7 @@ public class DiffuseSphereLight : SimpleLightBase
 	/// <inheritdoc/>
 	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit)
 	{
+		//TODO: Complete diffuse sphere light
 		switch (4)
 		{
 			//Completely random
