@@ -37,7 +37,6 @@ public sealed record RenderOptions(
 		[NonNegativeValue] int     MaxDepth,
 		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
 		[NonNegativeValue] int LightSampleCountHint = 3
-		//TODO: Max depth for calculating lighting?
 )
 {
 	/// <summary>Default render options</summary>

@@ -133,11 +133,8 @@ public sealed class Box : SingleMaterialHittable
 		// oF contains the index if the intersected face [0..5]
 
 		// convert from world to box space
-		//TODO: It seems like we could probable use Vector3.TransformXXX here, first TransformNormal then Transform (see W component)
-		Vector4 temp4 = Vector4.Transform(new Vector4(ray.Direction, 0f), WorldToBoxTransform);
-		Vector3 rd    = new(temp4.X, temp4.Y, temp4.Z);
-		temp4 = Vector4.Transform(new Vector4(ray.Origin, 1f), WorldToBoxTransform);
-		Vector3 ro = new(temp4.X, temp4.Y, temp4.Z);
+		Vector3 rd = TransformNormal(ray.Direction, WorldToBoxTransform);
+		Vector3 ro = Transform(ray.Origin, WorldToBoxTransform);
 
 		// ray-box intersection in box space
 		Vector3 m = new Vector3(1f) / rd;

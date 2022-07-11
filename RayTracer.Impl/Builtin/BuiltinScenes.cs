@@ -23,49 +23,13 @@ public static class BuiltinScenes
 	{
 		get
 		{
-			static Material Material(Colour colour)
-			{
-				return new PhongMaterial
-						{
-								AmbientColour  = new Colour(0.001f),
-								DiffuseColour  = colour,
-								SpecularColour = colour,
-								Shininess      = 7
-						};
-			}
-
-			Vector3  lightPos         = new (347.5f, 350f, 377.5f);
-			Material greyWallMaterial = Material(new Colour(0.73f, 0.73f, 0.73f));
-
 			return new Scene(
-					"Testing", Camera.Create(new Vector3(278, 278, -800), new Vector3(278, 278, 0), UnitY, 38f, 1f / 1f, 0f, 1f), new SceneObject[]
+					"Testing", Camera.Create(new Vector3(0,0,-5), new Vector3( 0), UnitY, 90, 16f / 9f, 0f, 1f), new SceneObject[]
 					{
-							new("Left", new YZPlane(0,  555, 0, 555, 0) { Material    = Material(new Colour(0.5f, 0.1f, 0.1f)) }),
-							new("Right", new YZPlane(0, 555, 0, 555, 555) { Material  = Material(new Colour(0.1f, 0.5f, 0.1f)) }),
-							new("Back", new XYPlane(0, 555, 0, 555, 555) { Material   = greyWallMaterial }),
-							new("Top", new XZPlane(0,    555, 0, 555, 555) { Material = greyWallMaterial }),
-							new("Bottom", new XZPlane(0, 555, 0, 555, 0) { Material   = greyWallMaterial }),
-
-							new("Small Box", new Box(Matrix4x4.CreateScale(165, 165, 165) * Matrix4x4.CreateFromYawPitchRoll(-18 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(212.5f, 82.5f, 147.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) }),
-							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = Material(new Colour(0.73f, 0.73f, 0.73f)) }),
-
-							new("Micro Box", new Box(Matrix4x4.CreateScale(100) * Matrix4x4.CreateFromYawPitchRoll(-15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(350, 300, 0f))) { Material = new RefractiveMaterial(1.1f, new SolidColourTexture(new Colour(0.8f, 0.9f, 1f) * 1.5f)) }),
-							new("Light Ball", new Sphere(lightPos, 50f){Material                                                                                                                                                                    = Material(Blue)})
+							new("Box", new Box(Matrix4x4.CreateScale(1) * Matrix4x4.CreateFromYawPitchRoll(-15 * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(new Vector3(0,.2f,0))) { Material = new StandardMaterial(HalfGrey, 0f) }),
 					},
-					new Light[]
-					{
-							new DiffuseSphereLight
-							{
-									Position          = lightPos,
-									Colour            = White,
-									AttenuationRadius = 500,
-									DiffusionRadius   = 50.1f,
-									// DistanceAttenuationFunc = SimpleLightBase.LinearDistanceAttenuation()
-									DistanceAttenuationFunc = SimpleLightBase.ExponentialDecayDistanceAttenuation(3f)
-									// DistanceAttenuationFunc=SimpleLight.LogisticsCurveDistanceAttenuation()
-							}
-					},
-					new SingleColourSkyBox(Black)
+                    Array.Empty<Light>(),
+					new DefaultSkyBox()
 			);
 		}
 	}
