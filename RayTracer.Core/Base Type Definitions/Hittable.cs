@@ -5,6 +5,7 @@ namespace RayTracer.Core;
 
 /// <summary>Base class for a hittable. Represents the surface/structure of a render-able object.</summary>
 //TODO: Standardize all objects and have them use Matrix4x4's for transform
+//TODO: Also remove the ctors and just make {get;set;} properties for all (and remove cached)
 [PublicAPI]
 public abstract class Hittable : RenderAccessor
 {

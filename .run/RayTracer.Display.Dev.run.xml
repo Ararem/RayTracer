@@ -4,6 +4,9 @@
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/RayTracer.Display.Dev/bin/Gtk/Debug/net6.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
+    <envs>
+      <env name="MONO_CAIRO_DEBUG_DISPOSE" value="1" />
+    </envs>
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />
     <option name="RUNTIME_ARGUMENTS" value="" />

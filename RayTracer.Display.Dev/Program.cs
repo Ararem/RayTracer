@@ -4,24 +4,34 @@ using RayTracer.Display.Dev.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using static Serilog.Log;
+using Logger = RayTracer.Core.Logger;
 using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
 
 namespace RayTracer.Display.Dev;
 
+/// <summary>
+/// Bootstrap class that contains the <c>Main()</c> function that inits everything else.
+/// </summary>
 internal static class Program
 {
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
 	private static int Main(string[] args)
 	{
-		Core.Logger.Init();
+		//Console and init
+		Console.ForegroundColor = ConsoleColor.Blue;
+		Console.Title           = "RayTracer [Console]";
+		Console.WriteLine("RayTracer.Display.Dev: Starting program");
+		Console.WriteLine("RayTracer.Display.Dev: Initialising logger");
+		Logger.Init();
+		Information("Starting RayTracer.Display.Dev app");
 		Information("Commandline args: {Args}", args);
 
 		Platform platform;
 		try
 		{
-			Verbose("Getting platform (Detect Mode)");
+			Debug("Getting platform (Detect Mode)");
 			platform = Platform.Detect!;
-			Verbose("Got platform");
+			Debug("Eto.Forms Platform: {@Platform}", platform);
 		}
 		catch (Exception e)
 		{
@@ -29,18 +39,18 @@ internal static class Program
 			return -1;
 		}
 
-		Debug("Platform is {Platform}", platform);
-
 		Application application;
 		try
 		{
-			Verbose("Creating new application object");
+			Debug("Creating new application object");
 			application = new Application(platform)
 			{
-					Name = "RayTracer Application",
-					ID   = "Main Application"
+					Name = "RayTracer [Name]",
+					ID   = "Main Application",
+					UIThreadCheckMode = UIThreadCheckMode.Error,
+					BadgeLabel = "RayTracer [Badge]"
 			};
-			Verbose("Created new application object");
+			Debug("Created application object: {@Application}", application);
 		}
 		catch (Exception e)
 		{
@@ -48,29 +58,36 @@ internal static class Program
 			return -1;
 		}
 
-		Debug("Application is {Application}", application);
-
-		Verbose("Hooking up unhandled exception event");
-		application.UnhandledException += EtoUnhandledException;
-		Verbose("Created new application object");
-
-		Debug("Application is {Application}", application);
+		try
+		{
+			EventHandler<UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
+			Debug("Hooking up unhandled exception event");
+			application.UnhandledException += unhandledExceptionHandler;
+			Debug("Unhandled exception event handler added: {@Handler}", unhandledExceptionHandler);
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Failed to set up unhandled exception handler");
+			return -1;
+		}
 
 		try
 		{
+			Debug("Registering styles");
 			Styles.RegisterStyles();
+			Debug("Styles registered");
 		}
 		catch (Exception e)
 		{
 			Error(e, "Could not register styles");
 		}
 
-		MainForm form;
+		MainForm mainForm;
 		try
 		{
-			Verbose("Creating new MainForm");
-			form = new MainForm();
-			Verbose("Created new MainForm");
+			Debug("Creating new MainForm");
+			mainForm = new MainForm();
+			Debug("Created new MainForm: {@MainForm}", mainForm);
 		}
 		catch (Exception e)
 		{
@@ -78,16 +95,33 @@ internal static class Program
 			return -1;
 		}
 
-		Debug("MainForm is {MainForm}", form);
-
-		Debug("Starting task watcher");
-		TaskWatcher.Init();
+		try
+		{
+			Debug("Starting task watcher");
+			TaskWatcher.Init();
+			Debug("Task watcher started");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Failed to initialize task watcher");
+			return -1;
+		}
 
 		try
 		{
 			Information("Running App");
-			application.Run(form);
+			application.Run(mainForm);
 			Information("App ran to completion");
+
+			Debug("Disposing application objects and quitting");
+			mainForm.Dispose();
+			application.Dispose();
+			Debug("Disposed app and main form");
+
+			Information("Shutting down logger and exiting");
+			CloseAndFlush();
+			Console.WriteLine("Logger closed");
+
 			return 0;
 		}
 		catch (Exception e)
