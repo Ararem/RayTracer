@@ -1,5 +1,8 @@
 using Eto.Forms;
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using static Serilog.Log;
 
 namespace RayTracer.Display.Dev;
@@ -27,26 +30,35 @@ internal sealed class MainForm : Form
 
 		{
 			Verbose("Setting up app quit handling");
+
 			Command quitAppCommand = new()
 			{
 					MenuText = "Quit App",
 					ID       = "[Command] Quit App",
-					Shortcut = Application.Instance!.CommonModifier | Keys.Q,
+					Shortcut = Application.Instance.CommonModifier | Keys.Q,
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
-
 			Closed                  += MainFormClosed;
 			quitAppCommand.Executed += MainFormClosed;
+			Menu.QuitItem           =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
 
-			Menu.QuitItem = new ButtonMenuItem(quitAppCommand){ID = "[MenuItem] Quit App"};
 			Verbose("Quit handling added");
-
 		}
+
 	#endregion
 	}
 
 	private static void MainFormClosed(object? o, EventArgs eventArgs)
 	{
+		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
+		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
+		MethodBase thisMethod    = MethodBase.GetCurrentMethod()!;
+		MethodBase appQuitMethod = typeof(Application).GetMethod(nameof(Application.Quit))!;
+		if (new StackTrace(1, false).GetFrames().Select(f => f.GetMethod()).Any(m => (m == thisMethod) || (m == appQuitMethod)))
+		{
+			Verbose("Closed event recursion detected, returning immediately without sending quit signal");
+			return;
+		}
 		Information("Main form closed");
 		if (Application.Instance.QuitIsSupported)
 		{
@@ -55,8 +67,7 @@ internal sealed class MainForm : Form
 		}
 		else
 		{
-			Debug("Quit not supported");
+			Error("Quit not supported");
 		}
 	}
-
 }

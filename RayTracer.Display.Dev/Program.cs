@@ -112,22 +112,29 @@ internal static class Program
 			Information("Running App");
 			application.Run(mainForm);
 			Information("App ran to completion");
-
-			Debug("Disposing application objects and quitting");
-			mainForm.Dispose();
-			application.Dispose();
-			Debug("Disposed app and main form");
-
-			Information("Shutting down logger and exiting");
-			CloseAndFlush();
-			Console.WriteLine("Logger closed");
-
 			return 0;
 		}
 		catch (Exception e)
 		{
 			Fatal(e, "App threw exception");
 			return -1;
+		}
+		finally
+		{
+			//Not sure what exactly needs to be disposed, but I'll do it all just to be sure since I did get some warns about not disposed code from GLib before
+			Debug("Disposing application objects and quitting");
+			mainForm.Dispose();
+			mainForm.Parent?.Dispose();
+			foreach (Window w in application.Windows)
+			{
+				w?.Dispose();
+			}
+			application.Dispose();
+			Debug("Disposed app and main form");
+
+			Information("Shutting down logger and exiting");
+			CloseAndFlush();
+			Console.WriteLine("Logger closed");
 		}
 	}
 
