@@ -1,6 +1,5 @@
 using RayTracer.Core;
 using Serilog;
-using System.Data.Common;
 using System.Numerics;
 
 namespace RayTracer.Impl.Lights;
@@ -60,13 +59,13 @@ public sealed class DiffuseShapedLight : SimpleLightBase
 				p1.X = RandUtils.RandomFloat(min.X, max.X);
 				p2.X = RandUtils.RandomFloat(min.X, max.X);
 				break;
-			default: throw new ArgumentOutOfRangeException(nameof(rand),rand, "Invalid random number was returned when choosing axis");
+			default: throw new ArgumentOutOfRangeException(nameof(rand), rand, "Invalid random number was returned when choosing axis");
 		}
 
 		return (p1, p2);
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit)
 	{
 		//Essentially, we try to find a ray that goes between the object hit, and the light source, one that we know should intersect with the light
@@ -81,7 +80,7 @@ public sealed class DiffuseShapedLight : SimpleLightBase
 			//We choose two points, one being the origin of the hit on the material, and the other being a point in the AABB of the light's shape
 			Vector3 p1 = hit.WorldPoint;
 			//TODO: Problems when the light AABB is inside the lit object's aabb
-			Vector3 p2 = new ( //TODO: Rand.UnitCube?
+			Vector3 p2 = new( //TODO: Rand.UnitCube?
 					MathUtils.Lerp(Shape.BoundingVolume.Min.X, Shape.BoundingVolume.Max.X, RandUtils.RandomFloat01()),
 					MathUtils.Lerp(Shape.BoundingVolume.Min.Y, Shape.BoundingVolume.Max.Y, RandUtils.RandomFloat01()),
 					MathUtils.Lerp(Shape.BoundingVolume.Min.Z, Shape.BoundingVolume.Max.Z, RandUtils.RandomFloat01())
@@ -89,8 +88,8 @@ public sealed class DiffuseShapedLight : SimpleLightBase
 			Ray r = Ray.FromPoints(p1, p2); //The ray goes [hit object's point] ==> [point inside AABB]
 
 			//I don't think the bounds matter too much
-			const float shapeKMin = 0.0001f;				//These two are only for finding a point on the surface of the light
-			const float shapeKMax = float.PositiveInfinity;	//And have nothing to do with intersections in the scene being rendered
+			const float shapeKMin = 0.0001f;                //These two are only for finding a point on the surface of the light
+			const float shapeKMax = float.PositiveInfinity; //And have nothing to do with intersections in the scene being rendered
 
 			//Try intersecting with the object to see if the ray hits the light source
 			HitRecord? maybeShapeHit = Shape.TryHit(r, shapeKMin, shapeKMax);
@@ -99,7 +98,7 @@ public sealed class DiffuseShapedLight : SimpleLightBase
 				//There was an intersection, so the ray hits the light source
 				//So return the ray
 				// if(RandUtils.RandomFloat01() < 0.0001f && i!=0) Log.Verbose("Intersected after {I} iterations", i);
-				return (r, 0.001f, lightSourceHit.K -0.001f); //Check for shadows for k = [0.001..where the light source was hit]
+				return (r, 0.001f, lightSourceHit.K - 0.001f); //Check for shadows for k = [0.001..where the light source was hit]
 			}
 		}
 

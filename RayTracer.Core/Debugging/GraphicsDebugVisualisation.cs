@@ -33,14 +33,10 @@ public enum GraphicsDebugVisualisation
 	/// <summary>Whenever a ray hits an object, display a debug texture based on the point's position in world-space</summary>
 	WorldCoordDebugTexture,
 
-	/// <summary>
-	/// How much light is estimated to reach the hit. May be affected depending on what material is used and how that material handles lighting
-	/// </summary>
+	/// <summary>How much light is estimated to reach the hit. May be affected depending on what material is used and how that material handles lighting</summary>
 	EstimatedLightIntensity,
 
-	/// <summary>
-	/// Undefined visualisation used for development and testing purposes, should not be used
-	/// </summary>
-	UndefinedTestVisualisation,
+	/// <summary>Undefined visualisation used for development and testing purposes, should not be used</summary>
+	UndefinedTestVisualisation
 	//TODO: Add how many bounces reached
 }

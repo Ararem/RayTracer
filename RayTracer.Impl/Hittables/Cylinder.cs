@@ -101,7 +101,7 @@ public sealed class Cylinder : SingleMaterialHittable
 			Vector3 localPos = worldPos - centre;
 			bool    inside   = Dot(ray.Direction, normal) > 0f; //If the ray is 'inside' the sphere
 
-			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero,this, Material); //TODO: UV coords
+			return new HitRecord(ray, worldPos, localPos, normal, k, !inside, Vector2.Zero, this, Material); //TODO: UV coords
 		}
 	}
 

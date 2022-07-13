@@ -21,12 +21,12 @@ public sealed record BinaryBvhNode(BvhNode NodeA, BvhNode NodeB, RenderStats Ren
 
 		(SceneObject Object, HitRecord Hit)? maybeHitA = NodeA.TryHit(ray, kMin, kMax);
 		//If we hit node A, we still need to check if node B is closer
-		if (maybeHitA is { } hitA)
+		if (maybeHitA is {} hitA)
 		{
 			//Check node B up to where node A intersected
 			//This way if node B has an intersection, we know that it has to be closer
 			(SceneObject Object, HitRecord Hit)? maybeHitB = NodeB.TryHit(ray, kMin, hitA.Hit.K);
-			if (maybeHitB is { } hitB) return hitB;
+			if (maybeHitB is {} hitB) return hitB;
 			else return hitA;
 		}
 		else

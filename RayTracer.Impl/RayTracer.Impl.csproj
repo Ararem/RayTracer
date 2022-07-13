@@ -18,7 +18,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
 	</ItemGroup>
 
 </Project>

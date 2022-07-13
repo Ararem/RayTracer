@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using System.Buffers;
 
 namespace RayTracer.Core;
 
@@ -12,7 +11,8 @@ public abstract class Material : RenderAccessor
 	/// <param name="prevHitsBetweenCamera">Collection of the previous hits between the camera and the current currentHit</param>
 	/// <remarks>
 	///  For a completely reflective material, the resulting ray would be 'flipped' around the surface <see cref="HitRecord.Normal"/>, and for a completely
-	///  diffuse object, it would be in a random direction. If the returned ray is <see langword="null"/>, it is inferred that the ray is absorbed and not scattered
+	///  diffuse object, it would be in a random direction. If the returned ray is <see langword="null"/>, it is inferred that the ray is absorbed and not
+	///  scattered
 	/// </remarks>
 	public abstract Ray? Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera);
 

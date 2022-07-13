@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-<meta charset='utf-8' />
-<title>RayTracer.Benchmarks.Benchmarks-20220622-153434</title>
+	<meta charset='utf-8'/>
+	<title>RayTracer.Benchmarks.Benchmarks-20220622-153434</title>
 
-<style type="text/css">
+	<style type="text/css">
 	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
 	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
 	tr { background-color: #fff; border-top: 1px solid #ccc; }
 	tr:nth-child(even) { background: #f8f8f8; }
-</style>
+
+	</style>
 </head>
 <body>
 <pre><code>
@@ -23,12 +24,50 @@ Intel Core i7-7700HQ CPU 2.80GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical co
 <pre><code></code></pre>
 
 <table>
-<thead><tr><th>Method</th><th> Job</th><th>Toolchain</th><th>Mean</th><th>Error</th><th>StdDev</th>
-</tr>
-</thead><tbody><tr><td>SumBilinear</td><td>DefaultJob</td><td>Default</td><td>0.5853 ns</td><td>0.0536 ns</td><td>0.0896 ns</td>
-</tr><tr><td>DiffLinear</td><td>DefaultJob</td><td>Default</td><td>0.0427 ns</td><td>0.0400 ns</td><td>0.0375 ns</td>
-</tr><tr><td>SumBilinear</td><td>Job-SUISCW</td><td>.NET 6.0</td><td>0.2636 ns</td><td>0.0452 ns</td><td>0.0768 ns</td>
-</tr><tr><td>DiffLinear</td><td>Job-SUISCW</td><td>.NET 6.0</td><td>0.0427 ns</td><td>0.0076 ns</td><td>0.0063 ns</td>
-</tr></tbody></table>
+	<thead>
+	<tr>
+		<th>Method</th>
+		<th> Job</th>
+		<th>Toolchain</th>
+		<th>Mean</th>
+		<th>Error</th>
+		<th>StdDev</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>SumBilinear</td>
+		<td>DefaultJob</td>
+		<td>Default</td>
+		<td>0.5853 ns</td>
+		<td>0.0536 ns</td>
+		<td>0.0896 ns</td>
+	</tr>
+	<tr>
+		<td>DiffLinear</td>
+		<td>DefaultJob</td>
+		<td>Default</td>
+		<td>0.0427 ns</td>
+		<td>0.0400 ns</td>
+		<td>0.0375 ns</td>
+	</tr>
+	<tr>
+		<td>SumBilinear</td>
+		<td>Job-SUISCW</td>
+		<td>.NET 6.0</td>
+		<td>0.2636 ns</td>
+		<td>0.0452 ns</td>
+		<td>0.0768 ns</td>
+	</tr>
+	<tr>
+		<td>DiffLinear</td>
+		<td>Job-SUISCW</td>
+		<td>.NET 6.0</td>
+		<td>0.0427 ns</td>
+		<td>0.0076 ns</td>
+		<td>0.0063 ns</td>
+	</tr>
+	</tbody>
+</table>
 </body>
 </html>

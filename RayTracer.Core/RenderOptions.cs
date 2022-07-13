@@ -1,21 +1,20 @@
 using LibArarem.Core.Exceptions;
 using RayTracer.Core.Debugging;
-using System.ComponentModel;
 
 namespace RayTracer.Core;
 
 /// <summary>Class that contains properties that are used to control how a <see cref="Scene"/> is rendered</summary>
-//TODO: Should we add property checks to these?
 public sealed class RenderOptions
 {
-	private readonly int renderHeight = 1080;
-	private readonly int renderWidth  = 1920;
-
-	private int concurrencyLevel = Environment.ProcessorCount;
-
-	private float kMax = float.PositiveInfinity;
-
-	private float kMin = 0.001f;
+	private readonly int                        renderHeight         = 1080;
+	private readonly int                        renderWidth          = 1920;
+	private          int                        concurrencyLevel     = Environment.ProcessorCount;
+	private          GraphicsDebugVisualisation debugVisualisation   = GraphicsDebugVisualisation.None;
+	private          float                      kMax                 = float.PositiveInfinity;
+	private          float                      kMin                 = 0.001f;
+	private          int                        lightSampleCountHint = 2;
+	private          int                        maxBounceDepth       = 100;
+	private          int                        passes               = 100;
 
 	/// <summary>How many pixels wide the render will be</summary>
 	public int RenderWidth
@@ -86,20 +85,20 @@ public sealed class RenderOptions
 		}
 	}
 
-	private int passes = 100;
-
 	/// <summary>Number of times the image will be rendered. These individual renders ('passes') will be combined to create the final image</summary>
-	/// <remarks>If equal to <c>-1</c>, the renderer will render infinitely until manually stopped. No other negative values are acceptable (and neither is zero)</remarks>
+	/// <remarks>
+	///  If equal to <c>-1</c>, the renderer will render infinitely until manually stopped. No other negative values are acceptable (and neither is
+	///  zero)
+	/// </remarks>
 	public int Passes
 	{
 		get => passes;
-		set {
+		set
+		{
 			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, $"{nameof(Passes)} was negative (should be -1 or >0).", nameof(Passes), (-1, -1), (1, int.MaxValue));
 			passes = value;
 		}
 	}
-
-	private int maxBounceDepth = 100;
 
 	/// <summary>
 	///  Maximum number of bounces allowed before a given ray path is discarded. Essentially puts a limit on how many times a ray can bounce, to avoid
@@ -116,8 +115,6 @@ public sealed class RenderOptions
 		}
 	}
 
-	private GraphicsDebugVisualisation debugVisualisation = GraphicsDebugVisualisation.None;
-
 	/// <summary>Optional visualisation to be used when rendering the scene, instead of rendering it normally (<see cref="GraphicsDebugVisualisation.None"/>)</summary>
 	public GraphicsDebugVisualisation DebugVisualisation
 	{
@@ -129,15 +126,13 @@ public sealed class RenderOptions
 		}
 	}
 
-	private int lightSampleCountHint = 2;
-
 	/// <summary>Hint to materials as to how many times they should sample each light (as opposed to 1 sample per light per intersection).</summary>
 	public int LightSampleCountHint
 	{
 		get => lightSampleCountHint;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, "Must have at least 1 sample per light", nameof(LightSampleCountHint), (1,int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, "Must have at least 1 sample per light", nameof(LightSampleCountHint), (1, int.MaxValue));
 			lightSampleCountHint = value;
 		}
 	}

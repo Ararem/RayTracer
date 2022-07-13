@@ -6,12 +6,10 @@ public class RenderJobTrackingTab
 {
 	private RenderJobTrackingTab(AsyncRenderJob renderJob)
 	{
-
 	}
 
-	/// <summary>
-	/// Gets the render options
-	/// </summary>
+	/// <summary>Gets the render options</summary>
 	public RenderOptions RenderOptions => RenderJob.RenderOptions;
-	public AsyncRenderJob RenderJob     { get; }
+
+	public AsyncRenderJob RenderJob { get; }
 }

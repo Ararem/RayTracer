@@ -2,7 +2,10 @@ using JetBrains.Annotations;
 
 namespace RayTracer.Core;
 
-/// <summary>Base class defining an object that requires access to a <see cref="AsyncRenderJob">renderer</see>. You probably shouldn't be implementing this directly, as the implementation and usage only works with internal classes</summary>
+/// <summary>
+///  Base class defining an object that requires access to a <see cref="AsyncRenderJob">renderer</see>. You probably shouldn't be implementing this
+///  directly, as the implementation and usage only works with internal classes
+/// </summary>
 [PublicAPI]
 public abstract class RenderAccessor
 {

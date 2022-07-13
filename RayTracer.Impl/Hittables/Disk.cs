@@ -11,9 +11,10 @@ public sealed class Disk : SingleMaterialHittable
 {
 	/// <summary>-Dot(<see cref="Centre"/>, <see cref="Normal"/>)</summary>
 	private readonly float negCentreDotNorm;
+
 	private readonly float radiusSqr;
 
-	private Matrix4x4 localToDiskMatrix;
+	private readonly Matrix4x4 localToDiskMatrix;
 
 	/// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 	/// <param name="centre">The centre of the disk in 3D space</param>
@@ -92,13 +93,13 @@ public sealed class Disk : SingleMaterialHittable
 		float u = (localPoint.X * localToDiskMatrix.M11) + (localPoint.Y * localToDiskMatrix.M21) + (localPoint.Z * localToDiskMatrix.M31) + localToDiskMatrix.M41;
 		float v = (localPoint.X * localToDiskMatrix.M12) + (localPoint.Y * localToDiskMatrix.M22) + (localPoint.Z * localToDiskMatrix.M32) + localToDiskMatrix.M42;
 
-		Vector2 uv         = new(u,v);
+		Vector2 uv = new(u, v);
 
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) uv = Vector2.Clamp(uv, Vector2.Zero, Vector2.One);
 
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv,this, Material);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, this, Material);
 	}
 
 	/// <inheritdoc/>

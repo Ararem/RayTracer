@@ -42,7 +42,7 @@ public sealed class EmissiveRefractiveMaterial : RefractiveMaterial
 	/// <inheritdoc/>
 	public override Colour CalculateColour(Colour futureRayColour, Ray futureRay, HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
-		Colour colour= futureRayColour;
+		Colour colour = futureRayColour;
 		colour += CalculateSimpleColourFromLights(currentHit);
 		colour *= Tint.GetColour(currentHit);
 		//Force emit if we allow direct lighting

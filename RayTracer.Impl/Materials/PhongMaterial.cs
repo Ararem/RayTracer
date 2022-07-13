@@ -26,7 +26,7 @@ public class PhongMaterial : Material
 	public override Ray? Scatter(HitRecord currentHit, ArraySegment<HitRecord> prevHitsBetweenCamera)
 	{
 		// {
-			// seg[SpecularRayIndex] = new Ray(currentHit.WorldPoint, Reflect(currentHit.IncomingRay.Direction, currentHit.Normal));
+		// seg[SpecularRayIndex] = new Ray(currentHit.WorldPoint, Reflect(currentHit.IncomingRay.Direction, currentHit.Normal));
 		// }
 		{
 			Vector3 dir                              = RandUtils.RandomOnUnitSphere(); //Pick a random scatter direction

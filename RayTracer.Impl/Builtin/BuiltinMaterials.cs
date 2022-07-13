@@ -6,9 +6,7 @@ namespace RayTracer.Impl;
 
 public static class BuiltinMaterials
 {
-	/// <summary>
-	/// The default diffuse material found in most game engines - half grey completely diffuse
-	/// </summary>
+	/// <summary>The default diffuse material found in most game engines - half grey completely diffuse</summary>
 	public static Material DefaultDiffuseMaterial => new StandardMaterial(Colour.HalfGrey, 1f);
 
 	/// <summary>Gets all the builtin materials</summary>

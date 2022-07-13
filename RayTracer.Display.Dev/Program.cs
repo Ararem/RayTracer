@@ -2,19 +2,14 @@
 using Eto.Forms;
 using RayTracer.Display.Dev.Appearance;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using static Serilog.Log;
 using Logger = RayTracer.Core.Logger;
 using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
 
 namespace RayTracer.Display.Dev;
 
-/// <summary>
-/// Bootstrap class that contains the <c>Main()</c> function that inits everything else.
-/// </summary>
+/// <summary>Bootstrap class that contains the <c>Main()</c> function that inits everything else.</summary>
 internal static class Program
 {
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
@@ -48,10 +43,10 @@ internal static class Program
 			Debug("Creating new application object");
 			application = new Application(platform)
 			{
-					Name = "RayTracer.Display",
-					ID   = "Main Application",
+					Name              = "RayTracer.Display",
+					ID                = "Main Application",
 					UIThreadCheckMode = UIThreadCheckMode.Error,
-					BadgeLabel = "RayTracer [Badge]"
+					BadgeLabel        = "RayTracer [Badge]"
 			};
 			Debug("Created application object: {@Application}", application);
 		}

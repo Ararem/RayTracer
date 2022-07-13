@@ -14,6 +14,8 @@ namespace RayTracer.Impl.Hittables;
 /// <remarks>This probably won't work too well with rays inside the medium, or other objects inside it, so beware...</remarks>
 public sealed class ConstantDensityMedium : Hittable
 {
+	private readonly VolumetricMaterial InternalMaterial;
+
 	/// <summary>-1 / <see cref="Density"/></summary>
 	private readonly float negInvDensity;
 
@@ -21,16 +23,15 @@ public sealed class ConstantDensityMedium : Hittable
 	public ConstantDensityMedium(Hittable boundary, float density, Colour colour)
 	{
 		if (boundary is ConstantDensityMedium) throw new ArgumentException("Cannot create a constant density volume using another volume", nameof(boundary));
-		Boundary      = boundary;
-		Density       = density;
-		negInvDensity = -1f / density;
-		InternalMaterial      = new VolumetricMaterial(colour, density);
+		Boundary         = boundary;
+		Density          = density;
+		negInvDensity    = -1f / density;
+		InternalMaterial = new VolumetricMaterial(colour, density);
 	}
 
-	public  Material           Material => InternalMaterial;
-	private readonly VolumetricMaterial InternalMaterial;
+	public Material Material => InternalMaterial;
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public override AsyncRenderJob Renderer
 	{
 		get => base.Renderer;
@@ -63,7 +64,7 @@ public sealed class ConstantDensityMedium : Hittable
 		const bool frontFace  = true;                           //Arbitrary
 
 		//Here we pass in how far we travelled 'inside' the object onto the VolumetricMaterial (the shader)
-		return new HitRecord(ray, worldPoint, localPoint, normal, entryHit.K + distanceToIntersection, frontFace, Vector2.Zero,this, Material, distanceToIntersection);
+		return new HitRecord(ray, worldPoint, localPoint, normal, entryHit.K + distanceToIntersection, frontFace, Vector2.Zero, this, Material, distanceToIntersection);
 	}
 
 	/// <summary>How dense the medium is. Higher values increase the chance of collision</summary>
@@ -121,9 +122,9 @@ public sealed class ConstantDensityMedium : Hittable
 			float distanceInside = currentHit.ShaderData as float? ?? throw new InvalidShaderDataException(currentHit.ShaderData, $"currentHit.ShaderData was not a float (was {currentHit.ShaderData?.GetType()}: {currentHit.ShaderData})");
 			float pow            = Density * distanceInside;
 			(float albedoR, float albedoG, float albedoB) = Albedo;
-			albedoR                           = MathF.Pow(albedoR, pow);
-			albedoG                           = MathF.Pow(albedoG, pow);
-			albedoB                           = MathF.Pow(albedoB, pow);
+			albedoR                                       = MathF.Pow(albedoR, pow);
+			albedoG                                       = MathF.Pow(albedoG, pow);
+			albedoB                                       = MathF.Pow(albedoB, pow);
 			return new Colour(albedoR, albedoG, albedoB) * futureRayColour;
 		}
 	}

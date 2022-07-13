@@ -66,18 +66,15 @@ public sealed class Quad : SingleMaterialHittable
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
 	/// <summary>The 'origin' point of the quad - the <see cref="U"/> and <see cref="V"/> vectors are treated as originating from this point</summary>
-	public Vector3 Origin { get;  }
+	public Vector3 Origin { get; }
 
-	/// <summary>
-	/// The side vector of the first side of the quad
-	/// </summary>
+	/// <summary>The side vector of the first side of the quad</summary>
 	[PublicAPI]
-	public Vector3 U { get;  }
-	/// <summary>
-	/// The side vector of the second side of the quad
-	/// </summary>
+	public Vector3 U { get; }
+
+	/// <summary>The side vector of the second side of the quad</summary>
 	[PublicAPI]
-	public Vector3 V { get;  }
+	public Vector3 V { get; }
 
 	/// <summary>Creates a new quad from three points, as opposed to a point and two directions</summary>
 	/// <param name="o">Origin of the quad (see <see cref="Origin"/>)</param>
@@ -118,10 +115,10 @@ public sealed class Quad : SingleMaterialHittable
 		//Assert our bounds of the quad (ensure the point is inside)
 		if (u is < 0 or > 1 or float.NaN || v is < 0 or > 1 or float.NaN) return null;
 
-		Vector2 uv      = new (u, v) ;
+		Vector2 uv      = new(u, v);
 		bool    outside = normDotDir < 0; //True if hit on the same side as the normal points to
 
-		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv,this, Material);
+		return new HitRecord(ray, worldPoint, localPoint, Normal, t, outside, uv, this, Material);
 	}
 
 	/// <inheritdoc/>

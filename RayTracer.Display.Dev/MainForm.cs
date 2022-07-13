@@ -1,6 +1,5 @@
 using Eto.Drawing;
 using Eto.Forms;
-using Gtk;
 using RayTracer.Core;
 using RayTracer.Impl;
 using System;
@@ -8,11 +7,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
-using AboutDialog = Eto.Forms.AboutDialog;
-using Application = Eto.Forms.Application;
-using Icon = Eto.Drawing.Icon;
-using MenuBar = Eto.Forms.MenuBar;
-using MenuItem = Eto.Forms.MenuItem;
 
 namespace RayTracer.Display.Dev;
 
@@ -132,24 +126,19 @@ internal sealed class MainForm : Form
 
 #region Tab management
 
-	/// <summary>
-	/// Adds a new render tab, with the specified initial value for the render options
-	/// </summary>
+	/// <summary>Adds a new render tab, with the specified initial value for the render options</summary>
 	/// <param name="initialRenderOptions">Initial value for the render options</param>
 	/// <param name="availableScenes">Array containing all the available scenes that can be selected</param>
 	/// <param name="initialSceneIndex">Index of the scene that should be selected initially. Defaults to 0</param>
-	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex=0)
+	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex = 0)
 	{
-
 	}
 
 #endregion
 
 #region Callbacks
 
-	/// <summary>
-	/// Callback for when the [Create New Render] command is executed
-	/// </summary>
+	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
 	{
 		Information("Create new render");

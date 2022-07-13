@@ -19,7 +19,8 @@ at it directly).
 3. Run the raytracer using one of the `RayTracer.Display.XXX` projects
     * If using the `SpectreConsole` runner, use command-line arguments to change render options, and select the scene using the console
     * If using the `EtoForms` runner, everything is controlled from the UI
-    * If using the `Dev` runner (which you shouldn't), everything is hardcoded in the `MainForm` class. Note that this won't save an image on completion
+    * If using the `Dev` runner (which you shouldn't), everything is hardcoded in the `MainForm` class. Note that this won't save an image on
+      completion
 4. Once the render is complete, the image should be saved to a file (where depends on which runner), and ***might*** open in your image viewer
    program\*  
    \**Opening in default programs is complicated; I test it on POP OS!*
@@ -52,7 +53,9 @@ controls shown when the app starts. Also implements a logger to the console.
 
 ### RayTracer.Display.Dev
 
-A copy of [RayTracer.Display.EtoForms](#raytracerdisplayetoforms) but modified for ease of development. It's meant to be hardcoded and modifiable at runtime through [Hot Reload](https://devblogs.microsoft.com/dotnet/introducing-net-hot-reload/). You'll probably only want to use this when you're prototyping/designing implementations of hittables, materials, etc.
+A copy of [RayTracer.Display.EtoForms](#raytracerdisplayetoforms) but modified for ease of development. It's meant to be hardcoded and modifiable at
+runtime through [Hot Reload](https://devblogs.microsoft.com/dotnet/introducing-net-hot-reload/). You'll probably only want to use this when you're
+prototyping/designing implementations of hittables, materials, etc.
 
 ### RayTracer.Benchmarks
 

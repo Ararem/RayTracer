@@ -2,9 +2,7 @@ using System.Buffers;
 
 namespace RayTracer.Core;
 
-/// <summary>
-/// Helper class for pooling <see cref="ArraySegment{T}"/>s. Useful for creating temporary fixed-size collections in a performant manner.
-/// </summary>
+/// <summary>Helper class for pooling <see cref="ArraySegment{T}"/>s. Useful for creating temporary fixed-size collections in a performant manner.</summary>
 public static class ArraySegmentPool
 {
 	public static ArraySegment<T> GetPooledSegment<T>(int length)

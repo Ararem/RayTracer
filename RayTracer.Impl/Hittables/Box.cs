@@ -76,6 +76,11 @@ public sealed class Box : SingleMaterialHittable
 		);
 	}
 
+	/// <summary>Creates a <see cref="Box"/> from two opposing corners</summary>
+	public Box(Vector3 corner1, Vector3 corner2) : this(TransformMatrixFromCorners(corner1, corner2))
+	{
+	}
+
 	/// <summary>Matrix to transform box-space to world-space</summary>
 	public Matrix4x4 BoxToWorldTransform { get; }
 
@@ -85,14 +90,7 @@ public sealed class Box : SingleMaterialHittable
 	/// <inheritdoc/>
 	public override AxisAlignedBoundingBox BoundingVolume { get; }
 
-	/// <summary>Creates a <see cref="Box"/> from two opposing corners</summary>
-	public Box(Vector3 corner1, Vector3 corner2) : this(TransformMatrixFromCorners(corner1, corner2))
-	{
-	}
-
-	/// <summary>
-	/// Helper method to simplify constructor overloading. Creates a transform matrix for an axis-aligned box with the specified corners
-	/// </summary>
+	/// <summary>Helper method to simplify constructor overloading. Creates a transform matrix for an axis-aligned box with the specified corners</summary>
 	/// <param name="c1">First corner of the box</param>
 	/// <param name="c2">Second corner of the box</param>
 	private static Matrix4x4 TransformMatrixFromCorners(Vector3 c1, Vector3 c2)
@@ -197,7 +195,7 @@ public sealed class Box : SingleMaterialHittable
 		//Side note: UV's are completely messed up
 		//X ranges approx [-0.71..+0.77], while Y ranges ~~ [-0.7..2.2]????
 		//Don't ask me how the hell that works, I don't know, but I know that something is broken and I can't be bothered to fix it, so I'm just disabling UV's
-		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero,this, Material);
+		return new HitRecord(ray, worldPoint, localPoint, Normalize(normal), k, Dot(ray.Direction, normal) < 0f, Vector2.Zero, this, Material);
 	}
 
 	/// <inheritdoc/>

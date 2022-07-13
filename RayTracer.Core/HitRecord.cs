@@ -12,7 +12,10 @@ namespace RayTracer.Core;
 /// <param name="UV">UV coordinate of the hit (for texture mapping)</param>
 /// <param name="Hittable">The <see cref="RayTracer.Core.Hittable"/> that this hit is on the surface of (the physical object hit)</param>
 /// <param name="Material"><see cref="RayTracer.Core.Material"/> that will be used to render this hit</param>
-/// <param name="ShaderData">Optional object containing information to be passed into the shader, may be useful communicating between the <see cref="Hittable"/> and the <see cref="Material"/> on a per-hit basis</param>
+/// <param name="ShaderData">
+///  Optional object containing information to be passed into the shader, may be useful communicating between the <see cref="Hittable"/> and the
+///  <see cref="Material"/> on a per-hit basis
+/// </param>
 public readonly record struct HitRecord(
 		Ray      IncomingRay,
 		Vector3  WorldPoint,
@@ -26,19 +29,15 @@ public readonly record struct HitRecord(
 		object?  ShaderData = null
 );
 
-/// <summary>
-/// Exception class for when the <see cref="HitRecord.ShaderData"/> is invalid
-/// </summary>
+/// <summary>Exception class for when the <see cref="HitRecord.ShaderData"/> is invalid</summary>
 public class InvalidShaderDataException : Exception
 {
-	/// <summary>
-	/// Actual value that was supplied as the <see cref="HitRecord.ShaderData"/> value
-	/// </summary>
-	public object? ActualValue { get; }
-
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public InvalidShaderDataException(object? actualValue, string? message = null, Exception? innerException = null) : base(message, innerException)
 	{
-		ActualValue  = actualValue;
+		ActualValue = actualValue;
 	}
+
+	/// <summary>Actual value that was supplied as the <see cref="HitRecord.ShaderData"/> value</summary>
+	public object? ActualValue { get; }
 }

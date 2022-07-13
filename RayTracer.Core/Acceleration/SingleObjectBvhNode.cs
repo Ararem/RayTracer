@@ -18,7 +18,7 @@ public sealed record SingleObjectBvhNode(SceneObject SceneObject, RenderStats Re
 		else
 		{
 			HitRecord? maybeHit = SceneObject.Hittable.TryHit(ray, kMin, kMax);
-			if (maybeHit is { } hit)
+			if (maybeHit is {} hit)
 			{
 				Interlocked.Increment(ref RenderStats.HittableIntersections);
 				return (SceneObject, hit);

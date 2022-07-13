@@ -206,7 +206,7 @@ public readonly struct Colour : IFormattable
 
 
 	/// <summary>Computes the value of a colour's channels to a given power</summary>
-	public static Colour Pow(Colour colour, float pow) => new(MathF.Pow(colour.R,pow), MathF.Pow(colour.G,pow), MathF.Pow(colour.B,pow));
+	public static Colour Pow(Colour colour, float pow) => new(MathF.Pow(colour.R, pow), MathF.Pow(colour.G, pow), MathF.Pow(colour.B, pow));
 
 	/// <summary>Linearly interpolates between two colours</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -237,9 +237,7 @@ public readonly struct Colour : IFormattable
 					(byte)(byte.MaxValue * c.B)
 			);
 
-	/// <summary>
-	/// Deconstructs a colour into it's components
-	/// </summary>
+	/// <summary>Deconstructs a colour into it's components</summary>
 	/// <param name="r"></param>
 	/// <param name="g"></param>
 	/// <param name="b"></param>

@@ -2,9 +2,9 @@ using RayTracer.Core;
 
 namespace RayTracer.Impl.Lights;
 
-/// <inheritdoc />
+/// <inheritdoc/>
 public sealed class PointLight : SimpleLightBase
 {
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	protected override (Ray ray, float kMin, float kMax) GetShadowRayForHit(HitRecord hit) => DefaultGetShadowRayForHit(hit.WorldPoint, Position);
 }

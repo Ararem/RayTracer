@@ -4,6 +4,7 @@
 
 * Swap floats to doubles and test the performance loss (might be preferable to use doubles everywhere instead of casting all the time)
 * Update all docs for new API and ensure everything is correct
+
 ## Materials/Textures
 
 * ***IMPORTANT***: Fix refraction calculation

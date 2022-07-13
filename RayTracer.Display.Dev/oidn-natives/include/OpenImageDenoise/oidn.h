@@ -16,30 +16,39 @@ OIDN_API_NAMESPACE_BEGIN
 // -----------------------------------------------------------------------------
 
 // Device types
-typedef enum
+using OIDNDeviceType = enum
 {
-  OIDN_DEVICE_TYPE_DEFAULT = 0, // select device automatically
+    OIDN_DEVICE_TYPE_DEFAULT = 0,
+    // select device automatically
 
-  OIDN_DEVICE_TYPE_CPU = 1, // CPU device
-} OIDNDeviceType;
+    OIDN_DEVICE_TYPE_CPU = 1,
+    // CPU device
+};
 
 // Error codes
-typedef enum
+using OIDNError = enum
 {
-  OIDN_ERROR_NONE                 = 0, // no error occurred
-  OIDN_ERROR_UNKNOWN              = 1, // an unknown error occurred
-  OIDN_ERROR_INVALID_ARGUMENT     = 2, // an invalid argument was specified
-  OIDN_ERROR_INVALID_OPERATION    = 3, // the operation is not allowed
-  OIDN_ERROR_OUT_OF_MEMORY        = 4, // not enough memory to execute the operation
-  OIDN_ERROR_UNSUPPORTED_HARDWARE = 5, // the hardware (e.g. CPU) is not supported
-  OIDN_ERROR_CANCELLED            = 6, // the operation was cancelled by the user
-} OIDNError;
+    OIDN_ERROR_NONE = 0,
+    // no error occurred
+    OIDN_ERROR_UNKNOWN = 1,
+    // an unknown error occurred
+    OIDN_ERROR_INVALID_ARGUMENT = 2,
+    // an invalid argument was specified
+    OIDN_ERROR_INVALID_OPERATION = 3,
+    // the operation is not allowed
+    OIDN_ERROR_OUT_OF_MEMORY = 4,
+    // not enough memory to execute the operation
+    OIDN_ERROR_UNSUPPORTED_HARDWARE = 5,
+    // the hardware (e.g. CPU) is not supported
+    OIDN_ERROR_CANCELLED = 6,
+    // the operation was cancelled by the user
+};
 
 // Error callback function
-typedef void (*OIDNErrorFunction)(void* userPtr, OIDNError code, const char* message);
+using OIDNErrorFunction = void(*)(void* userPtr, OIDNError code, const char* message);
 
 // Device handle
-typedef struct OIDNDeviceImpl* OIDNDevice;
+using OIDNDevice = struct OIDNDeviceImpl*;
 
 // Creates a new device.
 OIDN_API OIDNDevice oidnNewDevice(OIDNDeviceType type);
@@ -80,34 +89,38 @@ OIDN_API void oidnCommitDevice(OIDNDevice device);
 // -----------------------------------------------------------------------------
 
 // Formats for images and other data stored in buffers
-typedef enum
+using OIDNFormat = enum
 {
-  OIDN_FORMAT_UNDEFINED = 0,
+    OIDN_FORMAT_UNDEFINED = 0,
 
-  // 32-bit single-precision floating-point scalar and vector formats
-  OIDN_FORMAT_FLOAT  = 1,
-  OIDN_FORMAT_FLOAT2,
-  OIDN_FORMAT_FLOAT3,
-  OIDN_FORMAT_FLOAT4,
+    // 32-bit single-precision floating-point scalar and vector formats
+    OIDN_FORMAT_FLOAT = 1,
+    OIDN_FORMAT_FLOAT2,
+    OIDN_FORMAT_FLOAT3,
+    OIDN_FORMAT_FLOAT4,
 
-  // 16-bit half-precision floating-point scalar and vector formats
-  OIDN_FORMAT_HALF  = 257,
-  OIDN_FORMAT_HALF2,
-  OIDN_FORMAT_HALF3,
-  OIDN_FORMAT_HALF4,
-} OIDNFormat;
+    // 16-bit half-precision floating-point scalar and vector formats
+    OIDN_FORMAT_HALF = 257,
+    OIDN_FORMAT_HALF2,
+    OIDN_FORMAT_HALF3,
+    OIDN_FORMAT_HALF4,
+};
 
 // Access modes for mapping buffers
-typedef enum
+using OIDNAccess = enum
 {
-  OIDN_ACCESS_READ          = 0, // read-only access
-  OIDN_ACCESS_WRITE         = 1, // write-only access
-  OIDN_ACCESS_READ_WRITE    = 2, // read and write access
-  OIDN_ACCESS_WRITE_DISCARD = 3, // write-only access, previous contents discarded
-} OIDNAccess;
+    OIDN_ACCESS_READ = 0,
+    // read-only access
+    OIDN_ACCESS_WRITE = 1,
+    // write-only access
+    OIDN_ACCESS_READ_WRITE = 2,
+    // read and write access
+    OIDN_ACCESS_WRITE_DISCARD = 3,
+    // write-only access, previous contents discarded
+};
 
 // Buffer handle
-typedef struct OIDNBufferImpl* OIDNBuffer;
+using OIDNBuffer = struct OIDNBufferImpl*;
 
 // Creates a new buffer (data allocated and owned by the device).
 OIDN_API OIDNBuffer oidnNewBuffer(OIDNDevice device, size_t byteSize);
@@ -140,10 +153,10 @@ OIDN_API void oidnReleaseBuffer(OIDNBuffer buffer);
 // -----------------------------------------------------------------------------
 
 // Progress monitor callback function
-typedef bool (*OIDNProgressMonitorFunction)(void* userPtr, double n);
+using OIDNProgressMonitorFunction = bool(*)(void* userPtr, double n);
 
 // Filter handle
-typedef struct OIDNFilterImpl* OIDNFilter;
+using OIDNFilter = struct OIDNFilterImpl*;
 
 // Creates a new filter of the specified type (e.g. "RT").
 OIDN_API OIDNFilter oidnNewFilter(OIDNDevice device, const char* type);

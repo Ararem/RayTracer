@@ -66,7 +66,7 @@ public sealed class Sphere : SingleMaterialHittable
 		//This forces the normal to always be going against the ray
 		Vector3   normal = inside ? -outwardNormal : outwardNormal;
 		Vector2   uv     = GetSphereUV(outwardNormal);
-		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv,this, Material);
+		HitRecord hit    = new(ray, worldPoint, localPoint, normal, k, !inside, uv, this, Material);
 		return hit;
 	}
 

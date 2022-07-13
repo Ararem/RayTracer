@@ -48,8 +48,8 @@ public class RefractiveMaterial : Material
 		//TODO: Make this work by pulling it from other refractive materials?
 		//If the ray is going from the outside (air or another material) into the inside (this material),
 		//Use the air index as the first refractive index
-		bool outsideGoingInside = (previousHits.Count     == 0) //Direct ray from camera - has to be "from the air"
-				|| (previousHits[^1].Material != this); //If previous hit was also this object then we know it's the other way around
+		bool outsideGoingInside = (previousHits.Count         == 0)     //Direct ray from camera - has to be "from the air"
+								|| (previousHits[^1].Material != this); //If previous hit was also this object then we know it's the other way around
 		if (outsideGoingInside)
 		{
 			eta      = AirIndex;
@@ -70,7 +70,7 @@ public class RefractiveMaterial : Material
 		{
 			float r0 = (eta - etaPrime) / (eta + etaPrime);
 			r0 *= r0;
-			float reflectance = r0 + ((1 - r0) * Pow(1 - cosTheta, 5));
+			float reflectance                                = r0 + ((1 - r0) * Pow(1 - cosTheta, 5));
 			if (reflectance > RandomFloat01()) cannotRefract = true;
 		}
 
