@@ -1,5 +1,8 @@
+using Aardvark.Base;
+using Eto.Drawing;
 using Eto.Forms;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -26,6 +29,7 @@ internal sealed class MainForm : Form
 					//Same for the application items - on linux this is under the "File" section
 					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } }
 			};
+			Verbose("Created MenuBar: {@MenuBar}", Menu);
 		}
 
 		{
@@ -38,8 +42,10 @@ internal sealed class MainForm : Form
 					Shortcut = Application.Instance.CommonModifier | Keys.Q,
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
+			Verbose("Quit app command: {@Command}", quitAppCommand);
 			Closed        += MainFormClosed;
 			Menu.QuitItem =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
+			Verbose("Menu.QuitItem: {@MenuItem}", Menu.QuitItem);
 
 			Verbose("Quit handling added");
 		}
@@ -52,12 +58,80 @@ internal sealed class MainForm : Form
 					ID       = "[Command] About App",
 					ToolTip  = "Display information about the application in a popup dialog"
 			};
-			Menu.AboutItem = aboutCommand;
+			Verbose("About app command: {@Command}", aboutCommand);
+			Menu.AboutItem = new ButtonMenuItem(aboutCommand) { ID = "[MenuItem] About App" };
+			Verbose("Menu.AboutItem: {@MenuItem}", Menu.AboutItem);
 			Verbose("Set up about app menu");
+		}
+
+		{
+			Verbose("Setting icon");
+			const string iconPath = "RayTracer.Display.Dev.Appearance.icon.png";
+			Verbose("Icon path is {IconPath}", iconPath);
+			Icon = Icon.FromResource(iconPath);
+			Verbose("Set icon: {@Icon}", Icon);
+		}
+
+		{
+			Verbose("Toolbar disabled");
+			ToolBar = null;
+		}
+
+		{
+			Verbose("Setting window parameters");
+			Verbose("Resizeable: {Resizeable}",   Resizable   = true);
+			Verbose("Maximizable: {Maximizable}", Maximizable = true);
+			Verbose("Minimizable: {Minimizable}", Minimizable = true);
+			Verbose("MinimumSize: {MinimumSize}", MinimumSize = new Size(0,    0));
+			Verbose("Size: {Size}",               Size        = new Size(1280, 720));
+			Verbose("Title: {Title}",             Title       = Application.Instance.Name);
+			Verbose("Maximizing");
+			Maximize();
+		}
+
+	#endregion
+
+	#region Init everything else in the UI
+
+		Content = TabControlContent= new TabControl
+		{
+				ID = "[TabControl] MainForm.Content",
+				Pages =
+				{
+						new TabPage("Page 1 Content"){Text = "Page 1"},
+						new TabPage("Page 2 Content"){Text = "Page 2"},
+						new TabPage("Page 3 Content"){Text = "Page 3"},
+						new TabPage("Page 4 Content"){Text = "Page 4"},
+				}
+		};
+
+		//Create a way for the user to create a new render
+		{
+			Verbose("Setting up new render command");
+			Command newRenderCommand = new(CreateNewRenderCommandExecuted)
+			{
+					ID       = "[Command] Create new render",
+					MenuText = "Create new render"
+			};
+			MenuItem newRenderMenuItem = new ButtonMenuItem(newRenderCommand) { ID = "[MenuItem] Create new render" };
+			Menu.Items.Add(newRenderMenuItem);
+			Verbose("Set up create render command: {@Command}", newRenderCommand);
 		}
 
 	#endregion
 	}
+
+	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
+	{
+		Information("Create new render");
+	}
+
+	/// <summary>
+	/// List of disposables and/or actions that should be called upon exit, for cleanup
+	/// </summary>
+	private readonly List<(IDisposable? disposable, Action? action)> toDisposeUponExit = new();
+	private readonly TabControl                  TabControlContent;
+
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>
 	private void QuitAppCommandExecuted(object? sender, EventArgs e)
@@ -96,5 +170,22 @@ internal sealed class MainForm : Form
 		{
 			Error("Quit not supported");
 		}
+	}
+
+	/// <inheritdoc />
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			for (int i = 0; i < toDisposeUponExit.Count; i++)
+			{
+				(IDisposable? disposable, Action? action) tuple = toDisposeUponExit[i];
+				Verbose("Disposing [{Index}]: ({Disposable}, {@Action})", i, tuple.disposable, tuple.action);
+				tuple.Item2?.Invoke();
+				tuple.Item1?.Dispose();
+			}
+		}
+
+		base.Dispose(disposing);
 	}
 }

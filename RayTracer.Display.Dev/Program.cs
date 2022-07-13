@@ -48,7 +48,7 @@ internal static class Program
 			Debug("Creating new application object");
 			application = new Application(platform)
 			{
-					Name = "RayTracer [Name]",
+					Name = "RayTracer.Display",
 					ID   = "Main Application",
 					UIThreadCheckMode = UIThreadCheckMode.Error,
 					BadgeLabel = "RayTracer [Badge]"
@@ -128,13 +128,6 @@ internal static class Program
 			Debug("Disposing application objects and quitting");
 			Verbose($"Disposing {nameof(mainForm)}");
 			mainForm.Dispose();
-			// Verbose($"Disposing {nameof(mainForm)}.{nameof(mainForm.Parent)}");
-			// mainForm.Parent?.Dispose();
-			// Verbose($"Disposing {nameof(application)}.{nameof(application.Windows)}");
-			// foreach (Window w in application.Windows)
-			// {
-			// 	w?.Dispose();
-			// }
 			Verbose($"Disposing {nameof(application)}");
 			application.Dispose();
 			Debug("Disposed app and main form");
