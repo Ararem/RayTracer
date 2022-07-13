@@ -1,6 +1,7 @@
 using Eto.Forms;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
@@ -29,9 +30,9 @@ internal sealed class MainForm : Form
 		}
 
 		{
-			Verbose("Setting up app quit handling");
+			Verbose("Setting up quit handling");
 
-			Command quitAppCommand = new()
+			Command quitAppCommand = new(MainFormClosed)
 			{
 					MenuText = "Quit App",
 					ID       = "[Command] Quit App",
@@ -39,10 +40,16 @@ internal sealed class MainForm : Form
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
 			Closed                  += MainFormClosed;
-			quitAppCommand.Executed += MainFormClosed;
 			Menu.QuitItem           =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
 
 			Verbose("Quit handling added");
+		}
+
+		{
+			Verbose("Setting up about app menu");
+
+			Command aboutCommand = new();
+			Verbose("Set up about app menu");
 		}
 
 	#endregion

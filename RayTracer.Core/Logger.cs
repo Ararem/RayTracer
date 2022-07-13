@@ -26,11 +26,10 @@ internal static class Logger
 		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},10}}::{{{CallingMethodNameProp},-10}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
 		#else
 		const PerfMode perfMode = PerfMode.SingleFrameFast;
-		const string   template = $"[{{Timestamp:HH:mm:ss}} | +{{AppTimestamp:G}} | {{Level:t3}} | " /*+ $"{{{ThreadNameProp},-30}} " /**/+ $"{{{ThreadIdProp},3:'#'##}} | {{{CallingTypeNameProp},30}}::{{{CallingMethodNameProp},-20}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
+		const string   template = "[{Timestamp:HH:mm:ss} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},3:'#'##}} | {{{CallingTypeNameProp},30}}::{{{CallingMethodNameProp},-20}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
 		#endif
 
 		Thread.CurrentThread.Name ??= "Main Thread";
-		// ReSharper disable PossibleNullReferenceException
 		SelfLog.Enable(Console.Error);
 		Log.Logger = new LoggerConfiguration()
 					.MinimumLevel.Verbose()
@@ -50,8 +49,24 @@ internal static class Logger
 					.Destructure.AsScalar<Vector3>()
 					.Destructure.AsScalar<Vector2>()
 					.CreateLogger();
-		// ReSharper restore PossibleNullReferenceException
 
+
+		#if DEBUG
+		if (debugOnlyUpdateLogConfigTimer == null)
+		{
+			Log.Information("Logger Initialized");
+			debugOnlyUpdateLogConfigTimer = new Timer(DebugOnly_UpdateLogConfig, null, 0, 1000);
+		}
+		#else
 		Log.Information("Logger Initialized");
+		#endif
 	}
+	#if DEBUG
+
+	private static Timer? debugOnlyUpdateLogConfigTimer = null;
+	private static void DebugOnly_UpdateLogConfig(object? state)
+	{
+		Init();
+	}
+	#endif
 }
