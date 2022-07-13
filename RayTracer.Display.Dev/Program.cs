@@ -126,53 +126,15 @@ internal static class Program
 		{
 			//Not sure what exactly needs to be disposed, but I'll do it all just to be sure since I did get some warns about not disposed code from GLib before
 			Debug("Disposing application objects and quitting");
-
-			HashSet<IDisposable> alreadyDisposed = new();
-			void DisposeRecursively(IDisposable disposable, int depth)
-			{
-				if (!alreadyDisposed.Add(disposable)) return;
-				Verbose("Disposing {Disposable} [{Depth}]", disposable, depth);
-				Type type = disposable.GetType();
-				//Loop over all fields and properties that the disposable
-				foreach (MemberInfo member in type.GetMembers(BindingFlags.Instance | BindingFlags.Public))
-				{
-					try
-					{
-						switch (member)
-						{
-							case PropertyInfo prop:
-							{
-								object? propertyValue = prop.GetValue(disposable);
-								if(propertyValue is IDisposable nestedDisposable)
-									DisposeRecursively(nestedDisposable, depth + 1);
-								break;
-							}
-							case FieldInfo field:
-							{
-								object? fieldValue = field.GetValue(disposable);
-								if(fieldValue is IDisposable nestedDisposable)
-									DisposeRecursively(nestedDisposable, depth + 1);
-								break;
-							}
-						}
-					}
-					catch (Exception e)
-					{
-						// Verbose(e, "Could not access member {Member}", member);
-					}
-				}
-			}
-			DisposeRecursively(mainForm, 0);
-
 			Verbose($"Disposing {nameof(mainForm)}");
 			mainForm.Dispose();
-			Verbose($"Disposing {nameof(mainForm)}.{nameof(mainForm.Parent)}");
-			mainForm.Parent?.Dispose();
-			Verbose($"Disposing {nameof(application)}.{nameof(application.Windows)}");
-			foreach (Window w in application.Windows)
-			{
-				w?.Dispose();
-			}
+			// Verbose($"Disposing {nameof(mainForm)}.{nameof(mainForm.Parent)}");
+			// mainForm.Parent?.Dispose();
+			// Verbose($"Disposing {nameof(application)}.{nameof(application.Windows)}");
+			// foreach (Window w in application.Windows)
+			// {
+			// 	w?.Dispose();
+			// }
 			Verbose($"Disposing {nameof(application)}");
 			application.Dispose();
 			Debug("Disposed app and main form");

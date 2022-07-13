@@ -1,7 +1,6 @@
 using Eto.Forms;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
@@ -32,29 +31,48 @@ internal sealed class MainForm : Form
 		{
 			Verbose("Setting up quit handling");
 
-			Command quitAppCommand = new(MainFormClosed)
+			Command quitAppCommand = new(QuitAppCommandExecuted)
 			{
 					MenuText = "Quit App",
 					ID       = "[Command] Quit App",
 					Shortcut = Application.Instance.CommonModifier | Keys.Q,
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
-			Closed                  += MainFormClosed;
-			Menu.QuitItem           =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
+			Closed        += MainFormClosed;
+			Menu.QuitItem =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
 
 			Verbose("Quit handling added");
 		}
 
 		{
 			Verbose("Setting up about app menu");
-
-			Command aboutCommand = new();
+			Command aboutCommand = new(AboutAppCommandExecuted)
+			{
+					MenuText = "About App",
+					ID       = "[Command] About App",
+					ToolTip  = "Display information about the application in a popup dialog"
+			};
+			Menu.AboutItem = aboutCommand;
 			Verbose("Set up about app menu");
 		}
 
 	#endregion
 	}
 
+	/// <summary>Callback for when the [Quit App] command is executed</summary>
+	private void QuitAppCommandExecuted(object? sender, EventArgs e)
+	{
+		Debug("Closing main form");
+		Close();
+	}
+
+	/// <summary>Callback for when the [About App] command is executed</summary>
+	private void AboutAppCommandExecuted(object? o, EventArgs eventArgs)
+	{
+		new AboutDialog(Assembly.GetExecutingAssembly()).ShowDialog(this);
+	}
+
+	/// <summary>Quits the app, normally because the <see cref="MainForm"/> was closed (also gets called when the quit command button is pressed)</summary>
 	private static void MainFormClosed(object? o, EventArgs eventArgs)
 	{
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
@@ -66,11 +84,13 @@ internal sealed class MainForm : Form
 			Verbose("Closed event recursion detected, returning immediately without sending quit signal");
 			return;
 		}
-		Information("Main form closed");
+
+		Debug("Main form closed");
 		if (Application.Instance.QuitIsSupported)
 		{
-			Debug("Sending quit signal");
+			Verbose("Sending quit signal");
 			Application.Instance.Quit();
+			Verbose("Quit signal sent");
 		}
 		else
 		{
