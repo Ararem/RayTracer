@@ -8,6 +8,7 @@
 	
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/rrm/Documents/Projects/RayTracer/RayTracer.Display.Dev/libOpenImageDenoise.dll" /&gt;
+  &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Private.CoreLib.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
 	
 	
