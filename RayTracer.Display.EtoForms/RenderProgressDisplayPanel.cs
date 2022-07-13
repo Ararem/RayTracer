@@ -82,7 +82,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Size = new Size(0, 0), MinimumSize     = new Size(1, 1), Padding = 10
 		};
 
-		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxDepth, PixelFormat.Format32bppRgba)
+		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxBounceDepth, PixelFormat.Format32bppRgba)
 				{ ID = "Depth Buffer Bitmap" };
 		depthBufferImageView = new ImageView
 				{ ID = "Image View", Image = depthBufferBitmap, Size = new Size(-1, -1) };
@@ -338,7 +338,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
-							("Max Bounces", FormatNum(renderJob.RenderOptions.MaxDepth), null),
+							("Max Bounces", FormatNum(renderJob.RenderOptions.MaxBounceDepth), null),
 							("KMin", FormatFloat(renderJob.RenderOptions.KMin), null),
 							("KMax", FormatFloat(renderJob.RenderOptions.KMax), null),
 							("Visualisation", $"{renderJob.RenderOptions.DebugVisualisation,leftAlign}", null)
@@ -497,7 +497,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		//Depth buffer
 		{
 			int       row             = statsTable.Dimensions.Height - 1;
-			int       maxDepth        = renderJob.RenderOptions.MaxDepth;
+			int       maxDepth        = renderJob.RenderOptions.MaxBounceDepth;
 			TableCell titleCell       = statsTable.Rows[row].Cells[0];
 			TableCell descriptionCell = statsTable.Rows[row].Cells[1];
 			TableCell depthBufferCell = statsTable.Rows[row].Cells[2];

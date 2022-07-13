@@ -244,7 +244,7 @@ public sealed class AsyncRenderJob : IDisposable
 	//
 	// private Colour InitialCalculateRayColourRecursive(Ray ray)
 	// {
-	// 	HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth);
+	// 	HitRecord[]             array   = PrevHitPool.Shared.Rent(RenderOptions.MaxBounceDepth);
 	// 	ArraySegment<HitRecord> segment = new(array, 0, 0);
 	// 	Colour colour = InternalCalculateRayColourRecursive(ray, 0, segment);
 	// 	PrevHitPool.Shared.Return(array);
@@ -262,7 +262,7 @@ public sealed class AsyncRenderJob : IDisposable
 	// private Colour InternalCalculateRayColourRecursive(Ray ray, int depth, ArraySegment<HitRecord> prevHitsFromCamSegment)
 	// {
 	// 	//Don't go too deep
-	// 	if (depth > RenderOptions.MaxDepth)
+	// 	if (depth > RenderOptions.MaxBounceDepth)
 	// 	{
 	// 		Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
 	// 		return NoColour;
@@ -317,13 +317,13 @@ public sealed class AsyncRenderJob : IDisposable
 		{
 			//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
 			//This stores the hit state information, as well as what object was intersected with (at that hit)
-			HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(RenderOptions.MaxDepth + 1);
+			HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(RenderOptions.MaxBounceDepth + 1);
 			Colour                                finalColour      = NoColour;
 			//Loop for a max number of times equal to the depth
 			//And map out the ray path (don't do any colours yet)
 			//TODO: Fix this depth++/-- stuff, it's iffy
 			int depth;
-			for (depth = 0; depth < RenderOptions.MaxDepth; depth++)
+			for (depth = 0; depth < RenderOptions.MaxBounceDepth; depth++)
 			{
 				Interlocked.Increment(ref RenderStats.RayCount);
 				if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
@@ -359,7 +359,7 @@ public sealed class AsyncRenderJob : IDisposable
 				}
 			}
 
-			if (depth == RenderOptions.MaxDepth) Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
+			if (depth == RenderOptions.MaxBounceDepth) Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
 			Interlocked.Increment(ref RenderStats.RawRayDepthCounts[depth]);
 
 			//Now do the colour pass
@@ -394,7 +394,7 @@ public sealed class AsyncRenderJob : IDisposable
 					GraphicsValidator.CheckRayDirectionMagnitude(ref ray, camera);
 
 					//Ensure we don't go too deep
-					if (bounces > RenderOptions.MaxDepth)
+					if (bounces > RenderOptions.MaxBounceDepth)
 					{
 						Interlocked.Increment(ref bounceLimitExceeded);
 						return Colour.Black;

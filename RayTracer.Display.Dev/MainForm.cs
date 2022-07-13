@@ -1,18 +1,27 @@
-using Aardvark.Base;
 using Eto.Drawing;
 using Eto.Forms;
+using Gtk;
+using RayTracer.Core;
+using RayTracer.Impl;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
+using AboutDialog = Eto.Forms.AboutDialog;
+using Application = Eto.Forms.Application;
+using Icon = Eto.Drawing.Icon;
+using MenuBar = Eto.Forms.MenuBar;
+using MenuItem = Eto.Forms.MenuItem;
 
 namespace RayTracer.Display.Dev;
 
 /// <summary>Main form class that handles much of the UI stuff</summary>
 internal sealed class MainForm : Form
 {
+	/// <summary>Main control that contains the tabs for each of the renders</summary>
+	private readonly TabControl tabControlContent;
+
 	public MainForm()
 	{
 	#region Important setup to make the app run like expected
@@ -93,15 +102,15 @@ internal sealed class MainForm : Form
 
 	#region Init everything else in the UI
 
-		Content = TabControlContent= new TabControl
+		Content = tabControlContent = new TabControl
 		{
 				ID = "[TabControl] MainForm.Content",
 				Pages =
 				{
-						new TabPage("Page 1 Content"){Text = "Page 1"},
-						new TabPage("Page 2 Content"){Text = "Page 2"},
-						new TabPage("Page 3 Content"){Text = "Page 3"},
-						new TabPage("Page 4 Content"){Text = "Page 4"},
+						new TabPage("Page 1 Content") { Text = "Page 1" },
+						new TabPage("Page 2 Content") { Text = "Page 2" },
+						new TabPage("Page 3 Content") { Text = "Page 3" },
+						new TabPage("Page 4 Content") { Text = "Page 4" }
 				}
 		};
 
@@ -121,17 +130,31 @@ internal sealed class MainForm : Form
 	#endregion
 	}
 
+#region Tab management
+
+	/// <summary>
+	/// Adds a new render tab, with the specified initial value for the render options
+	/// </summary>
+	/// <param name="initialRenderOptions">Initial value for the render options</param>
+	/// <param name="availableScenes">Array containing all the available scenes that can be selected</param>
+	/// <param name="initialSceneIndex">Index of the scene that should be selected initially. Defaults to 0</param>
+	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex=0)
+	{
+
+	}
+
+#endregion
+
+#region Callbacks
+
+	/// <summary>
+	/// Callback for when the [Create New Render] command is executed
+	/// </summary>
 	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
 	{
 		Information("Create new render");
+		AddNewRenderTab(RenderOptions.Default, BuiltinScenes.GetAll().ToArray());
 	}
-
-	/// <summary>
-	/// List of disposables and/or actions that should be called upon exit, for cleanup
-	/// </summary>
-	private readonly List<(IDisposable? disposable, Action? action)> toDisposeUponExit = new();
-	private readonly TabControl                  TabControlContent;
-
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>
 	private void QuitAppCommandExecuted(object? sender, EventArgs e)
@@ -172,20 +195,5 @@ internal sealed class MainForm : Form
 		}
 	}
 
-	/// <inheritdoc />
-	protected override void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			for (int i = 0; i < toDisposeUponExit.Count; i++)
-			{
-				(IDisposable? disposable, Action? action) tuple = toDisposeUponExit[i];
-				Verbose("Disposing [{Index}]: ({Disposable}, {@Action})", i, tuple.disposable, tuple.action);
-				tuple.Item2?.Invoke();
-				tuple.Item1?.Dispose();
-			}
-		}
-
-		base.Dispose(disposing);
-	}
+#endregion
 }

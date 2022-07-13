@@ -1,7 +1,51 @@
-using JetBrains.Annotations;
 using RayTracer.Core.Debugging;
 
 namespace RayTracer.Core;
+
+/// <summary>Class that contains properties that are used to control how a <see cref="Scene"/> is rendered</summary>
+public sealed class RenderOptions
+{
+	/// <summary>How many pixels wide the render will be</summary>
+	public int RenderWidth { get; init; } = 1920;
+
+	/// <summary>How many pixels high the render will be</summary>
+	public int RenderHeight { get; init; } = 1080;
+
+	/// <summary>Minimum K value for intersections to be considered valid (Near plane)</summary>
+	/// <remarks>
+	///  <c>K</c> values mean the distance along a given ray at which the intersection occured. This essentially means what is the closest hit that we
+	///  consider valid. Set this to slightly above 0 to avoid self-intersecting problems, such as shadow acne
+	/// </remarks>
+	public float KMin { get; set; } = 0.001f;
+
+	/// <summary>Maximum K values for intersections to be considered valid (Far plane)</summary>
+	/// <remarks>
+	///  <c>K</c> values mean the distance along a given ray at which the intersection occured. This essentially means what is the furthest hit that we
+	///  consider valid.
+	/// </remarks>
+	public float KMax { get; set; } = float.PositiveInfinity;
+
+	/// <summary>Maximum number of threads that can render concurrently</summary>
+	/// <remarks>Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>)</remarks>
+	public int ConcurrencyLevel { get; set; } = Environment.ProcessorCount;
+
+	/// <summary>Number of times the image will be rendered. These individual renders ('passes') will be combined to create the final image</summary>
+	public int Passes { get; set; } = 100;
+
+	/// <summary>
+	///  Maximum number of bounces allowed before a given ray path is discarded. Essentially puts a limit on how many times a ray can bounce, to avoid
+	///  infinite bouncing
+	/// </summary>
+	public int MaxBounceDepth { get; set; } = 100;
+
+	/// <summary>Optional visualisation to be used when rendering the scene, instead of rendering it normally (<see cref="GraphicsDebugVisualisation.None"/>)</summary>
+	public GraphicsDebugVisualisation DebugVisualisation { get; set; } = GraphicsDebugVisualisation.None;
+
+	/// <summary>Hint to materials as to how many times they should sample each light (as opposed to 1 sample per light per intersection).</summary>
+	public int LightSampleCountHint { get; set; } = 2;
+
+	public static RenderOptions GetDefault() => new();
+}
 
 /// <summary>Record used to configure how a renderer renders a <see cref="Scene"/></summary>
 /// <param name="Width">How many pixels wide the image should be</param>
@@ -25,20 +69,5 @@ namespace RayTracer.Core;
 ///  How many samples to average, to create a less noisy image. If equal to <c>-1</c>, the renderer will render infinitely until
 ///  manually stopped
 /// </param>
-/// <param name="MaxDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
+/// <param name="MaxBounceDepth">The maximum number of times the rays from the camera are allowed to bounce off surfaces</param>
 /// <param name="LightSampleCountHint">A hint parameter that can be accessed by a <see cref="Material"/> for how many times it should cast light rays</param>
-public sealed record RenderOptions(
-		[NonNegativeValue] int     Width,
-		[NonNegativeValue] int     Height,
-		[NonNegativeValue] float   KMin,
-		[NonNegativeValue] float   KMax,
-		int                        ConcurrencyLevel,
-		int                        Passes,
-		[NonNegativeValue] int     MaxDepth,
-		GraphicsDebugVisualisation DebugVisualisation = GraphicsDebugVisualisation.None,
-		[NonNegativeValue] int LightSampleCountHint = 3
-)
-{
-	/// <summary>Default render options</summary>
-	public static readonly RenderOptions Default = new(1920, 1080, 0.001f, float.PositiveInfinity, Environment.ProcessorCount, 100, 100);
-}

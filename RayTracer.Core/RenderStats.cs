@@ -13,7 +13,7 @@ public sealed class RenderStats
 	/// <param name="options">Render options, used to assign and calculate some of the values</param>
 	public RenderStats(RenderOptions options)
 	{
-		RawRayDepthCounts = new long[options.MaxDepth + 1]; //+1 because we can also have 0 bounces;
+		RawRayDepthCounts = new long[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
 		TotalTruePixels   = options.Width * options.Height;
 		TotalRawPixels    = options.Width * options.Height * options.Passes;
 	}
@@ -89,7 +89,7 @@ public sealed class RenderStats
 
 	/// <summary>
 	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
-	///  <see cref="Core.RenderOptions.MaxDepth"/>
+	///  <see cref="RenderOptions.MaxBounceDepth"/>
 	/// </summary>
 	public long BounceLimitExceeded = 0;
 

@@ -6,6 +6,7 @@ namespace RayTracer.Core;
 [PublicAPI]
 public abstract class Light : RenderAccessor
 {
+	//TODO: Remove the bool and just return a named tuple with (TrueColour, DirectColour) // (TrueColour, RawColour)
 	/// <summary>Calculates the light emitted by the current <see cref="Light"/> instance, for the hit stored in the <paramref name="hit"/></summary>
 	/// <param name="hit">The information about the hit to calculate the lighting for</param>
 	/// <param name="ray">Output shadow ray that was calculated and checked</param>
