@@ -72,7 +72,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsContainer = new GroupBox
 				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1) };
 
-		previewImage = new Bitmap(renderJob.RenderOptions.Width, renderJob.RenderOptions.Height, PixelFormat.Format24bppRgb)
+		previewImage = new Bitmap(renderJob.RenderOptions.RenderWidth, renderJob.RenderOptions.RenderHeight, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Bitmap" };
 		previewImageView = new DragZoomImageView
 				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0), ZoomButton = MouseButtons.Middle };

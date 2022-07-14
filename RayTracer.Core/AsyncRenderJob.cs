@@ -35,11 +35,11 @@ public sealed class AsyncRenderJob : IDisposable
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={RenderOptions}", scene, renderOptions);
 
-		Image             = new Image<Rgb24>(renderOptions.Width, renderOptions.Height);
+		Image             = new Image<Rgb24>(renderOptions.RenderWidth, renderOptions.RenderHeight);
 		ImageBuffer       = Image.Frames.RootFrame!;
 		RenderOptions     = renderOptions;
-		rawColourBuffer   = new Colour[renderOptions.Width * renderOptions.Height];
-		sampleCountBuffer = new int[renderOptions.Width    * renderOptions.Height];
+		rawColourBuffer   = new Colour[renderOptions.RenderWidth * renderOptions.RenderHeight];
+		sampleCountBuffer = new int[renderOptions.RenderWidth    * renderOptions.RenderHeight];
 		Scene             = scene;
 
 		RenderStats = new RenderStats(renderOptions);
@@ -99,7 +99,7 @@ public sealed class AsyncRenderJob : IDisposable
 						}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
 						static (i, loop, state) =>
 						{
-							(int x, int y) = Decompress2DIndex(i, state.RenderOptions.Width);
+							(int x, int y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
 							Colour col = state.RenderPixelWithVisualisations(x, y);
 							state.UpdateBuffers(x, y, col);
 							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
@@ -139,7 +139,7 @@ public sealed class AsyncRenderJob : IDisposable
 		s += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		t += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		//Account for the fact that we want uv coords not pixel coords
-		Ray viewRay = Scene.Camera.GetRay(s / RenderOptions.Width, t / RenderOptions.Height);
+		Ray viewRay = Scene.Camera.GetRay(s / RenderOptions.RenderWidth, t / RenderOptions.RenderHeight);
 
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
@@ -522,13 +522,13 @@ public sealed class AsyncRenderJob : IDisposable
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
 		//The (X,Y) we're given is camera coords
-		y = RenderOptions.Height - y - 1;
+		y = RenderOptions.RenderHeight - y - 1;
 
 		//NOTE: Although this may not be 'thread-safe' at first glance, we don't actually need to lock to safely access and change to array
 		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
 		//In previous profiling sessions, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
-		int i = Compress2DIndex(x, y, RenderOptions.Width);
+		int i = Compress2DIndex(x, y, RenderOptions.RenderWidth);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
 		rawColourBuffer[i] = newSampleColour;

@@ -132,6 +132,13 @@ internal sealed class MainForm : Form
 	/// <param name="initialSceneIndex">Index of the scene that should be selected initially. Defaults to 0</param>
 	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex = 0)
 	{
+		Guid guid = Guid.NewGuid();
+		TabPage page = new()
+		{
+				ID   = $"[TabPage] Render Page {guid}",
+				Text = "New Render"
+		};
+		Error("{X}",SupportedPlatformCommands);
 	}
 
 #endregion
@@ -142,7 +149,7 @@ internal sealed class MainForm : Form
 	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
 	{
 		Information("Create new render");
-		AddNewRenderTab(RenderOptions.Default, BuiltinScenes.GetAll().ToArray());
+		AddNewRenderTab(new RenderOptions(), BuiltinScenes.GetAll().ToArray());
 	}
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>

@@ -16,15 +16,13 @@ internal sealed class RenderOptionSelectorPanel : Panel
 	/// <summary>Creates a new <see cref="RenderOptionSelectorPanel"/> panel</summary>
 	/// <param name="click"></param>
 	/// <param name="options">
-	///  Optional initial value for the render options. If <see langword="null"/>, will be set to
-	///  <see cref="Core.RenderOptions.Default"/>
+	///  Optional initial value for the render options. If <see langword="null"/>, will be set to the default
 	/// </param>
 	public RenderOptionSelectorPanel(EventHandler<EventArgs> click, RenderOptions? options = null)
 	{
 		if (options == null)
 		{
-			Verbose("No options supplied, using default value {DefaultValue}", RenderOptions.Default);
-			RenderOptions = RenderOptions.Default;
+			Verbose("No options supplied, using default value {DefaultValue}", RenderOptions = new RenderOptions());
 		}
 		else
 		{

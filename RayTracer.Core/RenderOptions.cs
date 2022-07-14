@@ -22,7 +22,7 @@ public sealed class RenderOptions
 		get => renderWidth;
 		init
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, "Image cannot have a width of less than 1 pixel", nameof(RenderWidth), (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(RenderWidth), "Image cannot have a width of less than 1 pixel", (1, int.MaxValue));
 			renderWidth = value;
 		}
 	}
@@ -33,7 +33,7 @@ public sealed class RenderOptions
 		get => renderHeight;
 		init
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, "Image cannot have a height of less than 1 pixel", nameof(RenderHeight), (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(RenderHeight), "Image cannot have a height of less than 1 pixel", (1, int.MaxValue));
 			renderHeight = value;
 		}
 	}
@@ -49,7 +49,7 @@ public sealed class RenderOptions
 		get => kMin;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<float>(value, "KMin cannot have a value of less than 0", nameof(KMin), (0f, float.PositiveInfinity));
+			if (value < 0) throw new ArgumentOutOfRangeException<float>(value, nameof(KMin), "KMin cannot have a value of less than 0", (0f, float.PositiveInfinity));
 			kMin = value;
 		}
 	}
@@ -65,7 +65,7 @@ public sealed class RenderOptions
 		get => kMax;
 		set
 		{
-			if ((value < KMin) || (value < 0)) throw new ArgumentOutOfRangeException<float>(value, "KMax cannot have a value of less than 0 or less than KMin", nameof(KMax), (0f, float.PositiveInfinity), (KMin, float.PositiveInfinity));
+			if ((value < KMin) || (value < 0)) throw new ArgumentOutOfRangeException<float>(value, nameof(KMax), "KMax cannot have a value of less than 0 or less than KMin", (0f, float.PositiveInfinity), (KMin, float.PositiveInfinity));
 			kMax = value;
 		}
 	}
@@ -80,7 +80,7 @@ public sealed class RenderOptions
 		get => concurrencyLevel;
 		set
 		{
-			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, $"{nameof(ConcurrencyLevel)} was negative (should be -1 or >0).", nameof(ConcurrencyLevel), (-1, -1), (1, int.MaxValue));
+			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be -1 or >0).", (-1, -1), (1, int.MaxValue));
 			concurrencyLevel = value;
 		}
 	}
@@ -95,7 +95,7 @@ public sealed class RenderOptions
 		get => passes;
 		set
 		{
-			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, $"{nameof(Passes)} was negative (should be -1 or >0).", nameof(Passes), (-1, -1), (1, int.MaxValue));
+			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, nameof(Passes), $"{nameof(Passes)} was negative (should be -1 or >0).", (-1, -1), (1, int.MaxValue));
 			passes = value;
 		}
 	}
@@ -110,7 +110,7 @@ public sealed class RenderOptions
 		get => maxBounceDepth;
 		set
 		{
-			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, $"{nameof(MaxBounceDepth)} must be >=0", nameof(MaxBounceDepth), (0, int.MaxValue));
+			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, int.MaxValue));
 			maxBounceDepth = value;
 		}
 	}
@@ -121,7 +121,7 @@ public sealed class RenderOptions
 		get => debugVisualisation;
 		set
 		{
-			if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException<GraphicsDebugVisualisation>(value, "Invalid debug visualisation", nameof(DebugVisualisation), Enum.GetValues<GraphicsDebugVisualisation>());
+			if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException<GraphicsDebugVisualisation>(value, nameof(DebugVisualisation), "Invalid debug visualisation", Enum.GetValues<GraphicsDebugVisualisation>());
 			debugVisualisation = value;
 		}
 	}
@@ -132,7 +132,7 @@ public sealed class RenderOptions
 		get => lightSampleCountHint;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, "Must have at least 1 sample per light", nameof(LightSampleCountHint), (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(LightSampleCountHint), "Must have at least 1 sample per light", (1, int.MaxValue));
 			lightSampleCountHint = value;
 		}
 	}

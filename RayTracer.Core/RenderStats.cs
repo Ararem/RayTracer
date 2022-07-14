@@ -14,8 +14,8 @@ public sealed class RenderStats
 	public RenderStats(RenderOptions options)
 	{
 		RawRayDepthCounts = new long[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
-		TotalTruePixels   = options.Width * options.Height;
-		TotalRawPixels    = options.Width * options.Height * options.Passes;
+		TotalTruePixels   = options.RenderWidth * options.RenderHeight;
+		TotalRawPixels    = options.RenderWidth * options.RenderHeight * options.Passes;
 	}
 
 	/// <summary>Copy constructor</summary>
