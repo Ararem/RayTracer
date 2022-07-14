@@ -39,24 +39,25 @@ public static class TaskWatcher
 		{
 			int totalTaskCount = 0, erroredTaskCount = 0, completeTaskCount = 0, incompleteTaskCount = 0;
 			//Loop over all the tasks to check
-			while (WatchedTasks.TryTake(out (Task Task, bool ExitOnError) task))
+			while (WatchedTasks.TryTake(out (Task Task, bool ExitOnError) tuple))
 			{
+				(Task task, bool exitOnError) = tuple;
 				totalTaskCount++;
-				if (task.Task.IsFaulted)
+				if (task.IsFaulted)
 				{
 					erroredTaskCount++;
-					Log.Error(task.Task.Exception, "Caught exception in watched task {@Task}", task);
-					if (task.ExitOnError)
+					Log.Error(task.Exception, "Caught exception in watched task {Task}", task);
+					if (exitOnError)
 					{
 						if (Application.Instance.QuitIsSupported)
 							Application.Instance.Quit();
 						else Environment.Exit(-1);
 					}
 				}
-				else if (!task.Task.IsCompleted)
+				else if (!task.IsCompleted)
 				{
 					incompleteTaskCount++;
-					NotYetCompleted.Add(task);
+					NotYetCompleted.Add(tuple);
 				}
 				//If the task has completed, no error, we don't do anything
 				//Since it's already been removed from the bag

@@ -162,12 +162,12 @@ internal sealed class MainForm : Form
 				ToolTip  = "Stops the render, and closes the tab associated with it",
 				Shortcut = Keys.Alt | Keys.A
 		};
-		Task.Delay(1000).ContinueWith(_ =>
+		TaskWatcher.Watch(Task.Delay(1000).ContinueWith(_ =>
 		{
 			Warning("Pre Show");
 			newPage.ContextMenu.Show(newPage);
 			Warning("Post Show");
-		});
+		}), true);
 	}
 
 #endregion

@@ -1,11 +1,14 @@
 ﻿using Eto;
 using Eto.Forms;
+using GLib;
 using RayTracer.Display.Dev.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using static Serilog.Log;
+using Application = Eto.Forms.Application;
+using Log = Serilog.Log;
 using Logger = RayTracer.Core.Logger;
-using UnhandledExceptionEventArgs = Eto.UnhandledExceptionEventArgs;
+using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 namespace RayTracer.Display.Dev;
 
@@ -23,6 +26,15 @@ internal static class Program
 		Logger.Init();
 		Information("Starting RayTracer.Display.Dev app");
 		Information("Commandline args: {Args}", args);
+
+		try
+		{
+			AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Could not ");
+		}
 
 		Platform platform;
 		try
@@ -58,7 +70,7 @@ internal static class Program
 
 		try
 		{
-			EventHandler<UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
+			EventHandler<Eto.UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
 			Debug("Hooking up unhandled exception event");
 			application.UnhandledException += unhandledExceptionHandler;
 			Debug("Unhandled exception event handler added: {@Handler}", unhandledExceptionHandler);
@@ -120,12 +132,19 @@ internal static class Program
 		finally
 		{
 			//Not sure what exactly needs to be disposed, but I'll do it all just to be sure since I did get some warns about not disposed code from GLib before
-			Debug("Disposing application objects and quitting");
-			Verbose($"Disposing {nameof(mainForm)}");
-			mainForm.Dispose();
-			Verbose($"Disposing {nameof(application)}");
-			application.Dispose();
-			Debug("Disposed app and main form");
+			try
+			{
+				Debug("Disposing application objects and quitting");
+				Verbose($"Disposing {nameof(mainForm)}");
+				mainForm.Dispose();
+				Verbose($"Disposing {nameof(application)}");
+				application.Dispose();
+				Debug("Disposed app and main form");
+			}
+			catch (Exception e)
+			{
+				Error(e, "Could not dispose application");
+			}
 
 			Information("Shutting down logger and exiting");
 			CloseAndFlush();
@@ -133,5 +152,18 @@ internal static class Program
 		}
 	}
 
-	private static void EtoUnhandledException(object? obj, UnhandledExceptionEventArgs args) => Error((Exception)args.ExceptionObject, "Caught ETO Unhandled {IsTerminating} Exception from {Target}", args.IsTerminating ? "Terminating" : "Non-Terminating", obj);
+	private static void OnUnhandledException(Exception exception, object? sender, bool isTerminating)
+	{
+		Error(exception, "Caught unhandled exception ({Terminating}) from {Sender}:", isTerminating ? "terminating" : "non-terminating", sender);
+	}
+
+	private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+	{
+		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
+	}
+
+	private static void EtoUnhandledException(object? sender, Eto.UnhandledExceptionEventArgs e)
+	{
+		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
+	}
 }
