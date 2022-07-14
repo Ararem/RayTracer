@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using static Serilog.Log;
 
 namespace RayTracer.Display.Dev;
@@ -21,6 +22,7 @@ internal sealed class MainForm : Form
 	#region Important setup to make the app run like expected
 
 		Debug("Setting up important app functionality");
+		ID = "MainForm";
 		{
 			Verbose("Creating MenuBar");
 			Menu = new MenuBar
@@ -31,39 +33,39 @@ internal sealed class MainForm : Form
 
 					//Same for the application items - on linux this is under the "File" section
 					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } }
+					ID = $"{ID}.Menu"
 			};
-			Verbose("Created MenuBar: {@MenuBar}", Menu);
+			Verbose("Created MenuBar: {MenuBar}", Menu);
 		}
 
 		{
 			Verbose("Setting up quit handling");
-
+			Menu.QuitItem = new ButtonMenuItem { ID = $"{Menu.ID}.QuitItem", Text = "Quit App" };
 			Command quitAppCommand = new(QuitAppCommandExecuted)
 			{
-					MenuText = "Quit App",
-					ID       = "[Command] Quit App",
+					MenuText = Menu.QuitItem.Text,
+					ID       = $"{Menu.QuitItem.ID}.Command",
 					Shortcut = Application.Instance.CommonModifier | Keys.Q,
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
-			Verbose("Quit app command: {@Command}", quitAppCommand);
-			Closed        += MainFormClosed;
-			Menu.QuitItem =  new ButtonMenuItem(quitAppCommand) { ID = "[MenuItem] Quit App" };
-			Verbose("Menu.QuitItem: {@MenuItem}", Menu.QuitItem);
+			Menu.QuitItem.Command = quitAppCommand;
+			Verbose("Menu.QuitItem: {MenuItem}", Menu.QuitItem);
+			Closed += MainFormClosed;
 
 			Verbose("Quit handling added");
 		}
 
 		{
 			Verbose("Setting up about app menu");
+			Menu.AboutItem = new ButtonMenuItem { ID = $"{Menu.ID}.AboutItem", Text = "About App" };
 			Command aboutCommand = new(AboutAppCommandExecuted)
 			{
-					MenuText = "About App",
-					ID       = "[Command] About App",
+					MenuText = Menu.AboutItem.Text,
+					ID       = $"{Menu.AboutItem.ID}.Command",
 					ToolTip  = "Display information about the application in a popup dialog"
 			};
-			Verbose("About app command: {@Command}", aboutCommand);
-			Menu.AboutItem = new ButtonMenuItem(aboutCommand) { ID = "[MenuItem] About App" };
-			Verbose("Menu.AboutItem: {@MenuItem}", Menu.AboutItem);
+			Menu.AboutItem.Command = aboutCommand;
+			Verbose("Menu.AboutItem: {MenuItem}", Menu.AboutItem);
 			Verbose("Set up about app menu");
 		}
 
@@ -71,13 +73,13 @@ internal sealed class MainForm : Form
 			Verbose("Setting icon");
 			const string iconPath = "RayTracer.Display.Dev.Appearance.icon.png";
 			Verbose("Icon path is {IconPath}", iconPath);
-			Icon = Icon.FromResource(iconPath);
-			Verbose("Set icon: {@Icon}", Icon);
+			Icon    = Icon.FromResource(iconPath);
+			Icon.ID = $"{ID}.Icon";
+			Verbose("Set icon: {Icon}", Icon);
 		}
 
 		{
-			Verbose("Toolbar disabled");
-			ToolBar = null;
+			Verbose("Toolbar disabled: {Toolbar}", ToolBar = null);
 		}
 
 		{
@@ -111,14 +113,15 @@ internal sealed class MainForm : Form
 		//Create a way for the user to create a new render
 		{
 			Verbose("Setting up new render command");
+			MenuItem newRenderMenuItem = new ButtonMenuItem { ID = $"{Menu.ID}.NewRenderItem", Text = "New Render" };
+			Menu.Items.Add(newRenderMenuItem);
 			Command newRenderCommand = new(CreateNewRenderCommandExecuted)
 			{
-					ID       = "[Command] Create new render",
-					MenuText = "Create new render"
+					ID       = $"{newRenderMenuItem.ID}.Command",
+					MenuText = newRenderMenuItem.Text
 			};
-			MenuItem newRenderMenuItem = new ButtonMenuItem(newRenderCommand) { ID = "[MenuItem] Create new render" };
-			Menu.Items.Add(newRenderMenuItem);
-			Verbose("Set up create render command: {@Command}", newRenderCommand);
+			newRenderMenuItem.Command = newRenderCommand;
+			Verbose("Set up create render command: {Command}", newRenderCommand);
 		}
 
 	#endregion
@@ -133,22 +136,53 @@ internal sealed class MainForm : Form
 	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex = 0)
 	{
 		Guid guid = Guid.NewGuid();
-		TabPage page = new()
+		Verbose("Adding new render tab with GUID {Guid}", guid);
+		TabPage newPage = new()
 		{
-				ID   = $"[TabPage] Render Page {guid}",
+				ID   = $"{tabControlContent.ID}.Pages.{guid}",
 				Text = "New Render"
 		};
-		Error("{X}",SupportedPlatformCommands);
+		Verbose("TabPage: {TabPage}", newPage);
+		tabControlContent.Pages.Add(newPage);
+
+		newPage.ContextMenu = new ContextMenu
+		{
+				ID = $"{newPage.ID}.ContextMenu"
+		};
+		ButtonMenuItem closeTabMenuItem = new()
+		{
+				ID   = $"{newPage.ContextMenu.ID}.Items.CloseTab",
+				Text = "Close Tab"
+		};
+		newPage.ContextMenu.Items.Add(closeTabMenuItem);
+		closeTabMenuItem.Command = new Command((sender, args) => CloseRenderTabExecuted(sender, args, newPage))
+		{
+				ID       = $"{closeTabMenuItem.ID}.Command",
+				MenuText = closeTabMenuItem.Text,
+				ToolTip  = "Stops the render, and closes the tab associated with it",
+				Shortcut = Keys.Alt | Keys.A
+		};
+		Task.Delay(1000).ContinueWith(_ =>
+		{
+			Warning("Pre Show");
+			newPage.ContextMenu.Show(newPage);
+			Warning("Post Show");
+		});
 	}
 
 #endregion
 
 #region Callbacks
 
+	private void CloseRenderTabExecuted(object? sender, EventArgs e, TabPage page)
+	{
+		Error("CloseRenderTab Executed");
+	}
+
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
 	{
-		Information("Create new render");
+		Information("Creating new render");
 		AddNewRenderTab(new RenderOptions(), BuiltinScenes.GetAll().ToArray());
 	}
 

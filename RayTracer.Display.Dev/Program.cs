@@ -29,7 +29,7 @@ internal static class Program
 		{
 			Debug("Getting platform (Detect Mode)");
 			platform = Platform.Detect!;
-			Debug("Eto.Forms Platform: {@Platform}", platform);
+			Debug("Got Platform: {Platform}", platform.ID);
 		}
 		catch (Exception e)
 		{
@@ -48,7 +48,7 @@ internal static class Program
 					UIThreadCheckMode = UIThreadCheckMode.Error,
 					BadgeLabel        = "RayTracer [Badge]"
 			};
-			Debug("Created application object: {@Application}", application);
+			Debug("Created application object: {Application}", application);
 		}
 		catch (Exception e)
 		{
@@ -85,7 +85,7 @@ internal static class Program
 		{
 			Debug("Creating new MainForm");
 			mainForm = new MainForm();
-			Debug("Created new MainForm: {@MainForm}", mainForm);
+			Debug("Created new MainForm: {MainForm}", mainForm);
 		}
 		catch (Exception e)
 		{
