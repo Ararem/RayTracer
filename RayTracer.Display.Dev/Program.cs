@@ -8,6 +8,8 @@ using static Serilog.Log;
 using Application = Eto.Forms.Application;
 using Log = Serilog.Log;
 using Logger = RayTracer.Core.Logger;
+using Thread = System.Threading.Thread;
+using static RayTracer.Display.Dev.Program.ExitCode;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 namespace RayTracer.Display.Dev;
@@ -15,8 +17,12 @@ namespace RayTracer.Display.Dev;
 /// <summary>Bootstrap class that contains the <c>Main()</c> function that inits everything else.</summary>
 internal static class Program
 {
+
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
-	private static int Main(string[] args)
+	private static int Main(string[] args) => (int)MainInternal(args);
+
+	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
+	private static ExitCode MainInternal(string[] args)
 	{
 		//Console and init
 		Console.ForegroundColor = ConsoleColor.Blue;
@@ -33,6 +39,7 @@ internal static class Program
 		}
 		catch (Exception e)
 		{
+			#warning ASDASDASDASDASD
 			Fatal(e, "Could not ");
 		}
 
@@ -46,7 +53,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise Eto.Forms platform");
-			return -1;
+			return InitializationFailure;
 		}
 
 		Application application;
@@ -65,7 +72,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise Eto.Forms application");
-			return -1;
+			return InitializationFailure;
 		}
 
 		try
@@ -78,7 +85,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Failed to set up unhandled exception handler");
-			return -1;
+			return InitializationFailure;
 		}
 
 		try
@@ -102,7 +109,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise MainForm");
-			return -1;
+			return InitializationFailure;
 		}
 
 		try
@@ -114,7 +121,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Failed to initialize task watcher");
-			return -1;
+			return InitializationFailure;
 		}
 
 		try
@@ -122,12 +129,12 @@ internal static class Program
 			Information("Running App");
 			application.Run(mainForm);
 			Information("App ran to completion");
-			return 0;
+			return GracefulExit;
 		}
 		catch (Exception e)
 		{
 			Fatal(e, "App threw exception");
-			return -1;
+			return AppFailure;
 		}
 		finally
 		{
@@ -165,5 +172,23 @@ internal static class Program
 	private static void EtoUnhandledException(object? sender, Eto.UnhandledExceptionEventArgs e)
 	{
 		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
+	}
+
+	public enum ExitCode
+	{
+		/// <summary>
+		/// The exit was purposeful (e.g. the user clicked the quit button), and not due to exceptional circumstances
+		/// </summary>
+		GracefulExit = 0,
+		/// <inheritdoc cref="GracefulExit"/>
+		None = GracefulExit,
+		/// <summary>
+		/// The app failed during the initialization stage
+		/// </summary>
+		InitializationFailure,
+		/// <summary>
+		/// App failed while running
+		/// </summary>
+		AppFailure
 	}
 }

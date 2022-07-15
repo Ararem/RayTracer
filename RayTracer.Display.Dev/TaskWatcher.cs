@@ -76,9 +76,7 @@ public static class TaskWatcher
 		{
 			Log.Fatal(e, "Caught fatal exception when processing watched tasks");
 			Log.Fatal("Program terminating");
-			if (Application.Instance.QuitIsSupported)
-				Application.Instance.Quit();
-			else Environment.Exit(-1);
+			Environment.Exit(-1);
 		}
 	}
 }

@@ -19,20 +19,21 @@
 		<DocumentationFile>bin\Release\net6.0\RayTracer.Core.xml</DocumentationFile>
 		<NoWarn>1701;1702;CS8765</NoWarn>
 		<DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+		<DebugType>full</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0"/>
-		<PackageReference Include="Serilog" Version="2.10.0"/>
-		<PackageReference Include="Serilog.Enrichers.Dynamic" Version="1.0.9"/>
-		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0"/>
-		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
-		<PackageReference Include="SharpNoise" Version="0.12.1.1"/>
-		<PackageReference Include="SixLabors.ImageSharp" Version="1.0.4"/>
+		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+		<PackageReference Include="Serilog" Version="2.10.0" />
+		<PackageReference Include="Serilog.Enrichers.Dynamic" Version="1.0.9" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+		<PackageReference Include="SharpNoise" Version="0.12.1.1" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="../LibArarem/LibArarem.Core/LibArarem.Core.csproj"/>
+		<ProjectReference Include="../LibArarem/LibArarem.Core/LibArarem.Core.csproj" />
 	</ItemGroup>
 
 </Project>

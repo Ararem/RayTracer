@@ -13,24 +13,29 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+	  <DebugType>full</DebugType>
+	  <DocumentationFile>bin\Gtk\Debug\net6.0\RayTracer.Display.Dev.xml</DocumentationFile>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<None Remove="Appearance\icon.png"/>
-		<EmbeddedResource Include="Appearance\icon.png"/>
-		<None Remove="Appearance\icon.ico"/>
-		<EmbeddedResource Include="Appearance\icon.ico"/>
+		<None Remove="Appearance\icon.png" />
+		<EmbeddedResource Include="Appearance\icon.png" />
+		<None Remove="Appearance\icon.ico" />
+		<EmbeddedResource Include="Appearance\icon.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj"/>
-		<ProjectReference Include="..\RayTracer.Impl\RayTracer.Impl.csproj"/>
+		<ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
+		<ProjectReference Include="..\RayTracer.Impl\RayTracer.Impl.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Aardvark.OpenImageDenoise" Version="0.3.0"/>
-		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.2"/>
-		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9"/>
-		<PackageReference Include="Serilog" Version="2.10.0"/>
-		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1"/>
+		<PackageReference Include="Aardvark.OpenImageDenoise" Version="0.3.0" />
+		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.2" />
+		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9" />
+		<PackageReference Include="Serilog" Version="2.10.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
 		<PackageReference Include="NetFabric.Hyperlinq.Analyzer" Version="2.0.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -38,27 +43,27 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="oidn-natives\lib\libOpenImageDenoise.so"/>
+		<None Remove="oidn-natives\lib\libOpenImageDenoise.so" />
 		<Content Include="oidn-natives\lib\libOpenImageDenoise.so">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-		<None Remove="oidn-natives\lib\libOpenImageDenoise.so.1"/>
+		<None Remove="oidn-natives\lib\libOpenImageDenoise.so.1" />
 		<Content Include="oidn-natives\lib\libOpenImageDenoise.so.1">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-		<None Remove="oidn-natives\lib\libOpenImageDenoise.so.1.4.3"/>
+		<None Remove="oidn-natives\lib\libOpenImageDenoise.so.1.4.3" />
 		<Content Include="oidn-natives\lib\libOpenImageDenoise.so.1.4.3">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-		<None Remove="oidn-natives\lib\libtbb.so"/>
+		<None Remove="oidn-natives\lib\libtbb.so" />
 		<Content Include="oidn-natives\lib\libtbb.so">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-		<None Remove="oidn-natives\lib\libtbb.so.12"/>
+		<None Remove="oidn-natives\lib\libtbb.so.12" />
 		<Content Include="oidn-natives\lib\libtbb.so.12">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-		<None Remove="oidn-natives\lib\libtbb.so.12.5"/>
+		<None Remove="oidn-natives\lib\libtbb.so.12.5" />
 		<Content Include="oidn-natives\lib\libtbb.so.12.5">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
