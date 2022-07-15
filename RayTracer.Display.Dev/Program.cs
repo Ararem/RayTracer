@@ -4,6 +4,7 @@ using GLib;
 using RayTracer.Display.Dev.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.ExceptionServices;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
 using Log = Serilog.Log;
@@ -35,12 +36,33 @@ internal static class Program
 
 		try
 		{
-			AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+			Debug("Setting up AppDomain exception catchers");
+			AppDomain.CurrentDomain.UnhandledException   += CurrentDomainOnUnhandledException;
+			/*
+			 * First-chance exceptions are often fine, since they'll be caught most of the time,
+			 * but sometimes async exceptions can get hidden and suppressed, despite being uncaught AND are missed by AppDomain.UnhandledException
+			 * So log them just in case, but they're unimportant hence the verbose
+			 */
+			void FirstChanceException(object? sender, FirstChanceExceptionEventArgs eventArgs)
+			{
+				Verbose(eventArgs.Exception, "First-chance exception from {Sender}:", sender);
+			}
+			AppDomain.CurrentDomain.FirstChanceException += FirstChanceException;
+			Debug("Set up AppDomain exception catchers");
 		}
 		catch (Exception e)
 		{
-			#warning ASDASDASDASDASD
-			Fatal(e, "Could not ");
+			Fatal(e, "Could not set up app domain exception handlers");
+			return InitializationFailure;
+		}
+
+		try
+		{
+			throw new Exception();
+		}
+		catch
+		{
+
 		}
 
 		Platform platform;
@@ -77,8 +99,8 @@ internal static class Program
 
 		try
 		{
-			EventHandler<Eto.UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
 			Debug("Hooking up unhandled exception event");
+			EventHandler<Eto.UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
 			application.UnhandledException += unhandledExceptionHandler;
 			Debug("Unhandled exception event handler added: {@Handler}", unhandledExceptionHandler);
 		}

@@ -49,9 +49,8 @@ public static class TaskWatcher
 					Log.Error(task.Exception, "Caught exception in watched task {Task}", task);
 					if (exitOnError)
 					{
-						if (Application.Instance.QuitIsSupported)
-							Application.Instance.Quit();
-						else Environment.Exit(-1);
+						//Don't call App.Quit here, since it may throw
+						Environment.Exit(-1);
 					}
 				}
 				else if (!task.IsCompleted)
