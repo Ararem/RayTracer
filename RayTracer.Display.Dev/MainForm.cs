@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using static Serilog.Log;
 
 namespace RayTracer.Display.Dev;
@@ -48,11 +47,9 @@ internal sealed class MainForm : Form
 					Shortcut = Application.Instance.CommonModifier | Keys.Q,
 					ToolTip  = "Quits the application by sending the quit signal"
 			};
-			Menu.QuitItem.Command = quitAppCommand;
-			Verbose("Menu.QuitItem: {MenuItem}", Menu.QuitItem);
-			Closed += MainFormClosed;
-
-			Verbose("Quit handling added");
+			Menu.QuitItem.Command =  quitAppCommand;
+			Closed                += MainFormClosed;
+			Verbose("Set Menu.QuitItem: {MenuItem}", Menu.QuitItem);
 		}
 
 		{
@@ -65,8 +62,7 @@ internal sealed class MainForm : Form
 					ToolTip  = "Display information about the application in a popup dialog"
 			};
 			Menu.AboutItem.Command = aboutCommand;
-			Verbose("Menu.AboutItem: {MenuItem}", Menu.AboutItem);
-			Verbose("Set up about app menu");
+			Verbose("Set Menu.AboutItem: {MenuItem}", Menu.AboutItem);
 		}
 
 		{
@@ -112,7 +108,7 @@ internal sealed class MainForm : Form
 
 		//Create a way for the user to create a new render
 		{
-			Verbose("Setting up new render command");
+			Verbose("Setting up new render button");
 			MenuItem newRenderMenuItem = new ButtonMenuItem { ID = $"{Menu.ID}.NewRenderItem", Text = "New Render" };
 			Menu.Items.Add(newRenderMenuItem);
 			Command newRenderCommand = new(CreateNewRenderCommandExecuted)
@@ -121,7 +117,22 @@ internal sealed class MainForm : Form
 					MenuText = newRenderMenuItem.Text
 			};
 			newRenderMenuItem.Command = newRenderCommand;
-			Verbose("Set up create render command: {Command}", newRenderCommand);
+			Verbose("Set up create render button: {MenuItem}", newRenderMenuItem);
+		}
+
+		{
+			Verbose("Setting up close render tab command");
+			MenuItem closeTabMenuItem = new ButtonMenuItem { ID = $"{Menu.ID}.CloseTabItem", Text = "Close Tab" };
+			Menu.Items.Add(closeTabMenuItem);
+			Command closeTabCommand = new (CloseRenderTabExecuted)
+			{
+					ID       = $"{closeTabMenuItem.ID}.Command",
+					MenuText = closeTabMenuItem.Text,
+					ToolTip  = "Stops the render, and closes the tab associated with it",
+					Shortcut = Keys.Alt | Keys.A
+			};
+			closeTabMenuItem.Command = closeTabCommand;
+			Verbose("Added close tab command: {MenuItem}", closeTabMenuItem);
 		}
 
 	#endregion
@@ -139,44 +150,29 @@ internal sealed class MainForm : Form
 		Verbose("Adding new render tab with GUID {Guid}", guid);
 		TabPage newPage = new()
 		{
-				ID   = $"{tabControlContent.ID}.Pages.{guid}",
+				ID   = $"{tabControlContent.ID}.Pages.Page_{guid}",
 				Text = "New Render"
 		};
 		Verbose("TabPage: {TabPage}", newPage);
 		tabControlContent.Pages.Add(newPage);
-
-		newPage.ContextMenu = new ContextMenu
-		{
-				ID = $"{newPage.ID}.ContextMenu"
-		};
-		ButtonMenuItem closeTabMenuItem = new()
-		{
-				ID   = $"{newPage.ContextMenu.ID}.Items.CloseTab",
-				Text = "Close Tab"
-		};
-		newPage.ContextMenu.Items.Add(closeTabMenuItem);
-		closeTabMenuItem.Command = new Command((sender, args) => CloseRenderTabExecuted(sender, args, newPage))
-		{
-				ID       = $"{closeTabMenuItem.ID}.Command",
-				MenuText = closeTabMenuItem.Text,
-				ToolTip  = "Stops the render, and closes the tab associated with it",
-				Shortcut = Keys.Alt | Keys.A
-		};
-		Task.Delay(1000).ContinueWith(_ =>
-		{
-			Warning("Pre Show");
-			newPage.ContextMenu.Show(newPage);
-			Warning("Post Show");
-		});
 	}
 
 #endregion
 
 #region Callbacks
 
-	private void CloseRenderTabExecuted(object? sender, EventArgs e, TabPage page)
+	private void CloseRenderTabExecuted(object? sender, EventArgs e)
 	{
-		Error("CloseRenderTab Executed");
+		if (tabControlContent.Pages.Count == 0)
+		{
+			Verbose("No tab to close");
+			return;
+		}
+
+		TabPage page = tabControlContent.SelectedPage;
+		Verbose("Closing tab {TabPage}", page);
+		tabControlContent.Remove(page);
+		page.Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
