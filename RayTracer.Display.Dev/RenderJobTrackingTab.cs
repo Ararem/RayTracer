@@ -1,15 +1,10 @@
+using Eto.Forms;
 using RayTracer.Core;
 
 namespace RayTracer.Display.Dev;
 
-public class RenderJobTrackingTab
+public class RenderJobTrackingTab : Control
 {
-	private RenderJobTrackingTab(AsyncRenderJob renderJob)
-	{
-	}
-
-	/// <summary>Gets the render options</summary>
-	public RenderOptions RenderOptions => RenderJob.RenderOptions;
-
+	public RenderOptions RenderOptions { get; init; }
 	public AsyncRenderJob RenderJob { get; }
 }

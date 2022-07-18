@@ -155,11 +155,16 @@ internal sealed class MainForm : Form
 		};
 		Verbose("TabPage: {TabPage}", newPage);
 		tabControlContent.Pages.Add(newPage);
+
+
+		RenderJobTrackingTab tracker = new()
+		{
+				ID = $"{newPage}.RenderTracker",
+				RenderOptions = initialRenderOptions.Copy(),
+		};
+		Verbose("Render Tracker: {RenderTracker}", tracker);
+		newPage.Content = tracker;
 	}
-
-#endregion
-
-#region Callbacks
 
 	private void CloseRenderTabExecuted(object? sender, EventArgs e)
 	{
@@ -174,6 +179,11 @@ internal sealed class MainForm : Form
 		tabControlContent.Remove(page);
 		page.Dispose();
 	}
+
+
+#endregion
+
+#region Callbacks
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
@@ -192,12 +202,14 @@ internal sealed class MainForm : Form
 	/// <summary>Callback for when the [About App] command is executed</summary>
 	private void AboutAppCommandExecuted(object? o, EventArgs eventArgs)
 	{
+		Debug("Showing about dialog");
 		new AboutDialog(Assembly.GetExecutingAssembly()).ShowDialog(this);
 	}
 
 	/// <summary>Quits the app, normally because the <see cref="MainForm"/> was closed (also gets called when the quit command button is pressed)</summary>
 	private static void MainFormClosed(object? o, EventArgs eventArgs)
 	{
+		// Debug();
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
 		MethodBase thisMethod    = MethodBase.GetCurrentMethod()!;
@@ -208,7 +220,7 @@ internal sealed class MainForm : Form
 			return;
 		}
 
-		Debug("Main form closed");
+		Information("Main form closed");
 		if (Application.Instance.QuitIsSupported)
 		{
 			Verbose("Sending quit signal");

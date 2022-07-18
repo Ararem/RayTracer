@@ -6,6 +6,34 @@ namespace RayTracer.Core;
 /// <summary>Class that contains properties that are used to control how a <see cref="Scene"/> is rendered</summary>
 public sealed class RenderOptions
 {
+	/// <summary>
+	/// Default constructor with default values
+	/// </summary>
+	public RenderOptions()
+	{
+
+	}
+
+	/// <summary>
+	/// Copy constructor
+	/// </summary>
+	public RenderOptions(RenderOptions toCopy)
+	{
+		renderHeight         = toCopy.renderHeight;
+		renderWidth          = toCopy.renderWidth;
+		debugVisualisation   = toCopy.debugVisualisation;
+		kMax                 = toCopy.kMax;
+		kMin                 = toCopy.kMin;
+		lightSampleCountHint = toCopy.lightSampleCountHint;
+		maxBounceDepth       = toCopy.maxBounceDepth;
+		passes               = toCopy.passes;
+	}
+
+	/// <summary>
+	/// Copies the current instance
+	/// </summary>
+	public RenderOptions Copy() => new(this);
+
 	private readonly int                        renderHeight         = 1080;
 	private readonly int                        renderWidth          = 1920;
 	private          int                        concurrencyLevel     = Environment.ProcessorCount;
