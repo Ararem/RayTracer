@@ -5,6 +5,7 @@ using RayTracer.Display.Dev.Appearance;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
+using Figgle;
 using static Serilog.Log;
 using Application = Eto.Forms.Application;
 using Log = Serilog.Log;
@@ -31,6 +32,10 @@ internal static class Program
 		Console.WriteLine("RayTracer.Display.Dev: Starting program");
 		Console.WriteLine("RayTracer.Display.Dev: Initialising logger");
 		Logger.Init();
+		
+		//Very important, whole program crashes without this log, idk y
+		Information($"\n{FiggleFonts.Graffiti.Render("RayTracer")}");
+		
 		Information("Starting RayTracer.Display.Dev app");
 		Information("Commandline args: {Args}", args);
 
