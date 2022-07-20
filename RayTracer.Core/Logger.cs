@@ -23,10 +23,10 @@ internal static class Logger
 	{
 		#if DEBUG_LOG
 		const PerfMode perfMode = PerfMode.FullTraceSlow;
-		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodFileProp}}}:{{{CallingMethodLineColumnProp}}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
+		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}:{{{CallingMethodColumnProp},-2:n0}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
 		#else
 		const PerfMode perfMode = PerfMode.SingleFrameFast;
-		const string   template = "[{Timestamp:HH:mm:ss} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},10:'Thread #'##}} | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineColumnProp}}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
+		const string   template = "[{Timestamp:HH:mm:ss} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},10:'Thread #'##}} | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
 		#endif
 
 		Thread.CurrentThread.Name ??= "Main Thread";
