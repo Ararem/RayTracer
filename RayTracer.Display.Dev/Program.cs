@@ -1,6 +1,7 @@
 ﻿using Eto;
 using Eto.Forms;
 using RayTracer.Display.Dev.Appearance;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -73,7 +74,7 @@ internal static class Program
 		Console.Title = $"{AppTitleVersioned} [Console]";
 		Console.WriteLine($"{AppTitle}: Initialising logger");
 		#endif
-		Logger.Init();
+		Logger.Init(LogExtensions.AdjustConfig);
 
 		Information("Starting RayTracer.Display.Dev app");
 		Information("Commandline args: {Args}", args);

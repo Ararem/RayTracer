@@ -19,7 +19,7 @@ internal static class Logger
 {
 	private static readonly Process CurrentProcess = Process.GetCurrentProcess();
 
-	internal static void Init()
+	internal static void Init(Func<LoggerConfiguration, LoggerConfiguration>? adjustConfig = null)
 	{
 		#if DEBUG_LOG
 		const PerfMode perfMode = PerfMode.FullTraceSlow;
@@ -31,24 +31,27 @@ internal static class Logger
 
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
-		Log.Logger = new LoggerConfiguration()
-					.MinimumLevel.Verbose()
-					.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-					.Enrich.WithThreadId()
-					.Enrich.WithThreadName()
-					.Enrich.FromLogContext()
-					.Enrich.With<ExceptionDataEnricher>()
-					.Enrich.With<DemystifiedExceptionsEnricher>()
-					.Enrich.With<ThreadInfoEnricher>()
-					.Enrich.With<EventLevelIndentEnricher>()
-					.Enrich.With<LogEventNumberEnricher>()
-					.Enrich.With(new CallerContextEnricher(perfMode))
-					.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
-					.Destructure.With<DelegateDestructurer>()
-					.Destructure.With<IncludePublicFieldsDestructurer>()
-					.Destructure.AsScalar<Vector3>()
-					.Destructure.AsScalar<Vector2>()
-					.CreateLogger();
+		LoggerConfiguration config = new LoggerConfiguration()
+									.MinimumLevel.Verbose()
+									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
+									.Enrich.WithThreadId()
+									.Enrich.WithThreadName()
+									.Enrich.FromLogContext()
+									.Enrich.With<ExceptionDataEnricher>()
+									.Enrich.With<DemystifiedExceptionsEnricher>()
+									.Enrich.With<ThreadInfoEnricher>()
+									.Enrich.With<EventLevelIndentEnricher>()
+									.Enrich.With<LogEventNumberEnricher>()
+									.Enrich.With(new CallerContextEnricher(perfMode))
+									.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
+									.Destructure.With<DelegateDestructurer>()
+									.Destructure.With<IncludePublicFieldsDestructurer>()
+									.Destructure.AsScalar<Vector3>()
+									.Destructure.AsScalar<Vector2>();
+
+		config = adjustConfig?.Invoke(config) ?? config; //If no config func is provided, `Invoke(...)` isn't called and it returns null, which is handled by the `?? config`
+
+		Log.Logger = config.CreateLogger();
 
 
 		#if DEBUG

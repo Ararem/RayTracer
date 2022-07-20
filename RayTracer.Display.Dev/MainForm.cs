@@ -1,7 +1,6 @@
 using Eto.Drawing;
 using Eto.Forms;
-using RayTracer.Core;
-using RayTracer.Impl;
+using JetBrains.Annotations;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -32,21 +31,21 @@ internal sealed class MainForm : Form
 
 					//Same for the application items - on linux this is under the "File" section
 					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } }
-					ID = $"{ID}.Menu"
+					ID = $"{ID}/Menu"
 			};
 			Verbose("Created MenuBar: {MenuBar}", Menu);
 		}
 
 		{
 			Verbose("Setting up quit handling");
-			Menu.QuitItem = new ButtonMenuItem { ID = $"{Menu.ID}.QuitItem", Text = "Quit App" };
-			Command quitAppCommand = new(QuitAppCommandExecuted)
+			Menu.QuitItem = new ButtonMenuItem
 			{
-					MenuText = Menu.QuitItem.Text,
-					ID       = $"{Menu.QuitItem.ID}.Command",
+					ID       = $"{Menu.ID}/QuitItem",
+					Text     = "&Quit App",
 					Shortcut = Application.Instance.CommonModifier | Keys.Q,
-					ToolTip  = "Quits the application by sending the quit signal"
+					ToolTip  = "Quits the application"
 			};
+			Command quitAppCommand = new(QuitAppCommandExecuted) { ID = $"{Menu.QuitItem.ID}.Command" };
 			Menu.QuitItem.Command =  quitAppCommand;
 			Closed                += MainFormClosed;
 			Verbose("Set Menu.QuitItem: {MenuItem}", Menu.QuitItem);
@@ -54,12 +53,16 @@ internal sealed class MainForm : Form
 
 		{
 			Verbose("Setting up about app menu");
-			Menu.AboutItem = new ButtonMenuItem { ID = $"{Menu.ID}.AboutItem", Text = "About App" };
+			Menu.AboutItem = new ButtonMenuItem
+			{
+					ID      = $"{Menu.ID}/AboutItem",
+					Text    = "About App",
+					ToolTip = "Display information about the application in a popup dialog",
+					Shortcut = Keys.Alt | Keys.Slash //TODO: Shift doesn't work?
+			};
 			Command aboutCommand = new(AboutAppCommandExecuted)
 			{
-					MenuText = Menu.AboutItem.Text,
 					ID       = $"{Menu.AboutItem.ID}.Command",
-					ToolTip  = "Display information about the application in a popup dialog"
 			};
 			Menu.AboutItem.Command = aboutCommand;
 			Verbose("Set Menu.AboutItem: {MenuItem}", Menu.AboutItem);
@@ -70,7 +73,7 @@ internal sealed class MainForm : Form
 			const string iconPath = "RayTracer.Display.Dev.Appearance.icon.png";
 			Verbose("Icon path is {IconPath}", iconPath);
 			Icon    = Icon.FromResource(iconPath);
-			Icon.ID = $"{ID}.Icon";
+			Icon.ID = $"{ID}/Icon";
 			Verbose("Set icon: {Icon}", Icon);
 		}
 
@@ -96,41 +99,37 @@ internal sealed class MainForm : Form
 
 		Content = tabControlContent = new TabControl
 		{
-				ID = "[TabControl] MainForm.Content",
-				Pages =
-				{
-						new TabPage("Page 1 Content") { Text = "Page 1" },
-						new TabPage("Page 2 Content") { Text = "Page 2" },
-						new TabPage("Page 3 Content") { Text = "Page 3" },
-						new TabPage("Page 4 Content") { Text = "Page 4" }
-				}
+				ID = "[TabControl] MainForm/Content"
 		};
 
-		//Create a way for the user to create a new render
+		//Create a way for the user to create a new render tab
 		{
-			Verbose("Setting up new render button");
-			MenuItem newRenderMenuItem = new ButtonMenuItem { ID = $"{Menu.ID}.NewRenderItem", Text = "New Render" };
-			Menu.Items.Add(newRenderMenuItem);
-			Command newRenderCommand = new(CreateNewRenderCommandExecuted)
+			Verbose("Setting up new tab button");
+			MenuItem newTabMenuItem = new ButtonMenuItem
 			{
-					ID       = $"{newRenderMenuItem.ID}.Command",
-					MenuText = newRenderMenuItem.Text
+					ID = $"{Menu.ID}/NewTabItem",
+					Text = "New Tab",
+					Shortcut = Application.Instance.CommonModifier | Keys.N,
+					ToolTip = "Creates a new render tab"
 			};
-			newRenderMenuItem.Command = newRenderCommand;
-			Verbose("Set up create render button: {MenuItem}", newRenderMenuItem);
+			Menu.Items.Add(newTabMenuItem);
+			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
+			newTabMenuItem.Command = newTabCommand;
+			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
+			newTabCommand.Execute();
 		}
 
 		{
 			Verbose("Setting up close render tab command");
-			MenuItem closeTabMenuItem = new ButtonMenuItem { ID = $"{Menu.ID}.CloseTabItem", Text = "Close Tab" };
-			Menu.Items.Add(closeTabMenuItem);
-			Command closeTabCommand = new (CloseRenderTabExecuted)
+			MenuItem closeTabMenuItem = new ButtonMenuItem
 			{
-					ID       = $"{closeTabMenuItem.ID}.Command",
-					MenuText = closeTabMenuItem.Text,
-					ToolTip  = "Stops the render, and closes the tab associated with it",
-					Shortcut = Keys.Alt | Keys.A
+					ID = $"{Menu.ID}/CloseTabItem",
+					Text = "Close Tab",
+					ToolTip = "Closes the currently selected tab and stops the render associated with it (if possible)",
+					Shortcut = Application.Instance.CommonModifier | Keys.W
 			};
+			Menu.Items.Add(closeTabMenuItem);
+			Command closeTabCommand = new(CloseRenderTabExecuted) { ID = $"{closeTabMenuItem.ID}.Command" };
 			closeTabMenuItem.Command = closeTabCommand;
 			Verbose("Added close tab command: {MenuItem}", closeTabMenuItem);
 		}
@@ -138,36 +137,29 @@ internal sealed class MainForm : Form
 	#endregion
 	}
 
-#region Tab management
+#region Callbacks
 
-	/// <summary>Adds a new render tab, with the specified initial value for the render options</summary>
-	/// <param name="initialRenderOptions">Initial value for the render options</param>
-	/// <param name="availableScenes">Array containing all the available scenes that can be selected</param>
-	/// <param name="initialSceneIndex">Index of the scene that should be selected initially. Defaults to 0</param>
-	private void AddNewRenderTab(RenderOptions initialRenderOptions, Scene[] availableScenes, int initialSceneIndex = 0)
+	private void AddNewRenderTab()
 	{
 		Guid guid = Guid.NewGuid();
 		Verbose("Adding new render tab with GUID {Guid}", guid);
 		TabPage newPage = new()
 		{
-				ID   = $"{tabControlContent.ID}.Pages.Page_{guid}",
+				ID   = $"{tabControlContent.ID}.Pages/Page_{guid}",
 				Text = "New Render"
 		};
-		Verbose("TabPage: {TabPage}", newPage);
+		Verbose("New TabPage: {TabPage}", newPage);
 		tabControlContent.Pages.Add(newPage);
 
-
-		RenderJobTrackingTab tracker = new()
-		{
-				ID = $"{newPage}.RenderTracker",
-				RenderOptions = initialRenderOptions.Copy(),
-		};
+		RenderJobTrackingTab tracker = new($"{newPage.ID}/{nameof(RenderJobTrackingTab)}");
 		Verbose("Render Tracker: {RenderTracker}", tracker);
 		newPage.Content = tracker;
 	}
 
-	private void CloseRenderTabExecuted(object? sender, EventArgs e)
+	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
+		Debug("{CallbackName}() from {@Sender}: {@EventArgs}", nameof(CloseRenderTabExecuted), sender, eventArgs);
+
 		if (tabControlContent.Pages.Count == 0)
 		{
 			Verbose("No tab to close");
@@ -175,41 +167,40 @@ internal sealed class MainForm : Form
 		}
 
 		TabPage page = tabControlContent.SelectedPage;
-		Verbose("Closing tab {TabPage}", page);
+		Verbose("Closing and disposing tab {TabPage}", page);
 		tabControlContent.Remove(page);
 		page.Dispose();
 	}
 
-
-#endregion
-
-#region Callbacks
-
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
-	private void CreateNewRenderCommandExecuted(object? sender, EventArgs e)
+	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		Information("Creating new render");
-		AddNewRenderTab(new RenderOptions(), BuiltinScenes.GetAll().ToArray());
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CreateNewTabCommandExecuted), sender, eventArgs);
+		Debug("Adding new render tab");
+		AddNewRenderTab();
 	}
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>
-	private void QuitAppCommandExecuted(object? sender, EventArgs e)
+	[ContractAnnotation("=> halt")]
+	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(QuitAppCommandExecuted), sender, eventArgs);
 		Debug("Closing main form");
 		Close();
 	}
 
 	/// <summary>Callback for when the [About App] command is executed</summary>
-	private void AboutAppCommandExecuted(object? o, EventArgs eventArgs)
+	private void AboutAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("Showing about dialog");
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(AboutAppCommandExecuted), sender, eventArgs);
 		new AboutDialog(Assembly.GetExecutingAssembly()).ShowDialog(this);
 	}
 
-	/// <summary>Quits the app, normally because the <see cref="MainForm"/> was closed (also gets called when the quit command button is pressed)</summary>
-	private static void MainFormClosed(object? o, EventArgs eventArgs)
+	[ContractAnnotation("=> halt")]
+	private static void MainFormClosed(object? sender, EventArgs eventArgs)
 	{
-		// Debug();
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(MainFormClosed), sender, eventArgs);
+
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
 		MethodBase thisMethod    = MethodBase.GetCurrentMethod()!;
