@@ -2,7 +2,6 @@ using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
-using RayTracer.Display.Dev.Appearance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +30,7 @@ public class RenderJobTrackingTab : Panel
 		{
 			Verbose("Creating property editors");
 			splitterContent.Panel1 = renderOptionLayout = new DynamicLayout { ID = $"{splitterContent.ID}/RenderOptions" };
-			DynamicGroup group                         = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
-			group.GroupBox.Style =
+			DynamicGroup group                          = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
 			// renderOptionLayout.BeginScrollable(border:BorderType.Line, spacing: new Size(10,10));
 
 			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
@@ -50,6 +48,9 @@ public class RenderJobTrackingTab : Panel
 			renderOptionLayout.Add(null, false, true); //Add empty row for nicer scaling
 			// renderOptionLayout.EndScrollable();
 			renderOptionLayout.EndGroup();
+			renderOptionLayout.Create();
+
+			group.GroupBox.Style     = nameof(Force_Heading);
 		}
 
 		{
@@ -77,7 +78,8 @@ public class RenderJobTrackingTab : Panel
 		{
 				ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
 				Text    = propertyName,
-				ToolTip = validRangeTooltip
+				ToolTip = validRangeTooltip,
+				Style   = nameof(Italic)
 		};
 		object? boxedPropertyValue = property.GetValue(RenderOptions);
 		int     initialValue       = boxedPropertyValue as int? ?? throw new ArgumentException($"Expected an integer but got {boxedPropertyValue}");
@@ -91,7 +93,8 @@ public class RenderJobTrackingTab : Panel
 				MaximumDecimalPlaces = 0,
 				MinValue             = min,
 				MaxValue             = max,
-				ToolTip              = validRangeTooltip
+				ToolTip              = validRangeTooltip,
+				Style                = nameof(Monospace)
 		};
 		stepper.ValueChanged += delegate
 		{
@@ -115,8 +118,9 @@ public class RenderJobTrackingTab : Panel
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 		Label label = new()
 		{
-				ID   = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text = propertyName
+				ID    = $"{renderOptionLayout.ID}/{propertyName}.Label",
+				Text  = propertyName,
+				Style = nameof(Italic)
 		};
 		object? boxedPropertyValue = property.GetValue(RenderOptions);
 		bool    initialValue       = boxedPropertyValue as bool? ?? throw new ArgumentException($"Expected a bool but got {boxedPropertyValue}");
@@ -124,7 +128,8 @@ public class RenderJobTrackingTab : Panel
 		CheckBox checkBox = new()
 		{
 				ID         = $"{renderOptionLayout.ID}/{propertyName}.CheckBox",
-				ThreeState = false
+				ThreeState = false,
+				Style      = nameof(General)
 		};
 		checkBox.CheckedChanged += delegate
 		{
@@ -151,7 +156,8 @@ public class RenderJobTrackingTab : Panel
 		{
 				ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
 				Text    = propertyName,
-				ToolTip = validRangeTooltip
+				ToolTip = validRangeTooltip,
+				Style   = nameof(Italic)
 		};
 		object? boxedPropertyValue = property.GetValue(RenderOptions);
 		float   initialValue       = boxedPropertyValue as float? ?? throw new ArgumentException($"Expected a float but got {boxedPropertyValue}");
@@ -166,7 +172,8 @@ public class RenderJobTrackingTab : Panel
 				DecimalPlaces        = 5,
 				MinValue             = min,
 				MaxValue             = max,
-				ToolTip              = validRangeTooltip
+				ToolTip              = validRangeTooltip,
+				Style                = nameof(Monospace)
 		};
 		stepper.ValueChanged += delegate
 		{
@@ -190,8 +197,9 @@ public class RenderJobTrackingTab : Panel
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 		Label label = new()
 		{
-				ID   = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text = propertyName
+				ID    = $"{renderOptionLayout.ID}/{propertyName}.Label",
+				Text  = propertyName,
+				Style = nameof(Italic)
 		};
 		object? boxedPropertyValue = property.GetValue(RenderOptions);
 		if (boxedPropertyValue is not T initialValue) throw new ArgumentException($"Expected an enum but got {boxedPropertyValue}");
@@ -200,7 +208,8 @@ public class RenderJobTrackingTab : Panel
 		{
 				//Can't assign a format string of "n0" because the comma breaks things once you get above 999 :(
 				//TODO: Make an issue on ETO for that
-				ID = $"{renderOptionLayout.ID}/{propertyName}.Dropdown"
+				ID    = $"{renderOptionLayout.ID}/{propertyName}.Dropdown",
+				Style = nameof(Monospace)
 		};
 		dropDown.SelectedValueChanged += delegate
 		{
