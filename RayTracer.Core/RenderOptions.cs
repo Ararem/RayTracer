@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using LibArarem.Core.Exceptions;
 using RayTracer.Core.Debugging;
 
@@ -45,6 +46,7 @@ public sealed class RenderOptions
 	private          int                        passes               = 100;
 
 	/// <summary>How many pixels wide the render will be</summary>
+	[ValueRange(1, int.MaxValue)]
 	public int RenderWidth
 	{
 		get => renderWidth;
@@ -56,6 +58,7 @@ public sealed class RenderOptions
 	}
 
 	/// <summary>How many pixels high the render will be</summary>
+	[ValueRange(1, int.MaxValue)]
 	public int RenderHeight
 	{
 		get => renderHeight;
@@ -72,6 +75,7 @@ public sealed class RenderOptions
 	///  consider valid. Set this to slightly above 0 to avoid self-intersecting problems, such as shadow acne. Note that this distance is distance along the
 	///  <see cref="Ray"/>, not distance from the <see cref="Camera"/>
 	/// </remarks>
+	[NonNegativeValue]
 	public float KMin
 	{
 		get => kMin;
@@ -100,39 +104,42 @@ public sealed class RenderOptions
 
 	/// <summary>Maximum number of threads that can render concurrently</summary>
 	/// <remarks>
-	///  Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>). Set this to -1 for an unlimited number of
-	///  threads, or any other positive integer to limit to that many threads (0 is invalid)
+	///  Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>).
 	/// </remarks>
+	[ValueRange(1, int.MaxValue)]
 	public int ConcurrencyLevel
 	{
 		get => concurrencyLevel;
 		set
 		{
-			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be -1 or >0).", (-1, -1), (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be >0).", (1, int.MaxValue));
 			concurrencyLevel = value;
 		}
 	}
 
 	/// <summary>Number of times the image will be rendered. These individual renders ('passes') will be combined to create the final image</summary>
-	/// <remarks>
-	///  If equal to <c>-1</c>, the renderer will render infinitely until manually stopped. No other negative values are acceptable (and neither is
-	///  zero)
-	/// </remarks>
+	[ValueRange(1, int.MaxValue)]
 	public int Passes
 	{
 		get => passes;
 		set
 		{
-			if (value is < -1 or 0) throw new ArgumentOutOfRangeException<int>(value, nameof(Passes), $"{nameof(Passes)} was negative (should be -1 or >0).", (-1, -1), (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(Passes), $"{nameof(Passes)} was negative (should be >0).", (1, int.MaxValue));
 			passes = value;
 		}
 	}
+
+	/// <summary>
+	/// Option that makes the renderer ignore <see cref="Passes"/> and instead render infinitely until manually stopped
+	/// </summary>
+	public bool InfinitePasses { get; set; } = false;
 
 	/// <summary>
 	///  Maximum number of bounces allowed before a given ray path is discarded. Essentially puts a limit on how many times a ray can bounce, to avoid
 	///  infinite bouncing
 	/// </summary>
 	/// <remarks>Must be &gt;=0</remarks>
+	[ValueRange(1, int.MaxValue)]
 	public int MaxBounceDepth
 	{
 		get => maxBounceDepth;
@@ -155,6 +162,7 @@ public sealed class RenderOptions
 	}
 
 	/// <summary>Hint to materials as to how many times they should sample each light (as opposed to 1 sample per light per intersection).</summary>
+	[ValueRange(1, int.MaxValue)]
 	public int LightSampleCountHint
 	{
 		get => lightSampleCountHint;

@@ -19,7 +19,7 @@ internal sealed class MainForm : Form
 	{
 	#region Important setup to make the app run like expected
 
-		Debug("Setting up important app functionality");
+		Debug("Setting up main form");
 		ID = "MainForm";
 		{
 			Verbose("Creating MenuBar");
@@ -99,7 +99,7 @@ internal sealed class MainForm : Form
 
 		Content = tabControlContent = new TabControl
 		{
-				ID = "[TabControl] MainForm/Content"
+				ID = "MainForm/Content"
 		};
 
 		//Create a way for the user to create a new render tab

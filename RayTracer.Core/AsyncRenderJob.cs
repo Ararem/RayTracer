@@ -85,7 +85,7 @@ public sealed class AsyncRenderJob : IDisposable
 		//Same comment from above applies, just different order
 		//Values are also compressed into a single number, then unpacked after
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
-		for (int pass = 0; (RenderOptions.Passes == -1) || (pass < RenderOptions.Passes); pass++)
+		for (int pass = 0; RenderOptions.InfinitePasses || (pass < RenderOptions.Passes); pass++)
 		{
 			try
 			{

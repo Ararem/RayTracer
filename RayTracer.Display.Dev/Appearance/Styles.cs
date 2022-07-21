@@ -1,58 +1,49 @@
+using Aardvark.Base;
 using Eto;
 using Eto.Drawing;
 using Eto.Forms;
+using System.Linq;
+using System.Reflection;
 using static Serilog.Log;
 
 namespace RayTracer.Display.Dev.Appearance;
 
 public static class Styles
 {
+	/// <summary>Standard size of the font for most styles</summary>
 	public const int GeneralFontSize = 10;
+	public const int HeadingSize = 16;
 
-	/// <summary>Style for the title of the application</summary>
-	public const string AppTitle = nameof(AppTitle);
+	public static StyleWidgetHandler<Label> AppTitle => static control =>
+	{
+		control.Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
+		control.TextColor = new Color(1f, 1f, 1f);
+	};
 
-	/// <summary>General textual control; e.g. button, label, description</summary>
-	public const string GeneralTextual = nameof(GeneralTextual);
+	public static StyleWidgetHandler<CommonControl> General => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize); };
 
-	/// <summary>General textual control, bolded; e.g. button, label, description</summary>
-	public const string GeneralTextualBold = nameof(GeneralTextualBold);
+	public static StyleWidgetHandler<CommonControl> Italic => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Italic); };
 
-	/// <summary>General textual control, italicised; e.g. button, label, description</summary>
-	public const string GeneralTextualItalic = nameof(GeneralTextualItalic);
+	public static StyleWidgetHandler<CommonControl> Bold => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Bold); };
 
-	/// <summary>General textual control, italicised; e.g. button, label, description</summary>
-	public const string GeneralTextualUnderline = nameof(GeneralTextualUnderline);
+	public static StyleWidgetHandler<CommonControl> Underline => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
 
-	/// <summary>Consistent text width - monospace font</summary>
-	public const string ConsistentTextWidth = nameof(ConsistentTextWidth);
+	public static StyleWidgetHandler<CommonControl> Monospace => static control => { control.Font = new Font(FontFamilies.Monospace, GeneralFontSize); };
+	public static Padding                           DefaultPadding => new(10, 10);
+	public static Size                              DefaultSpacing => new(10, 10);
 
 	internal static void RegisterStyles()
 	{
 		Information("Registering styles");
 
-		Verbose("Registering style {Style}", AppTitle);
-		Style.Add(
-				AppTitle, static (Label control) =>
-				{
-					control.Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
-					control.TextColor = new Color(1f, 1f, 1f);
-				}
-		);
-
-		Verbose("Registering style {Style}", GeneralTextual);
-		Style.Add(GeneralTextual, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize); });
-
-		Verbose("Registering style {Style}", GeneralTextualItalic);
-		Style.Add(GeneralTextualItalic, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Italic); });
-
-		Verbose("Registering style {Style}", GeneralTextualBold);
-		Style.Add(GeneralTextualBold, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Bold); });
-
-		Verbose("Registering style {Style}", GeneralTextualUnderline);
-		Style.Add(GeneralTextualUnderline, static (CommonControl control) => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.None, FontDecoration.Underline); });
-
-		Verbose("Registering style {Style}", ConsistentTextWidth);
-		Style.Add(ConsistentTextWidth, static (CommonControl control) => { control.Font = new Font(FontFamilies.Monospace, GeneralFontSize); });
+		MethodInfo addStyle = typeof(Style).GetMethod(nameof(Style.Add))!;
+		foreach (PropertyInfo prop in typeof(Styles).GetProperties(BindingFlags.Public | BindingFlags.Static).Where(p => p.PropertyType == typeof(StyleWidgetHandler<>)))
+		{
+			string name = prop.Name;
+			object? styleHandler = prop.GetValue(null);
+			if(styleHandler is null) Warning("Style property {Property} was null", prop);
+			Verbose("Found style {StyleName}", name);
+			addStyle.Invoke(null, new[]{name, styleHandler});
+		}
 	}
 }
