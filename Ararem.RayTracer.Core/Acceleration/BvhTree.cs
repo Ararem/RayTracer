@@ -27,7 +27,7 @@ public sealed class BvhTree
 		 * Interesting side-note, using SAH as opposed to the plain "split in the middle" approach is really effective
 		 * In the RayTracing in a Weekend Book 1 demo scene, it cuts down the render times from 2:00 hours to ~1:25, which is a really good 25% speedup
 		 */
-		this.renderStats = renderStats; //TODO: Fails if scene empty
+		this.renderStats = renderStats;
 		RootNode         = FromSegment_SAH(scene.SceneObjects, 0);
 	}
 
@@ -36,6 +36,7 @@ public sealed class BvhTree
 
 	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment, int depth)
 	{
+		if (segment.Count == 0) return new EmptyBvhNode(renderStats);
 		//Simple check if 1 element so we can assume more than 1 later on
 		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], renderStats);
 
