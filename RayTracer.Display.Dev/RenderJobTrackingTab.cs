@@ -1,4 +1,3 @@
-using Eto.Drawing;
 using Eto.Forms;
 using RayTracer.Core;
 using RayTracer.Core.Debugging;
@@ -17,6 +16,8 @@ public class RenderJobTrackingTab : Panel
 	private readonly DynamicLayout renderOptionLayout;
 	private readonly Splitter      splitterContent;
 
+	private Button toggleRenderStateButton;
+
 	public RenderJobTrackingTab(string id)
 	{
 		ID = id;
@@ -27,11 +28,12 @@ public class RenderJobTrackingTab : Panel
 			};
 		}
 
+		DynamicGroup renderOptionGroup;
 		{
-			Verbose("Creating property editors");
+			Verbose("Creating property editor panel");
 			splitterContent.Panel1 = renderOptionLayout = new DynamicLayout { ID = $"{splitterContent.ID}/RenderOptions" };
-			DynamicGroup group                          = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
-			// renderOptionLayout.BeginScrollable(border:BorderType.Line, spacing: new Size(10,10));
+			renderOptionGroup                          = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
+			renderOptionLayout.BeginScrollable();
 
 			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.RenderHeight), 1, int.MaxValue);
@@ -46,14 +48,21 @@ public class RenderJobTrackingTab : Panel
 			UpdateEditorsCanBeModified();
 
 			renderOptionLayout.Add(null, false, true); //Add empty row for nicer scaling
-			// renderOptionLayout.EndScrollable();
+			renderOptionLayout.EndScrollable();
 			renderOptionLayout.EndGroup();
-			renderOptionLayout.Create();
 
-			group.GroupBox.Style     = nameof(Force_Heading);
+			Verbose("Created property editors");
 		}
 
 		{
+			Verbose("Creating toggle render button");
+
+			Verbose("Created toggle render button");
+		}
+
+		{
+			renderOptionLayout.Create();
+			renderOptionGroup.GroupBox.Style = nameof(Force_Heading);
 		}
 	}
 

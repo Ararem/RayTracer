@@ -20,7 +20,7 @@ public static class Styles
 	/// <summary>Standard size of the font for most styles</summary>
 	public const int GeneralFontSize = 10;
 
-	public const int HeadingFontSize = 20;
+	public const int HeadingFontSize = 15;
 
 	public static StyleWidgetHandler<Label> AppTitle => static control =>
 	{
@@ -28,20 +28,20 @@ public static class Styles
 		control.TextColor = new Color(1f, 1f, 1f);
 	};
 
-	public static StyleWidgetHandler<CommonControl> General => static control => { control.Font = new Font(FontFamilies.Sans,    GeneralFontSize); };
-	public static StyleWidgetHandler<CommonControl> Heading => static control => { control.Font = new Font(FontFamilies.Sans, HeadingFontSize); };
-	public static StyleWidgetHandler<CommonControl> Italic => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Italic); };
-	public static StyleWidgetHandler<CommonControl> Bold => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Bold); };
-	public static StyleWidgetHandler<CommonControl> Underline => static control => { control.Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
-	public static StyleWidgetHandler<CommonControl> Monospace      => static control => { control.Font = new Font(FontFamilies.Monospace, GeneralFontSize); };
-	public static StyleWidgetHandler<Widget> Force_General => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,    GeneralFontSize); };
-	public static StyleWidgetHandler<Widget> Force_Heading => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans, HeadingFontSize); };
-	public static StyleWidgetHandler<Widget> Force_Italic => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Italic); };
-	public static StyleWidgetHandler<Widget> Force_Bold => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.Bold); };
-	public static StyleWidgetHandler<Widget> Force_Underline => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans, GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
-	public static StyleWidgetHandler<Widget> Force_Monospace      => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Monospace, GeneralFontSize); };
-	public static Padding                           DefaultPadding => new(10, 10);
-	public static Size                              DefaultSpacing => new(10, 10);
+	public static StyleWidgetHandler<CommonControl> General         => static control => { control.Font          = new Font(FontFamilies.Sans,      GeneralFontSize); };
+	public static StyleWidgetHandler<CommonControl> Heading         => static control => { control.Font          = new Font(FontFamilies.Sans,      HeadingFontSize, FontStyle.Bold, FontDecoration.Underline); };
+	public static StyleWidgetHandler<CommonControl> Italic          => static control => { control.Font          = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.Italic); };
+	public static StyleWidgetHandler<CommonControl> Bold            => static control => { control.Font          = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.Bold); };
+	public static StyleWidgetHandler<CommonControl> Underline       => static control => { control.Font          = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
+	public static StyleWidgetHandler<CommonControl> Monospace       => static control => { control.Font          = new Font(FontFamilies.Monospace, GeneralFontSize); };
+	public static StyleWidgetHandler<Widget>        Force_General   => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize); };
+	public static StyleWidgetHandler<Widget>        Force_Heading   => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      HeadingFontSize, FontStyle.Bold, FontDecoration.Underline); };
+	public static StyleWidgetHandler<Widget>        Force_Italic    => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.Italic); };
+	public static StyleWidgetHandler<Widget>        Force_Bold      => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.Bold); };
+	public static StyleWidgetHandler<Widget>        Force_Underline => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
+	public static StyleWidgetHandler<Widget>        Force_Monospace => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Monospace, GeneralFontSize); };
+	public static Padding                           DefaultPadding  => new(10, 10);
+	public static Size                              DefaultSpacing  => new(10, 10);
 
 	internal static void RegisterStyles()
 	{

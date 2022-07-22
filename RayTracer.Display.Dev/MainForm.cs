@@ -1,7 +1,9 @@
 using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
+using RayTracer.Core;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -30,7 +32,7 @@ internal sealed class MainForm : Form
 					// ApplicationMenu  = { Items = { new Command { ToolBarText = "AppMenu.Command.ToolbarText", MenuText = "AppMenu.Command.MenuText" } },Text = "AppMenu.Text"},
 
 					//Same for the application items - on linux this is under the "File" section
-					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } }
+					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } },
 					ID = $"{ID}/Menu"
 			};
 			Verbose("Created MenuBar: {MenuBar}", Menu);
@@ -55,14 +57,14 @@ internal sealed class MainForm : Form
 			Verbose("Setting up about app menu");
 			Menu.AboutItem = new ButtonMenuItem
 			{
-					ID      = $"{Menu.ID}/AboutItem",
-					Text    = "About App",
-					ToolTip = "Display information about the application in a popup dialog",
+					ID       = $"{Menu.ID}/AboutItem",
+					Text     = "About App",
+					ToolTip  = "Display information about the application in a popup dialog",
 					Shortcut = Keys.Alt | Keys.Slash //TODO: Shift doesn't work?
 			};
 			Command aboutCommand = new(AboutAppCommandExecuted)
 			{
-					ID       = $"{Menu.AboutItem.ID}.Command",
+					ID = $"{Menu.AboutItem.ID}.Command"
 			};
 			Menu.AboutItem.Command = aboutCommand;
 			Verbose("Set Menu.AboutItem: {MenuItem}", Menu.AboutItem);
@@ -102,33 +104,32 @@ internal sealed class MainForm : Form
 				ID = "MainForm/Content"
 		};
 
-		//Create a way for the user to create a new render tab
+		//Tab management
 		{
 			Verbose("Setting up new tab button");
 			MenuItem newTabMenuItem = new ButtonMenuItem
 			{
-					ID = $"{Menu.ID}/NewTabItem",
-					Text = "New Tab",
+					ID       = $"{Menu.ID}/NewTabItem",
+					Text     = "New Tab",
 					Shortcut = Application.Instance.CommonModifier | Keys.N,
-					ToolTip = "Creates a new render tab"
+					ToolTip  = "Creates a new render tab"
 			};
-			Menu.Items.Add(newTabMenuItem);
+			Menu.ApplicationItems.Add(newTabMenuItem);
 			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
 			newTabMenuItem.Command = newTabCommand;
 			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
 			newTabCommand.Execute();
-		}
 
-		{
+
 			Verbose("Setting up close render tab command");
 			MenuItem closeTabMenuItem = new ButtonMenuItem
 			{
-					ID = $"{Menu.ID}/CloseTabItem",
-					Text = "Close Tab",
-					ToolTip = "Closes the currently selected tab and stops the render associated with it (if possible)",
+					ID       = $"{Menu.ID}/CloseTabItem",
+					Text     = "Close Tab",
+					ToolTip  = "Closes the currently selected tab and stops the render associated with it (if possible)",
 					Shortcut = Application.Instance.CommonModifier | Keys.W
 			};
-			Menu.Items.Add(closeTabMenuItem);
+			Menu.ApplicationItems.Add(closeTabMenuItem);
 			Command closeTabCommand = new(CloseRenderTabExecuted) { ID = $"{closeTabMenuItem.ID}.Command" };
 			closeTabMenuItem.Command = closeTabCommand;
 			Verbose("Added close tab command: {MenuItem}", closeTabMenuItem);
@@ -146,8 +147,9 @@ internal sealed class MainForm : Form
 		TabPage newPage = new()
 		{
 				ID   = $"{tabControlContent.ID}.Pages/Page_{guid}",
-				Text = "New Render"
+				Text = $"Render {guid}"
 		};
+		//TODO: Tab selection thingy text styles
 		Verbose("New TabPage: {TabPage}", newPage);
 		tabControlContent.Pages.Add(newPage);
 
@@ -193,7 +195,15 @@ internal sealed class MainForm : Form
 	private void AboutAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(AboutAppCommandExecuted), sender, eventArgs);
-		new AboutDialog(Assembly.GetExecutingAssembly()).ShowDialog(this);
+		new AboutDialog(typeof(MainForm).Assembly)
+		{
+
+		}.ShowDialog(this);
+		//
+		// new AboutDialog(typeof(AsyncRenderJob).Assembly)
+		// {
+		//
+		// }.ShowDialog(this);
 	}
 
 	[ContractAnnotation("=> halt")]

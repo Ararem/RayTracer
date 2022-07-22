@@ -11,16 +11,26 @@
 		<ApplicationIcon>Appearance/icon.ico</ApplicationIcon>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<PackageId>Ararem.RayTracer.Display.Dev</PackageId>
+		<Authors>Ararem</Authors>
+		<PackageProjectUrl>https://www.github.com/Ararem/RayTracer</PackageProjectUrl>
+		<PackageIcon>Appearance\icon.png</PackageIcon>
+		<RepositoryUrl>https://www.github.com/Ararem/RayTracer</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-	  <DebugType>full</DebugType>
-	  <DocumentationFile>bin\Gtk\Debug\net6.0\RayTracer.Display.Dev.xml</DocumentationFile>
+		<DebugType>full</DebugType>
+		<DocumentationFile>bin\Gtk\Debug\net6.0\RayTracer.Display.Dev.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Remove="Appearance\icon.png" />
-		<EmbeddedResource Include="Appearance\icon.png" />
+		<EmbeddedResource Include="Appearance\icon.png">
+		  <Pack>True</Pack>
+		  <PackagePath></PackagePath>
+		</EmbeddedResource>
 		<None Remove="Appearance\icon.ico" />
 		<EmbeddedResource Include="Appearance\icon.ico" />
 	</ItemGroup>
