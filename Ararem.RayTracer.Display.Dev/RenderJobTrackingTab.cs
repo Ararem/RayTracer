@@ -20,7 +20,8 @@ public class RenderJobTrackingTab : Panel
 
 	public RenderJobTrackingTab(string id)
 	{
-		ID = id;
+		ID      = id;
+		Padding = DefaultPadding;
 		{
 			Content = splitterContent = new Splitter
 			{
@@ -33,31 +34,41 @@ public class RenderJobTrackingTab : Panel
 			Verbose("Creating property editor panel");
 			splitterContent.Panel1 = renderOptionLayout = new DynamicLayout { ID = $"{splitterContent.ID}/RenderOptions" };
 			renderOptionGroup                          = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
-			renderOptionLayout.BeginScrollable();
+			renderOptionLayout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
 			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.RenderHeight), 1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.Passes),       1, int.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
 			HandleIntProperty(nameof(RenderOptions.ConcurrencyLevel),     1, Environment.ProcessorCount);
-			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       0, int.MaxValue);
-			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 0, int.MaxValue);
+			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),        0, int.MaxValue);
+			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 1, int.MaxValue);
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
 			HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
 			UpdateEditorsCanBeModified();
 
-			renderOptionLayout.Add(null, false, true); //Add empty row for nicer scaling
+			renderOptionLayout.Add(null, yscale: true);
 			renderOptionLayout.EndScrollable();
-			renderOptionLayout.EndGroup();
-
 			Verbose("Created property editors");
-		}
 
-		{
+
 			Verbose("Creating toggle render button");
+			toggleRenderStateButton = new Button
+			{
+ID = $"{renderOptionLayout.ID}/ToggleRenderButton",
+Style = nameof(General),
+Text = "[Toggle Render]"
+			};
+			renderOptionLayout.AddCentered(toggleRenderStateButton);
+			Command toggleRenderStateCommand = new(ToggleRenderButtonClicked)
+			{
+					ID = $"{toggleRenderStateButton.ID}.Command"
+			};
+			toggleRenderStateButton.Command = toggleRenderStateCommand;
+			Verbose("Created toggle render button: {Control}", toggleRenderStateButton);
 
-			Verbose("Created toggle render button");
+			renderOptionLayout.EndGroup();
 		}
 
 		{
@@ -76,34 +87,35 @@ public class RenderJobTrackingTab : Panel
 
 #region RenderOption property editing
 
+	private Label GetNameLabel(string propertyName, (object min, object max)? maybeRange = null) =>
+			new()
+			{
+					ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
+					Text    = propertyName,
+					ToolTip = maybeRange is {} range ? $"Valid range is [{range.min}..{range.max}]" : null,
+					Style   = nameof(Italic),
+					TextAlignment = TextAlignment.Center
+			};
+
 	private void HandleIntProperty(string propertyName, int min, int max)
 	{
 		Verbose("Trying to add integer property editor for {Property}", propertyName);
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
-		string       validRangeTooltip     = $"Valid range is [{min}...{max}]";
-		Label label = new()
-		{
-				ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text    = propertyName,
-				ToolTip = validRangeTooltip,
-				Style   = nameof(Italic)
-		};
-		object? boxedPropertyValue = property.GetValue(RenderOptions);
-		int     initialValue       = boxedPropertyValue as int? ?? throw new ArgumentException($"Expected an integer but got {boxedPropertyValue}");
-
+		object?      boxedPropertyValue    = property.GetValue(RenderOptions);
+		int          initialValue          = boxedPropertyValue as int? ?? throw new ArgumentException($"Expected an integer but got {boxedPropertyValue}");
+		Label        label                 = GetNameLabel(propertyName, (min, max));
 		NumericStepper stepper = new()
 		{
 				//Can't assign a format string of "n0" because the comma breaks things once you get above 999 :(
-				//TODO: Make an issue on ETO for that
 				ID                   = $"{renderOptionLayout.ID}/{propertyName}.Stepper",
 				Increment            = 1.0,
 				MaximumDecimalPlaces = 0,
 				MinValue             = min,
 				MaxValue             = max,
-				ToolTip              = validRangeTooltip,
-				Style                = nameof(Monospace)
+				Style                = nameof(Monospace),
+				ToolTip = label.ToolTip
 		};
 		stepper.ValueChanged += delegate
 		{
@@ -124,16 +136,11 @@ public class RenderJobTrackingTab : Panel
 		Verbose("Trying to add boolean property editor for {Property}", propertyName);
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
-		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
-		Label label = new()
-		{
-				ID    = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text  = propertyName,
-				Style = nameof(Italic)
-		};
-		object? boxedPropertyValue = property.GetValue(RenderOptions);
-		bool    initialValue       = boxedPropertyValue as bool? ?? throw new ArgumentException($"Expected a bool but got {boxedPropertyValue}");
+		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit)); ;
+		object?      boxedPropertyValue    = property.GetValue(RenderOptions);
+		bool         initialValue          = boxedPropertyValue as bool? ?? throw new ArgumentException($"Expected a bool but got {boxedPropertyValue}");
 
+		Label label = GetNameLabel(propertyName);
 		CheckBox checkBox = new()
 		{
 				ID         = $"{renderOptionLayout.ID}/{propertyName}.CheckBox",
@@ -160,28 +167,19 @@ public class RenderJobTrackingTab : Panel
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
-		string       validRangeTooltip     = $"Valid range is [{min}...{max}]";
-		Label label = new()
-		{
-				ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text    = propertyName,
-				ToolTip = validRangeTooltip,
-				Style   = nameof(Italic)
-		};
 		object? boxedPropertyValue = property.GetValue(RenderOptions);
 		float   initialValue       = boxedPropertyValue as float? ?? throw new ArgumentException($"Expected a float but got {boxedPropertyValue}");
 
+		Label label = GetNameLabel(propertyName, (min, max));
 		NumericStepper stepper = new()
 		{
-				//Can't assign a format string of "n0" because the comma breaks things once you get above 999 :(
-				//TODO: Make an issue on ETO for that
 				ID                   = $"{renderOptionLayout.ID}/{propertyName}.Stepper",
 				Increment            = 1.0,
 				MaximumDecimalPlaces = 5,
 				DecimalPlaces        = 5,
 				MinValue             = min,
 				MaxValue             = max,
-				ToolTip              = validRangeTooltip,
+				ToolTip              = label.ToolTip,
 				Style                = nameof(Monospace)
 		};
 		stepper.ValueChanged += delegate
@@ -204,19 +202,12 @@ public class RenderJobTrackingTab : Panel
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
-		Label label = new()
-		{
-				ID    = $"{renderOptionLayout.ID}/{propertyName}.Label",
-				Text  = propertyName,
-				Style = nameof(Italic)
-		};
-		object? boxedPropertyValue = property.GetValue(RenderOptions);
+		Label        label                 = GetNameLabel(propertyName);
+		object?      boxedPropertyValue    = property.GetValue(RenderOptions);
 		if (boxedPropertyValue is not T initialValue) throw new ArgumentException($"Expected an enum but got {boxedPropertyValue}");
 
 		EnumDropDown<T> dropDown = new()
 		{
-				//Can't assign a format string of "n0" because the comma breaks things once you get above 999 :(
-				//TODO: Make an issue on ETO for that
 				ID    = $"{renderOptionLayout.ID}/{propertyName}.Dropdown",
 				Style = nameof(Monospace)
 		};
@@ -258,4 +249,10 @@ public class RenderJobTrackingTab : Panel
 	}
 
 #endregion
+
+	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
+	{
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(ToggleRenderButtonClicked), sender, eventArgs);
+
+	}
 }

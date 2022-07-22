@@ -1,4 +1,5 @@
-﻿using Ararem.RayTracer.Display.Dev.Appearance;
+﻿using Ararem.RayTracer.Core;
+using Ararem.RayTracer.Display.Dev.Appearance;
 using Eto;
 using Eto.Forms;
 using System;
@@ -35,9 +36,8 @@ internal static class Program
 		AppFailure
 	}
 
-	public static string AppTitle          => "Ararem.RayTracer";
-	public static string AppVersion        => $"v {typeof(Program).Assembly.GetName().Version?.ToString() ?? "?.?.?.?"}";
-	public static string AppTitleVersioned => $"{AppTitle} - {AppVersion}";
+	public static string Title          => AssemblyInfo.ProductName;
+	public static string AppTitleVersioned => $"{Title} - {AssemblyInfo.Version}";
 
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
 	private static int Main(string[] args) => (int)MainInternal(args);
@@ -69,13 +69,13 @@ internal static class Program
 
 		//Console and init
 		#if DEBUG
-		Console.WriteLine($"{AppTitle}: Starting program");
+		Console.WriteLine($"{Title}: Starting program");
 		Console.Title = $"{AppTitleVersioned} [Console]";
-		Console.WriteLine($"{AppTitle}: Initialising logger");
+		Console.WriteLine($"{Title}: Initialising logger");
 		#endif
 		Logger.Init(LogExtensions.AdjustConfig);
 
-		Information("Starting RayTracer.Display.Dev app");
+		Information("Starting {AppTitle} app", AssemblyInfo.ProductName);
 		Information("Commandline args: {Args}", args);
 
 		try

@@ -18,14 +18,19 @@ namespace Ararem.RayTracer.Display.Dev.Appearance;
 public static class Styles
 {
 	/// <summary>Standard size of the font for most styles</summary>
-	public const int GeneralFontSize = 10;
+	public const int GeneralFontSize = 11;
 
-	public const int HeadingFontSize = 15;
+	public const int HeadingFontSize = 20;
 
 	public static StyleWidgetHandler<Label> AppTitle => static control =>
 	{
 		control.Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
 		control.TextColor = new Color(1f, 1f, 1f);
+	};
+	public static StyleWidgetHandler<Widget> Force_AppTitle => static control =>
+	{
+		((dynamic)control).Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
+		((dynamic)control).TextColor = new Color(1f, 1f, 1f);
 	};
 
 	public static StyleWidgetHandler<CommonControl> General         => static control => { control.Font          = new Font(FontFamilies.Sans,      GeneralFontSize); };

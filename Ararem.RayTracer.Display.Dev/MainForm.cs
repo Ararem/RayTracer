@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
+using static Ararem.RayTracer.Display.Dev.Appearance.Styles;
 
 namespace Ararem.RayTracer.Display.Dev;
 
@@ -57,7 +58,7 @@ internal sealed class MainForm : Form
 			Menu.AboutItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/AboutItem",
-					Text     = "About App",
+					Text     = "&About App",
 					ToolTip  = "Display information about the application in a popup dialog",
 					Shortcut = Keys.Alt | Keys.Slash //TODO: Shift doesn't work?
 			};
@@ -98,10 +99,26 @@ internal sealed class MainForm : Form
 
 	#region Init everything else in the UI
 
-		Content = tabControlContent = new TabControl
 		{
-				ID = "MainForm/Content"
-		};
+			//TODO: Make this centre aligned rather than on the side as it is now
+			//Table?
+			GroupBox titleLabelSplitter = new()
+			{
+					ID            = $"{ID}/TitleLabelSplitter",
+					Padding       = DefaultPadding,
+					Text          = AssemblyInfo.ProductName,
+					Style         = nameof(Force_AppTitle),
+					 // = TextAlignment.Center
+			};
+			Content = titleLabelSplitter;
+			titleLabelSplitter.Content = (
+					tabControlContent = new TabControl
+					{
+							ID = "MainForm/Content/TabControl"
+					}
+			);
+		}
+
 
 		//Tab management
 		{
@@ -109,7 +126,7 @@ internal sealed class MainForm : Form
 			MenuItem newTabMenuItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/NewTabItem",
-					Text     = "New Tab",
+					Text     = "&New Tab",
 					Shortcut = Application.Instance.CommonModifier | Keys.N,
 					ToolTip  = "Creates a new render tab"
 			};
@@ -124,7 +141,7 @@ internal sealed class MainForm : Form
 			MenuItem closeTabMenuItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/CloseTabItem",
-					Text     = "Close Tab",
+					Text     = "&Close Tab",
 					ToolTip  = "Closes the currently selected tab and stops the render associated with it (if possible)",
 					Shortcut = Application.Instance.CommonModifier | Keys.W
 			};
@@ -177,7 +194,7 @@ internal sealed class MainForm : Form
 	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CreateNewTabCommandExecuted), sender, eventArgs);
-		Debug("Adding new render tab");
+		Verbose("Adding new render tab");
 		AddNewRenderTab();
 	}
 
@@ -186,7 +203,7 @@ internal sealed class MainForm : Form
 	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(QuitAppCommandExecuted), sender, eventArgs);
-		Debug("Closing main form");
+		Verbose("Closing main form");
 		Close();
 	}
 
@@ -207,8 +224,8 @@ internal sealed class MainForm : Form
 				ProgramDescription = AssemblyInfo.Description,
 				Title              = "About",
 				Website            = new Uri(AssemblyInfo.ProjectLink),
-				ProgramName = AssemblyInfo.DevAppName,
-				WebsiteLabel = "Project Website"
+				ProgramName        = AssemblyInfo.DevAppName,
+				WebsiteLabel       = "Project Website"
 		}.ShowDialog(this);
 	}
 
