@@ -1,0 +1,22 @@
+using Ararem.RayTracer.Core;
+using JetBrains.Annotations;
+
+namespace Ararem.RayTracer.Impl.Skyboxes;
+
+/// <summary>A skybox that is a single colour</summary>
+[PublicAPI]
+public class SingleColourSkyBox : SkyBox
+{
+	/// <summary>A skybox that is a single colour</summary>
+	/// <param name="colour">The colour of the sky</param>
+	public SingleColourSkyBox(Colour colour)
+	{
+		Colour = colour;
+	}
+
+	/// <summary>The colour of the sky</summary>
+	public Colour Colour { get; init; }
+
+	/// <inheritdoc/>
+	public override Colour GetSkyColour(Ray ray) => Colour;
+}
