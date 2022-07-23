@@ -100,21 +100,16 @@ internal sealed class MainForm : Form
 	#region Init everything else in the UI
 
 		{
+			//TODO: Make this centre aligned rather than on the side as it is now
 			//Table?
-			Splitter titleLabelSplitter = new()
+			TableLayout titleLabelSplitter = new(1,2)
 			{
 					ID            = $"{ID}/TitleLabelSplitter",
-					Orientation = Orientation.Vertical,
+					Padding       = DefaultPadding,
+					Spacing = DefaultSpacing,
 			};
 			Content = titleLabelSplitter;
-
-			//These two lines stop the user from resizing the split
-			titleLabelSplitter.FixedPanel       =  SplitterFixedPanel.Panel1;
-			titleLabelSplitter.PositionChanging += delegate(object? sender, SplitterPositionChangingEventArgs args)
-			{
-				args.Cancel = true;
-			};
-			titleLabelSplitter.Panel1 = (
+			titleLabelSplitter.Add(
 					new Label
 					{
 							ID = $"{titleLabelSplitter.ID}/TitleLabel",
@@ -122,14 +117,17 @@ internal sealed class MainForm : Form
 							Style = nameof(AppTitle),
 							TextAlignment= TextAlignment.Center,
 							VerticalAlignment = VerticalAlignment.Center
-					}
+					},
+					0,0,
+					true, false
 			);
-			titleLabelSplitter.Panel2=(
+			titleLabelSplitter.Add(
 					tabControlContent = new TabControl
 					{
-							ID = "MainForm/Content/TabControl",
-							ClientSize = new Size(-1,-1)
-					}
+							ID = "MainForm/Content/TabControl"
+					},
+					0,1,
+					true, true
 			);
 		}
 
