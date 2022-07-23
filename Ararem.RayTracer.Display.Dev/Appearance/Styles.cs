@@ -45,7 +45,7 @@ public static class Styles
 	public static StyleWidgetHandler<Widget>        Force_Bold      => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.Bold); };
 	public static StyleWidgetHandler<Widget>        Force_Underline => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Sans,      GeneralFontSize, FontStyle.None, FontDecoration.Underline); };
 	public static StyleWidgetHandler<Widget>        Force_Monospace => static widget => { ((dynamic)widget).Font = new Font(FontFamilies.Monospace, GeneralFontSize); };
-	public static Padding                           DefaultPadding  => new(10, 10);
+	public static Padding                           DefaultPadding  => new(5, 5);
 	public static Size                              DefaultSpacing  => new(10, 10);
 
 	internal static void RegisterStyles()

@@ -102,21 +102,30 @@ internal sealed class MainForm : Form
 		{
 			//TODO: Make this centre aligned rather than on the side as it is now
 			//Table?
-			GroupBox titleLabelSplitter = new()
+			DynamicLayout titleLabelSplitter = new()
 			{
 					ID            = $"{ID}/TitleLabelSplitter",
-					Padding       = DefaultPadding,
-					Text          = AssemblyInfo.ProductName,
-					Style         = nameof(Force_AppTitle),
-					 // = TextAlignment.Center
+					Padding       = DefaultPadding
 			};
+			titleLabelSplitter.BeginVertical();
 			Content = titleLabelSplitter;
-			titleLabelSplitter.Content = (
+			titleLabelSplitter.Add(
+					new Label
+					{
+							ID = $"{titleLabelSplitter.ID}/TitleLabel",
+							Text  = AssemblyInfo.ProductName,
+							Style = nameof(AppTitle),
+							TextAlignment= TextAlignment.Center,
+							VerticalAlignment = VerticalAlignment.Center
+					}
+			);
+			titleLabelSplitter.Add(
 					tabControlContent = new TabControl
 					{
 							ID = "MainForm/Content/TabControl"
 					}
 			);
+			titleLabelSplitter.EndVertical();
 		}
 
 
@@ -134,8 +143,6 @@ internal sealed class MainForm : Form
 			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
 			newTabMenuItem.Command = newTabCommand;
 			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
-			newTabCommand.Execute();
-
 
 			Verbose("Setting up close render tab command");
 			MenuItem closeTabMenuItem = new ButtonMenuItem
@@ -155,28 +162,9 @@ internal sealed class MainForm : Form
 	}
 
 #region Callbacks
-
-	private void AddNewRenderTab()
-	{
-		Guid guid = Guid.NewGuid();
-		Verbose("Adding new render tab with GUID {Guid}", guid);
-		TabPage newPage = new()
-		{
-				ID   = $"{tabControlContent.ID}.Pages/Page_{guid}",
-				Text = $"Render {guid}"
-		};
-		//TODO: Tab selection thingy text styles
-		Verbose("New TabPage: {TabPage}", newPage);
-		tabControlContent.Pages.Add(newPage);
-
-		RenderJobTrackingTab tracker = new($"{newPage.ID}/{nameof(RenderJobTrackingTab)}");
-		Verbose("Render Tracker: {RenderTracker}", tracker);
-		newPage.Content = tracker;
-	}
-
 	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {@Sender}: {@EventArgs}", nameof(CloseRenderTabExecuted), sender, eventArgs);
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CloseRenderTabExecuted), sender, eventArgs);
 
 		if (tabControlContent.Pages.Count == 0)
 		{
@@ -194,8 +182,22 @@ internal sealed class MainForm : Form
 	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CreateNewTabCommandExecuted), sender, eventArgs);
-		Verbose("Adding new render tab");
-		AddNewRenderTab();
+		Guid guid = Guid.NewGuid();
+		Verbose("Adding new render tab with GUID {Guid}", guid);
+		TabPage newPage = new()
+		{
+				ID    = $"{tabControlContent.ID}.Pages/Page_{guid}",
+				Text  = $"Render {guid}",
+				Image = Icon, //TODO: Icon reflects the render buffer...
+				//TODO: Add a close 'X' button at the top of the tab
+		};
+		//TODO: Tab selection thingy text styles
+		Verbose("New TabPage: {TabPage}", newPage);
+		tabControlContent.Pages.Add(newPage);
+
+		RenderJobTrackingTab tracker = new($"{newPage.ID}/{nameof(RenderJobTrackingTab)}");
+		Verbose("Render Tracker: {RenderTracker}", tracker);
+		newPage.Content = tracker;
 	}
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>

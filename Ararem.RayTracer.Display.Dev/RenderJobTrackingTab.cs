@@ -13,54 +13,57 @@ namespace Ararem.RayTracer.Display.Dev;
 
 public class RenderJobTrackingTab : Panel
 {
-	private readonly DynamicLayout renderOptionLayout;
-	private readonly Splitter      splitterContent;
+	private readonly DynamicLayout mainDynamicLayout;
 
-	private Button toggleRenderStateButton;
-
+	//TODO: Save image button
 	public RenderJobTrackingTab(string id)
 	{
+		DynamicGroup renderOptionsGroup;
+		DynamicGroup renderBufferGroup;
+		DynamicGroup renderStatsGroup;
 		ID      = id;
 		Padding = DefaultPadding;
 		{
-			Content = splitterContent = new Splitter
+			Content = mainDynamicLayout = new DynamicLayout
 			{
-					ID = $"{ID}/Content"
+					ID = $"{ID}/Content",
+					Spacing = DefaultSpacing,
+					Padding =DefaultPadding
 			};
 		}
+		//Split the layout into 3 horizontal groups - options, stats, image
+		mainDynamicLayout.BeginHorizontal();
 
-		DynamicGroup renderOptionGroup;
 		{
 			Verbose("Creating property editor panel");
-			splitterContent.Panel1 = renderOptionLayout = new DynamicLayout { ID = $"{splitterContent.ID}/RenderOptions" };
-			renderOptionGroup                          = renderOptionLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
-			renderOptionLayout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
+			renderOptionsGroup           = mainDynamicLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
+			mainDynamicLayout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
 			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.RenderHeight), 1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.Passes),       1, int.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
 			HandleIntProperty(nameof(RenderOptions.ConcurrencyLevel),     1, Environment.ProcessorCount);
-			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),        0, int.MaxValue);
+			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       0, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 1, int.MaxValue);
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
 			HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
 			UpdateEditorsCanBeModified();
 
-			renderOptionLayout.Add(null, yscale: true);
-			renderOptionLayout.EndScrollable();
+			mainDynamicLayout.Add(null, yscale: true);
+			mainDynamicLayout.EndScrollable();
 			Verbose("Created property editors");
 
 
 			Verbose("Creating toggle render button");
-			toggleRenderStateButton = new Button
+			Button toggleRenderStateButton = new()
 			{
-ID = $"{renderOptionLayout.ID}/ToggleRenderButton",
-Style = nameof(General),
-Text = "[Toggle Render]"
+					ID    = $"{mainDynamicLayout.ID}/ToggleRenderButton",
+					Style = nameof(Bold),
+					Text  = "[Toggle Render]"
 			};
-			renderOptionLayout.AddCentered(toggleRenderStateButton);
+			mainDynamicLayout.AddCentered(toggleRenderStateButton);
 			Command toggleRenderStateCommand = new(ToggleRenderButtonClicked)
 			{
 					ID = $"{toggleRenderStateButton.ID}.Command"
@@ -68,12 +71,38 @@ Text = "[Toggle Render]"
 			toggleRenderStateButton.Command = toggleRenderStateCommand;
 			Verbose("Created toggle render button: {Control}", toggleRenderStateButton);
 
-			renderOptionLayout.EndGroup();
+			mainDynamicLayout.EndGroup();
 		}
 
 		{
-			renderOptionLayout.Create();
-			renderOptionGroup.GroupBox.Style = nameof(Force_Heading);
+			Verbose("Creating render stats view");
+			renderStatsGroup = mainDynamicLayout.BeginGroup("Render Stats", spacing: DefaultSpacing, padding: DefaultPadding);
+			mainDynamicLayout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
+			mainDynamicLayout.Add("Test");
+			mainDynamicLayout.Add("Test");
+			mainDynamicLayout.Add("Testasdasdasdasdasdasdasdasdasdasdasdaads");
+			mainDynamicLayout.Add("Test");
+			mainDynamicLayout.Add("Test");
+			mainDynamicLayout.EndScrollable();
+			mainDynamicLayout.EndGroup();
+
+			Verbose("Created render stats view");
+		}
+
+		{
+			renderBufferGroup = mainDynamicLayout.BeginGroup("Render Buffer", spacing: DefaultSpacing, padding: DefaultPadding);
+			mainDynamicLayout.Add(Application.Instance.MainForm.Icon);
+			mainDynamicLayout.EndGroup();
+		}
+
+		mainDynamicLayout.EndHorizontal();
+
+		{
+			//Have to create the dynamic layouts before we try to access the instantiated controls, else they're null
+			mainDynamicLayout.Create();
+			renderOptionsGroup.GroupBox.Style = nameof(Force_Heading);
+			renderStatsGroup.GroupBox.Style  = nameof(Force_Heading);
+			renderBufferGroup.GroupBox.Style  = nameof(Force_Heading);
 		}
 	}
 
@@ -85,15 +114,20 @@ Text = "[Toggle Render]"
 
 	private bool IsRendering => RenderJob?.RenderCompleted == false;
 
+	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
+	{
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(ToggleRenderButtonClicked), sender, eventArgs);
+	}
+
 #region RenderOption property editing
 
 	private Label GetNameLabel(string propertyName, (object min, object max)? maybeRange = null) =>
 			new()
 			{
-					ID      = $"{renderOptionLayout.ID}/{propertyName}.Label",
-					Text    = propertyName,
-					ToolTip = maybeRange is {} range ? $"Valid range is [{range.min}..{range.max}]" : null,
-					Style   = nameof(Italic),
+					ID            = $"{mainDynamicLayout.ID}/{propertyName}.Label",
+					Text          = propertyName,
+					ToolTip       = maybeRange is {} range ? $"Valid range is [{range.min}..{range.max}]" : null,
+					Style         = nameof(Italic),
 					TextAlignment = TextAlignment.Center
 			};
 
@@ -109,13 +143,13 @@ Text = "[Toggle Render]"
 		NumericStepper stepper = new()
 		{
 				//Can't assign a format string of "n0" because the comma breaks things once you get above 999 :(
-				ID                   = $"{renderOptionLayout.ID}/{propertyName}.Stepper",
+				ID                   = $"{mainDynamicLayout.ID}/{propertyName}.Stepper",
 				Increment            = 1.0,
 				MaximumDecimalPlaces = 0,
 				MinValue             = min,
 				MaxValue             = max,
 				Style                = nameof(Monospace),
-				ToolTip = label.ToolTip
+				ToolTip              = label.ToolTip
 		};
 		stepper.ValueChanged += delegate
 		{
@@ -128,7 +162,7 @@ Text = "[Toggle Render]"
 		renderOptionEditors.Add(renderOptionEditor);
 
 		Verbose("Property editor is {PropertyEditor}", renderOptionEditor);
-		renderOptionLayout.AddRow(label, renderOptionEditor.Control);
+		mainDynamicLayout.AddRow(label, renderOptionEditor.Control);
 	}
 
 	private void HandleBoolProperty(string propertyName)
@@ -136,14 +170,15 @@ Text = "[Toggle Render]"
 		Verbose("Trying to add boolean property editor for {Property}", propertyName);
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
-		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit)); ;
-		object?      boxedPropertyValue    = property.GetValue(RenderOptions);
-		bool         initialValue          = boxedPropertyValue as bool? ?? throw new ArgumentException($"Expected a bool but got {boxedPropertyValue}");
+		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
+
+		object? boxedPropertyValue = property.GetValue(RenderOptions);
+		bool    initialValue       = boxedPropertyValue as bool? ?? throw new ArgumentException($"Expected a bool but got {boxedPropertyValue}");
 
 		Label label = GetNameLabel(propertyName);
 		CheckBox checkBox = new()
 		{
-				ID         = $"{renderOptionLayout.ID}/{propertyName}.CheckBox",
+				ID         = $"{mainDynamicLayout.ID}/{propertyName}.CheckBox",
 				ThreeState = false,
 				Style      = nameof(General)
 		};
@@ -158,7 +193,7 @@ Text = "[Toggle Render]"
 		renderOptionEditors.Add(renderOptionEditor);
 
 		Verbose("Property editor is {PropertyEditor}", renderOptionEditor);
-		renderOptionLayout.AddRow(label, renderOptionEditor.Control);
+		mainDynamicLayout.AddRow(label, renderOptionEditor.Control);
 	}
 
 	private void HandleFloatProperty(string propertyName, float min, float max)
@@ -167,13 +202,13 @@ Text = "[Toggle Render]"
 		PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 		MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
 		bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
-		object? boxedPropertyValue = property.GetValue(RenderOptions);
-		float   initialValue       = boxedPropertyValue as float? ?? throw new ArgumentException($"Expected a float but got {boxedPropertyValue}");
+		object?      boxedPropertyValue    = property.GetValue(RenderOptions);
+		float        initialValue          = boxedPropertyValue as float? ?? throw new ArgumentException($"Expected a float but got {boxedPropertyValue}");
 
 		Label label = GetNameLabel(propertyName, (min, max));
 		NumericStepper stepper = new()
 		{
-				ID                   = $"{renderOptionLayout.ID}/{propertyName}.Stepper",
+				ID                   = $"{mainDynamicLayout.ID}/{propertyName}.Stepper",
 				Increment            = 1.0,
 				MaximumDecimalPlaces = 5,
 				DecimalPlaces        = 5,
@@ -193,7 +228,7 @@ Text = "[Toggle Render]"
 		renderOptionEditors.Add(renderOptionEditor);
 
 		Verbose("Property editor is {PropertyEditor}", renderOptionEditor);
-		renderOptionLayout.AddRow(label, renderOptionEditor.Control);
+		mainDynamicLayout.AddRow(label, renderOptionEditor.Control);
 	}
 
 	private void HandleEnumProperty<T>(string propertyName) where T : Enum
@@ -208,7 +243,7 @@ Text = "[Toggle Render]"
 
 		EnumDropDown<T> dropDown = new()
 		{
-				ID    = $"{renderOptionLayout.ID}/{propertyName}.Dropdown",
+				ID    = $"{mainDynamicLayout.ID}/{propertyName}.Dropdown",
 				Style = nameof(Monospace)
 		};
 		dropDown.SelectedValueChanged += delegate
@@ -222,7 +257,7 @@ Text = "[Toggle Render]"
 		renderOptionEditors.Add(renderOptionEditor);
 
 		Verbose("Property editor is {PropertyEditor}", renderOptionEditor);
-		renderOptionLayout.AddRow(label, renderOptionEditor.Control);
+		mainDynamicLayout.AddRow(label, renderOptionEditor.Control);
 	}
 
 	private static void LogPropChanged<T>(PropertyInfo property, T newVal)
@@ -249,10 +284,4 @@ Text = "[Toggle Render]"
 	}
 
 #endregion
-
-	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
-	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(ToggleRenderButtonClicked), sender, eventArgs);
-
-	}
 }
