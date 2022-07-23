@@ -100,16 +100,21 @@ internal sealed class MainForm : Form
 	#region Init everything else in the UI
 
 		{
-			//TODO: Make this centre aligned rather than on the side as it is now
 			//Table?
-			DynamicLayout titleLabelSplitter = new()
+			Splitter titleLabelSplitter = new()
 			{
 					ID            = $"{ID}/TitleLabelSplitter",
-					Padding       = DefaultPadding
+					Orientation = Orientation.Vertical,
 			};
-			titleLabelSplitter.BeginVertical();
 			Content = titleLabelSplitter;
-			titleLabelSplitter.Add(
+
+			//These two lines stop the user from resizing the split
+			titleLabelSplitter.FixedPanel       =  SplitterFixedPanel.Panel1;
+			titleLabelSplitter.PositionChanging += delegate(object? sender, SplitterPositionChangingEventArgs args)
+			{
+				args.Cancel = true;
+			};
+			titleLabelSplitter.Panel1 = (
 					new Label
 					{
 							ID = $"{titleLabelSplitter.ID}/TitleLabel",
@@ -119,13 +124,13 @@ internal sealed class MainForm : Form
 							VerticalAlignment = VerticalAlignment.Center
 					}
 			);
-			titleLabelSplitter.Add(
+			titleLabelSplitter.Panel2=(
 					tabControlContent = new TabControl
 					{
-							ID = "MainForm/Content/TabControl"
+							ID = "MainForm/Content/TabControl",
+							ClientSize = new Size(-1,-1)
 					}
 			);
-			titleLabelSplitter.EndVertical();
 		}
 
 
