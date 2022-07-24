@@ -1,12 +1,13 @@
 using Ararem.RayTracer.Core;
 using Ararem.RayTracer.Core.Debugging;
+using Ararem.RayTracer.Display.Dev.Resources;
 using Eto.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using static Ararem.RayTracer.Display.Dev.Appearance.Styles;
+using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
 using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev;
@@ -91,7 +92,7 @@ public class RenderJobTrackingTab : Panel
 
 		{
 			renderBufferGroup = mainDynamicLayout.BeginGroup("Render Buffer", spacing: DefaultSpacing, padding: DefaultPadding);
-			mainDynamicLayout.Add(Application.Instance.MainForm.Icon);
+			mainDynamicLayout.Add(ResourceManager.AppIcon);
 			mainDynamicLayout.EndGroup();
 		}
 

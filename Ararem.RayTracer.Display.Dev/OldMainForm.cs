@@ -112,7 +112,7 @@
 // 		TaskWatcher.Watch(Task.Run(RenderLoop), true);
 //
 // 		Verbose("Creating UI elements");
-// 		titleLabel          = new Label { Text                          = title, Style                        = Appearance.Styles.AppTitle };
+// 		titleLabel          = new Label { Text                          = title, Style                        = Appearance.StyleManager.AppTitle };
 // 		displayedWindowItem = new StackLayoutItem { HorizontalAlignment = HorizontalAlignment.Stretch, Expand = true };
 // 		StackLayoutItem titleItem = new(titleLabel, HorizontalAlignment.Center);
 // 		Content = new StackLayout
@@ -565,7 +565,7 @@
 // 		{
 // 			static Label CreateHeaderLabel()
 // 			{
-// 				return new Label { Style = Appearance.Styles.GeneralTextualBold };
+// 				return new Label { Style = Appearance.StyleManager.GeneralTextualBold };
 // 			}
 //
 // 			TableRow row = statsTable.Rows[0];
@@ -630,7 +630,7 @@
 // 					Verbose("Cell {Position} was not label (was {Control}), disposing and updating", (0, rowIdx: rowIdx), row.Cells[0].Control);
 // 					row.Cells[0]?.Control?.Detach();
 // 					row.Cells[0]?.Control?.Dispose(); //Dispose the old control
-// 					titleLabel = new Label { Style = Appearance.Styles.GeneralTextualUnderline };
+// 					titleLabel = new Label { Style = Appearance.StyleManager.GeneralTextualUnderline };
 // 					statsTable.Add(titleLabel, 0, rowIdx);
 // 				}
 //
@@ -639,7 +639,7 @@
 // 					Verbose("Cell {Position} was not name label (was {Control}), disposing and updating", (1, rowIdx: rowIdx), row.Cells[1].Control);
 // 					row.Cells[1]?.Control?.Detach();
 // 					row.Cells[1]?.Control?.Dispose(); //Dispose of the old control
-// 					nameLabel = new Label { Style = Appearance.Styles.GeneralTextual };
+// 					nameLabel = new Label { Style = Appearance.StyleManager.GeneralTextual };
 // 					statsTable.Add(nameLabel, 1, rowIdx);
 // 				}
 //
@@ -648,7 +648,7 @@
 // 					Verbose("Cell {Position} was not value label (was {Control}), disposing and updating", (2, rowIdx: rowIdx), row.Cells[2].Control);
 // 					row.Cells[2]?.Control?.Detach();
 // 					row.Cells[2]?.Control?.Dispose(); //Dispose of the old control
-// 					valueLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
+// 					valueLabel = new Label { Style = Appearance.StyleManager.ConsistentTextWidth };
 // 					statsTable.Add(valueLabel, 2, rowIdx);
 // 				}
 //
@@ -657,7 +657,7 @@
 // 					Verbose("Cell {Position} was not delta label (was {Control}), disposing and updating", (3, rowIdx: rowIdx), row.Cells[3].Control);
 // 					row.Cells[3]?.Control?.Detach();
 // 					row.Cells[3]?.Control?.Dispose(); //Dispose of the old control
-// 					deltaLabel = new Label { Style = Appearance.Styles.ConsistentTextWidth };
+// 					deltaLabel = new Label { Style = Appearance.StyleManager.ConsistentTextWidth };
 // 					statsTable.Add(deltaLabel, 3, rowIdx);
 // 				}
 //

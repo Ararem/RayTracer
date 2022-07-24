@@ -1,11 +1,12 @@
 ﻿using Ararem.RayTracer.Core;
-using Ararem.RayTracer.Display.Dev.Appearance;
+using Ararem.RayTracer.Display.Dev.Resources;
 using Eto;
 using Eto.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -36,8 +37,8 @@ internal static class Program
 		AppFailure
 	}
 
-	public static string Title          => AssemblyInfo.ProductName;
-	public static string AppTitleVersioned => $"{Title} - {AssemblyInfo.Version}";
+	private static string Title             => AssemblyInfo.ProductName;
+	private static string AppTitleVersioned => $"{Title} - v {AssemblyInfo.Version}";
 
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
 	private static int Main(string[] args) => (int)MainInternal(args);
@@ -151,13 +152,15 @@ internal static class Program
 
 		try
 		{
-			Debug("Registering styles");
-			Styles.RegisterStyles();
-			Debug("Styles registered");
+			Information("Initialising manager classes");
+			RuntimeHelpers.RunClassConstructor(typeof(StyleManager).TypeHandle);
+			RuntimeHelpers.RunClassConstructor(typeof(ResourceManager).TypeHandle);
+			Information("Initialised manager classes");
 		}
 		catch (Exception e)
 		{
-			Error(e, "Could not register styles");
+			Fatal(e, "Could not init manager classes");
+			return InitializationFailure;
 		}
 
 		MainForm mainForm;

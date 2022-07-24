@@ -7,7 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using static Serilog.Log;
-using static Ararem.RayTracer.Display.Dev.Appearance.Styles;
+using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
+using ResourceManager = Ararem.RayTracer.Display.Dev.Resources.ResourceManager;
 
 namespace Ararem.RayTracer.Display.Dev;
 
@@ -72,10 +73,7 @@ internal sealed class MainForm : Form
 
 		{
 			Verbose("Setting icon");
-			const string iconPath = "Ararem.RayTracer.Display.Dev.Appearance.icon.png";
-			Verbose("Icon path is {IconPath}", iconPath);
-			Icon    = Icon.FromResource(iconPath);
-			Icon.ID = $"{ID}/Icon";
+			Icon = ResourceManager.AppIcon;
 			Verbose("Set icon: {Icon}", Icon);
 		}
 
@@ -146,6 +144,7 @@ internal sealed class MainForm : Form
 			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
 			newTabMenuItem.Command = newTabCommand;
 			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
+			newTabCommand.Execute();
 
 			Verbose("Setting up close render tab command");
 			MenuItem closeTabMenuItem = new ButtonMenuItem
@@ -171,14 +170,22 @@ internal sealed class MainForm : Form
 
 		if (tabControlContent.Pages.Count == 0)
 		{
-			Verbose("No tab to close");
+			Error("Tab count somehow got to 0 (this shouldn't happen)");
+			CreateNewTabCommandExecuted(null, EventArgs.Empty);
 			return;
 		}
 
-		TabPage page = tabControlContent.SelectedPage;
-		Verbose("Closing and disposing tab {TabPage}", page);
-		tabControlContent.Remove(page);
-		page.Dispose();
+		TabPage oldPage = tabControlContent.SelectedPage;
+		Verbose("Closing and disposing tab {TabPage}", oldPage);
+		tabControlContent.Remove(oldPage);
+		oldPage.Dispose();
+
+		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
+		if (tabControlContent.Pages.Count == 0)
+		{
+			Verbose("Just closed last tab, recreating to ensure we don't get below 1");
+			CreateNewTabCommandExecuted(null, EventArgs.Empty);
+		}
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
