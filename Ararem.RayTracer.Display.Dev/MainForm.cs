@@ -4,8 +4,10 @@ using Eto.Forms;
 using JetBrains.Annotations;
 using System;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using static Serilog.Log;
 using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
 using ResourceManager = Ararem.RayTracer.Display.Dev.Resources.ResourceManager;
@@ -170,12 +172,36 @@ internal sealed class MainForm : Form
 		DocumentPage oldPage = tabControlContent.SelectedPage;
 		Verbose("Closing and disposing tab {TabPage}", oldPage);
 		tabControlContent.Pages.Remove(oldPage);
-		oldPage.Dispose();
+		/*
+		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
+		 *
+		 * Extracted from GTK handler source:
+		 * internal void ClosePage(Gtk.Widget control, DocumentPage page)
+    	 * {
+    	 *   this.Control.RemovePage(this.Control.PageNum(control));
+    	 *   this.SetShowTabs();
+    	 *   if (!this.Widget.Loaded)
+    	 *     return;
+    	 *   this.Callback.OnPageClosed(this.Widget, new DocumentPageEventArgs(page)); //<<======== This is what I'm calling
+    	 * }
+		 */
+		try
+		{
+			dynamic callbackObject = ((dynamic)tabControlContent).Handler.Callback;
+			((object)callbackObject).GetType().GetMethod("OnPageClosed")!.Invoke(callbackObject, new object[] { tabControlContent, new DocumentPageEventArgs(oldPage) });
+		}
+		catch (Exception e)
+		{
+			Warning(e, "Manually calling OnPageClosed() callback failed");
+		}
+
+		oldPage?.Dispose();
 	}
 
 	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(DocumentPageOnClosed), sender, eventArgs);
+		//TODO: Extract this to it's own method somewhere
+		Debug("{@CallbackName}() from {Sender}: {@EventArgs}", (DocumentPageOnClosed), sender, eventArgs);
 
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (tabControlContent.Pages.Count == 0)
