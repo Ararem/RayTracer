@@ -92,7 +92,7 @@ public class RenderJobTrackingTab : Panel
 
 		{
 			renderBufferGroup = mainDynamicLayout.BeginGroup("Render Buffer", spacing: DefaultSpacing, padding: DefaultPadding);
-			mainDynamicLayout.Add(ResourceManager.AppIcon);
+			mainDynamicLayout.Add(ResourceManager.AppIconPng);
 			mainDynamicLayout.EndGroup();
 		}
 

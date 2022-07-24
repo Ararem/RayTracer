@@ -15,10 +15,10 @@ public static class ResourceManager
 		// Debug("Assembly for resources is {Assembly}", resourceAssembly);
 		{
 			const string iconPathPng = "Ararem.RayTracer.Display.Dev.Resources.icon.png";
-			Verbose("App Icon Png ({Path}): {Icon}", iconPathPng, AppIcon = Icon.FromResource(iconPathPng));
+			Verbose("App Icon Png ({Path}): {Icon}", iconPathPng, AppIconPng = Icon.FromResource(iconPathPng));
 
 		}
 		Information("Initialised Resource Manager");
 	}
-	public static Icon AppIcon { get; }
+	public static Icon AppIconPng { get; }
 }

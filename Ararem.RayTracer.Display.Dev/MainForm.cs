@@ -16,7 +16,7 @@ namespace Ararem.RayTracer.Display.Dev;
 internal sealed class MainForm : Form
 {
 	/// <summary>Main control that contains the tabs for each of the renders</summary>
-	private readonly TabControl tabControlContent;
+	private readonly DocumentControl tabControlContent;
 
 	public MainForm()
 	{
@@ -73,7 +73,7 @@ internal sealed class MainForm : Form
 
 		{
 			Verbose("Setting icon");
-			Icon = ResourceManager.AppIcon;
+			Icon = ResourceManager.AppIconPng;
 			Verbose("Set icon: {Icon}", Icon);
 		}
 
@@ -98,35 +98,34 @@ internal sealed class MainForm : Form
 	#region Init everything else in the UI
 
 		{
-			//TODO: Make this centre aligned rather than on the side as it is now
-			//Table?
-			TableLayout titleLabelSplitter = new(1,2)
+			DynamicLayout layout = new()
 			{
-					ID            = $"{ID}/TitleLabelSplitter",
+					ID            = $"{ID}/Layout",
 					Padding       = DefaultPadding,
-					Spacing = DefaultSpacing,
+					Spacing = DefaultSpacing
 			};
-			Content = titleLabelSplitter;
-			titleLabelSplitter.Add(
+			Content = layout;
+			layout.BeginVertical();
+			layout.Add(
 					new Label
 					{
-							ID = $"{titleLabelSplitter.ID}/TitleLabel",
+							ID = $"{layout.ID}/TitleLabel",
 							Text  = AssemblyInfo.ProductName,
 							Style = nameof(AppTitle),
 							TextAlignment= TextAlignment.Center,
 							VerticalAlignment = VerticalAlignment.Center
-					},
-					0,0,
-					true, false
+					}
 			);
-			titleLabelSplitter.Add(
-					tabControlContent = new TabControl
+			layout.BeginScrollable();
+			layout.Add(
+					tabControlContent = new DocumentControl
 					{
-							ID = "MainForm/Content/TabControl"
-					},
-					0,1,
-					true, true
+							ID = "MainForm/Content/DocumentControl",
+					}
 			);
+			tabControlContent.PageClosed += DocumentPageOnClosed;
+			layout.EndScrollable();
+			layout.EndVertical();
 		}
 
 
@@ -168,17 +167,15 @@ internal sealed class MainForm : Form
 	{
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CloseRenderTabExecuted), sender, eventArgs);
 
-		if (tabControlContent.Pages.Count == 0)
-		{
-			Error("Tab count somehow got to 0 (this shouldn't happen)");
-			CreateNewTabCommandExecuted(null, EventArgs.Empty);
-			return;
-		}
-
-		TabPage oldPage = tabControlContent.SelectedPage;
+		DocumentPage oldPage = tabControlContent.SelectedPage;
 		Verbose("Closing and disposing tab {TabPage}", oldPage);
-		tabControlContent.Remove(oldPage);
+		tabControlContent.Pages.Remove(oldPage);
 		oldPage.Dispose();
+	}
+
+	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
+	{
+		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(DocumentPageOnClosed), sender, eventArgs);
 
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (tabControlContent.Pages.Count == 0)
@@ -194,12 +191,11 @@ internal sealed class MainForm : Form
 		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CreateNewTabCommandExecuted), sender, eventArgs);
 		Guid guid = Guid.NewGuid();
 		Verbose("Adding new render tab with GUID {Guid}", guid);
-		TabPage newPage = new()
+		DocumentPage newPage = new()
 		{
 				ID    = $"{tabControlContent.ID}.Pages/Page_{guid}",
 				Text  = $"Render {guid}",
 				Image = Icon, //TODO: Icon reflects the render buffer...
-				//TODO: Add a close 'X' button at the top of the tab
 		};
 		//TODO: Tab selection thingy text styles
 		Verbose("New TabPage: {TabPage}", newPage);
