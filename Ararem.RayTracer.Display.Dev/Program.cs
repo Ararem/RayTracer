@@ -74,7 +74,7 @@ internal static class Program
 		Console.Title = $"{AppTitleVersioned} [Console]";
 		Console.WriteLine($"{Title}: Initialising logger");
 		#endif
-		Logger.Init(LogExtensions.AdjustConfig);
+		Logger.Init();
 
 		Information("Starting {AppTitle} app", AssemblyInfo.ProductName);
 		Information("Commandline args: {Args}", args);

@@ -1,20 +1,25 @@
 using Ararem.RayTracer.Core;
 using Ararem.RayTracer.Core.Debugging;
 using Ararem.RayTracer.Display.Dev.Resources;
+using Ararem.RayTracer.Impl.Builtin;
 using Eto.Forms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using static Ararem.RayTracer.Display.Dev.LogUtils;
 using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
 using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev;
 
+// TODO: Why am i modifying an immutable type with reflection (*cough* RenderOptions *cough*)
 public class RenderJobTrackingTab : Panel
 {
-	private readonly DynamicLayout mainDynamicLayout;
+	private readonly DynamicLayout           mainDynamicLayout;
+	private          CancellationTokenSource CancellationTokenSource = new();
 
 	//TODO: Save image button
 	public RenderJobTrackingTab(string id)
@@ -27,9 +32,9 @@ public class RenderJobTrackingTab : Panel
 		{
 			Content = mainDynamicLayout = new DynamicLayout
 			{
-					ID = $"{ID}/Content",
+					ID      = $"{ID}/Content",
 					Spacing = DefaultSpacing,
-					Padding =DefaultPadding
+					Padding = DefaultPadding
 			};
 		}
 		//Split the layout into 3 horizontal groups - options, stats, image
@@ -37,7 +42,7 @@ public class RenderJobTrackingTab : Panel
 
 		{
 			Verbose("Creating property editor panel");
-			renderOptionsGroup           = mainDynamicLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
+			renderOptionsGroup = mainDynamicLayout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
 			mainDynamicLayout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
 			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
@@ -50,12 +55,35 @@ public class RenderJobTrackingTab : Panel
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
 			HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
-			UpdateEditorsCanBeModified();
 
 			mainDynamicLayout.Add(null, yscale: true);
-			mainDynamicLayout.EndScrollable();
 			Verbose("Created property editors");
 
+
+			Verbose("Creating scene select dropdown");
+			Label label = GetNameLabel("Scene");
+
+			selectedSceneDropdown = new DropDown
+			{
+					ID    = $"{mainDynamicLayout.ID}/SelectedSceneDropdown",
+					Style = nameof(Monospace)
+			};
+			selectedSceneDropdown.SelectedValueChanged += delegate
+			{
+				Scene newScene = (Scene)selectedSceneDropdown.SelectedValue;
+				Verbose("Selected scene changed to {Scene}", newScene);
+				SelectedScene = newScene;
+			};
+			//A bit funky how we do this, but it works I guess
+			List<Scene> allScenes = BuiltinScenes.GetAll().ToList();
+			selectedSceneDropdown.DataStore     = allScenes;
+			Scene initial = allScenes.First(s => string.Equals(((Scene)s).Name, SelectedScene.Name, StringComparison.Ordinal));
+			int    index   = allScenes.ToList().IndexOf(initial);
+			selectedSceneDropdown.SelectedIndex = index;
+			mainDynamicLayout.AddRow(label, selectedSceneDropdown);
+			Verbose("Created scene select dropdown: {Dropdown}", selectedSceneDropdown);
+
+			mainDynamicLayout.EndScrollable();
 
 			Verbose("Creating toggle render button");
 			Button toggleRenderStateButton = new()
@@ -102,22 +130,42 @@ public class RenderJobTrackingTab : Panel
 			//Have to create the dynamic layouts before we try to access the instantiated controls, else they're null
 			mainDynamicLayout.Create();
 			renderOptionsGroup.GroupBox.Style = nameof(Force_Heading);
-			renderStatsGroup.GroupBox.Style  = nameof(Force_Heading);
+			renderStatsGroup.GroupBox.Style   = nameof(Force_Heading);
 			renderBufferGroup.GroupBox.Style  = nameof(Force_Heading);
+			UpdateEditorsCanBeModified();
 		}
 	}
 
 	/// <summary>Render options that affect how the <see cref="RenderJob"/> is rendered</summary>
 	public RenderOptions RenderOptions { get; } = new();
 
+	/// <summary>Currently selected scene. If a render is running, then it's the one that's being rendered.</summary>
+	public Scene SelectedScene { get; private set; } = BuiltinScenes.Demo;
+
 	/// <summary>The current render job (if any)</summary>
-	public AsyncRenderJob? RenderJob { get; } = null;
+	public AsyncRenderJob? RenderJob { get; private set; } = null;
 
-	private bool IsRendering => RenderJob?.RenderCompleted == false;
-
+	/// <summary>Called whenever the "Toggle Render" button is pressed</summary>
+	/// <param name="sender"></param>
+	/// <param name="eventArgs"></param>
 	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(ToggleRenderButtonClicked), sender, eventArgs);
+		TraceEvent(sender, eventArgs);
+		bool? currentlyRendering = RenderJob?.RenderCompleted;
+		LogVariable(currentlyRendering);
+		switch (currentlyRendering)
+		{
+			case true:
+				Verbose("Was rendering, cancelling and recreating task source {CancellationTokenSource}", CancellationTokenSource);
+				CancellationTokenSource.Cancel();
+				CancellationTokenSource.Dispose();
+				CancellationTokenSource = new CancellationTokenSource();
+				break;
+			case false:
+				Verbose("Was stopped, creating new render with RenderOptions {RenderOptions}", RenderOptions);
+				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
+				break;
+		}
 	}
 
 #region RenderOption property editing
@@ -269,19 +317,24 @@ public class RenderJobTrackingTab : Panel
 	/// <summary>List containing all the render option editors</summary>
 	private readonly List<RenderOptionEditor> renderOptionEditors = new();
 
+	private DropDown selectedSceneDropdown;
+
 	private sealed record RenderOptionEditor(CommonControl Control, bool CanModifyWhileRunning);
 
 	/// <summary>Updates all the property editors, locking them if they can't be modified</summary>
 	private void UpdateEditorsCanBeModified()
 	{
+		Verbose("Updating whether property editors can be modified");
 		for (int i = 0; i < renderOptionEditors.Count; i++)
 		{
 			RenderOptionEditor editor           = renderOptionEditors[i];
-			bool               shouldBeReadonly = !editor.CanModifyWhileRunning && IsRendering;
+			bool               shouldBeReadonly = !editor.CanModifyWhileRunning && (RenderJob?.RenderCompleted == false);
 			if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
 				readonlyProp.SetValue(editor.Control, shouldBeReadonly);
 			else editor.Control.Enabled = !shouldBeReadonly;
 		}
+
+		selectedSceneDropdown.Enabled = RenderJob is null or {RenderCompleted:  true};
 	}
 
 #endregion

@@ -167,7 +167,7 @@ internal sealed class MainForm : Form
 #region Callbacks
 	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CloseRenderTabExecuted), sender, eventArgs);
+		LogUtils.TraceEvent(sender, eventArgs);
 
 		DocumentPage oldPage = tabControlContent.SelectedPage;
 		Verbose("Closing and disposing tab {TabPage}", oldPage);
@@ -200,9 +200,7 @@ internal sealed class MainForm : Form
 
 	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
 	{
-		//TODO: Extract this to it's own method somewhere
-		Debug("{@CallbackName}() from {Sender}: {@EventArgs}", (DocumentPageOnClosed), sender, eventArgs);
-
+		LogUtils.TraceEvent(sender, eventArgs);
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (tabControlContent.Pages.Count == 0)
 		{
@@ -214,7 +212,7 @@ internal sealed class MainForm : Form
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(CreateNewTabCommandExecuted), sender, eventArgs);
+		LogUtils.TraceEvent(sender, eventArgs);
 		Guid guid = Guid.NewGuid();
 		Verbose("Adding new render tab with GUID {Guid}", guid);
 		DocumentPage newPage = new()
@@ -236,7 +234,7 @@ internal sealed class MainForm : Form
 	[ContractAnnotation("=> halt")]
 	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(QuitAppCommandExecuted), sender, eventArgs);
+		LogUtils.TraceEvent(sender, eventArgs);
 		Verbose("Closing main form");
 		Close();
 	}
@@ -244,7 +242,7 @@ internal sealed class MainForm : Form
 	/// <summary>Callback for when the [About App] command is executed</summary>
 	private void AboutAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(AboutAppCommandExecuted), sender, eventArgs);
+		LogUtils.TraceEvent(sender, eventArgs);
 		new AboutDialog
 		{
 				Copyright          = AssemblyInfo.Copyright,
@@ -266,7 +264,7 @@ internal sealed class MainForm : Form
 	[ContractAnnotation("=> halt")]
 	private static void MainFormClosed(object? sender, EventArgs eventArgs)
 	{
-		Debug("{CallbackName}() from {Sender}: {@EventArgs}", nameof(MainFormClosed), sender, eventArgs);
+		LogUtils.TraceEvent(sender, eventArgs);
 
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
