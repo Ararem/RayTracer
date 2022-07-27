@@ -76,9 +76,9 @@ public class RenderJobTrackingTab : Panel
 			};
 			//A bit funky how we do this, but it works I guess
 			List<Scene> allScenes = BuiltinScenes.GetAll().ToList();
-			selectedSceneDropdown.DataStore     = allScenes;
-			Scene initial = allScenes.First(s => string.Equals(((Scene)s).Name, SelectedScene.Name, StringComparison.Ordinal));
-			int    index   = allScenes.ToList().IndexOf(initial);
+			selectedSceneDropdown.DataStore = allScenes;
+			Scene initial = allScenes.First(s => string.Equals(s.Name, SelectedScene.Name, StringComparison.Ordinal));
+			int   index   = allScenes.ToList().IndexOf(initial);
 			selectedSceneDropdown.SelectedIndex = index;
 			mainDynamicLayout.AddRow(label, selectedSceneDropdown);
 			Verbose("Created scene select dropdown: {Dropdown}", selectedSceneDropdown);
@@ -151,21 +151,22 @@ public class RenderJobTrackingTab : Panel
 	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
 	{
 		TraceEvent(sender, eventArgs);
-		bool? currentlyRendering = RenderJob?.RenderCompleted;
-		LogVariable(currentlyRendering);
-		switch (currentlyRendering)
+		LogVariable(RenderJob?.RenderCompleted);
+		if (RenderJob is { RenderCompleted: false }) //Runs when the render is partway through
 		{
-			case true:
-				Verbose("Was rendering, cancelling and recreating task source {CancellationTokenSource}", CancellationTokenSource);
-				CancellationTokenSource.Cancel();
-				CancellationTokenSource.Dispose();
-				CancellationTokenSource = new CancellationTokenSource();
-				break;
-			case false:
-				Verbose("Was stopped, creating new render with RenderOptions {RenderOptions}", RenderOptions);
-				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
-				break;
+			Verbose("Render was running, cancelling and recreating task source {CancellationTokenSource}", CancellationTokenSource);
+			CancellationTokenSource.Cancel();
+			CancellationTokenSource.Dispose();
+			CancellationTokenSource = new CancellationTokenSource();
 		}
+		else
+		{
+			Verbose("Render was  null, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
+			RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
+			RenderJob.StartOrGetRenderAsync(CancellationTokenSource.Token);
+		}
+
+		UpdateEditorsCanBeModified();
 	}
 
 #region RenderOption property editing
@@ -317,7 +318,7 @@ public class RenderJobTrackingTab : Panel
 	/// <summary>List containing all the render option editors</summary>
 	private readonly List<RenderOptionEditor> renderOptionEditors = new();
 
-	private DropDown selectedSceneDropdown;
+	private readonly DropDown selectedSceneDropdown;
 
 	private sealed record RenderOptionEditor(CommonControl Control, bool CanModifyWhileRunning);
 
@@ -334,7 +335,7 @@ public class RenderJobTrackingTab : Panel
 			else editor.Control.Enabled = !shouldBeReadonly;
 		}
 
-		selectedSceneDropdown.Enabled = RenderJob is null or {RenderCompleted:  true};
+		selectedSceneDropdown.Enabled = RenderJob is null or { RenderCompleted: true };
 	}
 
 #endregion
