@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using System.Runtime.CompilerServices;
 
 namespace Ararem.RayTracer.Core.Acceleration;
 
@@ -15,5 +16,6 @@ public abstract record BvhNode(RenderStats RenderStats)
 	public abstract (SceneObject Object, HitRecord Hit)? TryHit(Ray ray, float kMin, float kMax);
 
 	/// <inheritdoc cref="AsyncRenderJob.AnyIntersectionFast"/>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public abstract bool FastTryHit(Ray ray, float kMin, float kMax);
 }

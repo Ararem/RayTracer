@@ -45,7 +45,7 @@ public static class TaskWatcher
 				if (task.IsFaulted)
 				{
 					erroredTaskCount++;
-					Log.Error(task.Exception, "Caught exception in watched task {Task}", task);
+					Log.Error(task.Exception!, "Caught exception in watched task {Task}", task);
 					if (exitOnError)
 					{
 						//Don't call App.Quit here, since it may throw

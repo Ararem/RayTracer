@@ -1,7 +1,4 @@
 using Eto.Drawing;
-using Eto.Forms;
-using JetBrains.Annotations;
-using System.Reflection;
 using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev.Resources;

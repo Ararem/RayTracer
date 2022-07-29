@@ -76,9 +76,9 @@ public class RenderJobTrackingTab : Panel
 			};
 			//A bit funky how we do this, but it works I guess
 			List<Scene> allScenes = BuiltinScenes.GetAll().ToList();
-			selectedSceneDropdown.DataStore = allScenes;
+			selectedSceneDropdown.DataStore     = allScenes;
 			Scene initial = allScenes.First(s => string.Equals(s.Name, SelectedScene.Name, StringComparison.Ordinal));
-			int   index   = allScenes.ToList().IndexOf(initial);
+			int    index   = allScenes.ToList().IndexOf(initial);
 			selectedSceneDropdown.SelectedIndex = index;
 			mainDynamicLayout.AddRow(label, selectedSceneDropdown);
 			Verbose("Created scene select dropdown: {Dropdown}", selectedSceneDropdown);
@@ -86,7 +86,7 @@ public class RenderJobTrackingTab : Panel
 			mainDynamicLayout.EndScrollable();
 
 			Verbose("Creating toggle render button");
-			Button toggleRenderStateButton = new()
+			toggleRenderStateButton = new()
 			{
 					ID    = $"{mainDynamicLayout.ID}/ToggleRenderButton",
 					Style = nameof(Bold),
@@ -132,7 +132,7 @@ public class RenderJobTrackingTab : Panel
 			renderOptionsGroup.GroupBox.Style = nameof(Force_Heading);
 			renderStatsGroup.GroupBox.Style   = nameof(Force_Heading);
 			renderBufferGroup.GroupBox.Style  = nameof(Force_Heading);
-			UpdateEditorsCanBeModified();
+			UpdateUI();
 		}
 	}
 
@@ -151,22 +151,29 @@ public class RenderJobTrackingTab : Panel
 	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
 	{
 		TraceEvent(sender, eventArgs);
-		LogVariable(RenderJob?.RenderCompleted);
-		if (RenderJob is { RenderCompleted: false }) //Runs when the render is partway through
+		bool? currentlyCompleted = RenderJob?.RenderCompleted;
+		LogVariable(currentlyCompleted);
+		switch (currentlyCompleted)
 		{
-			Verbose("Render was running, cancelling and recreating task source {CancellationTokenSource}", CancellationTokenSource);
-			CancellationTokenSource.Cancel();
-			CancellationTokenSource.Dispose();
-			CancellationTokenSource = new CancellationTokenSource();
+			case false:
+				Verbose("Render was running, cancelling and recreating task source {CancellationTokenSource}", CancellationTokenSource);
+				CancellationTokenSource.Cancel();
+				CancellationTokenSource.Dispose();
+				CancellationTokenSource = new CancellationTokenSource();
+				RenderJob!.RenderTask.ContinueWith(_ => Application.Instance.Invoke(UpdateUI)); //We make sure the UI gets updated after the render completes, else the UI shows the wrong state
+				break;
+			case true:
+				Verbose("Render was completed, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
+				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
+				RenderJob.StartOrGetRenderAsync(CancellationTokenSource.Token);
+				break;
+			case null:
+				Verbose("Render was  null, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
+				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
+				RenderJob.StartOrGetRenderAsync(CancellationTokenSource.Token);
+				break;
 		}
-		else
-		{
-			Verbose("Render was  null, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
-			RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
-			RenderJob.StartOrGetRenderAsync(CancellationTokenSource.Token);
-		}
-
-		UpdateEditorsCanBeModified();
+		UpdateUI();
 	}
 
 #region RenderOption property editing
@@ -318,24 +325,50 @@ public class RenderJobTrackingTab : Panel
 	/// <summary>List containing all the render option editors</summary>
 	private readonly List<RenderOptionEditor> renderOptionEditors = new();
 
+	private readonly Button   toggleRenderStateButton;
 	private readonly DropDown selectedSceneDropdown;
 
 	private sealed record RenderOptionEditor(CommonControl Control, bool CanModifyWhileRunning);
 
 	/// <summary>Updates all the property editors, locking them if they can't be modified</summary>
-	private void UpdateEditorsCanBeModified()
+	private void UpdateUI()
 	{
+		Verbose("Updating UI");
+
 		Verbose("Updating whether property editors can be modified");
 		for (int i = 0; i < renderOptionEditors.Count; i++)
 		{
 			RenderOptionEditor editor           = renderOptionEditors[i];
-			bool               shouldBeReadonly = !editor.CanModifyWhileRunning && (RenderJob?.RenderCompleted == false);
+			bool enabled = RenderJob is null or { RenderCompleted: true } //Render isn't running
+						   || editor.CanModifyWhileRunning; //Always allowed to modify
 			if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
+			{
+				bool shouldBeReadonly = !enabled;
 				readonlyProp.SetValue(editor.Control, shouldBeReadonly);
-			else editor.Control.Enabled = !shouldBeReadonly;
+				Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
+			}
+			else
+			{
+				editor.Control.Enabled = enabled;
+				Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
+			}
 		}
 
-		selectedSceneDropdown.Enabled = RenderJob is null or { RenderCompleted: true };
+		{
+			bool enabled = RenderJob is null or { RenderCompleted: true };
+			selectedSceneDropdown.Enabled = enabled;
+			Verbose("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
+		}
+		{
+			string newText = RenderJob?.RenderCompleted switch
+			{
+					null  => "Start render",
+					false => "Stop render",
+					true  => "Restart new render"
+			};
+			Verbose("Updating {Control}.Text: {OldValue} => {NewValue}", toggleRenderStateButton, toggleRenderStateButton.Text, newText);
+			toggleRenderStateButton.Text = newText;
+		}
 	}
 
 #endregion
