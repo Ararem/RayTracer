@@ -140,10 +140,11 @@ public sealed class RenderOptions
 	/// </summary>
 	/// <remarks>Must be &gt;=0</remarks>
 	[ValueRange(1, int.MaxValue)]
+	//TODO: Allow this to be changed at runtime
 	public int MaxBounceDepth
 	{
 		get => maxBounceDepth;
-		set
+		init
 		{
 			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, int.MaxValue));
 			maxBounceDepth = value;
