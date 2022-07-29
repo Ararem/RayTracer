@@ -38,7 +38,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Aardvark.OpenImageDenoise" Version="0.3.1" />
 		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.8" />
 		<PackageReference Include="Figgle" Version="0.4.0" />
 		<PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta9" />
