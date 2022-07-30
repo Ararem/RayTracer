@@ -1,4 +1,5 @@
 //Debugging aid to help me compare when I change things with Hot Reload
+
 #define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using Ararem.RayTracer.Core.Acceleration;
@@ -91,9 +92,7 @@ public sealed class AsyncRenderJob : IDisposable
 			try
 			{
 				Parallel.For(
-						0, RenderStats.TotalTruePixels,
-						new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken },
-						() =>
+						0, RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
 						{
 							Interlocked.Increment(ref RenderStats.ThreadsRunning);
 							return this;
@@ -106,8 +105,7 @@ public sealed class AsyncRenderJob : IDisposable
 							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
 
 							return state;
-						},
-						static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
+						}, static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
 				);
 			}
 			catch (OperationCanceledException e)
@@ -164,24 +162,37 @@ public sealed class AsyncRenderJob : IDisposable
 					return hit.OutsideFace ? Colour.Green : Colour.Red;
 				}
 				//Render how far away the objects are from the camera
-				case GraphicsDebugVisualisation.DistanceFromCamera:
-				{
-					//I have several ways for displaying the depth
-					//Changing `a` affects how steep the curve is. Higher values cause a faster drop off
-					//Have to ensure it's >0 or else all functions return 1
-					// ReSharper disable once UnusedVariable
-					#pragma warning disable CS0219
-					const float a = .200f;
-					#pragma warning restore CS0219
-					// ReSharper disable once JoinDeclarationAndInitializer
+				/*
+					const float a = 1f;
 					float val;
 					float z = hit.K - RenderOptions.KMin;
 
 					// val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
 					// val = MathF.Pow(MathF.E, -a * z); //Exponential
-					val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
-					// val   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
+					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
+					val = 1 - (MathF.Atan(a * z) * (2f / MathF.PI)); //Inverse Tan
 					// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
+				 */
+				case GraphicsDebugVisualisation.DistanceFromCamera_Close:
+				{
+					float z = hit.K - RenderOptions.KMin;
+					// float val = MathF.Pow(MathF.E, -.2f * z); //Exponential
+					float val = MathF.Pow(MathF.E, -(0.01f * z * z)); //Bell Curve
+					return new Colour(val);
+				}
+				case GraphicsDebugVisualisation.DistanceFromCamera_Mid:
+				{
+					float z = hit.K - RenderOptions.KMin;
+
+					// float val = MathF.Pow(MathF.E, -.02f * z); //Exponential
+					float val = MathF.Pow(MathF.E, -(0.0001f * z * z)); //Bell Curve
+					return new Colour(val);
+				}
+				case GraphicsDebugVisualisation.DistanceFromCamera_Far:
+				{
+					float z = hit.K - RenderOptions.KMin;
+					// float val = MathF.Pow(MathF.E, -.0008f * z); //Exponential
+					float val = MathF.Pow(MathF.E, -(.000001f * z * z)); //Bell Curve
 					return new Colour(val);
 				}
 
@@ -235,7 +246,7 @@ public sealed class AsyncRenderJob : IDisposable
 						sum += light.CalculateLight(hit, out _, true);
 					}
 
-					return sum;//Scene.Lights.Length;
+					return sum; //Scene.Lights.Length;
 				}
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
@@ -481,10 +492,7 @@ public sealed class AsyncRenderJob : IDisposable
 			Vector3 correctNormal = ray.Direction;
 			float   correctMag    = correctNormal.Length();
 
-			Log.Warning(
-					"HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude})\nHit: {@Hit}\nObject: {@Object}",
-					wrongNormal, wrongMag, correctNormal, correctMag, hit, obj
-			);
+			Log.Warning("HitRecord normal had incorrect magnitude, fixing. Correcting {WrongNormal} ({WrongMagnitude})	=>	{CorrectedNormal} ({CorrectedMagnitude})\nHit: {@Hit}\nObject: {@Object}", wrongNormal, wrongMag, correctNormal, correctMag, hit, obj);
 			GraphicsValidator.RecordError(GraphicsErrorType.NormalsWrongMagnitude, obj);
 		}
 
@@ -493,19 +501,13 @@ public sealed class AsyncRenderJob : IDisposable
 			Vector2 wrongUv     = hit.UV;
 			Vector2 correctedUv = Vector2.Clamp(hit.UV, Vector2.Zero, Vector2.One);
 
-			Log.Warning(
-					"HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}\nHit: {@Hit}\nObject: {@Object}",
-					wrongUv, correctedUv, hit, obj
-			);
+			Log.Warning("HitRecord UV was out of range, fixing. Correcting {WrongUV}	=>	{CorrectedUV}\nHit: {@Hit}\nObject: {@Object}", wrongUv, correctedUv, hit, obj);
 			GraphicsValidator.RecordError(GraphicsErrorType.UVInvalid, obj);
 		}
 
 		if (!GraphicsValidator.CheckValueRange(hit.K, kMin, kMax))
 		{
-			Log.Warning(
-					"Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]\nHit: {@Hit}\nObject: {@Object}",
-					hit.K, kMin, kMax, hit, obj
-			);
+			Log.Warning("Hittable K value was not in correct range, skipping object. K Value: {Value}, valid range is [{KMin}..{KMax}]\nHit: {@Hit}\nObject: {@Object}", hit.K, kMin, kMax, hit, obj);
 			GraphicsValidator.RecordError(GraphicsErrorType.KValueNotInRange, obj);
 			return null; //Skip because we can't consider it valid
 		}
@@ -534,7 +536,7 @@ public sealed class AsyncRenderJob : IDisposable
 		int i = Compress2DIndex(x, y, RenderOptions.RenderWidth);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
-		rawColourBuffer[i] = newSampleColour;
+		rawColourBuffer[i]   = newSampleColour;
 		//Have to clamp the colour here or we get funky things in the image later
 		Colour finalColour = newSampleColour;
 		#else

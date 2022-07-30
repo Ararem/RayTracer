@@ -14,8 +14,14 @@ public enum GraphicsDebugVisualisation
 	/// <remarks>Outside face is green, inside is red</remarks>
 	FaceDirection,
 
-	/// <summary>Output a greyscale image based on how close the intersection is to the camera.</summary>
-	DistanceFromCamera,
+	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively small distances (e.g. a few units)</summary>
+	DistanceFromCamera_Close,
+
+	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few hundred units)</summary>
+	DistanceFromCamera_Mid,
+
+	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few hundred units)</summary>
+	DistanceFromCamera_Far,
 
 	/// <summary>UV coordinate output by the object's intersection code</summary>
 	UVCoords,

@@ -13,7 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using static Ararem.RayTracer.Display.Dev.LogUtils;
+using static LibArarem.Core.Logging.LogUtils;
 using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
 using static Serilog.Log;
 
@@ -163,9 +163,9 @@ public class RenderJobTrackingTab : Panel
 	/// <param name="eventArgs"></param>
 	private void ToggleRenderButtonClicked(object? sender, EventArgs eventArgs)
 	{
-		TraceEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 		bool? currentlyCompleted = RenderJob?.RenderCompleted;
-		LogVariable(currentlyCompleted);
+		LogExpression(currentlyCompleted);
 		switch (currentlyCompleted)
 		{
 			case false:
