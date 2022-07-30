@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using static LibArarem.Core.Logging.LogUtils;
 
 namespace Ararem.RayTracer.Core.Acceleration;
 
@@ -36,89 +37,116 @@ public sealed class BvhTree
 
 	private BvhNode FromSegment_SAH(ArraySegment<SceneObject> segment, int depth)
 	{
-		if (segment.Count == 0) return new EmptyBvhNode(renderStats);
-		//Simple check if 1 element so we can assume more than 1 later on
-		if (segment.Count == 1) return new SingleObjectBvhNode(segment[0], renderStats);
-
-		//Port of Pete Shirley's code
-		// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
-		// https://3.bp.blogspot.com/-PMG6dWk1i60/VuG9UHjsdlI/AAAAAAAACEo/BS1qJyut7LE/s1600/Screen%2BShot%2B2016-03-10%2Bat%2B11.25.08%2BAM.png
-
-		int                      n         = segment.Count;
-		AxisAlignedBoundingBox[] boxes     = new AxisAlignedBoundingBox[n];
-		float[]                  leftArea  = new float[n];
-		float[]                  rightArea = new float[n];
-		SceneObject[]            objects   = segment.ToArray();
-
-		AxisAlignedBoundingBox mainBox = segment[0].Hittable.BoundingVolume;
-		for (int i = 1; i < n; i++)
+		BvhNode node;
+		switch (segment.Count)
 		{
-			mainBox = AxisAlignedBoundingBox.Encompass(segment[i].Hittable.BoundingVolume, mainBox);
-		}
-
-		//Find longest axis to split along, then sort
-		Vector3 size = mainBox.Max - mainBox.Min;
-		float   max  = MathF.Max(MathF.Max(size.X, size.Y), size.Z);
-		int     axis = Math.Abs(max - size.X) < 0.001f ? 0 : Math.Abs(max - size.Y) < 0.001f ? 1 : 2; //Choose longest axis
-
-		Comparison<SceneObject> compareFunc = axis switch
-		{
-				0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
-				1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
-				_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
-		};
-		Array.Sort(objects, compareFunc);
-
-		//Copy AABB's to an array for easier access
-		for (int i = 0; i < n; i++) boxes[i] = segment[i].Hittable.BoundingVolume;
-
-		//Calculate the area from the left towards right
-		leftArea[0] = GetAABBArea(boxes[0]);
-		AxisAlignedBoundingBox leftBox = boxes[0];
-		for (int i = 1; i < n - 1; i++)
-		{
-			leftBox     = AxisAlignedBoundingBox.Encompass(leftBox, boxes[i]);
-			leftArea[i] = GetAABBArea(leftBox);
-		}
-
-		//Calculate the area from right towards left
-		rightArea[n - 1] = GetAABBArea(boxes[n - 1]);
-		AxisAlignedBoundingBox rightBox = boxes[n - 1];
-		for (int i = n - 2; i > 0; i--)
-		{
-			rightBox     = AxisAlignedBoundingBox.Encompass(rightBox, boxes[i]);
-			rightArea[i] = GetAABBArea(rightBox);
-		}
-
-		//Find the index at which we get the smallest surface area, in order to find the most optimal split
-		float minSA      = float.MaxValue;
-		int   minSAIndex = 0;
-		for (int i = 0; i < n - 1; i++)
-		{
-			float sah = (i * leftArea[i]) + ((n - i - 1) * rightArea[i + 1]);
-			if (sah < minSA)
+			case 0:
 			{
-				minSAIndex = i;
-				minSA      = sah;
+				node = new EmptyBvhNode(renderStats);
+				break;
+			}
+			//Simple check if 1 element so we can assume more than 1 later on
+			case 1:
+			{
+				node = new SingleObjectBvhNode(segment[0], renderStats);
+				break;
+			}
+			case var n:
+			{
+				//Port of Pete Shirley's code
+				// https://psgraphics.blogspot.com/2016/03/a-simple-sah-bvh-build.html
+				// https://3.bp.blogspot.com/-PMG6dWk1i60/VuG9UHjsdlI/AAAAAAAACEo/BS1qJyut7LE/s1600/Screen%2BShot%2B2016-03-10%2Bat%2B11.25.08%2BAM.png
+
+				AxisAlignedBoundingBox[] boxes     = new AxisAlignedBoundingBox[n];
+				float[]                  leftArea  = new float[n];
+				float[]                  rightArea = new float[n];
+				SceneObject[]            objects   = segment.ToArray();
+
+				AxisAlignedBoundingBox mainBox = segment[0].Hittable.BoundingVolume;
+				for (int i = 1; i < n; i++)
+				{
+					mainBox = AxisAlignedBoundingBox.Encompass(segment[i].Hittable.BoundingVolume, mainBox);
+				}
+
+				//Find longest axis to split along, then sort
+				Vector3 size = mainBox.Max - mainBox.Min;
+				float   max  = MathF.Max(MathF.Max(size.X, size.Y), size.Z);
+				int     axis = Math.Abs(max - size.X) < 0.001f ? 0 : Math.Abs(max - size.Y) < 0.001f ? 1 : 2; //Choose longest axis
+
+				Comparison<SceneObject> compareFunc = axis switch
+				{
+						0 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.X),
+						1 => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Y),
+						_ => static (a, b) => CompareHittables(a.Hittable.BoundingVolume, b.Hittable.BoundingVolume, static v => v.Z)
+				};
+				Array.Sort(objects, compareFunc);
+
+				//Copy AABB's to an array for easier access
+				for (int i = 0; i < n; i++) boxes[i] = segment[i].Hittable.BoundingVolume;
+
+				//Calculate the area from the left towards right
+				leftArea[0] = GetAABBArea(boxes[0]);
+				AxisAlignedBoundingBox leftBox = boxes[0];
+				for (int i = 1; i < n - 1; i++)
+				{
+					leftBox     = AxisAlignedBoundingBox.Encompass(leftBox, boxes[i]);
+					leftArea[i] = GetAABBArea(leftBox);
+				}
+
+				//Calculate the area from right towards left
+				rightArea[n - 1] = GetAABBArea(boxes[n - 1]);
+				AxisAlignedBoundingBox rightBox = boxes[n - 1];
+				for (int i = n - 2; i > 0; i--)
+				{
+					rightBox     = AxisAlignedBoundingBox.Encompass(rightBox, boxes[i]);
+					rightArea[i] = GetAABBArea(rightBox);
+				}
+
+				//Find the index at which we get the smallest surface area, in order to find the most optimal split
+				float minSA      = float.MaxValue;
+				int   minSAIndex = 0;
+				for (int i = 0; i < n - 1; i++)
+				{
+					float sah = (i * leftArea[i]) + ((n - i - 1) * rightArea[i + 1]);
+					if (sah < minSA)
+					{
+						minSAIndex = i;
+						minSA      = sah;
+					}
+				}
+
+				//We know we'll be using binary nodes because we already checked for a single object earlier
+				string indent = new(' ', depth);
+				Trace("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+
+				BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)],   depth + 1);
+				BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..], depth + 1);
+
+				static float GetAABBArea(AxisAlignedBoundingBox aabb)
+				{
+					Vector3 size = aabb.Max - aabb.Min;
+					return 2 * ((size.X * size.Y) + (size.Y * size.Z) + (size.Z * size.X));
+				}
+
+				node = new BinaryBvhNode(leftNode, rightNode, renderStats);
+				break;
 			}
 		}
 
-		//We know we'll be using binary nodes because we already checked for a single object earlier
-		string indent = new(' ', depth);
-		Log.Verbose("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+		Trace("[{Depth}] {@Node}", depth, Destructure(node));
+		return node;
 
-		BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)],   depth + 1);
-		BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..], depth + 1);
-
-		return new BinaryBvhNode(leftNode, rightNode, renderStats);
-
-		static float GetAABBArea(AxisAlignedBoundingBox aabb)
+		static object? Destructure(BvhNode node)
 		{
-			Vector3 size = aabb.Max - aabb.Min;
-			return 2 * ((size.X * size.Y) + (size.Y * size.Z) + (size.Z * size.X));
+			return node switch
+			{
+					BinaryBvhNode binary       => new { binary.BoundingBox, NodeA = Destructure(binary.NodeA), NodeB = Destructure(binary.NodeB) },
+					SingleObjectBvhNode single => new { single.BoundingBox, single.SceneObject },
+					EmptyBvhNode empty         => new { empty.BoundingBox },
+					_                          => null
+			};
 		}
 	}
-
 
 	//Old version of splitting code
 	// private static IBvhNode FromArraySegment(ArraySegment<SceneObject> segment)

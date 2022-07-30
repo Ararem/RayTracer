@@ -333,7 +333,7 @@ public class RenderJobTrackingTab : Panel
 
 	private static void LogPropChanged<T>(PropertyInfo property, T newVal)
 	{
-		Trace("Property {Property} changed => {NewValue}", property, newVal);
+		Verbose("Property {Property} changed => {NewValue}", property, newVal);
 	}
 
 	/// <summary>List containing all the render option editors</summary>

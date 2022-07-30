@@ -1,11 +1,13 @@
 // #define DEBUG_LOG
 
+using Destructurama;
 using LibArarem.Core.Logging;
 using LibArarem.Core.Logging.Destructurers;
 using LibArarem.Core.Logging.Enrichers;
 using Serilog;
 using Serilog.Debugging;
 using Serilog.Enrichers;
+using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Diagnostics;
 using System.Numerics;
@@ -13,6 +15,7 @@ using static LibArarem.Core.Logging.Enrichers.ExceptionDataEnricher;
 using static LibArarem.Core.Logging.Enrichers.CallerContextEnricher;
 using static LibArarem.Core.Logging.Enrichers.EventLevelIndentEnricher;
 using static LibArarem.Core.Logging.Enrichers.ThreadInfoEnricher;
+using static LibArarem.Core.Logging.LogUtils;
 
 namespace Ararem.RayTracer.Core;
 
@@ -33,7 +36,8 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
 		LoggerConfiguration config = new LoggerConfiguration()
-									.MinimumLevel.Is(LogUtils.TraceLevel)
+									.MinimumLevel.Is(LogUtils.TraceLevel) //Rendered weird but it shouldn't be used unless it's for debugging
+									// .MinimumLevel.Is(LogEventLevel.Verbose) //Rendered weird but it shouldn't be used unless it's for debugging
 									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 									.Enrich.WithThreadId()
 									.Enrich.WithThreadName()
@@ -48,6 +52,7 @@ internal static class Logger
 									.Destructure.With<DelegateDestructurer>()
 									.Destructure.With<IncludePublicFieldsDestructurer>()
 									.Destructure.AsScalar<Vector3>()
+									.Destructure.UsingAttributes()
 									.Destructure.AsScalar<Vector2>();
 
 		config = adjustConfig?.Invoke(config) ?? config; //If no config func is provided, `Invoke(...)` isn't called and it returns null, which is handled by the `?? config`
