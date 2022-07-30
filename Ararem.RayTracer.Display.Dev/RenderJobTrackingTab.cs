@@ -333,7 +333,7 @@ public class RenderJobTrackingTab : Panel
 
 	private static void LogPropChanged<T>(PropertyInfo property, T newVal)
 	{
-		Verbose("Property {Property} changed => {NewValue}", property, newVal);
+		Trace("Property {Property} changed => {NewValue}", property, newVal);
 	}
 
 	/// <summary>List containing all the render option editors</summary>
@@ -349,10 +349,10 @@ public class RenderJobTrackingTab : Panel
 	private readonly DropDown selectedSceneDropdown;
 
 	/// <summary>Target refreshes-per-second that we want</summary>
-	private static readonly int TargetRefreshRate = 1; //Fps
+	private static int TargetRefreshRate => 1; //Fps
 
 	/// <summary>Time (ms) between updates for our <see cref="TargetRefreshRate"/></summary>
-	private static int UpdatePeriod => 1000 / 20;
+	private static int UpdatePeriod => 1000 / TargetRefreshRate;
 
 	/// <summary>Updates all the UI</summary>
 	private void UpdateUi()
@@ -364,7 +364,7 @@ public class RenderJobTrackingTab : Panel
 		 */
 		Stopwatch  totalSw  = Stopwatch.StartNew();
 		Stopwatch  partSw  = Stopwatch.StartNew();
-		Verbose("[{Sender}] Updating UI", ID);
+		Trace("[{Sender}] Updating UI", ID);
 
 		//Enable/disable controls depending on if we are rendering or not
 		partSw.Restart();
@@ -379,19 +379,19 @@ public class RenderJobTrackingTab : Panel
 				{
 					bool shouldBeReadonly = !enabled;
 					readonlyProp.SetValue(editor.Control, shouldBeReadonly);
-					// Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
+					Trace("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
 				}
 				else
 				{
 					editor.Control.Enabled = enabled;
-					// Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
+					Trace("{Control}.Enabled set to {Value}", editor.Control, enabled);
 				}
 			}
 
 			{
 				bool enabled = RenderJob is null or { RenderCompleted: true };
 				selectedSceneDropdown.Enabled = enabled;
-				// Verbose("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
+				Trace("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
 			}
 
 			//Update the text for the toggle render state button
@@ -403,10 +403,10 @@ public class RenderJobTrackingTab : Panel
 						true  => "Restart new render"
 				};
 				toggleRenderStateButton.Text = newText;
-				// Verbose("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
+				Trace("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
 			}
 		}
-		Verbose("[{Sender}] (Editors) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
+		Trace("[{Sender}] (Editors) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
 
 		//Update the image display of the render buffer
@@ -418,7 +418,7 @@ public class RenderJobTrackingTab : Panel
 				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
 				if ((previewImage.Width != width) || (previewImage.Height != height))
 				{
-					Verbose("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
+					Trace("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
 					previewImageView.Image = previewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{previewImageView.ID}.Bitmap" };
 				}
 
@@ -441,14 +441,14 @@ public class RenderJobTrackingTab : Panel
 				}
 			}
 		}
-		Verbose("[{Sender}] (Image) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
+		Trace("[{Sender}] (Image) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
 		//Update the statistics table
 		{
 			// UpdateStatsTable();
 		}
 
-		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", ID, totalSw.Elapsed.TotalMilliseconds);
+		Trace("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", ID, totalSw.Elapsed.TotalMilliseconds);
 		updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
 	}
 

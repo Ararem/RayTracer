@@ -1,5 +1,6 @@
 // #define DEBUG_LOG
 
+using LibArarem.Core.Logging;
 using LibArarem.Core.Logging.Destructurers;
 using LibArarem.Core.Logging.Enrichers;
 using Serilog;
@@ -32,7 +33,7 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
 		LoggerConfiguration config = new LoggerConfiguration()
-									.MinimumLevel.Verbose()
+									.MinimumLevel.Is(LogUtils.TraceLevel)
 									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 									.Enrich.WithThreadId()
 									.Enrich.WithThreadName()
