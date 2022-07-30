@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -135,7 +136,7 @@ public class RenderJobTrackingTab : Panel
 			// Periodically update the previews using a timer
 			//PERF: This creates quite a few allocations when called frequently
 			//TODO: Perhaps PeriodicTimer or UITimer
-			updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateUi, 0, UpdatePeriod);
+			updatePreviewTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateUi, UpdatePeriod, Timeout.Infinite);
 		}
 
 		{
@@ -348,10 +349,10 @@ public class RenderJobTrackingTab : Panel
 	private readonly DropDown selectedSceneDropdown;
 
 	/// <summary>Target refreshes-per-second that we want</summary>
-	private static readonly int TargetRefreshRate = 20; //Fps
+	private static readonly int TargetRefreshRate = 1; //Fps
 
 	/// <summary>Time (ms) between updates for our <see cref="TargetRefreshRate"/></summary>
-	private static int UpdatePeriod => 1000 / TargetRefreshRate;
+	private static int UpdatePeriod => 1000 / 20;
 
 	/// <summary>Updates all the UI</summary>
 	private void UpdateUi()
@@ -361,73 +362,94 @@ public class RenderJobTrackingTab : Panel
 		 * (A) - It's only called on the main thread
 		 * (B) - The timer is only ever reset *after* everything's already been updated
 		 */
-		// Verbose("Updating UI");
+		Stopwatch  totalSw  = Stopwatch.StartNew();
+		Stopwatch  partSw  = Stopwatch.StartNew();
+		Verbose("[{Sender}] Updating UI", ID);
 
 		//Enable/disable controls depending on if we are rendering or not
-		// Verbose("Updating whether property editors can be modified");
-		for (int i = 0; i < renderOptionEditors.Count; i++)
+		partSw.Restart();
 		{
-			RenderOptionEditor editor = renderOptionEditors[i];
-			bool enabled = RenderJob is null or { RenderCompleted: true } //Render isn't running
-						   || editor.CanModifyWhileRunning;               //Always allowed to modify
-			if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
+			// Verbose("Updating whether property editors can be modified");
+			for (int i = 0; i < renderOptionEditors.Count; i++)
 			{
-				bool shouldBeReadonly = !enabled;
-				readonlyProp.SetValue(editor.Control, shouldBeReadonly);
-				// Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
+				RenderOptionEditor editor = renderOptionEditors[i];
+				bool enabled = RenderJob is null or { RenderCompleted: true } //Render isn't running
+							   || editor.CanModifyWhileRunning;               //Always allowed to modify
+				if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
+				{
+					bool shouldBeReadonly = !enabled;
+					readonlyProp.SetValue(editor.Control, shouldBeReadonly);
+					// Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
+				}
+				else
+				{
+					editor.Control.Enabled = enabled;
+					// Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
+				}
 			}
-			else
+
 			{
-				editor.Control.Enabled = enabled;
-				// Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
+				bool enabled = RenderJob is null or { RenderCompleted: true };
+				selectedSceneDropdown.Enabled = enabled;
+				// Verbose("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
+			}
+
+			//Update the text for the toggle render state button
+			{
+				string newText = RenderJob?.RenderCompleted switch
+				{
+						null  => "Start render",
+						false => "Stop render",
+						true  => "Restart new render"
+				};
+				toggleRenderStateButton.Text = newText;
+				// Verbose("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
 			}
 		}
+		Verbose("[{Sender}] (Editors) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
-		{
-			bool enabled = RenderJob is null or { RenderCompleted: true };
-			selectedSceneDropdown.Enabled = enabled;
-			// Verbose("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
-		}
-
-		//Update the text for the toggle render state button
-		{
-			string newText = RenderJob?.RenderCompleted switch
-			{
-					null  => "Start render",
-					false => "Stop render",
-					true  => "Restart new render"
-			};
-			toggleRenderStateButton.Text = newText;
-			// Verbose("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
-		}
 
 		//Update the image display of the render buffer
-		Buffer2D<Rgb24>? srcRenderBuffer = RenderJob?.Image.Frames.RootFrame.PixelBuffer;
-		if (srcRenderBuffer is not null)
+		partSw.Restart();
 		{
-			int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
-			if ((previewImage.Width != width) || (previewImage.Height != height))
+			Buffer2D<Rgb24>? srcRenderBuffer = RenderJob?.Image.Frames.RootFrame.PixelBuffer;
+			if (srcRenderBuffer is not null)
 			{
-				Verbose("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
-				previewImageView.Image=previewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{previewImageView.ID}.Bitmap" };
-			}
+				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
+				if ((previewImage.Width != width) || (previewImage.Height != height))
+				{
+					Verbose("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
+					previewImageView.Image = previewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{previewImageView.ID}.Bitmap" };
+				}
 
-			using BitmapData destPreviewImage = previewImage.Lock();
-			IntPtr           destOffset       = destPreviewImage.Data;
-			int              xSize            = previewImage.Width, ySize = previewImage.Height;
-			for (int y = 0; y < ySize; y++)
+				using BitmapData destPreviewImage = previewImage.Lock();
+				IntPtr           destOffset       = destPreviewImage.Data;
+				int              xSize            = previewImage.Width, ySize = previewImage.Height;
+				for (int y = 0; y < ySize; y++)
+				{
 					//This code assumes the source and dest images are same bit depth and size
 					//Otherwise here be dragons
-				unsafe
-				{
-					Span<Rgb24> renderBufRow = srcRenderBuffer.DangerousGetRowSpan(y);
-					void*       destPtr      = destOffset.ToPointer();
-					Span<Rgb24> destRow      = new(destPtr, xSize);
+					unsafe
+					{
+						Span<Rgb24> renderBufRow = srcRenderBuffer.DangerousGetRowSpan(y);
+						void*       destPtr      = destOffset.ToPointer();
+						Span<Rgb24> destRow      = new(destPtr, xSize);
 
-					renderBufRow.CopyTo(destRow);
-					destOffset += destPreviewImage.ScanWidth;
+						renderBufRow.CopyTo(destRow);
+						destOffset += destPreviewImage.ScanWidth;
+					}
 				}
+			}
 		}
+		Verbose("[{Sender}] (Image) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
+
+		//Update the statistics table
+		{
+			// UpdateStatsTable();
+		}
+
+		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", ID, totalSw.Elapsed.TotalMilliseconds);
+		updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
 	}
 
 	private readonly Timer updatePreviewTimer;

@@ -110,7 +110,7 @@ public sealed class RenderOptions
 	public int ConcurrencyLevel
 	{
 		get => concurrencyLevel;
-		init
+		set
 		{
 			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be >0).", (1, int.MaxValue));
 			concurrencyLevel = value;

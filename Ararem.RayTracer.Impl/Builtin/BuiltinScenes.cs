@@ -72,7 +72,7 @@ public static class BuiltinScenes
 				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f) { Material = new StandardMaterial(Black, Red, 0f) }));
 
 				//Same but with a sized (area) light
-				lights.Add(new PointLight { Position = new Vector3(-5, 1f, -7f), Colour = Green, AttenuationRadius = 1.5f });
+				lights.Add(new PointLight { Position = new Vector3(-5, 1f, -7f), Colour = Green*10f, AttenuationRadius = 1.5f });
 				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f) { Material = new StandardMaterial(Black, Green, 0f) }));
 				objects.Add(new SceneObject("Sized Light Blocker",    new Sphere(new Vector3(-5, .6f,  -7f), .2f) { Material  = new StandardMaterial(Black, 0f) }));
 

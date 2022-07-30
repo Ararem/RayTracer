@@ -1,5 +1,5 @@
 //Debugging aid to help me compare when I change things with Hot Reload
-// #define DEBUG_IGNORE_BUFFER_PREVIOUS
+#define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using Ararem.RayTracer.Core.Acceleration;
 using Ararem.RayTracer.Core.Debugging;
@@ -171,27 +171,29 @@ public sealed class AsyncRenderJob : IDisposable
 					//Have to ensure it's >0 or else all functions return 1
 					// ReSharper disable once UnusedVariable
 					#pragma warning disable CS0219
-					const float a = .00200f;
+					const float a = .200f;
 					#pragma warning restore CS0219
 					// ReSharper disable once JoinDeclarationAndInitializer
 					float val;
 					float z = hit.K - RenderOptions.KMin;
 
 					// val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
-					val = MathF.Pow(MathF.E, -a * z); //Exponential
-					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
+					// val = MathF.Pow(MathF.E, -a * z); //Exponential
+					val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
 					// val   = 1 - (MathF.Atan(a * z) * (2f / MathF.PI));     //Inverse Tan
 					// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
 					return new Colour(val);
 				}
 
-					static Colour RandomColourFromMaterialHash(Material m, bool offset)
+					//Calculates a unique colour for a given material, using it's hash
+					//By setting `alternate` to true, we can get a secondary colour, which is useful when creating a checker texture
+					static Colour UniqueColourFromMaterialHash(Material m, bool alternate)
 					{
 						int        hash  = m.GetHashCode();
 						Span<byte> bytes = stackalloc byte[sizeof(int)];
 						BitConverter.TryWriteBytes(bytes, hash);
 
-						int   o  = offset ? 1 : 0;
+						int   o  = alternate ? 1 : 0;
 						float rh = bytes[o + 0] / 255f;
 						float gh = bytes[o + 1] / 255f;
 						float bh = bytes[o + 2] / 255f;
@@ -199,11 +201,11 @@ public sealed class AsyncRenderJob : IDisposable
 					}
 				//Debug texture based on X/Y pixel coordinates
 				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
-					return RandomColourFromMaterialHash(hit.Material, MathF.Sin(x / 2f) * MathF.Sin(y / 2f) < 0);
+					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(x / 2f) * MathF.Sin(y / 2f) < 0);
 				case GraphicsDebugVisualisation.WorldCoordDebugTexture:
-					return RandomColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
+					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(hit.WorldPoint.X * 40f) * MathF.Sin(hit.WorldPoint.Y * 40f) * MathF.Sin(hit.WorldPoint.Z * 40f) < 0);
 				case GraphicsDebugVisualisation.LocalCoordDebugTexture:
-					return RandomColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
+					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
 				case GraphicsDebugVisualisation.ScatterDirection:
 				{
 					//Convert vector values [-1..1] to [0..1]
@@ -233,7 +235,7 @@ public sealed class AsyncRenderJob : IDisposable
 						sum += light.CalculateLight(hit, out _, true);
 					}
 
-					return sum;
+					return sum;//Scene.Lights.Length;
 				}
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
