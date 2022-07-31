@@ -34,7 +34,7 @@ public sealed class AsyncRenderJob : IDisposable
 	{
 		ArgumentNullException.ThrowIfNull(scene);
 		ArgumentNullException.ThrowIfNull(renderOptions);
-		Log.Debug("New AsyncRenderJob created with Scene={Scene} and Options={@RenderOptions}", scene, renderOptions);
+		Log.Information("New AsyncRenderJob created with Scene={Scene} and Options={@RenderOptions}", scene, renderOptions);
 
 		Image             = new Image<Rgb24>(renderOptions.RenderWidth, renderOptions.RenderHeight);
 		ImageBuffer       = Image.Frames.RootFrame!;
@@ -65,8 +65,7 @@ public sealed class AsyncRenderJob : IDisposable
 
 	private void RenderInternal()
 	{
-		Log.Debug("Rendering start");
-		Log.Debug("CancellationToken: {@CancellationToken}", cancellationToken);
+		Log.Debug("Rendering start with CancellationToken {@CancellationToken}", cancellationToken);
 		Stopwatch.Start();
 		/*
 		 * Due to how i've internally implemented the buffers and functions, it doesn't matter what order the pixels are rendered in

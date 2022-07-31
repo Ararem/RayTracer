@@ -7,15 +7,16 @@ public static class ResourceManager
 {
 	static ResourceManager()
 	{
-		Information("Initialising Resource Manager");
+		Debug("Initialising Resource Manager");
 		// Assembly resourceAssembly = Assembly.GetExecutingAssembly();
 		// Debug("Assembly for resources is {Assembly}", resourceAssembly);
 		{
 			const string iconPathPng = "Ararem.RayTracer.Display.Dev.Resources.icon.png";
-			Verbose("App Icon Png ({Path}): {Icon}", iconPathPng, AppIconPng = Icon.FromResource(iconPathPng));
-
+			AppIconPng    = Icon.FromResource(iconPathPng);
+			AppIconPng.ID = "App Icon";
+			Verbose("App Icon (Png) ({Path}): {Icon}", iconPathPng, AppIconPng );
 		}
-		Information("Initialised Resource Manager");
+		Debug("Initialised Resource Manager");
 	}
 	public static Icon AppIconPng { get; }
 }

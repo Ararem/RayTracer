@@ -1,7 +1,6 @@
 // #define DEBUG_LOG
 
 using Destructurama;
-using LibArarem.Core.Logging;
 using LibArarem.Core.Logging.Destructurers;
 using LibArarem.Core.Logging.Enrichers;
 using Serilog;
@@ -15,7 +14,6 @@ using static LibArarem.Core.Logging.Enrichers.ExceptionDataEnricher;
 using static LibArarem.Core.Logging.Enrichers.CallerContextEnricher;
 using static LibArarem.Core.Logging.Enrichers.EventLevelIndentEnricher;
 using static LibArarem.Core.Logging.Enrichers.ThreadInfoEnricher;
-using static LibArarem.Core.Logging.LogUtils;
 
 namespace Ararem.RayTracer.Core;
 
@@ -36,8 +34,7 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
 		LoggerConfiguration config = new LoggerConfiguration()
-									.MinimumLevel.Is(LogUtils.TraceLevel) //Rendered weird but it shouldn't be used unless it's for debugging
-									// .MinimumLevel.Is(LogEventLevel.Verbose) //Rendered weird but it shouldn't be used unless it's for debugging
+									.MinimumLevel.Is(LogEventLevel.Debug)
 									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 									.Enrich.WithThreadId()
 									.Enrich.WithThreadName()
@@ -70,6 +67,7 @@ internal static class Logger
 		Log.Information("Logger Initialized");
 		#endif
 	}
+	//Lets us change the log settings when debugging and have it instantly happen with hot reload
 	#if DEBUG
 
 	private static Timer? debugOnlyUpdateLogConfigTimer = null;

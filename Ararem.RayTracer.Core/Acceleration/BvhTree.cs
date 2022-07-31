@@ -2,7 +2,6 @@ using JetBrains.Annotations;
 using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using static LibArarem.Core.Logging.LogUtils;
 
 namespace Ararem.RayTracer.Core.Acceleration;
 
@@ -117,7 +116,7 @@ public sealed class BvhTree
 
 				//We know we'll be using binary nodes because we already checked for a single object earlier
 				string indent = new(' ', depth);
-				Trace("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
+				Log.Verbose("{Indent}Split at {SplitPosition}/{Count} along {Axis} axis", indent, minSAIndex, objects.Length, axis switch { 0 => 'X', 1 => 'Y', _ => 'Z' });
 
 				BvhNode leftNode  = minSAIndex == 0 ? new SingleObjectBvhNode(objects[0],                  renderStats) : FromSegment_SAH(objects[..(minSAIndex + 1)],   depth + 1);
 				BvhNode rightNode = minSAIndex == n - 2 ? new SingleObjectBvhNode(objects[minSAIndex + 1], renderStats) : FromSegment_SAH(objects[(minSAIndex   + 1)..], depth + 1);
@@ -133,19 +132,7 @@ public sealed class BvhTree
 			}
 		}
 
-		Trace("[{Depth}] {@Node}", depth, Destructure(node));
 		return node;
-
-		static object? Destructure(BvhNode node)
-		{
-			return node switch
-			{
-					BinaryBvhNode binary       => new { binary.BoundingBox, NodeA = Destructure(binary.NodeA), NodeB = Destructure(binary.NodeB) },
-					SingleObjectBvhNode single => new { single.BoundingBox, single.SceneObject },
-					EmptyBvhNode empty         => new { empty.BoundingBox },
-					_                          => null
-			};
-		}
 	}
 
 	//Old version of splitting code

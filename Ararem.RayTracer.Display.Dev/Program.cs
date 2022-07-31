@@ -2,6 +2,7 @@
 using Ararem.RayTracer.Display.Dev.Resources;
 using Eto;
 using Eto.Forms;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -76,25 +77,18 @@ internal static class Program
 		#endif
 		Logger.Init();
 
-		Information("Starting {AppTitle} app", AssemblyInfo.ProductName);
 		Information("Commandline args: {Args}", args);
+		Information("{AppTitle} starting",      AssemblyInfo.ProductName);
 
+		Information("Initialising app components");
 		try
 		{
-			Debug("Setting up AppDomain exception catchers");
-			AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
-
-			/*
-			 * First-chance exceptions are often fine, since they'll be caught most of the time,
-			 * but sometimes async exceptions can get hidden and suppressed, despite being uncaught AND are missed by AppDomain.UnhandledException
-			 * So log them just in case, but they're unimportant hence the verbose
-			 */
-			void FirstChanceException(object? sender, FirstChanceExceptionEventArgs eventArgs)
-			{
-				Verbose(eventArgs.Exception, "First-chance exception from {Sender}:", sender);
-			}
-
-			AppDomain.CurrentDomain.FirstChanceException += FirstChanceException;
+			AppDomain domain = AppDomain.CurrentDomain;
+			Debug("Setting up AppDomain exception catchers for CurrentDomain={AppDomain}", domain);
+			UnhandledExceptionEventHandler              unhandledExceptionEventHandler   = CurrentDomainOnUnhandledException;
+			domain.UnhandledException += unhandledExceptionEventHandler;
+			EventHandler<FirstChanceExceptionEventArgs> firstChangeExceptionEventHandler = FirstChanceException;
+			domain.FirstChanceException += firstChangeExceptionEventHandler;
 			Debug("Set up AppDomain exception catchers");
 		}
 		catch (Exception e)
@@ -137,10 +131,10 @@ internal static class Program
 
 		try
 		{
-			Debug("Hooking up unhandled exception event");
+			Debug("Hooking up ETO.Application unhandled exception event");
 			EventHandler<Eto.UnhandledExceptionEventArgs> unhandledExceptionHandler = EtoUnhandledException;
 			application.UnhandledException += unhandledExceptionHandler;
-			Debug("Unhandled exception event handler added: {@Handler}", unhandledExceptionHandler);
+			Debug("ETO.Application unhandled exception event handler added: {@Handler}", unhandledExceptionHandler);
 		}
 		catch (Exception e)
 		{
@@ -152,10 +146,10 @@ internal static class Program
 
 		try
 		{
-			Information("Initialising manager classes");
+			Debug("Initialising manager classes");
 			RuntimeHelpers.RunClassConstructor(typeof(StyleManager).TypeHandle);
 			RuntimeHelpers.RunClassConstructor(typeof(ResourceManager).TypeHandle);
-			Information("Initialised manager classes");
+			Debug("Initialised manager classes");
 		}
 		catch (Exception e)
 		{
@@ -229,12 +223,22 @@ internal static class Program
 
 	private static void OnUnhandledException(Exception exception, object? sender, bool isTerminating)
 	{
-		Error(exception, "Caught unhandled exception ({Terminating}) from {Sender}:", isTerminating ? "terminating" : "non-terminating", sender);
+		Write(isTerminating ? LogEventLevel.Fatal : LogEventLevel.Error, exception, "Caught unhandled exception ({Terminating}) from {Sender}:", isTerminating ? "terminating" : "non-terminating", sender);
 	}
 
 	private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
 	{
 		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
+	}
+
+	/*
+	 * First-chance exceptions are often fine, since they'll be caught most of the time,
+	 * but sometimes async exceptions can get hidden and suppressed, despite being uncaught AND are missed by AppDomain.UnhandledException
+	 * So log them just in case, but they're unimportant hence the verbose
+	 */
+	private static void FirstChanceException(object? sender, FirstChanceExceptionEventArgs eventArgs)
+	{
+		Verbose(eventArgs.Exception, "First-chance exception from {Sender}:", propertyValue: sender);
 	}
 
 	private static void EtoUnhandledException(object? sender, Eto.UnhandledExceptionEventArgs e)

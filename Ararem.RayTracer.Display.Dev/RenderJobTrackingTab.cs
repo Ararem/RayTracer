@@ -169,19 +169,19 @@ public class RenderJobTrackingTab : Panel
 		switch (currentlyCompleted)
 		{
 			case false:
-				Verbose("Render was running, cancelling and recreating task source {RenderJobCancellationTokenSource}", renderJobCancellationTokenSource);
+				Debug("Render was running, cancelling and recreating task source {RenderJobCancellationTokenSource}", renderJobCancellationTokenSource);
 				renderJobCancellationTokenSource.Cancel();
 				renderJobCancellationTokenSource.Dispose();
 				renderJobCancellationTokenSource = new CancellationTokenSource();
 				RenderJob!.RenderTask.ContinueWith(_ => Application.Instance.Invoke(UpdateUi)); //We make sure the UI gets updated after the render completes, else the UI shows the wrong state
 				break;
 			case true:
-				Verbose("Render was completed, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
+				Debug("Render was completed, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
 				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
 				RenderJob.StartOrGetRenderAsync(renderJobCancellationTokenSource.Token);
 				break;
 			case null:
-				Verbose("Render was  null, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
+				Debug("Render was  null, creating new render with RenderOptions {@RenderOptions} and Scene {Scene}", RenderOptions, SelectedScene);
 				RenderJob = new AsyncRenderJob(SelectedScene, RenderOptions);
 				RenderJob.StartOrGetRenderAsync(renderJobCancellationTokenSource.Token);
 				break;
@@ -364,12 +364,11 @@ public class RenderJobTrackingTab : Panel
 		 */
 		Stopwatch  totalSw  = Stopwatch.StartNew();
 		Stopwatch  partSw  = Stopwatch.StartNew();
-		Trace("[{Sender}] Updating UI", ID);
+		Verbose("[{Sender}] Updating UI", ID);
 
 		//Enable/disable controls depending on if we are rendering or not
 		partSw.Restart();
 		{
-			// Verbose("Updating whether property editors can be modified");
 			for (int i = 0; i < renderOptionEditors.Count; i++)
 			{
 				RenderOptionEditor editor = renderOptionEditors[i];
@@ -378,20 +377,25 @@ public class RenderJobTrackingTab : Panel
 				if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
 				{
 					bool shouldBeReadonly = !enabled;
+					if((bool)readonlyProp.GetValue(editor.Control)! == shouldBeReadonly) continue; //Only log and modify if different
 					readonlyProp.SetValue(editor.Control, shouldBeReadonly);
-					Trace("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
+					Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
 				}
 				else
 				{
+					if(editor.Control.Enabled == enabled) continue; ////Only log and modify if different
 					editor.Control.Enabled = enabled;
-					Trace("{Control}.Enabled set to {Value}", editor.Control, enabled);
+					Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
 				}
 			}
 
 			{
 				bool enabled = RenderJob is null or { RenderCompleted: true };
-				selectedSceneDropdown.Enabled = enabled;
-				Trace("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
+				if (selectedSceneDropdown.Enabled != enabled)
+				{
+					selectedSceneDropdown.Enabled = enabled;
+					Verbose("{Control}.Enabled set to {Value}", selectedSceneDropdown, enabled);
+				}
 			}
 
 			//Update the text for the toggle render state button
@@ -402,11 +406,14 @@ public class RenderJobTrackingTab : Panel
 						false => "Stop render",
 						true  => "Restart new render"
 				};
-				toggleRenderStateButton.Text = newText;
-				Trace("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
+				if (toggleRenderStateButton.Text != newText)
+				{
+					toggleRenderStateButton.Text = newText;
+					Verbose("{Control}.Text set to {NewValue}", toggleRenderStateButton, newText);
+				}
 			}
 		}
-		Trace("[{Sender}] (Editors) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
+		Verbose("[{Sender}] Editors updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
 
 		//Update the image display of the render buffer
@@ -418,7 +425,7 @@ public class RenderJobTrackingTab : Panel
 				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
 				if ((previewImage.Width != width) || (previewImage.Height != height))
 				{
-					Trace("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
+					Verbose("Recreating preview image ({OldValue}) to change size to {NewValue}", previewImage.Size, new Size(width, height));
 					previewImageView.Image = previewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{previewImageView.ID}.Bitmap" };
 				}
 
@@ -441,15 +448,20 @@ public class RenderJobTrackingTab : Panel
 				}
 			}
 		}
-		Trace("[{Sender}] (Image) Updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
+		Verbose("[{Sender}] Image updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
 		//Update the statistics table
+		partSw.Restart();
 		{
 			// UpdateStatsTable();
 		}
+		Verbose("[{Sender}] Stats updated in {Elapsed:#00.000 'ms'}", ID, partSw.Elapsed.TotalMilliseconds);
 
-		Trace("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", ID, totalSw.Elapsed.TotalMilliseconds);
-		updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite);
+		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}",       ID, totalSw.Elapsed.TotalMilliseconds);
+		if (!updatePreviewTimer.Change(UpdatePeriod, Timeout.Infinite))
+		{
+			Error("Could not set preview timer to call again (expect static UI)");
+		}
 	}
 
 	private readonly Timer updatePreviewTimer;
@@ -462,5 +474,6 @@ public class RenderJobTrackingTab : Panel
 
 #endregion
 
-	// #error EXTRACT TO CUSTOM CLASSES FOR EACH GROUP REGION
+	#warning EXTRACT TO CUSTOM CLASSES FOR EACH GROUP REGION
+	#error Dispose members - timer not disposed and keeps running
 }

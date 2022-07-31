@@ -29,7 +29,7 @@ public static class StyleManager
 
 	static StyleManager()
 	{
-		Information("Initializing Style Manager");
+		Debug("Initializing Style Manager");
 		MethodInfo genericAddStyleMethod = ((Action<string, StyleWidgetHandler<Widget>>)Style.Add).Method.GetGenericMethodDefinition();
 		//Loop over all public, static properties that are style handlers for widgets
 		//The reflection stuff is a bit funky, but so are generics so  ¯\_(ツ)_/¯
@@ -47,7 +47,7 @@ public static class StyleManager
 			genericAddStyleMethod.MakeGenericMethod(prop.PropertyType.GenericTypeArguments).Invoke(null, new[] { styleName, styleHandler });
 		}
 
-		Information("Initialized Style Manager");
+		Debug("Initialized Style Manager");
 	}
 
 	public static StyleWidgetHandler<Label> AppTitle => static control =>

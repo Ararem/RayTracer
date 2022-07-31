@@ -35,7 +35,7 @@ internal sealed class MainForm : Form
 
 					//Same for the application items - on linux this is under the "File" section
 					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } },
-					ID = $"{ID}/Menu"
+					ID = $"{ID}/MenuBar"
 			};
 			Verbose("Created MenuBar: {MenuBar}", Menu);
 		}
@@ -79,7 +79,7 @@ internal sealed class MainForm : Form
 		}
 
 		{
-			Verbose("Toolbar disabled: {Toolbar}", ToolBar = null);
+			Verbose("Toolbar (disabled): {Toolbar}", ToolBar = null);
 		}
 
 		{
@@ -99,15 +99,16 @@ internal sealed class MainForm : Form
 	#region Init everything else in the UI
 
 		{
+			Verbose("Creating dynamic layout");
 			DynamicLayout layout = new()
 			{
 					ID            = $"{ID}/Layout",
 					Padding       = DefaultPadding,
 					Spacing = DefaultSpacing
 			};
-			Content = layout;
+			Verbose("Dynamic Layout (MainForm.Content): {Content}", Content = layout);
 			layout.BeginVertical();
-			layout.Add(
+			Verbose("Add Label: {Control}", layout.Add(
 					new Label
 					{
 							ID = $"{layout.ID}/TitleLabel",
@@ -116,17 +117,19 @@ internal sealed class MainForm : Form
 							TextAlignment= TextAlignment.Center,
 							VerticalAlignment = VerticalAlignment.Center
 					}
-			);
+			));
 			layout.BeginScrollable();
-			layout.Add(
+			Verbose("Add DocumentControl: {Control}",layout.Add(
 					tabControlContent = new DocumentControl
 					{
 							ID = "MainForm/Content/DocumentControl",
 					}
-			);
+			));
+			Verbose("Adding page closed handler");
 			tabControlContent.PageClosed += DocumentPageOnClosed;
 			layout.EndScrollable();
 			layout.EndVertical();
+			Verbose("Finished adding to main dynamic layout");
 		}
 
 
@@ -144,7 +147,6 @@ internal sealed class MainForm : Form
 			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
 			newTabMenuItem.Command = newTabCommand;
 			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
-			newTabCommand.Execute();
 
 			Verbose("Setting up close render tab command");
 			MenuItem closeTabMenuItem = new ButtonMenuItem
@@ -158,6 +160,10 @@ internal sealed class MainForm : Form
 			Command closeTabCommand = new(CloseRenderTabExecuted) { ID = $"{closeTabMenuItem.ID}.Command" };
 			closeTabMenuItem.Command = closeTabCommand;
 			Verbose("Added close tab command: {MenuItem}", closeTabMenuItem);
+
+			Verbose("Creating initial tab");
+			newTabCommand.Execute();
+			Verbose("Initial tab created");
 		}
 
 	#endregion
@@ -169,7 +175,7 @@ internal sealed class MainForm : Form
 		LogUtils.TrackEvent(sender, eventArgs);
 
 		DocumentPage oldPage = tabControlContent.SelectedPage;
-		Verbose("Closing and disposing tab {TabPage}", oldPage);
+		Debug("Closing and disposing tab {Control}", oldPage);
 		tabControlContent.Pages.Remove(oldPage);
 		/*
 		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
@@ -203,7 +209,7 @@ internal sealed class MainForm : Form
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (tabControlContent.Pages.Count == 0)
 		{
-			Verbose("Just closed last tab, recreating to ensure we don't get below 1");
+			Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(null, EventArgs.Empty);
 		}
 	}
@@ -213,19 +219,18 @@ internal sealed class MainForm : Form
 	{
 		LogUtils.TrackEvent(sender, eventArgs);
 		Guid guid = Guid.NewGuid();
-		Verbose("Adding new render tab with GUID {Guid}", guid);
 		DocumentPage newPage = new()
 		{
-				ID    = $"{tabControlContent.ID}.Pages/Page_{guid}",
+				ID    = $"Page_{guid}.DocumentPage",
 				Text  = $"Render {guid}",
 				Image = Icon, //TODO: Icon reflects the render buffer...
 		};
 		//TODO: Tab selection thingy text styles
-		Verbose("New TabPage: {TabPage}", newPage);
+		Debug("Added new render tab: {Control}", newPage);
 		tabControlContent.Pages.Add(newPage);
 
-		RenderJobTrackingTab tracker = new($"{newPage.ID}/{nameof(RenderJobTrackingTab)}");
-		Verbose("Render Tracker: {RenderTracker}", tracker);
+		RenderJobTrackingTab tracker = new($"Page_{guid}");
+		Verbose("New render tab control: {Control}", tracker);
 		newPage.Content = tracker;
 	}
 
@@ -234,7 +239,7 @@ internal sealed class MainForm : Form
 	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
 		LogUtils.TrackEvent(sender, eventArgs);
-		Verbose("Closing main form");
+		Debug("Closing main form");
 		Close();
 	}
 
@@ -284,7 +289,7 @@ internal sealed class MainForm : Form
 		}
 		else
 		{
-			Error("Quit not supported");
+			Error("Quit not supported ☹️");
 		}
 	}
 
