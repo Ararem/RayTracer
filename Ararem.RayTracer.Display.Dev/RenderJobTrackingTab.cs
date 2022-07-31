@@ -461,4 +461,6 @@ public class RenderJobTrackingTab : Panel
 	private readonly DragZoomImageView previewImageView;
 
 #endregion
+
+	// #error EXTRACT TO CUSTOM CLASSES FOR EACH GROUP REGION
 }

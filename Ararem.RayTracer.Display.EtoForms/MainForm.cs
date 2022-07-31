@@ -72,7 +72,7 @@ public sealed class MainForm : Form
 				QuitItem  = quitCommand,
 				AboutItem = aboutCommand
 		};
-		const string iconPath = "RayTracer.Display.EtoForms.Appearance.icon.png";
+		const string iconPath = "Ararem.RayTracer.Display.EtoForms.Appearance.icon.png";
 		Verbose("Loading and setting icon from {IconPath}", iconPath);
 		Icon = Icon.FromResource(iconPath);
 

@@ -5,7 +5,7 @@
 	  The default is the platform you are building on.
 	  Valid values: Wpf, Windows, Mac64, XamMac2, Gtk, Direct2D
 	-->
-
+	
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ApplicationIcon>Appearance/icon.ico</ApplicationIcon>

@@ -4,6 +4,7 @@ using Eto.Drawing;
 using Eto.Forms;
 using LibArarem.Core.ObjectPools;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Buffers;
@@ -146,16 +147,16 @@ internal sealed class RenderProgressDisplayPanel : Panel
 
 	private void UpdateImagePreview()
 	{
-		using BitmapData  data         = previewImage.Lock();
-		int               xSize        = previewImage.Width, ySize = previewImage.Height;
-		ImageFrame<Rgb24> renderBuffer = renderJob.ImageBuffer;
-		IntPtr            offset       = data.Data;
+		using BitmapData data         = previewImage.Lock();
+		int              xSize        = previewImage.Width, ySize = previewImage.Height;
+		Buffer2D<Rgb24>  renderBuffer = renderJob.ImageBuffer.PixelBuffer;
+		IntPtr           offset       = data.Data;
 		for (int y = 0; y < ySize; y++)
 				//This code assumes the source and dest images are same bit depth and size
 				//Otherwise here be dragons
 			unsafe
 			{
-				Span<Rgb24> renderBufRow = renderBuffer.GetPixelRowSpan(y);
+				Span<Rgb24> renderBufRow = renderBuffer.DangerousGetRowSpan(y);
 				void*       destPtr      = offset.ToPointer();
 				Span<Rgb24> destRow      = new(destPtr, xSize);
 
@@ -334,7 +335,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			stringStats.Add(
 					("Renderer", new (string Name, string Value, string? Delta)[]
 					{
-							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{(renderJob.RenderOptions.ConcurrencyLevel == -1 ? "∞" : renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat))}".PadLeft(leftAlign), null),
+							("Threads", $"{renderStats.ThreadsRunning.ToString(numFormat)}/{renderJob.RenderOptions.ConcurrencyLevel.ToString(numFormat)}".PadLeft(leftAlign), null),
 							("Completed", $"{renderJob.RenderTask.IsCompleted,leftAlign}", null),
 							// ("Task", renderJob.RenderTask.ToString()!, null),
 							("Status", $"{renderJob.RenderTask.Status,leftAlign}", null),
