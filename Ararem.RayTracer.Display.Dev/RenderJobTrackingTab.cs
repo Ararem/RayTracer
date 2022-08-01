@@ -475,5 +475,5 @@ public class RenderJobTrackingTab : Panel
 #endregion
 
 	#warning EXTRACT TO CUSTOM CLASSES FOR EACH GROUP REGION
-	#error Dispose members - timer not disposed and keeps running
+	// #error Dispose members - timer not disposed and keeps running
 }

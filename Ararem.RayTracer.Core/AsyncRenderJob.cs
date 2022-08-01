@@ -1,6 +1,6 @@
 //Debugging aid to help me compare when I change things with Hot Reload
 
-#define DEBUG_IGNORE_BUFFER_PREVIOUS
+// #define DEBUG_IGNORE_BUFFER_PREVIOUS
 
 using Ararem.RayTracer.Core.Acceleration;
 using Ararem.RayTracer.Core.Debugging;
