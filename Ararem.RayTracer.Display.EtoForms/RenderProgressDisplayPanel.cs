@@ -45,7 +45,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	private readonly DragZoomImageView previewImageView;
 
 	/// <summary>Render job we are displaying the progress for</summary>
-	private readonly AsyncRenderJob renderJob;
+	private readonly RenderJob renderJob;
 
 	/// <summary>Container that has a title and border around the stats table</summary>
 	private readonly GroupBox statsContainer;
@@ -64,7 +64,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 	/// <summary>Table that contains the various stats</summary>
 	private TableLayout statsTable;
 
-	public RenderProgressDisplayPanel(AsyncRenderJob renderJob)
+	public RenderProgressDisplayPanel(RenderJob renderJob)
 	{
 		this.renderJob = renderJob;
 		Verbose("Creating StackPanelLayout with content");

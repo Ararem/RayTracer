@@ -13,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static Figgle.FiggleFonts;
-using static Serilog.Log;
 using static Ararem.RayTracer.Display.Dev.Program.ExitCode;
 using Logger = Ararem.RayTracer.Core.Logger;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;

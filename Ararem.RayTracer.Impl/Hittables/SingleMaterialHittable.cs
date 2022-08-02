@@ -11,7 +11,7 @@ public abstract class SingleMaterialHittable : Hittable
 	public Material Material { get; init; } = BuiltinMaterials.DefaultDiffuseMaterial;
 
 	/// <inheritdoc/>
-	public override AsyncRenderJob Renderer
+	public override RenderJob Renderer
 	{
 		get => base.Renderer;
 		set

@@ -32,7 +32,7 @@ public sealed class ConstantDensityMedium : Hittable
 	public Material Material => InternalMaterial;
 
 	/// <inheritdoc/>
-	public override AsyncRenderJob Renderer
+	public override RenderJob Renderer
 	{
 		get => base.Renderer;
 		set

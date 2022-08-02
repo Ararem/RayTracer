@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Ararem.RayTracer.Core.Debugging;
 
-//TODO: I don't really like how this is made a static class, perhaps refactor this into an instance class and store in AsyncRenderJob
+//TODO: I don't really like how this is made a static class, perhaps refactor this into an instance class and store in RenderJob
 /// <summary>Static class for validating graphics</summary>
 public static class GraphicsValidator
 {

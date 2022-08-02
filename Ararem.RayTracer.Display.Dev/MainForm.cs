@@ -7,8 +7,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using static Serilog.Log;
-using static Ararem.RayTracer.Display.Dev.Resources.StyleManager;
 using ResourceManager = Ararem.RayTracer.Display.Dev.Resources.ResourceManager;
 
 namespace Ararem.RayTracer.Display.Dev;
@@ -229,7 +227,7 @@ internal sealed class MainForm : Form
 		Debug("Added new render tab: {Control}", newPage);
 		tabControlContent.Pages.Add(newPage);
 
-		RenderJobTrackingTab tracker = new($"Page_{guid}");
+		RenderJobPanel tracker = new($"Page_{guid}");
 		Verbose("New render tab control: {Control}", tracker);
 		newPage.Content = tracker;
 	}

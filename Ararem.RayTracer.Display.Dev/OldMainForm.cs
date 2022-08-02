@@ -92,7 +92,7 @@
 // 	private Image<Rgb24> renderBufferB;
 //
 // 	/// <summary>Render job we are displaying the progress for</summary>
-// 	private AsyncRenderJob renderJob;
+// 	private RenderJob renderJob;
 //
 // 	/// <summary>Table that contains the various stats</summary>
 // 	private TableLayout statsTable;
@@ -237,7 +237,7 @@
 // 	private async Task Render()
 // 	{
 // 		// ReSharper disable once RedundantArgumentDefaultValue
-// 		renderJob = new AsyncRenderJob(
+// 		renderJob = new RenderJob(
 // 				BuiltinScenes.Testing, new RenderOptions(
 // 						1920, 1080,
 // 						0.00001f, float.PositiveInfinity,

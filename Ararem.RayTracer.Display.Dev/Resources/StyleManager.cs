@@ -4,7 +4,6 @@ using Eto.Forms;
 using System;
 using System.Linq;
 using System.Reflection;
-using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev.Resources;
 

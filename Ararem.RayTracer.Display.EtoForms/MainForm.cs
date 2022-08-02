@@ -21,7 +21,7 @@ public sealed class MainForm : Form
 	private readonly RenderOptionSelectorPanel? selectorPanel = null;
 	private readonly Label                      titleLabel;
 	private          StackLayoutItem            displayedWindowItem;
-	private          AsyncRenderJob?            renderJob = null;
+	private          RenderJob?            renderJob = null;
 
 	public MainForm()
 	{
@@ -96,7 +96,7 @@ public sealed class MainForm : Form
 		Debug("Scene is {Scene}, Options are {Options}", scene, options);
 
 		Debug("Creating render job");
-		renderJob = new AsyncRenderJob(scene, options);
+		renderJob = new RenderJob(scene, options);
 		Debug("Starting render job");
 		CancellationTokenSource cancellationTokenSource = new();
 		Task                    renderTask              = renderJob.StartOrGetRenderAsync(cancellationTokenSource.Token);

@@ -1,5 +1,4 @@
 using Eto.Drawing;
-using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev.Resources;
 
