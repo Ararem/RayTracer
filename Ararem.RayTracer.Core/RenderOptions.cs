@@ -5,6 +5,7 @@ using LibArarem.Core.Exceptions;
 namespace Ararem.RayTracer.Core;
 
 /// <summary>Class that contains properties that are used to control how a <see cref="Scene"/> is rendered</summary>
+[UsedImplicitly]
 public sealed class RenderOptions
 {
 	/// <summary>
@@ -92,6 +93,7 @@ public sealed class RenderOptions
 	///  consider valid. Note that this distance is distance along the <see cref="Ray"/>, not distance from the <see cref="Camera"/>. This should also be
 	///  &gt; <see cref="KMin"/>, preferably a very large number such as <see cref="float.PositiveInfinity"/>
 	/// </remarks>
+	[NonNegativeValue]
 	public float KMax
 	{
 		get => kMax;
@@ -146,7 +148,7 @@ public sealed class RenderOptions
 		get => maxBounceDepth;
 		init
 		{
-			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, int.MaxValue));
+			if (maxBounceDepth < 1) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=1", (1, int.MaxValue));
 			maxBounceDepth = value;
 		}
 	}

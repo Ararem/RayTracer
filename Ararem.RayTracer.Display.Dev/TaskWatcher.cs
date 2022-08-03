@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -20,7 +19,7 @@ public static class TaskWatcher
 	/// <remarks>To use, simply call the async method you want to watch, and then call <see cref="Watch"/> on the returned task object</remarks>
 	public static void Watch(Task task, bool exitOnError)
 	{
-		Log.Verbose("Added watched task {Task} (Exit on error = {ExitOnError}", task, exitOnError);
+		Verbose("Added watched task {Task} (Exit on error = {ExitOnError}", task, exitOnError);
 		WatchedTasks.Add((task, exitOnError));
 	}
 
@@ -28,7 +27,7 @@ public static class TaskWatcher
 	internal static void Init()
 	{
 		const int period = 500;
-		Log.Debug("Task watcher started with period of {Period}", period);
+		Debug("Task watcher started with period of {Period}", period);
 		watcherTimer = new Timer(CheckTasks, null, 0, period);
 	}
 
@@ -45,7 +44,7 @@ public static class TaskWatcher
 				if (task.IsFaulted)
 				{
 					erroredTaskCount++;
-					Log.Error(task.Exception!, "Caught exception in watched task {Task}", task);
+					Error(task.Exception!, "Caught exception in watched task {Task}", task);
 					if (exitOnError)
 					{
 						//Don't call App.Quit here, since it may throw
@@ -68,12 +67,12 @@ public static class TaskWatcher
 			//Add back the ones that haven't finished
 			while (NotYetCompleted.TryTake(out (Task Task, bool ExitOnError) result)) WatchedTasks.Add(result);
 
-			Log.Verbose("Processed watched tasks: {Errored} errored, {Incomplete} incomplete, {Complete} completed, {Total} total", erroredTaskCount, incompleteTaskCount, completeTaskCount, totalTaskCount);
+			Verbose("Processed watched tasks: {Errored} errored, {Incomplete} incomplete, {Complete} completed, {Total} total", erroredTaskCount, incompleteTaskCount, completeTaskCount, totalTaskCount);
 		}
 		catch (Exception e)
 		{
-			Log.Fatal(e, "Caught fatal exception when processing watched tasks");
-			Log.Fatal("Program terminating");
+			Fatal(e, "Caught fatal exception when processing watched tasks");
+			Fatal("Program terminating");
 			Environment.Exit(-1);
 		}
 	}

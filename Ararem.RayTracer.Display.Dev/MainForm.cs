@@ -1,13 +1,12 @@
 using Ararem.RayTracer.Core;
+using Ararem.RayTracer.Display.Dev.Resources;
 using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
-using LibArarem.Core.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using ResourceManager = Ararem.RayTracer.Display.Dev.Resources.ResourceManager;
 
 namespace Ararem.RayTracer.Display.Dev;
 
@@ -170,7 +169,7 @@ internal sealed class MainForm : Form
 #region Callbacks
 	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 
 		DocumentPage oldPage = tabControlContent.SelectedPage;
 		Debug("Closing and disposing tab {Control}", oldPage);
@@ -203,19 +202,20 @@ internal sealed class MainForm : Form
 
 	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (tabControlContent.Pages.Count == 0)
 		{
 			Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(null, EventArgs.Empty);
 		}
+		((RenderJobPanel)eventArgs.Page.Content).Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 		Guid guid = Guid.NewGuid();
 		DocumentPage newPage = new()
 		{
@@ -236,7 +236,7 @@ internal sealed class MainForm : Form
 	[ContractAnnotation("=> halt")]
 	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 		Debug("Closing main form");
 		Close();
 	}
@@ -244,7 +244,7 @@ internal sealed class MainForm : Form
 	/// <summary>Callback for when the [About App] command is executed</summary>
 	private void AboutAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 		new AboutDialog
 		{
 				Copyright          = AssemblyInfo.Copyright,
@@ -266,7 +266,7 @@ internal sealed class MainForm : Form
 	[ContractAnnotation("=> halt")]
 	private static void MainFormClosed(object? sender, EventArgs eventArgs)
 	{
-		LogUtils.TrackEvent(sender, eventArgs);
+		TrackEvent(sender, eventArgs);
 
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately

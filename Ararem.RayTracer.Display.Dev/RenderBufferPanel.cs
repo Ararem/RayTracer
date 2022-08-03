@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Ararem.RayTracer.Display.Dev;
 
-public partial class RenderJobPanel
+public sealed partial class RenderJobPanel
 {
 	private sealed class RenderBufferPanel : Panel
 	{
@@ -90,7 +90,8 @@ public partial class RenderJobPanel
 					}
 				}
 			}
-			Verbose("[{Sender}] Image updated in {Elapsed:#00.000 'ms'}", ID, sw.Elapsed.TotalMilliseconds);
+			Invalidate(true); //Mark for redraw
+			Verbose("[{Sender}] Image updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
 		}
 	}
 }

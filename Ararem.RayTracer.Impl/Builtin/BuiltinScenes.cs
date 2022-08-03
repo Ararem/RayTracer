@@ -101,7 +101,7 @@ public static class BuiltinScenes
 				}
 			}
 
-			lights.Add(new PointLight(){Position = new Vector3(0,3,0), Colour = White, AttenuationRadius = 5 });
+			lights.Add(new DiffuseSphereLight() {Position = new Vector3(0,3,0), Colour = White, AttenuationRadius = 8,DiffusionRadius = 1f});
 			// objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1) { Material = new RefractiveMaterial(1.5f, new SolidColourTexture(White)) }));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1) { Material = new StandardMaterial(new Colour(.4f, .2f, .1f), 1f) }));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1) { Material = new StandardMaterial(new Colour(.7f, .6f, .5f), 0f) }));

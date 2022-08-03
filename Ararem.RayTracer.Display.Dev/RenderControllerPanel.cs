@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace Ararem.RayTracer.Display.Dev;
 
-public partial class RenderJobPanel
+public sealed partial class RenderJobPanel
 {
 	/// <summary>Panel class that controls an <see cref="RenderJob"/>. Allows editing the <see cref="Core.RenderOptions"/> and <see cref="Scene"/> for the render, as well as starting/stopping the render</summary>
 	// TODO: Why am i modifying an immutable type with reflection (*cough* RenderOptions *cough*)
@@ -36,7 +36,7 @@ public partial class RenderJobPanel
 			HandleIntProperty(nameof(RenderOptions.Passes),       1, int.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
 			HandleIntProperty(nameof(RenderOptions.ConcurrencyLevel),     1, Environment.ProcessorCount);
-			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       0, int.MaxValue);
+			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       1, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 1, int.MaxValue);
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
@@ -65,6 +65,7 @@ public partial class RenderJobPanel
 
 			Layout.EndScrollable();
 
+			//TODO: Button to save image
 			Verbose("Creating toggle render button");
 			ToggleRenderStateButton = new Button
 			{
@@ -181,7 +182,8 @@ public partial class RenderJobPanel
 					Verbose("{Control}.Text set to {NewValue}", ToggleRenderStateButton, newText);
 				}
 			}
-			Verbose("[{Sender}] Editors updated in {Elapsed:#00.000 'ms'}", ID, sw.Elapsed.TotalMilliseconds);
+			Invalidate(true); //Mark for redraw
+			Verbose("[{Sender}] Editors updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
 		}
 
 	#region Ease-of-use properties (shortcut properties)
@@ -354,5 +356,12 @@ public partial class RenderJobPanel
 		private sealed record RenderOptionEditor(CommonControl Control, bool CanModifyWhileRunning);
 
 	#endregion
+
+		/// <inheritdoc />
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			RenderJobCTS.Cancel(); //Cancel the render job so that it doesn't keep running
+		}
 	}
 }

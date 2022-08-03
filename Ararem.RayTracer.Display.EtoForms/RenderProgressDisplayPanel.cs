@@ -3,7 +3,6 @@ using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
 using LibArarem.Core.ObjectPools;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -15,7 +14,6 @@ using System.Linq;
 using System.Threading;
 using static Ararem.RayTracer.Core.MathUtils;
 using static Serilog.Log;
-using Size = Eto.Drawing.Size;
 
 // using NetFabric.Hyperlinq;
 

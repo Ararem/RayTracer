@@ -1,9 +1,10 @@
 using Ararem.RayTracer.Core;
 using Eto.Forms;
+using System.Diagnostics;
 
 namespace Ararem.RayTracer.Display.Dev;
 
-public partial class RenderJobPanel
+public sealed partial class RenderJobPanel
 {
 	/// <summary><see cref="Panel"/> class that displays the statistics of a <see cref="RenderJob"/></summary>
 	private sealed class RenderStatsPanel : Panel
@@ -45,7 +46,10 @@ public partial class RenderJobPanel
 
 		public void Update()
 		{
+			Stopwatch sw = Stopwatch.StartNew();
 
+			Invalidate(true); //Mark for redraw
+			Verbose("[{Sender}] Stats updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
 		}
 	}
 }
