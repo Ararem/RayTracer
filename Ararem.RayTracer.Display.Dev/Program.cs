@@ -244,7 +244,7 @@ internal static class Program
 	 */
 	private static void FirstChanceException(object? sender, FirstChanceExceptionEventArgs eventArgs)
 	{
-		Verbose(eventArgs.Exception, "First-chance exception from {Sender}:", propertyValue: sender);
+		Debug(eventArgs.Exception, "First-chance exception from {Sender}:", propertyValue: sender);
 	}
 
 	private static void EtoUnhandledException(object? sender, Eto.UnhandledExceptionEventArgs e)

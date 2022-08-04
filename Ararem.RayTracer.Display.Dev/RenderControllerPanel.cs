@@ -31,13 +31,13 @@ public sealed partial class RenderJobPanel
 			DynamicGroup group = Layout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
 			Layout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
-			HandleIntProperty(nameof(RenderOptions.RenderWidth),  1, int.MaxValue);
-			HandleIntProperty(nameof(RenderOptions.RenderHeight), 1, int.MaxValue);
-			HandleIntProperty(nameof(RenderOptions.Passes),       1, int.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.RenderWidth),  1,ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.RenderHeight), 1,ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.Passes),       1,ulong.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
-			HandleIntProperty(nameof(RenderOptions.ConcurrencyLevel),     1, Environment.ProcessorCount);
-			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       0, int.MaxValue);
-			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 1, int.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.ConcurrencyLevel),     1, (ulong)Environment.ProcessorCount);
+			HandleULongProperty(nameof(RenderOptions.MaxBounceDepth),       0, ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.LightSampleCountHint), 1, ulong.MaxValue);
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
 			HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
@@ -216,14 +216,14 @@ public sealed partial class RenderJobPanel
 						TextAlignment = TextAlignment.Center
 				};
 
-		private void HandleIntProperty(string propertyName, int min, int max)
+		private void HandleULongProperty(string propertyName, ulong min, ulong max)
 		{
 			Verbose("Trying to add integer property editor for {Property}", propertyName);
 			PropertyInfo property              = typeof(RenderOptions).GetProperty(propertyName) ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName);
 			MethodInfo   setMethod             = property.SetMethod                              ?? throw new MissingMemberException(nameof(Core.RenderOptions), propertyName + ".set");
 			bool         canModifyWhileRunning = !setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 			object?      boxedPropertyValue    = property.GetValue(RenderOptions);
-			int          initialValue          = boxedPropertyValue as int? ?? throw new ArgumentException($"Expected an integer but got {boxedPropertyValue}");
+			ulong        initialValue          = boxedPropertyValue as ulong? ?? throw new ArgumentException($"Expected an integer but got {boxedPropertyValue}");
 			Label        label                 = GetNameLabel(propertyName, (min, max));
 			NumericStepper stepper = new()
 			{
@@ -238,7 +238,7 @@ public sealed partial class RenderJobPanel
 			};
 			stepper.ValueChanged += delegate
 			{
-				int newValue = (int)stepper.Value;
+				ulong newValue = (ulong)stepper.Value;
 				LogPropChanged(property, newValue);
 				property.SetValue(RenderOptions, newValue);
 			};

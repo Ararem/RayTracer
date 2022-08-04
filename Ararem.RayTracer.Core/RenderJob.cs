@@ -37,7 +37,7 @@ public sealed class RenderJob : IDisposable
 		ArgumentNullException.ThrowIfNull(renderOptions);
 		Log.Information("New RenderJob created with Scene={Scene} and Options={@RenderOptions}", scene, renderOptions);
 
-		Image             = new Image<Rgb24>(renderOptions.RenderWidth, renderOptions.RenderHeight);
+		Image             = new Image<Rgb24>((int)renderOptions.RenderWidth, (int)renderOptions.RenderHeight);
 		ImageBuffer       = Image.Frames.RootFrame!;
 		RenderOptions     = renderOptions;
 		rawColourBuffer   = new Colour[renderOptions.RenderWidth * renderOptions.RenderHeight];
@@ -87,19 +87,20 @@ public sealed class RenderJob : IDisposable
 		//Same comment from above applies, just different order
 		//Values are also compressed into a single number, then unpacked after
 		//I do this so that it's easier to parallelize the loop without nesting them too much (parallel nesting is probably bad)
-		for (int pass = 0; RenderOptions.InfinitePasses || (pass < RenderOptions.Passes); pass++)
+		for (ulong pass = 0; RenderOptions.InfinitePasses || (pass < RenderOptions.Passes); pass++)
 		{
 			try
 			{
 				Parallel.For(
-						0, RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism = RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
+						0L, (long)RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism =(int) RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
 						{
 							Interlocked.Increment(ref RenderStats.ThreadsRunning);
 							return this;
 						}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
-						static (i, loop, state) =>
+						static (longI, loop, state) =>
 						{
-							( x, int y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
+							ulong i = (ulong)longI; //Have to cast this here because microsoft won't create a ulong version of Parallel.For()???????
+							(ulong x, ulong y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
 							Colour col = state.RenderPixelWithVisualisations(x, y);
 							state.UpdateBuffers(x, y, col);
 							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
@@ -129,12 +130,12 @@ public sealed class RenderJob : IDisposable
 	/// <remarks><paramref name="x"/> and <paramref name="y"/> coords start at the lower-left corner, moving towards the upper-right.</remarks>
 	/// <param name="x">X coordinate of the pixel</param>
 	/// <param name="y">Y coordinate of the pixel</param>
-	private Colour RenderPixelWithVisualisations(int x, int y)
+	private Colour RenderPixelWithVisualisations(ulong x, ulong y)
 	{
 		//To create some 'antialiasing' (SSAA maybe?), add a slight random offset to the uv coords
 		float s = x, t = y;
 		//Add up to half a pixel of offset randomness to the coords
-		const float ssaaRadius = .3f;
+		const float ssaaRadius = .5f; //I'm choosing .5 so that adjacent pixels exactly border each other.
 		s += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		t += RandUtils.RandomPlusMinusOne() * ssaaRadius;
 		//Account for the fact that we want uv coords not pixel coords
@@ -323,8 +324,8 @@ public sealed class RenderJob : IDisposable
 
 	private Colour CalculateRayColourLooped(Ray initialRay)
 	{
-		int    maxDepthReached;                                //The highest depth value we reached
-		int    maxAllowedDepth = RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
+		int  maxDepthReached = -1;                                //The highest depth value we reached
+		int  maxAllowedDepth = (int)RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
 		Ray    currentRay      = initialRay;                   //The ray we are currently calculating on. Make a copy so we don't modify the initial ray parameter
 		Colour finalColour;
 
@@ -335,19 +336,22 @@ public sealed class RenderJob : IDisposable
 		HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
 		for (int currentDepth = 0;;currentDepth++)
 		{
+			// maxDepthReached = currentDepth; //Update the max depth
+
 			//Ensure we don't go too deep
 			if (currentDepth > maxAllowedDepth)
 			{
 				Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
 				finalColour = NoColour;
+				break;
 			}
 
-			maxDepthReached = currentDepth; //Update the max depth
 			if (TryFindClosestHit(currentRay, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
 			{
-				hitStateArray[currentDepth] = hit; //Store the hit in the array
-				ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, currentDepth); //Create the segment for the previous hits, which shouldn't include the current hit
-				Ray? maybeNewRay = hit.Material.Scatter(hit, prevHits);
+				maxDepthReached             = currentDepth;                                //Update the max depth
+				hitStateArray[currentDepth] = hit;                                         //Store the hit in the array
+				ArraySegment<HitRecord> prevHits    = new(hitStateArray, 0, currentDepth); //Create the segment for the previous hits, which shouldn't include the current hit
+				Ray?                    maybeNewRay = hit.Material.Scatter(hit, prevHits);
 				if (maybeNewRay is null)
 				{
 					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
@@ -368,15 +372,17 @@ public sealed class RenderJob : IDisposable
 				//No object was hit (at least not in the range), so return the skybox colour
 				Interlocked.Increment(ref RenderStats.SkyRays);
 				finalColour = Scene.SkyBox.GetSkyColour(currentRay);
+				if (maxDepthReached == -1) //We didn't hit any object at all
+					return finalColour; //So return the skybox colour directly (no materials to calculate and it would be broken anyway)
 				break;
 			}
-
-			// currentDepth++; //Increment the depth counter out here so it doesn't get called when we break out of the loop manually
 		}
+
 		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[maxDepthReached]);
 
 
 		//Now go in reverse for the colour pass
+		#warning Negative index?
 		for (int currentDepth = maxDepthReached; currentDepth >= 0; currentDepth--)
 		{
 			HitRecord               hit      = hitStateArray[currentDepth];
@@ -521,7 +527,7 @@ public sealed class RenderJob : IDisposable
 	/// <param name="x">X coordinate for the pixel (camera coords, left to right)</param>
 	/// <param name="y">Y coordinate for the pixel (camera coords, bottom to top)</param>
 	/// <param name="newSampleColour">Colour that the pixel was just rendered as</param>
-	private void UpdateBuffers(int x, int y, Colour newSampleColour)
+	private void UpdateBuffers(ulong x, ulong y, Colour newSampleColour)
 	{
 		//We have to flip the y- value because the camera expects y=0 to be the bottom (cause UV coords)
 		//But the image expects it to be at the top (Graphics APIs amirite?)
@@ -532,7 +538,7 @@ public sealed class RenderJob : IDisposable
 		//Although multiple threads will be rendering and changing pixels, two passes can never render at the same time (see RenderInternal)
 		//Passes (and pixels) are rendered sequentially, so there is no chance of a pixel being accessed by multiple threads at the same time.
 		//In previous profiling sessions, locking was approximately 65% of the total time spent updating, with 78% of the time being this method call
-		int i = Compress2DIndex(x, y, RenderOptions.RenderWidth);
+		ulong i = Compress2DIndex(x, y, RenderOptions.RenderWidth);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
 		rawColourBuffer[i] = newSampleColour;
@@ -549,7 +555,7 @@ public sealed class RenderJob : IDisposable
 		//Sqrt for gamma=2 correction
 		finalColour = Colour.Sqrt(finalColour);
 		Rgb24 rgb24 = (Rgb24)finalColour;
-		ImageBuffer[x, y] = rgb24;
+		ImageBuffer[(int)x, (int)y] = rgb24;
 	}
 
 #region Internal state

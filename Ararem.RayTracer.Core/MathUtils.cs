@@ -30,13 +30,13 @@ public static class MathUtils
 
 	/// <summary>Compresses a 2d index into a 1d index. Useful for un-nesting loops</summary>
 	[Pure]
-	public static int Compress2DIndex(int x, int y, int width) => x + (y * width);
+	public static ulong Compress2DIndex(ulong x, ulong y, ulong width) => x + (y * width);
 
 	/// <summary>Decompresses an index made by (<see cref="Compress2DIndex"/>)</summary>
 	[Pure]
-	public static (int X, int Y) Decompress2DIndex(int i, int width)
+	public static (ulong X, ulong Y) Decompress2DIndex(ulong i, ulong width)
 	{
-		(int y, int x) = Math.DivRem(i, width);
+		(ulong y, ulong x) = Math.DivRem(i, width);
 		// int x = i % width;
 		// int y = i / width;
 		return (x, y);
@@ -49,6 +49,7 @@ public static class MathUtils
 	/// <returns>
 	///  <c>x % y</c>
 	/// </returns>
+	[Pure]
 	public static long SafeMod(long x, long y)
 	{
 		if (x == y) return 0;

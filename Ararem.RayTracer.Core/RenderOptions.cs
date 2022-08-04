@@ -36,36 +36,36 @@ public sealed class RenderOptions
 	/// </summary>
 	public RenderOptions Copy() => new(this);
 
-	private readonly int                        renderHeight         = 1080;
-	private readonly int                        renderWidth          = 1920;
-	private          int                        concurrencyLevel     = Environment.ProcessorCount;
+	private readonly ulong                        renderHeight         = 1080;
+	private readonly ulong                        renderWidth          = 1920;
+	private          ulong                        concurrencyLevel     = (ulong)Environment.ProcessorCount;
 	private          GraphicsDebugVisualisation debugVisualisation   = GraphicsDebugVisualisation.None;
 	private          float                      kMax                 = float.PositiveInfinity;
 	private          float                      kMin                 = 0.001f;
-	private          int                        lightSampleCountHint = 2;
-	private          int                        maxBounceDepth       = 100;
-	private          int                        passes               = 100;
+	private          ulong                        lightSampleCountHint = 2;
+	private          ulong                        maxBounceDepth       = 100;
+	private          ulong                        passes               = 100;
 
 	/// <summary>How many pixels wide the render will be</summary>
-	[ValueRange(1, int.MaxValue)]
-	public int RenderWidth
+	[ValueRange(1, ulong.MaxValue)]
+	public ulong RenderWidth
 	{
 		get => renderWidth;
 		init
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(RenderWidth), "Image cannot have a width of less than 1 pixel", (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<ulong>(value, nameof(RenderWidth), "Image cannot have a width of less than 1 pixel", (1, ulong.MaxValue));
 			renderWidth = value;
 		}
 	}
 
 	/// <summary>How many pixels high the render will be</summary>
-	[ValueRange(1, int.MaxValue)]
-	public int RenderHeight
+	[ValueRange(1, ulong.MaxValue)]
+	public ulong RenderHeight
 	{
 		get => renderHeight;
 		init
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(RenderHeight), "Image cannot have a height of less than 1 pixel", (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<ulong>(value, nameof(RenderHeight), "Image cannot have a height of less than 1 pixel", (1, ulong.MaxValue));
 			renderHeight = value;
 		}
 	}
@@ -108,25 +108,25 @@ public sealed class RenderOptions
 	/// <remarks>
 	///  Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>).
 	/// </remarks>
-	[ValueRange(1, int.MaxValue)]
-	public int ConcurrencyLevel
+	[ValueRange(1, ulong.MaxValue)]
+	public ulong ConcurrencyLevel
 	{
 		get => concurrencyLevel;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be >0).", (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<ulong>(value, nameof(ConcurrencyLevel), $"{nameof(ConcurrencyLevel)} was negative (should be >0).", (1, ulong.MaxValue));
 			concurrencyLevel = value;
 		}
 	}
 
 	/// <summary>Number of times the image will be rendered. These individual renders ('passes') will be combined to create the final image</summary>
-	[ValueRange(1, int.MaxValue)]
-	public int Passes
+	[ValueRange(1, ulong.MaxValue)]
+	public ulong Passes
 	{
 		get => passes;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(Passes), $"{nameof(Passes)} was negative (should be >0).", (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<ulong>(value, nameof(Passes), $"{nameof(Passes)} was negative (should be >0).", (1, ulong.MaxValue));
 			passes = value;
 		}
 	}
@@ -141,14 +141,14 @@ public sealed class RenderOptions
 	///  infinite bouncing
 	/// </summary>
 	/// <remarks>Must be &gt;=0</remarks>
-	[ValueRange(0, int.MaxValue)]
+	[ValueRange(0, ulong.MaxValue)]
 	//TODO: Allow this to be changed at runtime
-	public int MaxBounceDepth
+	public ulong MaxBounceDepth
 	{
 		get => maxBounceDepth;
 		init
 		{
-			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, int.MaxValue));
+			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<ulong>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, ulong.MaxValue));
 			maxBounceDepth = value;
 		}
 	}
@@ -165,13 +165,13 @@ public sealed class RenderOptions
 	}
 
 	/// <summary>Hint to materials as to how many times they should sample each light (as opposed to 1 sample per light per intersection).</summary>
-	[ValueRange(1, int.MaxValue)]
-	public int LightSampleCountHint
+	[ValueRange(1, ulong.MaxValue)]
+	public ulong LightSampleCountHint
 	{
 		get => lightSampleCountHint;
 		set
 		{
-			if (value < 1) throw new ArgumentOutOfRangeException<int>(value, nameof(LightSampleCountHint), "Must have at least 1 sample per light", (1, int.MaxValue));
+			if (value < 1) throw new ArgumentOutOfRangeException<ulong>(value, nameof(LightSampleCountHint), "Must have at least 1 sample per light", (1, ulong.MaxValue));
 			lightSampleCountHint = value;
 		}
 	}

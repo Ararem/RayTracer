@@ -12,6 +12,7 @@
   &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Linq.Expressions.dll" /&gt;
   &lt;Assembly Path="/home/rrm/.nuget/packages/eto.forms/2.6.1/lib/netstandard2.0/Eto.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=4dabaa2e_002Ddd3e_002D46aa_002D9a63_002Df16d1810c18f_0023Ararem_002ERayTracer_002EDisplay_002EEtoForms/@EntryIndexedValue">True</s:Boolean>
 	
 	
 	

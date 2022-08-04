@@ -3,20 +3,19 @@ using Ararem.RayTracer.Core.Acceleration;
 namespace Ararem.RayTracer.Core;
 
 /// <summary>Class that stores statistics about a render</summary>
-//Yeah I'm using longs everywhere, just cause ints aren't large enough on large images, and I still want negative support
-//TODO: Use ulong?
+//Yeah I'm using ulongs everywhere, just cause ints aren't large enough on large images, and it's easier to have them all the same
 public sealed class RenderStats
 {
 	/// <summary>How many threads are currently rendering the scene</summary>
-	public long ThreadsRunning = 0;
+	public ulong ThreadsRunning = 0;
 
 	/// <summary>Constructor for creating a new <see cref="RenderStats"/> object</summary>
 	/// <param name="options">Render options, used to assign and calculate some of the values</param>
 	public RenderStats(RenderOptions options)
 	{
-		RawRayDepthCounts = new long[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
-		TotalTruePixels   = options.RenderWidth * options.RenderHeight;
-		TotalRawPixels    = options.RenderWidth * options.RenderHeight * options.Passes;
+		RawRayDepthCounts = new ulong[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
+		TotalTruePixels   = (ulong)options.RenderWidth * (ulong)options.RenderHeight;
+		TotalRawPixels    = (ulong)options.RenderWidth * (ulong)options.RenderHeight * (ulong) options.Passes;
 	}
 
 	/// <summary>Copy constructor</summary>
@@ -44,64 +43,64 @@ public sealed class RenderStats
 #region Pixels & Passes
 
 	/// <summary>How many pixels have been rendered, including multisampled pixels</summary>
-	public long RawPixelsRendered = 0;
+	public ulong RawPixelsRendered = 0;
 
 	/// <summary>How many passes have been rendered</summary>
-	public long PassesRendered = 0;
+	public ulong PassesRendered = 0;
 
 	/// <summary>How many 'raw' pixels need to be rendered (including multisampled pixels)</summary>
-	public long TotalRawPixels { get; }
+	public ulong TotalRawPixels { get; }
 
 	/// <summary>How many 'true' pixels need to be rendered (not including multisampling)</summary>
-	public long TotalTruePixels { get; }
+	public ulong TotalTruePixels { get; }
 
 #endregion
 
 #region Materials
 
 	/// <summary>How many rays were scattered (bounced off materials) in the scene</summary>
-	public long MaterialScatterCount = 0;
+	public ulong MaterialScatterCount = 0;
 
 	/// <summary>The number of times one of the materials in the scene absorbed a light ray (and did not scatter)</summary>
-	public long MaterialAbsorbedCount = 0;
+	public ulong MaterialAbsorbedCount = 0;
 
 #endregion
 
 #region Hittables
 
 	/// <summary>How many times the <see cref="AxisAlignedBoundingBox"/> was missed by a <see cref="Ray"/></summary>
-	public long AabbMisses = 0;
+	public ulong AabbMisses = 0;
 
 	/// <summary>
 	///  How many times a <see cref="Ray"/> intersected with an <see cref="AxisAlignedBoundingBox"/> but did not hit the enclosed
 	///  <see cref="Hittable"/>
 	/// </summary>
-	public long HittableMisses = 0;
+	public ulong HittableMisses = 0;
 
 	/// <summary>How many times a <see cref="Hittable"/> was intersected by a <see cref="Ray"/></summary>
-	public long HittableIntersections = 0;
+	public ulong HittableIntersections = 0;
 
 #endregion
 
 #region Rays
 
 	/// <summary>How many rays did not hit any objects, and hit the sky</summary>
-	public long SkyRays = 0;
+	public ulong SkyRays = 0;
 
 	/// <summary>
 	///  How times a ray was not rendered because the bounce count for that ray exceeded the limit specified by
 	///  <see cref="RenderOptions.MaxBounceDepth"/>
 	/// </summary>
-	public long BounceLimitExceeded = 0;
+	public ulong BounceLimitExceeded = 0;
 
 	/// <summary>How many rays were rendered so far (scattered, absorbed, etc)</summary>
-	public long RayCount = 0;
+	public ulong RayCount = 0;
 
 	/// <summary>
 	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
 	///  bounce, etc.
 	/// </summary>
-	public readonly long[] RawRayDepthCounts;
+	public readonly ulong[] RawRayDepthCounts;
 
 #endregion
 }

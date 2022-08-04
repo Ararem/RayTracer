@@ -42,8 +42,8 @@ public class PhongMaterial : Material
 		Colour rawSpecularColourSum = Colour.Black;
 
 		//Do a few iterations and average them, to make the colours a bit smoother
-		int lightSamples = Renderer.RenderOptions.LightSampleCountHint;
-		for (int avgI = 0; avgI < lightSamples; avgI++)
+		ulong lightSamples = Renderer.RenderOptions.LightSampleCountHint;
+		for (ulong avgI = 0; avgI < lightSamples; avgI++)
 		{
 			//Loop over the lights and calculate the diffuse & specular from them
 			for (int i = 0; i < Renderer.Scene.Lights.Length; i++)
