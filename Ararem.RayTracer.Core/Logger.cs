@@ -14,6 +14,7 @@ using static LibArarem.Core.Logging.Enrichers.ExceptionDataEnricher;
 using static LibArarem.Core.Logging.Enrichers.CallerContextEnricher;
 using static LibArarem.Core.Logging.Enrichers.EventLevelIndentEnricher;
 using static LibArarem.Core.Logging.Enrichers.ThreadInfoEnricher;
+using static Serilog.Log;
 
 namespace Ararem.RayTracer.Core;
 
@@ -25,12 +26,11 @@ internal static class Logger
 	{
 		#if DEBUG_LOG
 		const PerfMode perfMode = PerfMode.FullTraceSlow;
-		const string template = $"[{{Timestamp:HH:mm:ss}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}:{{{CallingMethodColumnProp},-2:n0}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
+		const string template = $"[{{Timestamp:HH:mm:ss.ffffff}} | {{{LogEventNumberEnricher.EventNumberProp},5:'#'####}} | {{Level:t3}} | {{{ThreadNameProp},-30}} {{{ThreadIdProp},3:'#'##}} ({{{ThreadTypeProp},11}}) | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}:{{{CallingMethodColumnProp},-2:n0}}]:\t{{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{NewLine}}{{{StackTraceProp}}}{{NewLine}}{{NewLine}}";;
 		#else
 		const PerfMode perfMode = PerfMode.SingleFrameFast;
-		const string   template = "[{Timestamp:HH:mm:ss} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},10:'Thread #'##}} | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
+		const string   template = "[{Timestamp:HH:mm:ss.ffffff} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},10:'Thread #'##}} | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
 		#endif
-
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
 		LoggerConfiguration config = new LoggerConfiguration()
@@ -56,24 +56,6 @@ internal static class Logger
 
 		Log.Logger = config.CreateLogger();
 
-
-		#if DEBUG
-		if (debugOnlyUpdateLogConfigTimer == null)
-		{
-			Log.Information("Logger Initialized");
-			debugOnlyUpdateLogConfigTimer = new Timer(DebugOnly_UpdateLogConfig, null, 0, 1000);
-		}
-		#else
-		Log.Information("Logger Initialized");
-		#endif
+		Information("Logger Initialised");
 	}
-	//Lets us change the log settings when debugging and have it instantly happen with hot reload
-	#if DEBUG
-
-	private static Timer? debugOnlyUpdateLogConfigTimer = null;
-	private static void DebugOnly_UpdateLogConfig(object? state)
-	{
-		Init();
-	}
-	#endif
 }

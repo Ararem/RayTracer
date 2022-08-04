@@ -68,7 +68,9 @@ public sealed partial class RenderJobPanel
 				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
 				if ((PreviewImage.Width != width) || (PreviewImage.Height != height))
 				{
-					Verbose("Recreating preview image ({OldValue}) to change size to {NewValue}", PreviewImage.Size, new Size(width, height));
+					Debug("Recreating preview image ({OldValue}) to change size to {NewValue}", PreviewImage.Size, new Size(width, height));
+					ImageView.Image = null;
+					PreviewImage.Dispose();
 					ImageView.Image = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
 				}
 

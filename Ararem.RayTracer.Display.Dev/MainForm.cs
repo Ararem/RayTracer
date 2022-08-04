@@ -14,7 +14,7 @@ namespace Ararem.RayTracer.Display.Dev;
 internal sealed class MainForm : Form
 {
 	/// <summary>Main control that contains the tabs for each of the renders</summary>
-	private readonly DocumentControl tabControlContent;
+	private readonly DocumentControl documentControlContent;
 
 	public MainForm()
 	{
@@ -99,31 +99,35 @@ internal sealed class MainForm : Form
 			Verbose("Creating dynamic layout");
 			DynamicLayout layout = new()
 			{
-					ID            = $"{ID}/Layout",
-					Padding       = DefaultPadding,
+					ID      = $"{ID}/Layout",
+					Padding = DefaultPadding,
 					Spacing = DefaultSpacing
 			};
 			Verbose("Dynamic Layout (MainForm.Content): {Content}", Content = layout);
 			layout.BeginVertical();
-			Verbose("Add Label: {Control}", layout.Add(
-					new Label
-					{
-							ID = $"{layout.ID}/TitleLabel",
-							Text  = AssemblyInfo.ProductName,
-							Style = nameof(AppTitle),
-							TextAlignment= TextAlignment.Center,
-							VerticalAlignment = VerticalAlignment.Center
-					}
-			));
+			Verbose(
+					"Add Label: {Control}", layout.Add(
+							new Label
+							{
+									ID                = $"{layout.ID}/TitleLabel",
+									Text              = AssemblyInfo.ProductName,
+									Style             = nameof(AppTitle),
+									TextAlignment     = TextAlignment.Center,
+									VerticalAlignment = VerticalAlignment.Center
+							}
+					)
+			);
 			layout.BeginScrollable();
-			Verbose("Add DocumentControl: {Control}",layout.Add(
-					tabControlContent = new DocumentControl
-					{
-							ID = "MainForm/Content/DocumentControl",
-					}
-			));
+			Verbose(
+					"Add DocumentControl: {Control}", layout.Add(
+							documentControlContent = new DocumentControl
+							{
+									ID = "MainForm/Content/DocumentControl"
+							}
+					)
+			);
 			Verbose("Adding page closed handler");
-			tabControlContent.PageClosed += DocumentPageOnClosed;
+			documentControlContent.PageClosed += DocumentPageOnClosed;
 			layout.EndScrollable();
 			layout.EndVertical();
 			Verbose("Finished adding to main dynamic layout");
@@ -167,13 +171,16 @@ internal sealed class MainForm : Form
 	}
 
 #region Callbacks
+
 	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
 		TrackEvent(sender, eventArgs);
 
-		DocumentPage oldPage = tabControlContent.SelectedPage;
-		Debug("Closing and disposing tab {Control}", oldPage);
-		tabControlContent.Pages.Remove(oldPage);
+		DocumentPage oldPage = documentControlContent.SelectedPage;
+		Debug("Closing tab {Control}", oldPage);
+		bool couldRemove = documentControlContent.Pages.Remove(oldPage);
+		if (couldRemove is false)
+			ForContext("Item", oldPage).ForContext("Collection", documentControlContent.Pages).Warning("Could not remove tab from pages collection");
 		/*
 		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
 		 *
@@ -189,27 +196,39 @@ internal sealed class MainForm : Form
 		 */
 		try
 		{
-			dynamic callbackObject = ((dynamic)tabControlContent).Handler.Callback;
-			((object)callbackObject).GetType().GetMethod("OnPageClosed")!.Invoke(callbackObject, new object[] { tabControlContent, new DocumentPageEventArgs(oldPage) });
+			/*
+			 * Yes this is very slow and unsafe, but there's not really a better way
+			 * `dynamic` won't let me call OnPageClosed() because it can't find the method:
+			 * Microsoft.CSharp.RuntimeBinder.RuntimeBinderException: 'Eto.Forms.Control.Callback' does not contain a definition for 'OnPageClosed'
+   			 *	at void CallSite.Target(Closure, CallSite, object, DocumentControl, DocumentPageEventArgs)
+   			 *	at void System.Dynamic.UpdateDelegates.UpdateAndExecuteVoid3<T0, T1, T2>(CallSite site, T0 arg0, T1 arg1, T2 arg2)
+			 *
+			 * I think it's trying to resolve the method from the base type (which is Eto.Forms.Control.Callback), which doesn't have the method OnPageClosed(),
+			 * despite the object instance being a DocumentControl.Callback, which does have the method OnPageClosed()
+			 */
+			dynamic callbackObject = ((dynamic)documentControlContent).Handler.Callback;
+			((object)callbackObject).GetType().GetMethod("OnPageClosed")!.Invoke(callbackObject, new object[] { documentControlContent, new DocumentPageEventArgs(oldPage) });
 		}
 		catch (Exception e)
 		{
-			Warning(e, "Manually calling OnPageClosed() callback failed");
+			Warning(e, "Attempt to manually calling OnPageClosed() callback failed");
 		}
 
-		oldPage?.Dispose();
+		// oldPage?.Dispose();
 	}
 
 	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
 	{
 		TrackEvent(sender, eventArgs);
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
-		if (tabControlContent.Pages.Count == 0)
+		if (documentControlContent.Pages.Count == 0)
 		{
 			Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(null, EventArgs.Empty);
 		}
-		((RenderJobPanel)eventArgs.Page.Content).Dispose();
+
+		Information("Closed tab {Control}", eventArgs.Page);
+		// eventArgs.Page?.Content?.Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
@@ -219,17 +238,14 @@ internal sealed class MainForm : Form
 		Guid guid = Guid.NewGuid();
 		DocumentPage newPage = new()
 		{
-				ID    = $"Page_{guid}.DocumentPage",
+				ID    = $"Page_{guid}.Page",
 				Text  = $"Render {guid}",
 				Image = Icon, //TODO: Icon reflects the render buffer...
+				Content = new RenderJobPanel($"Page_{guid}")
 		};
 		//TODO: Tab selection thingy text styles
-		Debug("Added new render tab: {Control}", newPage);
-		tabControlContent.Pages.Add(newPage);
-
-		RenderJobPanel tracker = new($"Page_{guid}");
-		Verbose("New render tab control: {Control}", tracker);
-		newPage.Content = tracker;
+		documentControlContent.Pages.Add(newPage);
+		Information("Added new render tab: {Control}", newPage);
 	}
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>

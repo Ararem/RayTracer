@@ -39,7 +39,6 @@ public sealed partial class RenderJobPanel : Panel
 		}
 		//Split the layout into 3 horizontal groups - options, stats, image
 		Layout.BeginHorizontal();
-
 		Layout.Add(renderControllerPanel = new RenderControllerPanel(this){ID = $"{ID}/Controller"});
 		Layout.Add(renderStatsPanel      = new RenderStatsPanel(this){ID      = $"{ID}/Stats"});
 		Layout.Add(renderBufferPanel     = new RenderBufferPanel(this){ID     = $"{ID}/Buffer"});
@@ -49,11 +48,11 @@ public sealed partial class RenderJobPanel : Panel
 
 		{
 			// Periodically update the previews using a timer
-			//PERF: This creates quite a few allocations when called frequently
-			//TODO: Perhaps PeriodicTimer or UITimer
-			#warning Need to dispose timer when panel closed
-			#warning Need to cancel render when panel closed
-			updateUiTimer = new Timer(static state => Application.Instance.Invoke((Action)state!), UpdateUi, UpdatePeriod, Timeout.Infinite);
+			updateUiTimer = new UITimer(UpdateUi)
+			{
+					ID = $"{ID}/UITimer",Interval = 1f/TargetRefreshRate
+			};
+			updateUiTimer.Start();
 		}
 	}
 
@@ -72,14 +71,12 @@ public sealed partial class RenderJobPanel : Panel
 #region UI Controls
 
 	/// <summary>Target refreshes-per-second that we want</summary>
-	private static int TargetRefreshRate => 1; //Fps
-
-	/// <summary>Time (ms) between updates for our <see cref="TargetRefreshRate"/></summary>
-	private static int UpdatePeriod => 1000 / TargetRefreshRate;
+	private static double TargetRefreshRate => 10; //Fps
 
 	/// <summary>Updates all the UI</summary>
-	private void UpdateUi()
+	private void UpdateUi(object? sender, EventArgs eventArgs)
 	{
+		//TODO: Add something to prevent UI freezes
 		/*
 		 * Note that we don't have to worry about locks or anything, since
 		 * (A) - It's only called on the main thread, so that's thread safety done
@@ -93,14 +90,9 @@ public sealed partial class RenderJobPanel : Panel
 		renderBufferPanel.Update();
 
 		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", this, totalSw.Elapsed.TotalMilliseconds);
-
-		if (!updateUiTimer.Change(UpdatePeriod, Timeout.Infinite))
-		{
-			Error("Could not set preview timer to call again (expect static UI)");
-		}
 	}
 
-	private readonly Timer updateUiTimer;
+	private readonly UITimer updateUiTimer;
 
 #endregion
 
@@ -110,10 +102,11 @@ public sealed partial class RenderJobPanel : Panel
 		Debug("[{Sender}]: Disposing", this);
 		base.Dispose(disposing);
 		//Dispose of all our child panels
-		renderBufferPanel.Dispose();
-		renderControllerPanel.Dispose();
-		renderStatsPanel.Dispose();
+		// renderBufferPanel?.Dispose();
+		// renderControllerPanel?.Dispose();
+		// renderStatsPanel?.Dispose();
 		//Stop the UI timer from firing after we've disposed
-		updateUiTimer.Dispose();
+		updateUiTimer?.Stop();
+		updateUiTimer?.Dispose();
 	}
 }

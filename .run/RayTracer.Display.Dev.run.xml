@@ -1,9 +1,14 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Dev" type="DotNetProject" factoryName=".NET Project" singleton="true">
+  <configuration default="false" name="Ararem.RayTracer.Display.Dev" type="DotNetProject" factoryName=".NET Project" singleton="true">
     <option name="EXE_PATH" value="$PROJECT_DIR$/Ararem.RayTracer.Display.Dev/bin/Gtk/Debug/net6.0/Ararem.RayTracer.Display.Dev" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Ararem.RayTracer.Display.Dev/bin/Gtk/Debug/net6.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
+    <envs>
+      <env name="!G_ENABLE_DIAGNOSTIC" value="1" />
+      <env name="!G_MESSAGES_DEBUG" value="all" />
+      <env name="!MONO_CAIRO_DEBUG_DISPOSE" value="1" />
+    </envs>
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />
     <option name="RUNTIME_ARGUMENTS" value="" />

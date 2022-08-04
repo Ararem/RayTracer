@@ -2,6 +2,7 @@
 using Ararem.RayTracer.Display.Dev.Resources;
 using Eto;
 using Eto.Forms;
+using GLib;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Figgle.FiggleFonts;
 using static Ararem.RayTracer.Display.Dev.Program.ExitCode;
+using Application = Eto.Forms.Application;
+using DateTime = System.DateTime;
 using Logger = Ararem.RayTracer.Core.Logger;
+using Task = System.Threading.Tasks.Task;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 namespace Ararem.RayTracer.Display.Dev;
@@ -73,8 +77,11 @@ internal static class Program
 		Console.WriteLine($"{Title}: Starting program");
 		Console.Title = $"{AppTitleVersioned} [Console]";
 		Console.WriteLine($"{Title}: Initialising logger");
+		Console.ResetColor();
 		#endif
+
 		Logger.Init();
+		LogAggregator.Init();
 
 		Information("Commandline args: {Args}", args);
 		Information("{AppTitle} starting",      AssemblyInfo.ProductName);

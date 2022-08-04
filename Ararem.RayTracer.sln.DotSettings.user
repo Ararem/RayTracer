@@ -9,6 +9,8 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/rrm/Documents/Projects/RayTracer/RayTracer.Display.Dev/libOpenImageDenoise.dll" /&gt;
   &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Private.CoreLib.dll" /&gt;
+  &lt;Assembly Path="/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.5/System.Linq.Expressions.dll" /&gt;
+  &lt;Assembly Path="/home/rrm/.nuget/packages/eto.forms/2.6.1/lib/netstandard2.0/Eto.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
 	
 	
