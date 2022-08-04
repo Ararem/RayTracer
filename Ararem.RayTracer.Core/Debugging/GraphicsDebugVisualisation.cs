@@ -43,6 +43,9 @@ public enum GraphicsDebugVisualisation
 	EstimatedLight,
 
 	/// <summary>Undefined visualisation used for development and testing purposes, should not be used</summary>
-	UndefinedTestVisualisation
-	//TODO: Add how many bounces reached
+	UndefinedTestVisualisation,
+	/// <summary>
+	/// Displays many times the ray bounced (the depth it reached). White is few bounces (good), dark blue is many bounces (maybe not so good if it's very dark)
+	/// </summary>
+	BounceDepth
 }

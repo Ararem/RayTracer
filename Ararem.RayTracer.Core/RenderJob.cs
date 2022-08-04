@@ -5,15 +5,15 @@
 using Ararem.RayTracer.Core.Acceleration;
 using Ararem.RayTracer.Core.Debugging;
 using JetBrains.Annotations;
-using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static Ararem.RayTracer.Core.MathUtils;
+using static System.MathF;
+using Log = Serilog.Log;
 using PrevHitPool = System.Buffers.ArrayPool<Ararem.RayTracer.Core.HitRecord>;
 
 namespace Ararem.RayTracer.Core;
@@ -92,7 +92,7 @@ public sealed class RenderJob : IDisposable
 			try
 			{
 				Parallel.For(
-						0L, (long)RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism =(int) RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
+						0L, (long)RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism = (int)RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
 						{
 							Interlocked.Increment(ref RenderStats.ThreadsRunning);
 							return this;
@@ -143,112 +143,186 @@ public sealed class RenderJob : IDisposable
 
 		//Switch depending on how we want to view the scene
 		//Only if we don't have visualisations do we render the scene normally.
-		if (RenderOptions.DebugVisualisation == GraphicsDebugVisualisation.None)
-			return CalculateRayColourLooped(viewRay);
+		switch (RenderOptions.DebugVisualisation)
+		{
+			case GraphicsDebugVisualisation.None:
+				return CalculateRayColourLooped(viewRay);
 
-		//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
-		//Note that these visualisations will not 'bounce' off the scene objects, only the first hit is counted
-		if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
-			switch (RenderOptions.DebugVisualisation)
+			//`CalculateRayColourLooped` will do the intersection code for us, so if we're not using it we have to manually check
+			//Note that (most of) these visualisations will not 'bounce' off the scene objects, only the first hit is counted
+
+			case GraphicsDebugVisualisation.Normals:
 			{
-				case GraphicsDebugVisualisation.Normals:
-				{
-					//Convert normal values [-1..1] to [0..1]
-					Vector3 n = (hit.Normal + Vector3.One) / 2f;
-					return (Colour)n;
-				}
-				case GraphicsDebugVisualisation.FaceDirection:
-				{
-					//Outside is green, inside is red
-					return hit.OutsideFace ? Colour.Green : Colour.Red;
-				}
-				//Render how far away the objects are from the camera
-				/*
-					const float a = 1f;
-					float val;
-					float z = hit.K - RenderOptions.KMin;
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				//Convert normal values [-1..1] to [0..1]
+				Vector3 n = (hit.Normal + Vector3.One) / 2f;
+				return (Colour)n;
+			}
+			case GraphicsDebugVisualisation.FaceDirection:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				//Outside is green, inside is red
+				return hit.OutsideFace ? Colour.Green : Colour.Red;
+			}
+			//Render how far away the objects are from the camera
+			/*
+				const float a = 1f;
+				float val;
+				float z = hit.K - RenderOptions.KMin;
 
-					// val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
-					// val = MathF.Pow(MathF.E, -a * z); //Exponential
-					// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
-					val = 1 - (MathF.Atan(a * z) * (2f / MathF.PI)); //Inverse Tan
-					// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
-				 */
-				case GraphicsDebugVisualisation.DistanceFromCamera_Close:
+				// val = z / (RenderOptions.KMax - RenderOptions.KMin); //Inverse lerp k to [0..1]. Doesn't work when KMax is large (especially infinity)
+				// val = MathF.Pow(MathF.E, -a * z); //Exponential
+				// val   = 1f / ((a * z) + 1);                            //Reciprocal X. Get around asymptote by treating KMin as 0, and starting at x=1
+				val = 1 - (MathF.Atan(a * z) * (2f / MathF.PI)); //Inverse Tan
+				// val = MathF.Pow(MathF.E, -(a * z * z)); //Bell Curve
+			 */
+			case GraphicsDebugVisualisation.DistanceFromCamera_Close:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				float z = hit.K - RenderOptions.KMin;
+				// float val = MathF.Pow(MathF.E, -.2f * z); //Exponential
+				float val = Pow(E, -(0.01f * z * z)); //Bell Curve
+				return new Colour(val);
+			}
+			case GraphicsDebugVisualisation.DistanceFromCamera_Mid:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				float z = hit.K - RenderOptions.KMin;
+				// float val = MathF.Pow(MathF.E, -.02f * z); //Exponential
+				float val = Pow(E, -(0.0001f * z * z)); //Bell Curve
+				return new Colour(val);
+			}
+			case GraphicsDebugVisualisation.DistanceFromCamera_Far:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				float z = hit.K - RenderOptions.KMin;
+				// float val = MathF.Pow(MathF.E, -.0008f * z); //Exponential
+				float val = Pow(E, -(.000001f * z * z)); //Bell Curve
+				return new Colour(val);
+			}
+			//Debug texture based on X/Y pixel coordinates
+			case GraphicsDebugVisualisation.PixelCoordDebugTexture:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				return UniqueColourFromMaterialHash(hit.Material, Sin(x / 2f) * Sin(y / 2f) < 0);
+			}
+			case GraphicsDebugVisualisation.WorldCoordDebugTexture:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				return UniqueColourFromMaterialHash(hit.Material, Sin(hit.WorldPoint.X * 40f) * Sin(hit.WorldPoint.Y * 40f) * Sin(hit.WorldPoint.Z * 40f) < 0);
+			}
+			case GraphicsDebugVisualisation.LocalCoordDebugTexture:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				return UniqueColourFromMaterialHash(hit.Material, Sin(hit.LocalPoint.X * 40f) * Sin(hit.LocalPoint.Y * 40f) * Sin(hit.LocalPoint.Z * 40f) < 0);
+			}
+			case GraphicsDebugVisualisation.ScatterDirection:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				//Convert vector values [-1..1] to [0..1]
+				Vector3 scat = hit.Material.Scatter(hit, ArraySegment<HitRecord>.Empty)?.Direction ?? Vector3.Zero;
+				Vector3 n    = (scat + Vector3.One) / 2f;
+				return (Colour)n;
+			}
+			case GraphicsDebugVisualisation.UVCoords:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				return new Colour(hit.UV.X, hit.UV.Y, 1);
+			}
+			case GraphicsDebugVisualisation.EstimatedLight:
+			{
+				if (TryFindClosestHit(viewRay, RenderOptions.KMin, RenderOptions.KMax) is not {} hit) return NoColour;
+				Colour sum     = Colour.Black;
+				ulong  samples = RenderOptions.LightSampleCountHint;
+				for (ulong i = 0; i < samples; i++)
 				{
-					float z = hit.K - RenderOptions.KMin;
-					// float val = MathF.Pow(MathF.E, -.2f * z); //Exponential
-					float val = MathF.Pow(MathF.E, -(0.01f * z * z)); //Bell Curve
-					return new Colour(val);
-				}
-				case GraphicsDebugVisualisation.DistanceFromCamera_Mid:
-				{
-					float z = hit.K - RenderOptions.KMin;
-
-					// float val = MathF.Pow(MathF.E, -.02f * z); //Exponential
-					float val = MathF.Pow(MathF.E, -(0.0001f * z * z)); //Bell Curve
-					return new Colour(val);
-				}
-				case GraphicsDebugVisualisation.DistanceFromCamera_Far:
-				{
-					float z = hit.K - RenderOptions.KMin;
-					// float val = MathF.Pow(MathF.E, -.0008f * z); //Exponential
-					float val = MathF.Pow(MathF.E, -(.000001f * z * z)); //Bell Curve
-					return new Colour(val);
-				}
-
-					//Calculates a unique colour for a given material, using it's hash
-					//By setting `alternate` to true, we can get a secondary colour, which is useful when creating a checker texture
-					static Colour UniqueColourFromMaterialHash(Material m, bool alternate)
-					{
-						int        hash  = m.GetHashCode();
-						Span<byte> bytes = stackalloc byte[sizeof(int)];
-						BitConverter.TryWriteBytes(bytes, hash);
-
-						int   o  = alternate ? 1 : 0;
-						float rh = bytes[o + 0] / 255f;
-						float gh = bytes[o + 1] / 255f;
-						float bh = bytes[o + 2] / 255f;
-						return new Colour(rh, gh, bh);
-					}
-				//Debug texture based on X/Y pixel coordinates
-				case GraphicsDebugVisualisation.PixelCoordDebugTexture:
-					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(x / 2f) * MathF.Sin(y / 2f) < 0);
-				case GraphicsDebugVisualisation.WorldCoordDebugTexture:
-					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(hit.WorldPoint.X * 40f) * MathF.Sin(hit.WorldPoint.Y * 40f) * MathF.Sin(hit.WorldPoint.Z * 40f) < 0);
-				case GraphicsDebugVisualisation.LocalCoordDebugTexture:
-					return UniqueColourFromMaterialHash(hit.Material, MathF.Sin(hit.LocalPoint.X * 40f) * MathF.Sin(hit.LocalPoint.Y * 40f) * MathF.Sin(hit.LocalPoint.Z * 40f) < 0);
-				case GraphicsDebugVisualisation.ScatterDirection:
-				{
-					//Convert vector values [-1..1] to [0..1]
-					Vector3 scat = hit.Material.Scatter(hit, ArraySegment<HitRecord>.Empty)?.Direction ?? Vector3.Zero;
-					Vector3 n    = (scat + Vector3.One) / 2f;
-					return (Colour)n;
-				}
-				case GraphicsDebugVisualisation.None:
-					break; //Shouldn't get to here
-				case GraphicsDebugVisualisation.UVCoords:
-					return new Colour(hit.UV.X, hit.UV.Y, 1);
-				case GraphicsDebugVisualisation.EstimatedLight:
-				{
-					Colour sum = Colour.Black;
 					foreach (Light light in Scene.Lights)
 					{
 						sum += light.CalculateLight(hit, out _);
 					}
+				}
 
-					return sum;
-				}
-				case GraphicsDebugVisualisation.UndefinedTestVisualisation:
-				{
-					return Colour.Black;
-				}
-				default:
-					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
+				sum /= samples;
+
+				return sum;
 			}
+			case GraphicsDebugVisualisation.BounceDepth:
+			{
+				int maxDepthReached = -1;                                //The highest depth value we reached
+				int maxAllowedDepth = (int)RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
+				Ray currentRay      = viewRay;                           //The ray we are currently calculating on. Make a copy so we don't modify the initial ray parameter
+
+				//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
+				//This stores the hit state information, as well as what object was intersected with (at that hit)
+				//Add 1 to the size so that we have 1:1 mapping for depth:index (since array indices start at 0 and we want maxAllowedDepthItems as the highest index)
+				//Depth of 0 (no bounces, direct from camera) = index[0]
+				HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
+				for (int currentDepth = 0;; currentDepth++)
+				{
+					// maxDepthReached = currentDepth; //Update the max depth
+
+					//Ensure we don't go too deep
+					if (currentDepth > maxAllowedDepth)
+					{
+						Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
+						break;
+					}
+
+					if (TryFindClosestHit(currentRay, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
+					{
+						maxDepthReached             = currentDepth;                                //Update the max depth
+						hitStateArray[currentDepth] = hit;                                         //Store the hit in the array
+						ArraySegment<HitRecord> prevHits    = new(hitStateArray, 0, currentDepth); //Create the segment for the previous hits, which shouldn't include the current hit
+						Ray?                    maybeNewRay = hit.Material.Scatter(hit, prevHits);
+						if (maybeNewRay is null)
+						{
+							Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
+							//If the new ray is null, the material did not scatter (completely absorbed the light)
+							//So it's impossible to have any future bounces, so quit the loop
+							break;
+						}
+						else
+						{
+							Interlocked.Increment(ref RenderStats.MaterialScatterCount);
+							//Otherwise, the material scattered, creating a new ray
+							currentRay = (Ray)maybeNewRay;
+						}
+					}
+					else
+					{
+						//No object was hit (at least not in the range), so return the skybox colour
+						Interlocked.Increment(ref RenderStats.SkyRays);
+						break;
+					}
+				}
+				if(maxDepthReached == -1) return Colour.Purple;
+				float val = 1-Pow(E, -(maxDepthReached * maxDepthReached * Sqrt(maxAllowedDepth)));
+				return Colour.Lerp(Colour.White, Colour.Blue*0.02f, val);
+			}
+			default:
+				throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
+		}
 
 		//No object was intersected with
 		return NoColour;
+	}
+
+
+	/// <summary>
+	///  Calculates a unique colour for a given material, using it's hash By setting `alternate` to true, we can get a secondary colour, which is useful when
+	///  creating a checker texture
+	/// </summary>
+	private static Colour UniqueColourFromMaterialHash(Material m, bool alternate)
+	{
+		int        hash  = m.GetHashCode();
+		Span<byte> bytes = stackalloc byte[sizeof(int)];
+		BitConverter.TryWriteBytes(bytes, hash);
+
+		int   o  = alternate ? 1 : 0;
+		float rh = bytes[o + 0] / 255f;
+		float gh = bytes[o + 1] / 255f;
+		float bh = bytes[o + 2] / 255f;
+		return new Colour(rh, gh, bh);
 	}
 	//
 	// private Colour InitialCalculateRayColourRecursive(Ray ray)
@@ -324,9 +398,9 @@ public sealed class RenderJob : IDisposable
 
 	private Colour CalculateRayColourLooped(Ray initialRay)
 	{
-		int  maxDepthReached = -1;                                //The highest depth value we reached
-		int  maxAllowedDepth = (int)RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
-		Ray    currentRay      = initialRay;                   //The ray we are currently calculating on. Make a copy so we don't modify the initial ray parameter
+		int    maxDepthReached = -1;                                //The highest depth value we reached
+		int    maxAllowedDepth = (int)RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
+		Ray    currentRay      = initialRay;                        //The ray we are currently calculating on. Make a copy so we don't modify the initial ray parameter
 		Colour finalColour;
 
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
@@ -334,7 +408,7 @@ public sealed class RenderJob : IDisposable
 		//Add 1 to the size so that we have 1:1 mapping for depth:index (since array indices start at 0 and we want maxAllowedDepthItems as the highest index)
 		//Depth of 0 (no bounces, direct from camera) = index[0]
 		HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
-		for (int currentDepth = 0;;currentDepth++)
+		for (int currentDepth = 0;; currentDepth++)
 		{
 			// maxDepthReached = currentDepth; //Update the max depth
 
@@ -355,7 +429,7 @@ public sealed class RenderJob : IDisposable
 				if (maybeNewRay is null)
 				{
 					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
-					finalColour          = NoColour;
+					finalColour = NoColour;
 					//If the new ray is null, the material did not scatter (completely absorbed the light)
 					//So it's impossible to have any future bounces, so quit the loop
 					break;
@@ -372,17 +446,16 @@ public sealed class RenderJob : IDisposable
 				//No object was hit (at least not in the range), so return the skybox colour
 				Interlocked.Increment(ref RenderStats.SkyRays);
 				finalColour = Scene.SkyBox.GetSkyColour(currentRay);
-				if (maxDepthReached == -1) //We didn't hit any object at all
-					return finalColour; //So return the skybox colour directly (no materials to calculate and it would be broken anyway)
 				break;
 			}
 		}
 
+		if (maxDepthReached == -1) //We didn't hit any object at all
+			return finalColour;    //So return the skybox colour directly (no materials to calculate and it would be broken anyway)
+
 		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[maxDepthReached]);
 
-
 		//Now go in reverse for the colour pass
-		#warning Negative index?
 		for (int currentDepth = maxDepthReached; currentDepth >= 0; currentDepth--)
 		{
 			HitRecord               hit      = hitStateArray[currentDepth];
