@@ -71,7 +71,7 @@ public sealed partial class RenderJobPanel
 					Debug("Recreating preview image ({OldValue}) to change size to {NewValue}", PreviewImage.Size, new Size(width, height));
 					ImageView.Image = null;
 					PreviewImage.Dispose();
-					ImageView.Image = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
+					ImageView.Image                             = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
 				}
 
 				using BitmapData destPreviewImage = PreviewImage.Lock();
@@ -93,6 +93,7 @@ public sealed partial class RenderJobPanel
 				}
 			}
 			Invalidate(true); //Mark for redraw
+			((DocumentPage)ParentJobPanel.Parent).Image = PreviewImage; //Make the icon of the DocumentPage be the same as the buffer
 			Verbose("[{Sender}] Image updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
 		}
 	}

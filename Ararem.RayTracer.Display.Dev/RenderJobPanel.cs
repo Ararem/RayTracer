@@ -90,6 +90,8 @@ public sealed partial class RenderJobPanel : Panel
 		renderBufferPanel.Update();
 
 		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", this, totalSw.Elapsed.TotalMilliseconds);
+
+		((DocumentPage)Parent).Invalidate();
 	}
 
 	private readonly UITimer updateUiTimer;

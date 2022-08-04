@@ -240,7 +240,7 @@ internal sealed class MainForm : Form
 		{
 				ID    = $"Page_{guid}.Page",
 				Text  = $"Render {guid}",
-				Image = Icon, //TODO: Icon reflects the render buffer...
+				Image = Icon,
 				Content = new RenderJobPanel($"Page_{guid}")
 		};
 		//TODO: Tab selection thingy text styles
