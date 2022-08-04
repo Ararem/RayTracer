@@ -31,14 +31,6 @@ internal static class LogAggregator
 					Debug("GLib - {Domain} @ {Level}: {Message}", domain, level, message);
 				}
 		);
-		// Log.SetLogHandler(
-		// 		"", LogLevelFlags.All, delegate(string domain, LogLevelFlags level, string message)
-		// 		{
-		// 			Debug("GLib.Log - {Domain} @ {Level}: {Message}", domain, level, message);
-		// 		}
-		// );
-		// new Log().WriteLog("asdasdasdasd", LogLevelFlags.Debug, "Testing");
-
 		Log.SetPrintHandler(
 				delegate(string message)
 				{

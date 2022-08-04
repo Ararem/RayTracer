@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -98,7 +99,7 @@ public sealed class RenderJob : IDisposable
 						}, //Gives us the state tracking the `this` reference, so we don't have to closure inside the body loop
 						static (i, loop, state) =>
 						{
-							(int x, int y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
+							( x, int y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
 							Colour col = state.RenderPixelWithVisualisations(x, y);
 							state.UpdateBuffers(x, y, col);
 							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
@@ -227,7 +228,7 @@ public sealed class RenderJob : IDisposable
 					break; //Shouldn't get to here
 				case GraphicsDebugVisualisation.UVCoords:
 					return new Colour(hit.UV.X, hit.UV.Y, 1);
-				case GraphicsDebugVisualisation.EstimatedLightIntensity:
+				case GraphicsDebugVisualisation.EstimatedLight:
 				{
 					Colour sum = Colour.Black;
 					foreach (Light light in Scene.Lights)
@@ -239,13 +240,7 @@ public sealed class RenderJob : IDisposable
 				}
 				case GraphicsDebugVisualisation.UndefinedTestVisualisation:
 				{
-					Colour sum = Colour.Black;
-					foreach (Light light in Scene.Lights)
-					{
-						sum += light.CalculateLight(hit, out _, true);
-					}
-
-					return sum; //Scene.Lights.Length;
+					return Colour.Black;
 				}
 				default:
 					throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
@@ -326,63 +321,67 @@ public sealed class RenderJob : IDisposable
 	// 	}
 	// }
 
-	private Colour CalculateRayColourLooped(Ray ray)
+	private Colour CalculateRayColourLooped(Ray initialRay)
 	{
+		int    maxDepthReached;                                //The highest depth value we reached
+		int    maxAllowedDepth = RenderOptions.MaxBounceDepth; //The highest depth we can reach. Also the max index for `hitStateArray`
+		Ray    currentRay      = initialRay;                   //The ray we are currently calculating on. Make a copy so we don't modify the initial ray parameter
+		Colour finalColour;
+
 		//Reusing pools from ArrayPool should reduce memory (I was using `new Stack<...>()` before, which I'm sure isn't a good idea
 		//This stores the hit state information, as well as what object was intersected with (at that hit)
-		HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(RenderOptions.MaxBounceDepth + 1);
-		Colour      finalColour   = NoColour;
-		//Loop for a max number of times equal to the depth
-		//And map out the ray path (don't do any colours yet)
-		//TODO: Fix this depth++/-- stuff, it's iffy
-		int depth;
-		for (depth = 0; depth < RenderOptions.MaxBounceDepth; depth++)
+		//Add 1 to the size so that we have 1:1 mapping for depth:index (since array indices start at 0 and we want maxAllowedDepthItems as the highest index)
+		//Depth of 0 (no bounces, direct from camera) = index[0]
+		HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
+		for (int currentDepth = 0;;currentDepth++)
 		{
-			Interlocked.Increment(ref RenderStats.RayCount);
-			if (TryFindClosestHit(ray, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
+			//Ensure we don't go too deep
+			if (currentDepth > maxAllowedDepth)
 			{
-				ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, depth); //Shouldn't include the current hit
-				//See if the material scatters the ray
-				Ray? maybeNewRay = hit.Material.Scatter(hit, prevHits);
+				Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
+				finalColour = NoColour;
+			}
 
+			maxDepthReached = currentDepth; //Update the max depth
+			if (TryFindClosestHit(currentRay, RenderOptions.KMin, RenderOptions.KMax) is {} hit)
+			{
+				hitStateArray[currentDepth] = hit; //Store the hit in the array
+				ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, currentDepth); //Create the segment for the previous hits, which shouldn't include the current hit
+				Ray? maybeNewRay = hit.Material.Scatter(hit, prevHits);
 				if (maybeNewRay is null)
 				{
-					//If the new ray is null, the material did not scatter (completely absorbed the light)
-					//So it's impossible to have any future bounces, so quit the loop
 					Interlocked.Increment(ref RenderStats.MaterialAbsorbedCount);
 					finalColour          = NoColour;
-					hitStateArray[depth] = hit;
-					depth++; //Have to counteract the `depth--` further down
+					//If the new ray is null, the material did not scatter (completely absorbed the light)
+					//So it's impossible to have any future bounces, so quit the loop
 					break;
 				}
 				else
 				{
-					//Otherwise, the material scattered, creating a new ray
-					ray = (Ray)maybeNewRay;
 					Interlocked.Increment(ref RenderStats.MaterialScatterCount);
-					hitStateArray[depth] = hit;
+					//Otherwise, the material scattered, creating a new ray
+					currentRay = (Ray)maybeNewRay;
 				}
 			}
-			//No object was hit (at least not in the range), so return the skybox colour
 			else
 			{
+				//No object was hit (at least not in the range), so return the skybox colour
 				Interlocked.Increment(ref RenderStats.SkyRays);
-				finalColour = Scene.SkyBox.GetSkyColour(ray);
+				finalColour = Scene.SkyBox.GetSkyColour(currentRay);
 				break;
 			}
+
+			// currentDepth++; //Increment the depth counter out here so it doesn't get called when we break out of the loop manually
 		}
+		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[maxDepthReached]);
 
-		if (depth == RenderOptions.MaxBounceDepth) Interlocked.Increment(ref RenderStats.BounceLimitExceeded);
-		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[depth]);
 
-		//Now do the colour pass
-		//Have to decrement depth here or we get index out of bounds because `depth++` is called on the exiting (last) iteration of the above for loop
-		depth--;
-		for (; depth >= 0; depth--)
+		//Now go in reverse for the colour pass
+		for (int currentDepth = maxDepthReached; currentDepth >= 0; currentDepth--)
 		{
-			HitRecord               hit      = hitStateArray[depth];
-			ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, depth); //Shouldn't include the current hit
-			finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[depth + 1].IncomingRay, hit, prevHits);
+			HitRecord               hit      = hitStateArray[currentDepth];
+			ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, currentDepth); //Shouldn't include the current hit
+			finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[currentDepth + 1].IncomingRay, hit, prevHits);
 		}
 
 		PrevHitPool.Shared.Return(hitStateArray);
@@ -479,6 +478,7 @@ public sealed class RenderJob : IDisposable
 	/// <param name="kMax">Upper bound for K along the ray</param>
 	public HitRecord? TryFindClosestHit(Ray ray, float kMin, float kMax)
 	{
+		Interlocked.Increment(ref RenderStats.RayCount);
 		//I love how simple this is
 		//Like I just need to validate the result and that's it
 		(SceneObject Object, HitRecord Hit)? maybeHit = BvhTree.TryHit(ray, kMin, kMax);
@@ -535,7 +535,7 @@ public sealed class RenderJob : IDisposable
 		int i = Compress2DIndex(x, y, RenderOptions.RenderWidth);
 		#if DEBUG_IGNORE_BUFFER_PREVIOUS
 		sampleCountBuffer[i] = 1;
-		rawColourBuffer[i]   = newSampleColour;
+		rawColourBuffer[i] = newSampleColour;
 		//Have to clamp the colour here or we get funky things in the image later
 		Colour finalColour = newSampleColour;
 		#else

@@ -141,14 +141,14 @@ public sealed class RenderOptions
 	///  infinite bouncing
 	/// </summary>
 	/// <remarks>Must be &gt;=0</remarks>
-	[ValueRange(1, int.MaxValue)]
+	[ValueRange(0, int.MaxValue)]
 	//TODO: Allow this to be changed at runtime
 	public int MaxBounceDepth
 	{
 		get => maxBounceDepth;
 		init
 		{
-			if (maxBounceDepth < 1) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=1", (1, int.MaxValue));
+			if (maxBounceDepth < 0) throw new ArgumentOutOfRangeException<int>(maxBounceDepth, nameof(MaxBounceDepth), $"{nameof(MaxBounceDepth)} must be >=0", (0, int.MaxValue));
 			maxBounceDepth = value;
 		}
 	}

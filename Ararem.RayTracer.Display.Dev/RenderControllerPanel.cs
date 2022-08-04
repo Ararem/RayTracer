@@ -36,7 +36,7 @@ public sealed partial class RenderJobPanel
 			HandleIntProperty(nameof(RenderOptions.Passes),       1, int.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
 			HandleIntProperty(nameof(RenderOptions.ConcurrencyLevel),     1, Environment.ProcessorCount);
-			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       1, int.MaxValue);
+			HandleIntProperty(nameof(RenderOptions.MaxBounceDepth),       0, int.MaxValue);
 			HandleIntProperty(nameof(RenderOptions.LightSampleCountHint), 1, int.MaxValue);
 			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
 			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);

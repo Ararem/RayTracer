@@ -40,7 +40,7 @@ public enum GraphicsDebugVisualisation
 	WorldCoordDebugTexture,
 
 	/// <summary>How much light is estimated to reach the hit. May be affected depending on what material is used and how that material handles lighting</summary>
-	EstimatedLightIntensity,
+	EstimatedLight,
 
 	/// <summary>Undefined visualisation used for development and testing purposes, should not be used</summary>
 	UndefinedTestVisualisation

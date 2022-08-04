@@ -3,11 +3,12 @@ using Ararem.RayTracer.Core.Acceleration;
 namespace Ararem.RayTracer.Core;
 
 /// <summary>Class that stores statistics about a render</summary>
-//Yeah I'm using long's everywhere, just cause `ints` aren't large enough on large images, and I still want negative support
+//Yeah I'm using longs everywhere, just cause ints aren't large enough on large images, and I still want negative support
+//TODO: Use ulong?
 public sealed class RenderStats
 {
 	/// <summary>How many threads are currently rendering the scene</summary>
-	public int ThreadsRunning = 0;
+	public long ThreadsRunning = 0;
 
 	/// <summary>Constructor for creating a new <see cref="RenderStats"/> object</summary>
 	/// <param name="options">Render options, used to assign and calculate some of the values</param>
@@ -46,13 +47,13 @@ public sealed class RenderStats
 	public long RawPixelsRendered = 0;
 
 	/// <summary>How many passes have been rendered</summary>
-	public int PassesRendered = 0;
+	public long PassesRendered = 0;
 
 	/// <summary>How many 'raw' pixels need to be rendered (including multisampled pixels)</summary>
 	public long TotalRawPixels { get; }
 
 	/// <summary>How many 'true' pixels need to be rendered (not including multisampling)</summary>
-	public int TotalTruePixels { get; }
+	public long TotalTruePixels { get; }
 
 #endregion
 
