@@ -1,13 +1,8 @@
 using GLib;
-using Serilog.Events;
-using System;
-using System.Reflection;
-using DateTime = System.DateTime;
 
 namespace Ararem.RayTracer.Display.Dev;
 
 /// <summary>Static helper class that combines logs from multiple other sources into our <see cref="Serilog"/> <see cref="Serilog.Log.Logger"/></summary>
-//TODO: Aardvark and GLib
 internal static class LogAggregator
 {
 	public static void Init()
@@ -25,24 +20,24 @@ internal static class LogAggregator
 		 * G_ENABLE_DIAGNOSTIC=1
 		 */
 		Debug("Redirecting GLib logs");
-		Log.SetDefaultHandler(
+		Verbose("SetDefaultHandler: {@Value}",Log.SetDefaultHandler(
 				delegate(string domain, LogLevelFlags level, string message)
 				{
 					Debug("GLib - {Domain} @ {Level}: {Message}", domain, level, message);
 				}
-		);
-		Log.SetPrintHandler(
+		));
+		Verbose("SetPrintHandler: {@Value}",Log.SetPrintHandler(
 				delegate(string message)
 				{
 					Debug("GLib: {Message}", message);
 				}
-		);
-		Log.SetPrintErrorHandler(
+		));
+		Verbose("SetPrintErrorHandler: {@Value}",Log.SetPrintErrorHandler(
 				delegate (string message)
 				{
 					Debug("GLib: {Message}", message);
 				}
-		);
+		));
 		Debug("GLib redirected");
 	}
 }

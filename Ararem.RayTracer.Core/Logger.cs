@@ -34,7 +34,7 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(Console.Error);
 		LoggerConfiguration config = new LoggerConfiguration()
-									.MinimumLevel.Is(LogEventLevel.Debug)
+									.MinimumLevel.Is(LogEventLevel.Verbose)
 									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
 									.Enrich.WithThreadId()
 									.Enrich.WithThreadName()
