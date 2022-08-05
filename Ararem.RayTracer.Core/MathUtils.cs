@@ -25,8 +25,7 @@ public static class MathUtils
 	/// <param name="val">Value to remap</param>
 	/// <returns></returns>
 	[Pure]
-	public static float Remap(float iMin, float iMax, float oMin, float oMax, float val)
-		=> Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
+	public static float Remap(float iMin, float iMax, float oMin, float oMax, float val) => Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
 
 	/// <summary>Compresses a 2d index into a 1d index. Useful for un-nesting loops</summary>
 	[Pure]

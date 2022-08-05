@@ -238,9 +238,9 @@ internal sealed class MainForm : Form
 		Guid guid = Guid.NewGuid();
 		DocumentPage newPage = new()
 		{
-				ID    = $"Page_{guid}.Page",
-				Text  = $"Render {guid}",
-				Image = Icon,
+				ID      = $"Page_{guid}.Page",
+				Text    = $"Render {guid}",
+				Image   = Icon,
 				Content = new RenderJobPanel($"Page_{guid}")
 		};
 		//TODO: Tab selection thingy text styles

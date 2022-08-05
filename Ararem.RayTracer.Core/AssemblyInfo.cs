@@ -23,6 +23,7 @@ namespace Ararem.RayTracer.Core;
 internal static class AssemblyInfo
 {
 #region Constant attribute things
+
 	public const string ProductName = "Ararem.RayTracer",
 						DevAppName  = "Ararem.RayTracer.Display.Dev",
 						CoreAppName = "Ararem.RayTracer.Core",
@@ -37,9 +38,10 @@ internal static class AssemblyInfo
 	#else
 			"Unknown";
 	#endif
+
 #endregion
 
-	public const           string?               Copyright   = null,              Licence    = null;
-	public static readonly IReadOnlyList<string> Designers   = new[]{ "Ararem" }, Developers =new[] { "Ararem" }, Documenters =new[] { "Ararem" };
+	public const           string?               Copyright   = null,               Licence    = null;
+	public static readonly IReadOnlyList<string> Designers   = new[] { "Ararem" }, Developers = new[] { "Ararem" }, Documenters = new[] { "Ararem" };
 	public const           string                ProjectLink = "https://www.github.com/Ararem/RayTracer";
 }

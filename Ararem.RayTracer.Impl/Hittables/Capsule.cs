@@ -45,12 +45,7 @@ public sealed class Capsule : SingleMaterialHittable
 		// Original is:
 		// Vector3 q = (point-Position1)*mat3(u, v, w);
 		// OpenGL uses column-major ordering, so `u` is the first column, the v, then w
-		uvMatrix = new Matrix4x4(
-				u.X, v.X, w.X, 0,
-				u.Y, v.Y, w.Y, 0,
-				u.Z, v.Z, w.Z, 0,
-				0, 0, 0, 0
-		);
+		uvMatrix = new Matrix4x4(u.X, v.X, w.X, 0, u.Y, v.Y, w.Y, 0, u.Z, v.Z, w.Z, 0, 0, 0, 0, 0);
 
 		//Cached vars
 		p2MinusP1              = P2 - P1;

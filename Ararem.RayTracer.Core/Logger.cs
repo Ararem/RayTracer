@@ -32,25 +32,8 @@ internal static class Logger
 		const string   template = "[{Timestamp:HH:mm:ss.ffffff} | +{AppTimestamp:G} | {Level:t3} | " /*+ $"{{{ThreadNameProp},-30}} " /**/ + $"{{{ThreadIdProp},10:'Thread #'##}} | {{{CallingTypeNameProp},20}}.{{{CallingMethodNameProp},-30}}@{{{CallingMethodLineProp},3:n0}}] {{{LevelIndentProp}}}{{Message:l}}{{NewLine}}{{Exception}}{{{ExceptionDataProp}}}";
 		#endif
 		Thread.CurrentThread.Name ??= "Main Thread";
-		SelfLog.Enable(Console.Error);
-		LoggerConfiguration config = new LoggerConfiguration()
-									.MinimumLevel.Is(LogEventLevel.Verbose)
-									.WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-									.Enrich.WithThreadId()
-									.Enrich.WithThreadName()
-									.Enrich.FromLogContext()
-									.Enrich.With<ExceptionDataEnricher>()
-									.Enrich.With<DemystifiedExceptionsEnricher>()
-									.Enrich.With<ThreadInfoEnricher>()
-									.Enrich.With<EventLevelIndentEnricher>()
-									.Enrich.With<LogEventNumberEnricher>()
-									.Enrich.With(new CallerContextEnricher(perfMode))
-									.Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime))
-									.Destructure.With<DelegateDestructurer>()
-									.Destructure.With<IncludePublicFieldsDestructurer>()
-									.Destructure.AsScalar<Vector3>()
-									.Destructure.UsingAttributes()
-									.Destructure.AsScalar<Vector2>();
+		SelfLog.Enable(str => Console.Error.WriteLine($"[SelfLog] {str}"));
+		LoggerConfiguration config = new LoggerConfiguration().MinimumLevel.Is(LogEventLevel.Verbose).WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code).Enrich.WithThreadId().Enrich.WithThreadName().Enrich.FromLogContext().Enrich.With<ExceptionDataEnricher>().Enrich.With<DemystifiedExceptionsEnricher>().Enrich.With<ThreadInfoEnricher>().Enrich.With<EventLevelIndentEnricher>().Enrich.With<LogEventNumberEnricher>().Enrich.With(new CallerContextEnricher(perfMode)).Enrich.With(new DynamicEnricher("AppTimestamp", static () => DateTime.Now - CurrentProcess.StartTime)).Destructure.With<DelegateDestructurer>().Destructure.With<IncludePublicFieldsDestructurer>().Destructure.AsScalar<Vector3>().Destructure.UsingAttributes().Destructure.AsScalar<Vector2>();
 
 		config = adjustConfig?.Invoke(config) ?? config; //If no config func is provided, `Invoke(...)` isn't called and it returns null, which is handled by the `?? config`
 

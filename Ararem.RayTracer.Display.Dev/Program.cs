@@ -2,7 +2,7 @@
 using Ararem.RayTracer.Display.Dev.Resources;
 using Eto;
 using Eto.Forms;
-using GLib;
+using Serilog;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -15,10 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Figgle.FiggleFonts;
 using static Ararem.RayTracer.Display.Dev.Program.ExitCode;
-using Application = Eto.Forms.Application;
-using DateTime = System.DateTime;
 using Logger = Ararem.RayTracer.Core.Logger;
-using Task = System.Threading.Tasks.Task;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 namespace Ararem.RayTracer.Display.Dev;
@@ -80,7 +77,7 @@ internal static class Program
 		Console.ResetColor();
 		#endif
 
-		Logger.Init();
+		Logger.Init(AdjustConfig);
 		LogAggregator.Init();
 
 		Information("Commandline args: {Args}", args);
@@ -91,7 +88,7 @@ internal static class Program
 		{
 			AppDomain domain = AppDomain.CurrentDomain;
 			Debug("Setting up AppDomain exception catchers for CurrentDomain={AppDomain}", domain);
-			UnhandledExceptionEventHandler              unhandledExceptionEventHandler   = CurrentDomainOnUnhandledException;
+			UnhandledExceptionEventHandler unhandledExceptionEventHandler = CurrentDomainOnUnhandledException;
 			domain.UnhandledException += unhandledExceptionEventHandler;
 			EventHandler<FirstChanceExceptionEventArgs> firstChangeExceptionEventHandler = FirstChanceException;
 			domain.FirstChanceException += firstChangeExceptionEventHandler;
@@ -227,6 +224,11 @@ internal static class Program
 		}
 	}
 
+	private static LoggerConfiguration AdjustConfig(LoggerConfiguration arg)
+	{
+		return arg.Destructure.AsScalar<Widget>();
+	}
+
 	private static void OnUnhandledException(Exception exception, object? sender, bool isTerminating)
 	{
 		Write(isTerminating ? LogEventLevel.Fatal : LogEventLevel.Error, exception, "Caught unhandled exception ({Terminating}) from {Sender}:", isTerminating ? "terminating" : "non-terminating", sender);
@@ -251,6 +253,8 @@ internal static class Program
 	{
 		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
 	}
+
+
 
 	/// <summary>Makes the Console.Error stuff a different colour...</summary>
 	private sealed class ColouredConsoleErrorWriter : TextWriter

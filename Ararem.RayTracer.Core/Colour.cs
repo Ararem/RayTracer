@@ -231,11 +231,7 @@ public readonly struct Colour : IFormattable
 	/// <returns></returns>
 	[Pure]
 	public static explicit operator Rgb24(Colour c) =>
-			new(
-					(byte)(byte.MaxValue * c.R),
-					(byte)(byte.MaxValue * c.G),
-					(byte)(byte.MaxValue * c.B)
-			);
+			new((byte)(byte.MaxValue * c.R), (byte)(byte.MaxValue * c.G), (byte)(byte.MaxValue * c.B));
 
 	/// <summary>Deconstructs a colour into it's components</summary>
 	/// <param name="r"></param>

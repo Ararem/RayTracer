@@ -14,13 +14,17 @@ namespace Ararem.RayTracer.Display.Dev;
 
 public sealed partial class RenderJobPanel
 {
-	/// <summary>Panel class that controls an <see cref="RenderJob"/>. Allows editing the <see cref="Core.RenderOptions"/> and <see cref="Scene"/> for the render, as well as starting/stopping the render</summary>
+	/// <summary>
+	///  Panel class that controls an <see cref="RenderJob"/>. Allows editing the <see cref="Core.RenderOptions"/> and <see cref="Scene"/> for the render, as
+	///  well as starting/stopping the render
+	/// </summary>
 	// TODO: Why am i modifying an immutable type with reflection (*cough* RenderOptions *cough*)
 	private sealed class RenderControllerPanel : Panel
 	{
 		public RenderControllerPanel(RenderJobPanel parentJobPanel)
 		{
 			ParentJobPanel = parentJobPanel;
+			ID             = $"{ParentJobPanel.ID}/Controller";
 			Verbose("Creating property editors");
 			Content = Layout = new DynamicLayout
 			{
@@ -28,12 +32,11 @@ public sealed partial class RenderJobPanel
 					Spacing = DefaultSpacing,
 					Padding = DefaultPadding
 			};
-			DynamicGroup group = Layout.BeginGroup("Render Options", spacing: DefaultSpacing, padding: DefaultPadding);
 			Layout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
-			HandleULongProperty(nameof(RenderOptions.RenderWidth),  1,ulong.MaxValue);
-			HandleULongProperty(nameof(RenderOptions.RenderHeight), 1,ulong.MaxValue);
-			HandleULongProperty(nameof(RenderOptions.Passes),       1,ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.RenderWidth),  1, ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.RenderHeight), 1, ulong.MaxValue);
+			HandleULongProperty(nameof(RenderOptions.Passes),       1, ulong.MaxValue);
 			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
 			HandleULongProperty(nameof(RenderOptions.ConcurrencyLevel),     1, (ulong)Environment.ProcessorCount);
 			HandleULongProperty(nameof(RenderOptions.MaxBounceDepth),       0, ulong.MaxValue);
@@ -81,17 +84,7 @@ public sealed partial class RenderJobPanel
 			ToggleRenderStateButton.Command = toggleRenderStateCommand;
 			Verbose("Created toggle render button: {Control}", ToggleRenderStateButton);
 
-			Layout.EndGroup();
 			Layout.Create();
-			group.GroupBox.Style = nameof(Force_Heading);
-		}
-
-		private void SelectedSceneDropdownChanged(object? sender, EventArgs eventArgs)
-		{
-			TrackEvent(sender, eventArgs);
-			Scene newScene = (Scene)SelectedSceneDropdown.SelectedValue;
-			Verbose("Selected scene changed to {Scene}", newScene);
-			SelectedScene = newScene;
 		}
 
 		/// <summary>The <see cref="RenderJobPanel"/> that contains this instance as a child object (aka the panel that created this panel)</summary>
@@ -105,6 +98,14 @@ public sealed partial class RenderJobPanel
 
 		/// <summary>The <see cref="CancellationTokenSource"/> that is used to cancel the <see cref="Core.RenderJob"/></summary>
 		public CancellationTokenSource RenderJobCTS { get; private set; } = new();
+
+		private void SelectedSceneDropdownChanged(object? sender, EventArgs eventArgs)
+		{
+			TrackEvent(sender, eventArgs);
+			Scene newScene = (Scene)SelectedSceneDropdown.SelectedValue;
+			Verbose("Selected scene changed to {Scene}", newScene);
+			SelectedScene = newScene;
+		}
 
 		/// <summary>Called whenever the "Toggle Render" button is pressed</summary>
 		/// <param name="sender"></param>
@@ -147,13 +148,13 @@ public sealed partial class RenderJobPanel
 				if (editor.Control.GetType().GetProperty("ReadOnly", typeof(bool)) is {} readonlyProp)
 				{
 					bool shouldBeReadonly = !enabled;
-					if((bool)readonlyProp.GetValue(editor.Control)! == shouldBeReadonly) continue; //Only log and modify if different
+					if ((bool)readonlyProp.GetValue(editor.Control)! == shouldBeReadonly) continue; //Only log and modify if different
 					readonlyProp.SetValue(editor.Control, shouldBeReadonly);
 					Verbose("{Control}.Readonly set to {Value}", editor.Control, shouldBeReadonly);
 				}
 				else
 				{
-					if(editor.Control.Enabled == enabled) continue; ////Only log and modify if different
+					if (editor.Control.Enabled == enabled) continue; ////Only log and modify if different
 					editor.Control.Enabled = enabled;
 					Verbose("{Control}.Enabled set to {Value}", editor.Control, enabled);
 				}
@@ -183,7 +184,14 @@ public sealed partial class RenderJobPanel
 				}
 			}
 			Invalidate(true); //Mark for redraw
-			Verbose("[{Sender}] Editors updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
+			ForContext("Control", this).Verbose("Editors updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
+		}
+
+		/// <inheritdoc/>
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			RenderJobCTS.Cancel(); //Cancel the render job so that it doesn't keep running
 		}
 
 	#region Ease-of-use properties (shortcut properties)
@@ -356,12 +364,5 @@ public sealed partial class RenderJobPanel
 		private sealed record RenderOptionEditor(CommonControl Control, bool CanModifyWhileRunning);
 
 	#endregion
-
-		/// <inheritdoc />
-		protected override void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-			RenderJobCTS.Cancel(); //Cancel the render job so that it doesn't keep running
-		}
 	}
 }

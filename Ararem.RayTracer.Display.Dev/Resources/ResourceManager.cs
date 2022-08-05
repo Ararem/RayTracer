@@ -13,9 +13,10 @@ public static class ResourceManager
 			const string iconPathPng = "Ararem.RayTracer.Display.Dev.Resources.icon.png";
 			AppIconPng    = Icon.FromResource(iconPathPng);
 			AppIconPng.ID = "App Icon";
-			Verbose("App Icon (Png) ({Path}): {Icon}", iconPathPng, AppIconPng );
+			Verbose("App Icon (Png) ({Path}): {Icon}", iconPathPng, AppIconPng);
 		}
 		Debug("Initialised Resource Manager");
 	}
+
 	public static Icon AppIconPng { get; }
 }

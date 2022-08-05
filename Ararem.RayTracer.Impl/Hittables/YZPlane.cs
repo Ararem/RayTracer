@@ -68,9 +68,7 @@ public sealed class YZPlane : SingleMaterialHittable
 		Vector2 uv = new((y - YLow) / (YHigh - YLow), (z - ZLow) / (ZHigh - ZLow));
 		Vector3 outwardNormal =
 				//See XYPlane.cs for explanation of this
-				ray.Origin.X < X
-						? -Vector3.UnitX
-						: Vector3.UnitX;
+				ray.Origin.X < X ? -Vector3.UnitX : Vector3.UnitX;
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, this, Material);
 	}

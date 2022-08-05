@@ -81,9 +81,7 @@ public sealed class DiffuseShapedLight : SimpleLightBase
 			Vector3 p1 = hit.WorldPoint;
 			//TODO: Problems when the light AABB is inside the lit object's aabb
 			Vector3 p2 = new( //TODO: Rand.UnitCube?
-					MathUtils.Lerp(Shape.BoundingVolume.Min.X, Shape.BoundingVolume.Max.X, RandUtils.RandomFloat01()),
-					MathUtils.Lerp(Shape.BoundingVolume.Min.Y, Shape.BoundingVolume.Max.Y, RandUtils.RandomFloat01()),
-					MathUtils.Lerp(Shape.BoundingVolume.Min.Z, Shape.BoundingVolume.Max.Z, RandUtils.RandomFloat01())
+					MathUtils.Lerp(Shape.BoundingVolume.Min.X, Shape.BoundingVolume.Max.X, RandUtils.RandomFloat01()), MathUtils.Lerp(Shape.BoundingVolume.Min.Y, Shape.BoundingVolume.Max.Y, RandUtils.RandomFloat01()), MathUtils.Lerp(Shape.BoundingVolume.Min.Z, Shape.BoundingVolume.Max.Z, RandUtils.RandomFloat01())
 			);
 			Ray r = Ray.FromPoints(p1, p2); //The ray goes [hit object's point] ==> [point inside AABB]
 

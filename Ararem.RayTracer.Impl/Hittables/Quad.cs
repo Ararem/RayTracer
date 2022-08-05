@@ -49,12 +49,7 @@ public sealed class Quad : SingleMaterialHittable
 		//If we have a vector that's the length and direction of our U side, it's (1, 0, 0) in quad coords
 		//In world coords it's just the U vector
 		//This StackOverflow answer was helpful in creating the matrix: https://stackoverflow.com/questions/31257325/converting-points-into-another-coordinate-system
-		Matrix4x4 quadToWorld = new(
-				u.X, u.Y, u.Z, 0,
-				v.X, v.Y, v.Z, 0,
-				Normal.X, Normal.Y, Normal.Z, 0,
-				0, 0, 0, 1
-		);
+		Matrix4x4 quadToWorld = new(u.X, u.Y, u.Z, 0, v.X, v.Y, v.Z, 0, Normal.X, Normal.Y, Normal.Z, 0, 0, 0, 0, 1);
 
 		if (!Matrix4x4.Invert(quadToWorld, out localToQuadMatrix)) throw new ArithmeticException("Could not invert Quad to world transformation matrix (UV coords were probably parallel)");
 	}

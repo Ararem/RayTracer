@@ -26,30 +26,12 @@ public sealed partial class RenderJobPanel
 		/// <summary>Main <see cref="DynamicLayout"/> for this panel. Is the same as accessing <see cref="Panel.Content"/></summary>
 		public DynamicLayout Layout { get; }
 
-	#region Ease-of-use properties (shortcut properties)
-
-		private Scene SelectedScene
-		{
-			get => ParentJobPanel.SelectedScene;
-			set => ParentJobPanel.SelectedScene = value;
-		}
-
-		private RenderOptions RenderOptions => ParentJobPanel.RenderOptions;
-
-		private RenderJob? RenderJob
-		{
-			get => ParentJobPanel.RenderJob;
-			set => ParentJobPanel.RenderJob = value;
-		}
-
-	#endregion
-
 		public void Update()
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 
 			Invalidate(true); //Mark for redraw
-			Verbose("[{Sender}] Stats updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
+			ForContext("Control", this).Verbose("Stats updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 		}
 	}
 }

@@ -95,9 +95,7 @@ public sealed class XYPlane : SingleMaterialHittable
 				 *
 				 * Therefore, if Ray.Z < Plane.Z, then Normal.Z =-1, else Normal.Z = +1
 				 */
-				ray.Origin.Z < Z
-						? -Vector3.UnitZ
-						: Vector3.UnitZ;
+				ray.Origin.Z < Z ? -Vector3.UnitZ : Vector3.UnitZ;
 
 		//Pretend front face is always true, since a 2D plane doesn't really have an 'inside'
 		return new HitRecord(ray, worldPoint, localPoint, outwardNormal, k, true, uv, this, Material);

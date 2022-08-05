@@ -59,21 +59,9 @@ public sealed class Box : SingleMaterialHittable
 		BoundingVolume = AxisAlignedBoundingBox.Encompass(corners);
 
 		//Cache some values for later in TryHit()
-		boxToWorldRow1 = new Vector3(
-				BoxToWorldTransform.M11,
-				BoxToWorldTransform.M12,
-				BoxToWorldTransform.M13
-		);
-		boxToWorldRow2 = new Vector3(
-				BoxToWorldTransform.M21,
-				BoxToWorldTransform.M22,
-				BoxToWorldTransform.M23
-		);
-		boxToWorldRow3 = new Vector3(
-				BoxToWorldTransform.M31,
-				BoxToWorldTransform.M32,
-				BoxToWorldTransform.M33
-		);
+		boxToWorldRow1 = new Vector3(BoxToWorldTransform.M11, BoxToWorldTransform.M12, BoxToWorldTransform.M13);
+		boxToWorldRow2 = new Vector3(BoxToWorldTransform.M21, BoxToWorldTransform.M22, BoxToWorldTransform.M23);
+		boxToWorldRow3 = new Vector3(BoxToWorldTransform.M31, BoxToWorldTransform.M32, BoxToWorldTransform.M33);
 	}
 
 	/// <summary>Creates a <see cref="Box"/> from two opposing corners</summary>
@@ -138,11 +126,7 @@ public sealed class Box : SingleMaterialHittable
 		Vector3 m = new Vector3(1f) / rd;
 		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
 		if (m.X is float.NaN || m.Y is float.NaN || m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y) || float.IsInfinity(m.Z)) return null;
-		Vector3 s = new(
-				rd.X < 0f ? 1f : -1f,
-				rd.Y < 0f ? 1f : -1f,
-				rd.Z < 0f ? 1f : -1f
-		);
+		Vector3 s  = new(rd.X < 0f ? 1f : -1f, rd.Y < 0f ? 1f : -1f, rd.Z < 0f ? 1f : -1f);
 		Vector3 t1 = m * (-ro + (s / 2f));
 		Vector3 t2 = m * (-ro - (s / 2f));
 
@@ -213,11 +197,7 @@ public sealed class Box : SingleMaterialHittable
 		Vector3 m = new Vector3(1f) / rd;
 		//To be honest I really dislike having this, but when it's left in it causes weird graphical artifacts and causes a whole bunch of NaN's down the line, screwing everything up
 		if (m.X is float.NaN || m.Y is float.NaN || m.Z is float.NaN || float.IsInfinity(m.X) || float.IsInfinity(m.Y) || float.IsInfinity(m.Z)) return false;
-		Vector3 s = new(
-				rd.X < 0f ? 1f : -1f,
-				rd.Y < 0f ? 1f : -1f,
-				rd.Z < 0f ? 1f : -1f
-		);
+		Vector3 s  = new(rd.X < 0f ? 1f : -1f, rd.Y < 0f ? 1f : -1f, rd.Z < 0f ? 1f : -1f);
 		Vector3 t1 = m * (-ro + (s / 2f));
 		Vector3 t2 = m * (-ro - (s / 2f));
 

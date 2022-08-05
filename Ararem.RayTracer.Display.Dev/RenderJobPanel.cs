@@ -1,9 +1,9 @@
 using Ararem.RayTracer.Core;
 using Ararem.RayTracer.Impl.Builtin;
 using Eto.Forms;
+using Serilog.Context;
 using System;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Ararem.RayTracer.Display.Dev;
 
@@ -39,9 +39,9 @@ public sealed partial class RenderJobPanel : Panel
 		}
 		//Split the layout into 3 horizontal groups - options, stats, image
 		Layout.BeginHorizontal();
-		Layout.Add(renderControllerPanel = new RenderControllerPanel(this){ID = $"{ID}/Controller"});
-		Layout.Add(renderStatsPanel      = new RenderStatsPanel(this){ID      = $"{ID}/Stats"});
-		Layout.Add(renderBufferPanel     = new RenderBufferPanel(this){ID     = $"{ID}/Buffer"});
+		Layout.Add(renderControllerPanel = new RenderControllerPanel(this, $"{ID}/Controller" ));
+		Layout.Add(renderStatsPanel      = new RenderStatsPanel(this,$"{ID}/Stats" ));
+		Layout.Add(renderBufferPanel     = new RenderBufferPanel(this,$"{ID}/Buffer"));
 
 		Layout.EndHorizontal();
 		Layout.Create();
@@ -50,7 +50,7 @@ public sealed partial class RenderJobPanel : Panel
 			// Periodically update the previews using a timer
 			updateUiTimer = new UITimer(UpdateUi)
 			{
-					ID = $"{ID}/UITimer",Interval = 1f/TargetRefreshRate
+					ID = $"{ID}/UITimer", Interval = 1f / TargetRefreshRate
 			};
 			updateUiTimer.Start();
 		}
@@ -68,40 +68,9 @@ public sealed partial class RenderJobPanel : Panel
 	/// <summary>Render options that affect how the <see cref="RenderJob"/> is rendered</summary>
 	public RenderOptions RenderOptions { get; } = new();
 
-#region UI Controls
-
-	/// <summary>Target refreshes-per-second that we want</summary>
-	private static double TargetRefreshRate => 10; //Fps
-
-	/// <summary>Updates all the UI</summary>
-	private void UpdateUi(object? sender, EventArgs eventArgs)
-	{
-		//TODO: Add something to prevent UI freezes
-		/*
-		 * Note that we don't have to worry about locks or anything, since
-		 * (A) - It's only called on the main thread, so that's thread safety done
-		 * (B) - The timer is only ever reset *after* everything's already been updated, so no chance of two calls being executed at the same time
-		 */
-		Stopwatch totalSw = Stopwatch.StartNew();
-		Verbose("[{Sender}] Updating UI", this);
-
-		renderControllerPanel.Update();
-		renderStatsPanel.Update();
-		renderBufferPanel.Update();
-
-		Verbose("[{Sender}] Updated in {Elapsed:#00.000 'ms'}", this, totalSw.Elapsed.TotalMilliseconds);
-
-		((DocumentPage)Parent).Invalidate();
-	}
-
-	private readonly UITimer updateUiTimer;
-
-#endregion
-
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	protected override void Dispose(bool disposing)
 	{
-		Debug("[{Sender}]: Disposing", this);
 		base.Dispose(disposing);
 		//Dispose of all our child panels
 		// renderBufferPanel?.Dispose();
@@ -111,4 +80,35 @@ public sealed partial class RenderJobPanel : Panel
 		updateUiTimer?.Stop();
 		updateUiTimer?.Dispose();
 	}
+
+#region UI Controls
+
+	/// <summary>Target refreshes-per-second that we want</summary>
+	private static double TargetRefreshRate => 10; //Fps
+
+	/// <summary>Updates all the UI</summary>
+	private void UpdateUi(object? sender, EventArgs eventArgs)
+	{
+		using IDisposable _ = LogContext.PushProperty("Control", this, false);
+		//TODO: Add something to prevent UI freezes
+		/*
+		 * Note that we don't have to worry about locks or anything, since
+		 * (A) - It's only called on the main thread, so that's thread safety done
+		 * (B) - The timer is only ever reset *after* everything's already been updated, so no chance of two calls being executed at the same time
+		 */
+		Stopwatch totalSw = Stopwatch.StartNew();
+		Verbose("Updating UI");
+
+		renderControllerPanel.Update();
+		renderStatsPanel.Update();
+		renderBufferPanel.Update();
+
+		ForContext("Control", this).Verbose("Updated UI in {Elapsed:#00.000 'ms'}", totalSw.Elapsed.TotalMilliseconds);
+
+		((DocumentPage)Parent).Invalidate();
+	}
+
+	private readonly UITimer updateUiTimer;
+
+#endregion
 }

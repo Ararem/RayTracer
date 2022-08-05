@@ -14,13 +14,22 @@ public enum GraphicsDebugVisualisation
 	/// <remarks>Outside face is green, inside is red</remarks>
 	FaceDirection,
 
-	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively small distances (e.g. a few units)</summary>
+	/// <summary>
+	///  Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively small distances (e.g. a few
+	///  units)
+	/// </summary>
 	DistanceFromCamera_Close,
 
-	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few hundred units)</summary>
+	/// <summary>
+	///  Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few
+	///  hundred units)
+	/// </summary>
 	DistanceFromCamera_Mid,
 
-	/// <summary>Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few hundred units)</summary>
+	/// <summary>
+	///  Output a greyscale image based on how close the intersection is to the camera. Should be used in scenes with relatively large distances (e.g. a few
+	///  hundred units)
+	/// </summary>
 	DistanceFromCamera_Far,
 
 	/// <summary>UV coordinate output by the object's intersection code</summary>
@@ -44,8 +53,10 @@ public enum GraphicsDebugVisualisation
 
 	/// <summary>Undefined visualisation used for development and testing purposes, should not be used</summary>
 	UndefinedTestVisualisation,
+
 	/// <summary>
-	/// Displays many times the ray bounced (the depth it reached). White is few bounces (good), dark blue is many bounces (maybe not so good if it's very dark)
+	///  Displays many times the ray bounced (the depth it reached). White is few bounces (good), dark blue is many bounces (maybe not so good if it's very
+	///  dark)
 	/// </summary>
 	BounceDepth
 }

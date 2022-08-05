@@ -16,8 +16,8 @@ public abstract class Light : RenderAccessor
 	/// </param>
 	/// <returns>The amount of light received by the <paramref name="hit"/>, from this light source</returns>
 	/// <remarks>
-	///  When checking for shadowing, you would most likely use <see cref="RenderJob.AnyIntersectionFast"/> between the point hit and the position of
-	///  the light source (see example below)
+	///  When checking for shadowing, you would most likely use <see cref="RenderJob.AnyIntersectionFast"/> between the point hit and the position of the
+	///  light source (see example below)
 	/// </remarks>
 	/// <example>
 	///  Assuming a light has a <c>Vector3 Position</c> property.

@@ -7,6 +7,7 @@ using Ararem.RayTracer.Core.Debugging;
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -14,7 +15,6 @@ using System.Runtime.CompilerServices;
 using static Ararem.RayTracer.Core.MathUtils;
 using static System.MathF;
 using Log = Serilog.Log;
-using PrevHitPool = System.Buffers.ArrayPool<Ararem.RayTracer.Core.HitRecord>;
 
 namespace Ararem.RayTracer.Core;
 
@@ -60,6 +60,8 @@ public sealed class RenderJob : IDisposable
 
 		RenderTask = new Task(RenderInternal, TaskCreationOptions.LongRunning);
 	}
+
+	private static ArrayPool<HitRecord> PrevHitPool => ArrayPool<HitRecord>.Shared;
 
 	/// <summary>The colour that's used whenever a given colour doesn't exist. E.g. when the bounce limit is exceeded, or a material doesn't scatter a ray</summary>
 	public static Colour NoColour => Colour.Black;
@@ -256,7 +258,7 @@ public sealed class RenderJob : IDisposable
 				//This stores the hit state information, as well as what object was intersected with (at that hit)
 				//Add 1 to the size so that we have 1:1 mapping for depth:index (since array indices start at 0 and we want maxAllowedDepthItems as the highest index)
 				//Depth of 0 (no bounces, direct from camera) = index[0]
-				HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
+				HitRecord[] hitStateArray = PrevHitPool.Rent(maxAllowedDepth + 1);
 				for (int currentDepth = 0;; currentDepth++)
 				{
 					// maxDepthReached = currentDepth; //Update the max depth
@@ -295,16 +297,16 @@ public sealed class RenderJob : IDisposable
 						break;
 					}
 				}
-				if(maxDepthReached == -1) return Colour.Purple;
-				float val = 1-Pow(E, -(maxDepthReached * maxDepthReached * Sqrt(maxAllowedDepth)));
-				return Colour.Lerp(Colour.White, Colour.Blue*0.02f, val);
+
+				PrevHitPool.Return(hitStateArray);
+
+				if (maxDepthReached == -1) return Colour.Purple;
+				float val = 1 - Pow(E, -(maxDepthReached * maxDepthReached * Sqrt(maxAllowedDepth)));
+				return Colour.Lerp(Colour.White, Colour.Blue * 0.02f, val);
 			}
 			default:
 				throw new ArgumentOutOfRangeException(nameof(RenderOptions.DebugVisualisation), RenderOptions.DebugVisualisation, "Wrong enum value for debug visualisation");
 		}
-
-		//No object was intersected with
-		return NoColour;
 	}
 
 
@@ -407,11 +409,9 @@ public sealed class RenderJob : IDisposable
 		//This stores the hit state information, as well as what object was intersected with (at that hit)
 		//Add 1 to the size so that we have 1:1 mapping for depth:index (since array indices start at 0 and we want maxAllowedDepthItems as the highest index)
 		//Depth of 0 (no bounces, direct from camera) = index[0]
-		HitRecord[] hitStateArray = PrevHitPool.Shared.Rent(maxAllowedDepth + 1);
+		HitRecord[] hitStateArray = PrevHitPool.Rent(maxAllowedDepth + 1);
 		for (int currentDepth = 0;; currentDepth++)
 		{
-			// maxDepthReached = currentDepth; //Update the max depth
-
 			//Ensure we don't go too deep
 			if (currentDepth > maxAllowedDepth)
 			{
@@ -463,7 +463,7 @@ public sealed class RenderJob : IDisposable
 			finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[currentDepth + 1].IncomingRay, hit, prevHits);
 		}
 
-		PrevHitPool.Shared.Return(hitStateArray);
+		PrevHitPool.Return(hitStateArray);
 
 		return finalColour;
 

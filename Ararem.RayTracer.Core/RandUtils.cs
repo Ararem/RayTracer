@@ -70,9 +70,5 @@ public static class RandUtils
 	/// <param name="max">Highest RGB values allowed</param>
 	[MustUseReturnValue]
 	public static Colour RandomColour(Colour min, Colour max) =>
-			new(
-					Lerp(min.R, max.R, RandomFloat01()),
-					Lerp(min.G, max.G, RandomFloat01()),
-					Lerp(min.B, max.B, RandomFloat01())
-			);
+			new(Lerp(min.R, max.R, RandomFloat01()), Lerp(min.G, max.G, RandomFloat01()), Lerp(min.B, max.B, RandomFloat01()));
 }

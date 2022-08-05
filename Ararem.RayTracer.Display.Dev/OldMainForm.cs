@@ -747,3 +747,4 @@
 // 		Application.Instance.MainForm.Menu.Items.Remove(resetImageCommand);
 // 	}
 // }
+

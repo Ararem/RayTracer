@@ -13,15 +13,7 @@ namespace Ararem.RayTracer.Core;
 /// <param name="LookFrom">Where the camera looks from (it's position)</param>
 /// <param name="U">Unknown Vector</param>
 /// <param name="V">Unknown Vector</param>
-public sealed record Camera(
-		float   LensRadius,
-		Vector3 Horizontal,
-		Vector3 Vertical,
-		Vector3 LowerLeftCorner,
-		Vector3 LookFrom,
-		Vector3 U,
-		Vector3 V
-)
+public sealed record Camera(float LensRadius, Vector3 Horizontal, Vector3 Vertical, Vector3 LowerLeftCorner, Vector3 LookFrom, Vector3 U, Vector3 V)
 {
 	/// <summary>Gets the world-space ray that corresponds to the given pixel's <paramref name="u"/><paramref name="v"/> coordinate</summary>
 	/// <param name="u">The UV coordinate of the pixel</param>

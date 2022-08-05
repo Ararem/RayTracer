@@ -1,4 +1,3 @@
-using Ararem.RayTracer.Core;
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
@@ -13,56 +12,36 @@ public sealed partial class RenderJobPanel
 {
 	private sealed class RenderBufferPanel : Panel
 	{
-		/// <summary>The <see cref="RenderJobPanel"/> that contains this instance as a child object (aka the panel that created this panel)</summary>
-		public RenderJobPanel ParentJobPanel { get; }
-
-		/// <summary>Main <see cref="DynamicLayout"/> for this panel. Is the same as accessing <see cref="Panel.Content"/></summary>
-		public DynamicLayout Layout { get; }
-	#region Ease-of-use properties (shortcut properties)
-
-		private Scene SelectedScene
-		{
-			get => ParentJobPanel.SelectedScene;
-			set => ParentJobPanel.SelectedScene = value;
-		}
-
-		private RenderOptions RenderOptions => ParentJobPanel.RenderOptions;
-
-		private RenderJob? RenderJob
-		{
-			get => ParentJobPanel.RenderJob;
-			set => ParentJobPanel.RenderJob = value;
-		}
-
-	#endregion
-
-		public DragZoomImageView ImageView    { get; }
-		public Bitmap            PreviewImage { get; private set; }
-
 		public RenderBufferPanel(RenderJobPanel parentJobPanel)
 		{
 			ParentJobPanel = parentJobPanel;
-			Content = Layout = new DynamicLayout
+			ID             = $"{ParentJobPanel.ID}/Buffer";
+			Content = ImageView = new DragZoomImageView
 			{
-					ID      = $"{ID}/Content",
-					Spacing = DefaultSpacing,
-					Padding = DefaultPadding
+					ID = $"{ID}/ImageView", ZoomButton = MouseButtons.Middle
 			};
-			DynamicGroup group = Layout.BeginGroup("Render Buffer", spacing: DefaultSpacing, padding: DefaultPadding);
-			//TODO: ID's
-			PreviewImage      = new Bitmap(new Size(1, 1), PixelFormat.Format24bppRgb); //Assign something so that it's not null
-			ImageView  = new DragZoomImageView { ID = "Preview Image View", ZoomButton = MouseButtons.Middle };
-			Layout.Add(ImageView);
-			Layout.EndGroup();
-
-			Layout.Create();
-			group.GroupBox.Style = nameof(Force_Heading);
+			ImageView.Image = PreviewImage = new Bitmap(2,2, PixelFormat.Format24bppRgb, new[]{Colors.Black, Colors.Magenta, Colors.Black, Colors.Magenta})
+			{
+					ID = $"{ImageView.ID}/TEMP_WILL_BE_REPLACED_ONCE_UI_UPDATED",
+			}; //Assign something so that it's not null
 		}
+
+		/// <summary>The <see cref="RenderJobPanel"/> that contains this instance as a child object (aka the panel that created this panel)</summary>
+		public RenderJobPanel ParentJobPanel { get; }
+		/// <summary>
+		/// The <see cref="DragZoomImageView"/> that is used to display the render buffer (also the content of this panel)
+		/// </summary>
+		public DragZoomImageView ImageView    { get; }
+
+		/// <summary>
+		/// The bitmap image that is displayed by <see cref="ImageView"/>
+		/// </summary>
+		public Bitmap            PreviewImage { get; private set; }
 
 		public void Update()
 		{
 			Stopwatch        sw              = Stopwatch.StartNew();
-			Buffer2D<Rgb24>? srcRenderBuffer = RenderJob?.Image.Frames.RootFrame.PixelBuffer;
+			Buffer2D<Rgb24>? srcRenderBuffer = ParentJobPanel.RenderJob?.Image.Frames.RootFrame.PixelBuffer;
 			if (srcRenderBuffer is not null)
 			{
 				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
@@ -71,7 +50,7 @@ public sealed partial class RenderJobPanel
 					Debug("Recreating preview image ({OldValue}) to change size to {NewValue}", PreviewImage.Size, new Size(width, height));
 					ImageView.Image = null;
 					PreviewImage.Dispose();
-					ImageView.Image                             = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
+					ImageView.Image = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
 				}
 
 				using BitmapData destPreviewImage = PreviewImage.Lock();
@@ -92,9 +71,10 @@ public sealed partial class RenderJobPanel
 					}
 				}
 			}
-			Invalidate(true); //Mark for redraw
+
+			Invalidate(true);                                           //Mark for redraw
 			((DocumentPage)ParentJobPanel.Parent).Image = PreviewImage; //Make the icon of the DocumentPage be the same as the buffer
-			Verbose("[{Sender}] Image updated in {Elapsed:#00.000 'ms'}", this, sw.Elapsed.TotalMilliseconds);
+			ForContext("Control", this).Verbose("Image updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 		}
 	}
 }

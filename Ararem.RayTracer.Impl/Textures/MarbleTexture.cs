@@ -8,14 +8,13 @@ namespace Ararem.RayTracer.Impl.Textures;
 /// <summary>Texture that mimics the appearance of Marble.</summary>
 public sealed class MarbleTexture : Texture
 {
-	private static readonly Module Noise =
-			new Perlin
-			{
-					Quality     = NoiseQuality.Fast,
-					Persistence = .5,
-					Lacunarity  = 3,
-					OctaveCount = 5
-			};
+	private static readonly Module Noise = new Perlin
+	{
+			Quality     = NoiseQuality.Fast,
+			Persistence = .5,
+			Lacunarity  = 3,
+			OctaveCount = 5
+	};
 
 	/// <summary>Texture that mimics the appearance of Marble.</summary>
 	/// <param name="scale">How scaled the texture is. Higher values increase the 'zoom', while lower values increase it</param>

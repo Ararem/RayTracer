@@ -16,18 +16,8 @@ namespace Ararem.RayTracer.Core;
 ///  Optional object containing information to be passed into the shader, may be useful communicating between the <see cref="Hittable"/> and the
 ///  <see cref="Material"/> on a per-hit basis
 /// </param>
-public readonly record struct HitRecord(
-		Ray      IncomingRay,
-		Vector3  WorldPoint,
-		Vector3  LocalPoint, //TODO: Remove LocalPoint? Perhaps also WorldPoint since it can be found from the ray and K value
-		Vector3  Normal,
-		float    K,
-		bool     OutsideFace,
-		Vector2  UV,
-		Hittable Hittable,
-		Material Material,
-		object?  ShaderData = null
-);
+public readonly record struct HitRecord(Ray     IncomingRay, Vector3 WorldPoint, Vector3 LocalPoint,  //TODO: Remove LocalPoint? Perhaps also WorldPoint since it can be found from the ray and K value
+										Vector3 Normal,      float   K,          bool    OutsideFace, Vector2 UV, Hittable Hittable, Material Material, object? ShaderData = null);
 
 /// <summary>Exception class for when the <see cref="HitRecord.ShaderData"/> is invalid</summary>
 public class InvalidShaderDataException : Exception

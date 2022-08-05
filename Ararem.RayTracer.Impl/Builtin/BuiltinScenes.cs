@@ -78,7 +78,7 @@ public static class BuiltinScenes
 						}
 						else if (chooseMat < 0.9)
 						{
-							Colour albedo = RandomColour(Black, White *.7f);
+							Colour albedo = RandomColour(Black, White * .7f);
 							sphereMaterial = new StandardMaterial(albedo, albedo, 1f);
 						}
 						// else if (chooseMat < 0.66)
@@ -101,7 +101,7 @@ public static class BuiltinScenes
 				}
 			}
 
-			lights.Add(new DiffuseSphereLight() {Position = new Vector3(0,3,0), Colour = White, AttenuationRadius = 8,DiffusionRadius = 1f});
+			lights.Add(new DiffuseSphereLight { Position = new Vector3(0, 3, 0), Colour = White, AttenuationRadius = 8, DiffusionRadius = 1f });
 			// objects.Add(new SceneObject("Sphere A", new Sphere(new Vector3(0,  1, 0), 1) { Material = new RefractiveMaterial(1.5f, new SolidColourTexture(White)) }));
 			objects.Add(new SceneObject("Sphere B", new Sphere(new Vector3(-4, 1, 0), 1) { Material = new StandardMaterial(new Colour(.4f, .2f, .1f), 1f) }));
 			objects.Add(new SceneObject("Sphere C", new Sphere(new Vector3(4,  1, 0), 1) { Material = new StandardMaterial(new Colour(.7f, .6f, .5f), 0f) }));
@@ -148,7 +148,7 @@ public static class BuiltinScenes
 				objects.Add(new SceneObject("Infinite Light Visualiser", new Sphere(new Vector3(-1, 5.1f, -2), .05f) { Material = new StandardMaterial(Black, Red, 0f) }));
 
 				//Same but with a sized (area) light
-				lights.Add(new PointLight { Position = new Vector3(-5, 1f, -7f), Colour = Green*10f, AttenuationRadius = 1.5f });
+				lights.Add(new PointLight { Position = new Vector3(-5, 1f, -7f), Colour = Green * 10f, AttenuationRadius = 1.5f });
 				objects.Add(new SceneObject("Sized Light Visualiser", new Sphere(new Vector3(-5, 1.1f, -7f), .05f) { Material = new StandardMaterial(Black, Green, 0f) }));
 				objects.Add(new SceneObject("Sized Light Blocker",    new Sphere(new Vector3(-5, .6f,  -7f), .2f) { Material  = new StandardMaterial(Black, 0f) }));
 
@@ -184,9 +184,7 @@ public static class BuiltinScenes
 			"A lonely Sphere", Camera.Create(new Vector3(0, 0, 2), new Vector3(0.1f, 0f, 0f), UnitY, 20, 16f / 9f, 0, 1f), new SceneObject[]
 			{
 					new("Sphere", new Sphere(Zero, .1f) { Material = new StandardMaterial(Red, 1f) })
-			},
-			Array.Empty<Light>(),
-			new DefaultSkyBox()
+			}, Array.Empty<Light>(), new DefaultSkyBox()
 	);
 
 	/// <summary>Simple scene with two spheres at (+-1, 0, 0)</summary>
@@ -197,9 +195,7 @@ public static class BuiltinScenes
 					new("Sphere 2", new Sphere(new Vector3(0),     .1f) { Material = new StandardMaterial(Lerp(Green, White, 0.5f), 1f) }),
 					new("Sphere 3", new Sphere(new Vector3(-0.1f), .1f) { Material = new StandardMaterial(Lerp(Blue,  White, 0.5f), 1f) })
 					// new("Plane", new InfinitePlane(Zero, UnitZ), new RefractiveMaterial(1, White * .5f, Black))
-			},
-			Array.Empty<Light>(),
-			new DefaultSkyBox()
+			}, Array.Empty<Light>(), new DefaultSkyBox()
 	);
 
 	/// <summary>The good 'ol cornell box, as is traditional for raytracing</summary>
@@ -223,13 +219,11 @@ public static class BuiltinScenes
 							new("Tall Box", new Box(Matrix4x4.CreateScale(165,  330, 165) * Matrix4x4.CreateFromYawPitchRoll(15  * (PI / 180f), 0 * (PI / 180f), 0 * (PI / 180f)) * Matrix4x4.CreateTranslation(347.5f, 165f,  377.5f)) { Material = new StandardMaterial(new Colour(0.73f, 0.73f, 0.73f), 1f) }),
 							new("Small Box Sphere", new Sphere(new Vector3(212.5f, 265f, 147.5f), 100) { Material                                                                                                                                  = new EmissiveRefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White), new SolidColourTexture(Blue * 0.1f), true) }),
 							new("Tall Box Sphere", new Sphere(new Vector3(347.5f,  430f, 377.5f), 100) { Material                                                                                                                                  = new RefractiveMaterial(RefractiveMaterial.GlassIndex, new SolidColourTexture(White)) })
-					},
-					new Light[]
+					}, new Light[]
 					{
 							//Centre ceiling light
 							new DiffuseSphereLight { Position = new Vector3((213 + 343) / 2f, 554 - 50, (227 + 332) / 2f), DiffusionRadius = 40, Colour = White * 0.5f, AttenuationRadius = 150 }
-					},
-					new SingleColourSkyBox(Black)
+					}, new SingleColourSkyBox(Black)
 			);
 		}
 	}
@@ -303,9 +297,6 @@ public static class BuiltinScenes
 	/// <summary>Gets all the builtin scenes</summary>
 	public static IEnumerable<Scene> GetAll()
 	{
-		return typeof(BuiltinScenes)
-				.GetProperties(BindingFlags.Public | BindingFlags.Static)
-				.Where(p => p.PropertyType == typeof(Scene))
-				.Select(p => (Scene)p.GetValue(null)!);
+		return typeof(BuiltinScenes).GetProperties(BindingFlags.Public | BindingFlags.Static).Where(p => p.PropertyType == typeof(Scene)).Select(p => (Scene)p.GetValue(null)!);
 	}
 }

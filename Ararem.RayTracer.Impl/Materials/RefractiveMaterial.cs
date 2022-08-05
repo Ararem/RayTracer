@@ -48,8 +48,8 @@ public class RefractiveMaterial : Material
 		//TODO: Make this work by pulling it from other refractive materials?
 		//If the ray is going from the outside (air or another material) into the inside (this material),
 		//Use the air index as the first refractive index
-		bool outsideGoingInside = (previousHits.Count         == 0)     //Direct ray from camera - has to be "from the air"
-								|| (previousHits[^1].Material != this); //If previous hit was also this object then we know it's the other way around
+		bool outsideGoingInside = (previousHits.Count           == 0)     //Direct ray from camera - has to be "from the air"
+								  || (previousHits[^1].Material != this); //If previous hit was also this object then we know it's the other way around
 		if (outsideGoingInside)
 		{
 			eta      = AirIndex;
@@ -85,10 +85,9 @@ public class RefractiveMaterial : Material
 			//So just let the user decide
 			//TODO: Fix refraction
 
-			Vector3 refractedRayPerpendicular = refractionRatio * (unitDirection + (cosTheta * hit.Normal));
-			Vector3 refractedRayParallel =
-					-Sqrt(Abs(1.0f - refractedRayPerpendicular.LengthSquared())) * hit.Normal;
-			Vector3 standard = refractedRayPerpendicular + refractedRayParallel;
+			Vector3 refractedRayPerpendicular = refractionRatio                                              * (unitDirection + (cosTheta * hit.Normal));
+			Vector3 refractedRayParallel      = -Sqrt(Abs(1.0f - refractedRayPerpendicular.LengthSquared())) * hit.Normal;
+			Vector3 standard                  = refractedRayPerpendicular + refractedRayParallel;
 
 			Vector3 alternate = Normalize((Sqrt((1 - Pow(refractionRatio, 2)) * (1 - Pow(Dot(hit.Normal, unitDirection), 2))) * hit.Normal) + (refractionRatio * (unitDirection - (Dot(hit.Normal, unitDirection) * hit.Normal))));
 

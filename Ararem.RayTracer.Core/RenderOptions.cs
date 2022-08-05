@@ -8,17 +8,22 @@ namespace Ararem.RayTracer.Core;
 [UsedImplicitly]
 public sealed class RenderOptions
 {
-	/// <summary>
-	/// Default constructor with default values
-	/// </summary>
+	private readonly ulong                      renderHeight         = 1080;
+	private readonly ulong                      renderWidth          = 1920;
+	private          ulong                      concurrencyLevel     = (ulong)Environment.ProcessorCount;
+	private          GraphicsDebugVisualisation debugVisualisation   = GraphicsDebugVisualisation.None;
+	private          float                      kMax                 = float.PositiveInfinity;
+	private          float                      kMin                 = 0.001f;
+	private          ulong                      lightSampleCountHint = 2;
+	private readonly ulong                      maxBounceDepth       = 100;
+	private          ulong                      passes               = 100;
+
+	/// <summary>Default constructor with default values</summary>
 	public RenderOptions()
 	{
-
 	}
 
-	/// <summary>
-	/// Copy constructor
-	/// </summary>
+	/// <summary>Copy constructor</summary>
 	public RenderOptions(RenderOptions toCopy)
 	{
 		renderHeight         = toCopy.renderHeight;
@@ -30,21 +35,6 @@ public sealed class RenderOptions
 		maxBounceDepth       = toCopy.maxBounceDepth;
 		passes               = toCopy.passes;
 	}
-
-	/// <summary>
-	/// Copies the current instance
-	/// </summary>
-	public RenderOptions Copy() => new(this);
-
-	private readonly ulong                        renderHeight         = 1080;
-	private readonly ulong                        renderWidth          = 1920;
-	private          ulong                        concurrencyLevel     = (ulong)Environment.ProcessorCount;
-	private          GraphicsDebugVisualisation debugVisualisation   = GraphicsDebugVisualisation.None;
-	private          float                      kMax                 = float.PositiveInfinity;
-	private          float                      kMin                 = 0.001f;
-	private          ulong                        lightSampleCountHint = 2;
-	private          ulong                        maxBounceDepth       = 100;
-	private          ulong                        passes               = 100;
 
 	/// <summary>How many pixels wide the render will be</summary>
 	[ValueRange(1, ulong.MaxValue)]
@@ -105,9 +95,7 @@ public sealed class RenderOptions
 	}
 
 	/// <summary>Maximum number of threads that can render concurrently</summary>
-	/// <remarks>
-	///  Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>).
-	/// </remarks>
+	/// <remarks>Defaults to the number of (hyper-threaded) cores present (see <see cref="Environment.ProcessorCount"/>).</remarks>
 	[ValueRange(1, ulong.MaxValue)]
 	public ulong ConcurrencyLevel
 	{
@@ -131,9 +119,7 @@ public sealed class RenderOptions
 		}
 	}
 
-	/// <summary>
-	/// Option that makes the renderer ignore <see cref="Passes"/> and instead render infinitely until manually stopped
-	/// </summary>
+	/// <summary>Option that makes the renderer ignore <see cref="Passes"/> and instead render infinitely until manually stopped</summary>
 	public bool InfinitePasses { get; set; } = false;
 
 	/// <summary>
@@ -175,4 +161,7 @@ public sealed class RenderOptions
 			lightSampleCountHint = value;
 		}
 	}
+
+	/// <summary>Copies the current instance</summary>
+	public RenderOptions Copy() => new(this);
 }

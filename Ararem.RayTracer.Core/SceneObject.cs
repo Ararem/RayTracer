@@ -5,9 +5,7 @@ namespace Ararem.RayTracer.Core;
 /// <param name="Hittable">The mesh used for calculating intersections with this object (it's geometry)</param>
 public sealed record SceneObject(
 		// ReSharper disable once NotAccessedPositionalProperty.Global
-		string   Name,
-		Hittable Hittable
-)
+		string Name, Hittable Hittable)
 {
 	// /// <inheritdoc/>
 	// public override string ToString() => $"Scene Object '{Name}' {{Shape: {Hittable}, Material: {Material}}})";

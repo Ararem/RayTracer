@@ -20,24 +20,30 @@ internal static class LogAggregator
 		 * G_ENABLE_DIAGNOSTIC=1
 		 */
 		Debug("Redirecting GLib logs");
-		Verbose("SetDefaultHandler: {@Value}",Log.SetDefaultHandler(
-				delegate(string domain, LogLevelFlags level, string message)
-				{
-					Debug("GLib - {Domain} @ {Level}: {Message}", domain, level, message);
-				}
-		));
-		Verbose("SetPrintHandler: {@Value}",Log.SetPrintHandler(
-				delegate(string message)
-				{
-					Debug("GLib: {Message}", message);
-				}
-		));
-		Verbose("SetPrintErrorHandler: {@Value}",Log.SetPrintErrorHandler(
-				delegate (string message)
-				{
-					Debug("GLib: {Message}", message);
-				}
-		));
+		Verbose(
+				"SetDefaultHandler: {@Value}", Log.SetDefaultHandler(
+						delegate(string domain, LogLevelFlags level, string message)
+						{
+							Debug("GLib - {Domain} @ {Level}: {Message}", domain, level, message);
+						}
+				)
+		);
+		Verbose(
+				"SetPrintHandler: {@Value}", Log.SetPrintHandler(
+						delegate(string message)
+						{
+							Debug("GLib: {Message}", message);
+						}
+				)
+		);
+		Verbose(
+				"SetPrintErrorHandler: {@Value}", Log.SetPrintErrorHandler(
+						delegate(string message)
+						{
+							Debug("GLib: {Message}", message);
+						}
+				)
+		);
 		Debug("GLib redirected");
 	}
 }

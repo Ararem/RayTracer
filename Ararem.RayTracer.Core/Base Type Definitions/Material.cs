@@ -30,7 +30,7 @@ public abstract class Material : RenderAccessor
 	public Colour CalculateSimpleColourFromLights(HitRecord hit)
 	{
 		Colour sum     = Colour.Black;
-		ulong    samples = Renderer.RenderOptions.LightSampleCountHint;
+		ulong  samples = Renderer.RenderOptions.LightSampleCountHint;
 		for (ulong s = 0; s < samples; s++)
 		{
 			for (int i = 0; i < Renderer.Scene.Lights.Length; i++)

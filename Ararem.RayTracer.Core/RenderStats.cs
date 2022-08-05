@@ -14,8 +14,8 @@ public sealed class RenderStats
 	public RenderStats(RenderOptions options)
 	{
 		RawRayDepthCounts = new ulong[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
-		TotalTruePixels   = (ulong)options.RenderWidth * (ulong)options.RenderHeight;
-		TotalRawPixels    = (ulong)options.RenderWidth * (ulong)options.RenderHeight * (ulong) options.Passes;
+		TotalTruePixels   = options.RenderWidth * options.RenderHeight;
+		TotalRawPixels    = options.RenderWidth * options.RenderHeight * options.Passes;
 	}
 
 	/// <summary>Copy constructor</summary>

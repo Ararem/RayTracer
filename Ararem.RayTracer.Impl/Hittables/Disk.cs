@@ -9,12 +9,12 @@ namespace Ararem.RayTracer.Impl.Hittables;
 /// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 public sealed class Disk : SingleMaterialHittable
 {
+	private readonly Matrix4x4 localToDiskMatrix;
+
 	/// <summary>-Dot(<see cref="Centre"/>, <see cref="Normal"/>)</summary>
 	private readonly float negCentreDotNorm;
 
 	private readonly float radiusSqr;
-
-	private readonly Matrix4x4 localToDiskMatrix;
 
 	/// <summary>A 2D Disk in 3D space. Defined by a point (the centre of the disk) and a normal direction)</summary>
 	/// <param name="centre">The centre of the disk in 3D space</param>
@@ -32,15 +32,10 @@ public sealed class Disk : SingleMaterialHittable
 
 		//See Quad.cs for a semi explanation of this
 		//Since it's essentially the same code, except we find two random UV vectors first
-		Vector3 randCrossDir = Abs(Dot(Normal, UnitX)) < 0.01f ? UnitY : UnitX; //Choose the X/Y axis depending on if the X axis is parallel to the normal or not (the Cross fails if we cross two parallel vectors)
-		Vector3 u            = Normalize(Cross(Normal, randCrossDir));
-		Vector3 v            = Normalize(Cross(Normal, u));
-		Matrix4x4 diskToLocalMatrix = new(
-				u.X, u.Y, u.Z, 0,
-				v.X, v.Y, v.Z, 0,
-				Normal.X, Normal.Y, Normal.Z, 0,
-				0, 0, 0, 1
-		);
+		Vector3   randCrossDir      = Abs(Dot(Normal, UnitX)) < 0.01f ? UnitY : UnitX; //Choose the X/Y axis depending on if the X axis is parallel to the normal or not (the Cross fails if we cross two parallel vectors)
+		Vector3   u                 = Normalize(Cross(Normal, randCrossDir));
+		Vector3   v                 = Normalize(Cross(Normal, u));
+		Matrix4x4 diskToLocalMatrix = new(u.X, u.Y, u.Z, 0, v.X, v.Y, v.Z, 0, Normal.X, Normal.Y, Normal.Z, 0, 0, 0, 0, 1);
 
 		if (!Matrix4x4.Invert(diskToLocalMatrix, out localToDiskMatrix)) throw new ArithmeticException("Could not invert Disk to world transformation matrix (UV coords were probably parallel)");
 	}
