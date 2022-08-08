@@ -1,10 +1,13 @@
 ﻿using Ararem.RayTracer.Core;
 using Ararem.RayTracer.Display.Dev.Resources;
+using Ararem.RayTracer.Display.Dev.UI;
 using Eto;
 using Eto.Forms;
+using LibArarem.Core.Logging;
 using Serilog;
 using Serilog.Events;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -15,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static Figgle.FiggleFonts;
 using static Ararem.RayTracer.Display.Dev.Program.ExitCode;
+using static Serilog.Log;
 using Logger = Ararem.RayTracer.Core.Logger;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
@@ -75,13 +79,23 @@ internal static class Program
 		Console.Title = $"{AppTitleVersioned} [Console]";
 		Console.WriteLine($"{Title}: Initialising logger");
 		Console.ResetColor();
+		Console.SetError(new ColouredConsoleErrorWriter(Console.Error));
+
 		#endif
 
-		Logger.Init(AdjustConfig);
+		Logger.Init(EarlyAdjustConfig);
 		LogAggregator.Init();
 
 		Information("Commandline args: {Args}", args);
 		Information("{AppTitle} starting",      AssemblyInfo.ProductName);
+		Debug("CLR Version: {Value}",       Environment.Version);
+		Debug("Current Directory: {Value}", Environment.CurrentDirectory);
+		Debug("OS Version: {Value}",        Environment.OSVersion);
+		Debug("Environment Variables:");
+		foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
+		{
+			Debug<object, object?>("{Variable} = \"{Value}\"", variable.Key, variable.Value);
+		}
 
 		Information("Initialising app components");
 		try
@@ -105,7 +119,7 @@ internal static class Program
 		{
 			Debug("Getting platform (Detect Mode)");
 			platform = Platform.Detect!;
-			Debug("Got Platform: {Platform}", platform.ID);
+			Debug("Got Platform: {Platform}", platform);
 		}
 		catch (Exception e)
 		{
@@ -145,8 +159,6 @@ internal static class Program
 			return InitializationFailure;
 		}
 
-		Console.SetError(new ColouredConsoleErrorWriter(Console.Error));
-
 		try
 		{
 			Debug("Initialising manager classes");
@@ -164,7 +176,10 @@ internal static class Program
 		try
 		{
 			Debug("Creating new MainForm");
-			mainForm = new MainForm();
+			mainForm = new MainForm
+			{
+					ID = "MainForm"
+			};
 			Debug("Created new MainForm: {MainForm}", mainForm);
 		}
 		catch (Exception e)
@@ -224,14 +239,19 @@ internal static class Program
 		}
 	}
 
-	private static LoggerConfiguration AdjustConfig(LoggerConfiguration arg)
+	private static LoggerConfiguration EarlyAdjustConfig(LoggerConfiguration arg)
 	{
-		return arg.Destructure.AsScalar<Widget>();
+		return arg //.Filter.ByExcluding(evt => (evt.Level == LogEventLevel.Verbose) && evt.Properties.ContainsKey(nameof(LogUtils.MarkContextAsExtremelyVerbose)))
+			   .Destructure.ByTransformingWhere(static t => t.IsAssignableTo(typeof(Widget)), static (Widget w) => w.ToString())
+			   .Destructure.ByTransforming<Command>(static c => string.IsNullOrEmpty(c.ID) ? $"{c} (<unnamed>)" : $"{c} ({c.ID})");
 	}
 
 	private static void OnUnhandledException(Exception exception, object? sender, bool isTerminating)
 	{
-		Write(isTerminating ? LogEventLevel.Fatal : LogEventLevel.Error, exception, "Caught unhandled exception ({Terminating}) from {Sender}:", isTerminating ? "terminating" : "non-terminating", sender);
+		Write(
+				isTerminating ? LogEventLevel.Fatal : LogEventLevel.Error, exception, "Caught unhandled exception ({Terminating}) from {Sender}:",
+				isTerminating ? "terminating" : "non-terminating",         sender
+		);
 	}
 
 	private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -253,7 +273,6 @@ internal static class Program
 	{
 		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
 	}
-
 
 
 	/// <summary>Makes the Console.Error stuff a different colour...</summary>

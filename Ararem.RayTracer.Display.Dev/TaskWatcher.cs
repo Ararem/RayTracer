@@ -1,4 +1,6 @@
 using JetBrains.Annotations;
+using NetFabric.Hyperlinq;
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -6,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Ararem.RayTracer.Display.Dev;
 
+/// <summary>
+/// Static helper class for 'watching' tasks (making sure they complete successfully without manually having to check them)
+/// </summary>
 public static class TaskWatcher
 {
 	private static readonly ConcurrentBag<(Task Task, bool ExitOnError)> WatchedTasks    = new();
@@ -19,7 +24,7 @@ public static class TaskWatcher
 	/// <remarks>To use, simply call the async method you want to watch, and then call <see cref="Watch"/> on the returned task object</remarks>
 	public static void Watch(Task task, bool exitOnError)
 	{
-		Verbose("Added watched task {Task} (Exit on error = {ExitOnError}", task, exitOnError);
+		Log.Verbose("Added watched task {Task} (Exit on error = {ExitOnError}", task, exitOnError);
 		WatchedTasks.Add((task, exitOnError));
 	}
 
@@ -27,7 +32,7 @@ public static class TaskWatcher
 	internal static void Init()
 	{
 		const int period = 500;
-		Debug("Task watcher started with period of {Period}", period);
+		Log.Debug("Task watcher started with period of {Period}", period);
 		watcherTimer = new Timer(CheckTasks, null, 0, period);
 	}
 
@@ -40,40 +45,47 @@ public static class TaskWatcher
 			while (WatchedTasks.TryTake(out (Task Task, bool ExitOnError) tuple))
 			{
 				(Task task, bool exitOnError) = tuple;
+				Log.Verbose("Checking task {@Task}", task);
+
 				totalTaskCount++;
 				if (task.IsFaulted)
 				{
 					erroredTaskCount++;
-					Error(task.Exception!, "Caught exception in watched task {Task}", task);
+					Log.Error(task.Exception!, "Caught exception in watched task {Task}", task);
 					if (exitOnError)
 					{
+						const int exitCode = (int)Program.ExitCode.AppFailure;
+						Log.Debug("Exiting with Environment.Exit({ExitCode})", exitCode);
 						//Don't call App.Quit here, since it may throw
-						Environment.Exit(-1);
+						Environment.Exit(exitCode);
 					}
 				}
 				else if (!task.IsCompleted)
 				{
 					incompleteTaskCount++;
 					NotYetCompleted.Add(tuple);
+					Log.Verbose("Task {@Task} not yet completed", task);
 				}
 				//If the task has completed, no error, we don't do anything
 				//Since it's already been removed from the bag
 				else
 				{
 					completeTaskCount++;
+					Log.Verbose("Task {@Task} was completed", task);
 				}
 			}
 
 			//Add back the ones that haven't finished
 			while (NotYetCompleted.TryTake(out (Task Task, bool ExitOnError) result)) WatchedTasks.Add(result);
 
-			Verbose("Processed watched tasks: {Errored} errored, {Incomplete} incomplete, {Complete} completed, {Total} total", erroredTaskCount, incompleteTaskCount, completeTaskCount, totalTaskCount);
+			Log.Verbose("Processed watched tasks: {Errored} errored, {Incomplete} incomplete, {Complete} completed, {Total} total", erroredTaskCount, incompleteTaskCount, completeTaskCount, totalTaskCount);
 		}
 		catch (Exception e)
 		{
-			Fatal(e, "Caught fatal exception when processing watched tasks");
-			Fatal("Program terminating");
-			Environment.Exit(-1);
+			const int exitCode = (int)Program.ExitCode.AppFailure;
+			Log.Fatal(e, "Caught fatal exception when processing watched tasks");
+			Log.Fatal("Program terminating ({ExitCode})",exitCode);
+			Environment.Exit(exitCode);
 		}
 	}
 }

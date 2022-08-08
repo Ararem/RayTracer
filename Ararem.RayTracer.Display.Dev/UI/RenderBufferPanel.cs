@@ -1,21 +1,30 @@
 using Eto.Containers;
 using Eto.Drawing;
 using Eto.Forms;
+using LibArarem.Core.Logging;
+using Serilog;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Diagnostics;
 
-namespace Ararem.RayTracer.Display.Dev;
+namespace Ararem.RayTracer.Display.Dev.UI;
 
 public sealed partial class RenderJobPanel
 {
 	private sealed class RenderBufferPanel : Panel
 	{
+		private readonly ILogger log;
 		public RenderBufferPanel(RenderJobPanel parentJobPanel)
 		{
 			ParentJobPanel = parentJobPanel;
-			ID             = $"{ParentJobPanel.ID}/Buffer";
+			log            = LogUtils.WithInstanceContext(this);
+		}
+
+		/// <inheritdoc />
+		protected override void OnPreLoad(EventArgs e)
+		{
+			log.TrackEvent(this,e);
 			Content = ImageView = new DragZoomImageView
 			{
 					ID = $"{ID}/ImageView", ZoomButton = MouseButtons.Middle
@@ -24,6 +33,7 @@ public sealed partial class RenderJobPanel
 			{
 					ID = $"{ImageView.ID}/TEMP_WILL_BE_REPLACED_ONCE_UI_UPDATED",
 			}; //Assign something so that it's not null
+			base.OnPreLoad(e);
 		}
 
 		/// <summary>The <see cref="RenderJobPanel"/> that contains this instance as a child object (aka the panel that created this panel)</summary>
@@ -31,7 +41,7 @@ public sealed partial class RenderJobPanel
 		/// <summary>
 		/// The <see cref="DragZoomImageView"/> that is used to display the render buffer (also the content of this panel)
 		/// </summary>
-		public DragZoomImageView ImageView    { get; }
+		public DragZoomImageView ImageView { get; private set; }
 
 		/// <summary>
 		/// The bitmap image that is displayed by <see cref="ImageView"/>
@@ -47,7 +57,7 @@ public sealed partial class RenderJobPanel
 				int width = srcRenderBuffer.Width, height = srcRenderBuffer.Height;
 				if ((PreviewImage.Width != width) || (PreviewImage.Height != height))
 				{
-					Debug("Recreating preview image ({OldValue}) to change size to {NewValue}", PreviewImage.Size, new Size(width, height));
+					log.Verbose("Recreating preview image ({OldValue}) to change size to ({NewValue})", PreviewImage.Size, new Size(width, height).ToString());
 					ImageView.Image = null;
 					PreviewImage.Dispose();
 					ImageView.Image = PreviewImage = new Bitmap(width, height, PixelFormat.Format24bppRgb) { ID = $"{ImageView.ID}.Bitmap" };
@@ -74,7 +84,7 @@ public sealed partial class RenderJobPanel
 
 			Invalidate(true);                                           //Mark for redraw
 			((DocumentPage)ParentJobPanel.Parent).Image = PreviewImage; //Make the icon of the DocumentPage be the same as the buffer
-			ForContext("Control", this).Verbose("Image updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
+			log.Verbose("Image updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 		}
 	}
 }

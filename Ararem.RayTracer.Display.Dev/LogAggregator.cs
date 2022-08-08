@@ -1,4 +1,5 @@
 using GLib;
+using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev;
 

@@ -1,4 +1,5 @@
 using Eto.Drawing;
+using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev.Resources;
 
@@ -11,9 +12,10 @@ public static class ResourceManager
 		// Debug("Assembly for resources is {Assembly}", resourceAssembly);
 		{
 			const string iconPathPng = "Ararem.RayTracer.Display.Dev.Resources.icon.png";
+			Verbose("App icon (png) path: ({Path})", iconPathPng);
 			AppIconPng    = Icon.FromResource(iconPathPng);
 			AppIconPng.ID = "App Icon";
-			Verbose("App Icon (Png) ({Path}): {Icon}", iconPathPng, AppIconPng);
+			Verbose("App icon (png) loaded");
 		}
 		Debug("Initialised Resource Manager");
 	}

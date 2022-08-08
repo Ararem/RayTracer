@@ -3,27 +3,36 @@ using Ararem.RayTracer.Display.Dev.Resources;
 using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
+using LibArarem.Core.Logging;
+using Serilog;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-namespace Ararem.RayTracer.Display.Dev;
+namespace Ararem.RayTracer.Display.Dev.UI;
 
 /// <summary>Main form class that handles much of the UI stuff</summary>
 internal sealed class MainForm : Form
 {
-	/// <summary>Main control that contains the tabs for each of the renders</summary>
-	private readonly DocumentControl documentControlContent;
+	private readonly ILogger log;
 
 	public MainForm()
 	{
-	#region Important setup to make the app run like expected
+		log = LogUtils.WithInstanceContext(this);
+	}
 
-		Debug("Setting up main form");
-		ID = "MainForm";
+	/// <summary>Main control that contains the tabs for each of the renders</summary>
+	private DocumentControl documentControlContent;
+
+	/// <inheritdoc/>
+	protected override void OnPreLoad(EventArgs e)
+	{
+		log.TrackEvent(this, e);
+		//Load the components
 		{
-			Verbose("Creating MenuBar");
+			log.Verbose("Creating MenuBar");
 			Menu = new MenuBar
 			{
 					//Application-specific menu, gets it's own section in the menu bar
@@ -34,11 +43,11 @@ internal sealed class MainForm : Form
 					// ApplicationItems = { new Command { ToolBarText = "AppItems.Command.ToolbarText", MenuText = "AppItems.Command.MenuText" } },
 					ID = $"{ID}/MenuBar"
 			};
-			Verbose("Created MenuBar: {MenuBar}", Menu);
+			log.Verbose("Created MenuBar");
 		}
 
 		{
-			Verbose("Setting up quit handling");
+			log.Verbose("Setting up quit handling");
 			Menu.QuitItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/QuitItem",
@@ -49,11 +58,11 @@ internal sealed class MainForm : Form
 			Command quitAppCommand = new(QuitAppCommandExecuted) { ID = $"{Menu.QuitItem.ID}.Command" };
 			Menu.QuitItem.Command =  quitAppCommand;
 			Closed                += MainFormClosed;
-			Verbose("Set Menu.QuitItem: {MenuItem}", Menu.QuitItem);
+			log.Verbose("Set up quit handling");
 		}
 
 		{
-			Verbose("Setting up about app menu");
+			log.Verbose("Setting up about app menu");
 			Menu.AboutItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/AboutItem",
@@ -66,77 +75,65 @@ internal sealed class MainForm : Form
 					ID = $"{Menu.AboutItem.ID}.Command"
 			};
 			Menu.AboutItem.Command = aboutCommand;
-			Verbose("Set Menu.AboutItem: {MenuItem}", Menu.AboutItem);
+			log.Verbose("Set about app menu");
 		}
 
 		{
-			Verbose("Setting icon");
+			log.Verbose("Setting icon");
 			Icon = ResourceManager.AppIconPng;
-			Verbose("Set icon: {Icon}", Icon);
+			log.Verbose("Set icon");
 		}
 
 		{
-			Verbose("Toolbar (disabled): {Toolbar}", ToolBar = null);
+			log.Verbose("Toolbar (disabled)");
 		}
 
 		{
-			Verbose("Setting window parameters");
-			Verbose("Resizeable: {Resizeable}",   Resizable   = true);
-			Verbose("Maximizable: {Maximizable}", Maximizable = true);
-			Verbose("Minimizable: {Minimizable}", Minimizable = true);
-			Verbose("MinimumSize: {MinimumSize}", MinimumSize = new Size(0,    0));
-			Verbose("Size: {Size}",               Size        = new Size(1280, 720));
-			Verbose("Title: {Title}",             Title       = Application.Instance.Name);
-			Verbose("Maximizing");
+			log.Verbose("Setting window parameters");
+			Resizable   = true;
+			Maximizable = true;
+			Minimizable = true;
+			MinimumSize = new Size(0,    0);
+			Size        = new Size(1280, 720);
+			Title       = Application.Instance.Name;
 			Maximize();
+			log.Verbose("Window parameters set");
 		}
 
-	#endregion
-
-	#region Init everything else in the UI
-
 		{
-			Verbose("Creating dynamic layout");
+			log.Verbose("Creating main (dynamic) layout");
 			DynamicLayout layout = new()
 			{
 					ID      = $"{ID}/Layout",
 					Padding = DefaultPadding,
 					Spacing = DefaultSpacing
 			};
-			Verbose("Dynamic Layout (MainForm.Content): {Content}", Content = layout);
 			layout.BeginVertical();
-			Verbose(
-					"Add Label: {Control}", layout.Add(
-							new Label
-							{
-									ID                = $"{layout.ID}/TitleLabel",
-									Text              = AssemblyInfo.ProductName,
-									Style             = nameof(AppTitle),
-									TextAlignment     = TextAlignment.Center,
-									VerticalAlignment = VerticalAlignment.Center
-							}
-					)
+			layout.Add(
+					new Label
+					{
+							ID                = $"{layout.ID}/TitleLabel",
+							Text              = AssemblyInfo.ProductName,
+							Style             = nameof(AppTitle),
+							TextAlignment     = TextAlignment.Center,
+							VerticalAlignment = VerticalAlignment.Center
+					}
 			);
 			layout.BeginScrollable();
-			Verbose(
-					"Add DocumentControl: {Control}", layout.Add(
-							documentControlContent = new DocumentControl
-							{
-									ID = "MainForm/Content/DocumentControl"
-							}
-					)
+			layout.Add(
+					documentControlContent = new DocumentControl
+					{
+							ID = "MainForm/Content/DocumentControl"
+					}
 			);
-			Verbose("Adding page closed handler");
-			documentControlContent.PageClosed += DocumentPageOnClosed;
 			layout.EndScrollable();
 			layout.EndVertical();
-			Verbose("Finished adding to main dynamic layout");
+			log.Verbose("Finished adding to main dynamic layout");
 		}
-
 
 		//Tab management
 		{
-			Verbose("Setting up new tab button");
+			log.Verbose("Setting up new tab button");
 			MenuItem newTabMenuItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/NewTabItem",
@@ -147,9 +144,9 @@ internal sealed class MainForm : Form
 			Menu.ApplicationItems.Add(newTabMenuItem);
 			Command newTabCommand = new(CreateNewTabCommandExecuted) { ID = $"{newTabMenuItem.ID}.Command" };
 			newTabMenuItem.Command = newTabCommand;
-			Verbose("Set up new tab button: {MenuItem}", newTabMenuItem);
+			log.Verbose("Set up new tab button");
 
-			Verbose("Setting up close render tab command");
+			log.Verbose("Setting up close render tab command");
 			MenuItem closeTabMenuItem = new ButtonMenuItem
 			{
 					ID       = $"{Menu.ID}/CloseTabItem",
@@ -160,27 +157,30 @@ internal sealed class MainForm : Form
 			Menu.ApplicationItems.Add(closeTabMenuItem);
 			Command closeTabCommand = new(CloseRenderTabExecuted) { ID = $"{closeTabMenuItem.ID}.Command" };
 			closeTabMenuItem.Command = closeTabCommand;
-			Verbose("Added close tab command: {MenuItem}", closeTabMenuItem);
+			log.Verbose("Added close tab command");
 
-			Verbose("Creating initial tab");
+			log.Verbose("Adding page closed handler");
+			documentControlContent.PageClosed += DocumentPageOnClosed;
+
+			log.Verbose("Creating initial tab");
 			newTabCommand.Execute();
-			Verbose("Initial tab created");
+			log.Verbose("Initial tab created");
 		}
-
-	#endregion
+		log.Verbose("Load complete");
+		base.OnPreLoad(e);
 	}
 
 #region Callbacks
 
 	private void CloseRenderTabExecuted(object? sender, EventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
+		log.TrackEvent(sender, eventArgs);
 
 		DocumentPage oldPage = documentControlContent.SelectedPage;
-		Debug("Closing tab {Control}", oldPage);
+		log.Debug("Closing tab {Control}", oldPage);
 		bool couldRemove = documentControlContent.Pages.Remove(oldPage);
 		if (couldRemove is false)
-			ForContext("Item", oldPage).ForContext("Collection", documentControlContent.Pages).Warning("Could not remove tab from pages collection");
+			log.ForContext("Item", oldPage).ForContext("Collection", documentControlContent.Pages).Warning("Could not remove tab from pages collection");
 		/*
 		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
 		 *
@@ -206,61 +206,57 @@ internal sealed class MainForm : Form
 			 * I think it's trying to resolve the method from the base type (which is Eto.Forms.Control.Callback), which doesn't have the method OnPageClosed(),
 			 * despite the object instance being a DocumentControl.Callback, which does have the method OnPageClosed()
 			 */
-			dynamic callbackObject = ((dynamic)documentControlContent).Handler.Callback;
+			dynamic           callbackObject = ((dynamic)documentControlContent).Handler.Callback;
 			((object)callbackObject).GetType().GetMethod("OnPageClosed")!.Invoke(callbackObject, new object[] { documentControlContent, new DocumentPageEventArgs(oldPage) });
 		}
 		catch (Exception e)
 		{
-			Warning(e, "Attempt to manually calling OnPageClosed() callback failed");
+			log.Warning(e, "Attempt to manually calling OnPageClosed() for {Control} callback failed", documentControlContent);
 		}
-
-		// oldPage?.Dispose();
 	}
 
 	private void DocumentPageOnClosed(object? sender, DocumentPageEventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
+		log.TrackEvent(sender, eventArgs);
+		log.Information("Closed tab {Control}", eventArgs.Page);
 		//The UI items all collapse and everything looks kinda weird when we have 0 tabs open, so we get around this by closing the current one and opening a new tab whenever we are on the last tab
 		if (documentControlContent.Pages.Count == 0)
 		{
-			Debug("Just closed last tab, recreating to ensure we don't get below 1");
-			CreateNewTabCommandExecuted(null, EventArgs.Empty);
+			log.Debug("Just closed last tab, recreating to ensure we don't get below 1");
+			CreateNewTabCommandExecuted(DocumentPageOnClosed, EventArgs.Empty);
 		}
-
-		Information("Closed tab {Control}", eventArgs.Page);
-		// eventArgs.Page?.Content?.Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
 	private void CreateNewTabCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
+		log.TrackEvent(sender, eventArgs);
 		Guid guid = Guid.NewGuid();
 		DocumentPage newPage = new()
 		{
 				ID      = $"Page_{guid}.Page",
 				Text    = $"Render {guid}",
 				Image   = Icon,
-				Content = new RenderJobPanel($"Page_{guid}")
+				Content = new RenderJobPanel { ID = $"Page_{guid}" }
 		};
 		//TODO: Tab selection thingy text styles
 		documentControlContent.Pages.Add(newPage);
-		Information("Added new render tab: {Control}", newPage);
+		log.Information("Added new render tab: {Control}", newPage);
 	}
 
 	/// <summary>Callback for when the [Quit App] command is executed</summary>
 	[ContractAnnotation("=> halt")]
 	private void QuitAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
-		Debug("Closing main form");
+		log.TrackEvent(sender, eventArgs);
+		log.Debug("Closing main form");
 		Close();
 	}
 
 	/// <summary>Callback for when the [About App] command is executed</summary>
 	private void AboutAppCommandExecuted(object? sender, EventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
+		log.TrackEvent(sender, eventArgs);
 		new AboutDialog
 		{
 				Copyright          = AssemblyInfo.Copyright,
@@ -280,9 +276,9 @@ internal sealed class MainForm : Form
 	}
 
 	[ContractAnnotation("=> halt")]
-	private static void MainFormClosed(object? sender, EventArgs eventArgs)
+	private void MainFormClosed(object? sender, EventArgs eventArgs)
 	{
-		TrackEvent(sender, eventArgs);
+		log.TrackEvent(sender, eventArgs);
 
 		//To prevent recursive loops where this calls itself (since `Application.Quit` calls `MainForm.Closed`)
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
@@ -290,20 +286,20 @@ internal sealed class MainForm : Form
 		MethodBase appQuitMethod = typeof(Application).GetMethod(nameof(Application.Quit))!;
 		if (new StackTrace(1, false).GetFrames().Select(f => f.GetMethod()).Any(m => (m == thisMethod) || (m == appQuitMethod)))
 		{
-			Verbose("Closed event recursion detected, returning immediately without sending quit signal");
+			log.Verbose("Closed event recursion detected, returning immediately without sending quit signal");
 			return;
 		}
 
-		Information("Main form closed");
+		log.Information("Main form closed");
 		if (Application.Instance.QuitIsSupported)
 		{
-			Verbose("Sending quit signal");
+			log.Verbose("Sending quit signal");
 			Application.Instance.Quit();
-			Verbose("Quit signal sent");
+			log.Verbose("Quit signal sent");
 		}
 		else
 		{
-			Error("Quit not supported ☹️");
+			log.Error("Quit not supported ☹️");
 		}
 	}
 

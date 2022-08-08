@@ -1,9 +1,11 @@
 using Eto;
 using Eto.Drawing;
 using Eto.Forms;
+using JetBrains.Annotations;
 using System;
 using System.Linq;
 using System.Reflection;
+using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev.Resources;
 
@@ -12,18 +14,22 @@ namespace Ararem.RayTracer.Display.Dev.Resources;
 ///  <c>myControl.Style = nameof(StyleManager.Bold);</c>
 /// </summary>
 /// <remarks>
-///  Most styles should work for most widgets, but if a style isn't working when it should (e.g. <see cref="Heading"/> on a <see cref="GroupBox"/>) due
+///  Most styles should work for most widgets, but if a style isn't working when it should (e.g. <see cref="StyleManager.Heading"/> on a <see cref="GroupBox"/>) due
 ///  to mismatched base types, you can try using the `Force_XXX` style instead. This will attempt to dynamically access the relevant members of the type
 ///  to assign them. This will only work in specific scenarios, where the target type (i.e. <see cref="GroupBox"/>) has a definition for a property that
-///  should be styled (i.e. <see cref="GroupBox.Font"/>), but the standard style (i.e. <see cref="Heading"/>) only works for a different base type (i.e.
-///  <see cref="CommonControl"/>). In this example, since the <see cref="GroupBox"/> has a "Font" property, we can use the <see cref="Force_Heading"/>
+///  should be styled (i.e. <see cref="GroupBox.Font"/>), but the standard style (i.e. <see cref="StyleManager.Heading"/>) only works for a different base type (i.e.
+///  <see cref="CommonControl"/>). In this example, since the <see cref="GroupBox"/> has a "Font" property, we can use the <see cref="StyleManager.Force_Heading"/>
 ///  style to dynamically (forcefully) change the property (since it accepts any object of type <see cref="Widget"/>).
 /// </remarks>
+[PublicAPI]
 public static class StyleManager
 {
 	/// <summary>Standard size of the font for most styles</summary>
 	public const int GeneralFontSize = 11;
 
+	/// <summary>
+	/// Font size for heading text
+	/// </summary>
 	public const int HeadingFontSize = 20;
 
 	static StyleManager()
@@ -49,12 +55,17 @@ public static class StyleManager
 		Debug("Initialized Style Manager");
 	}
 
+	/// <summary>
+	/// Style for a <see cref="Label"/> for the app title
+	/// </summary>
 	public static StyleWidgetHandler<Label> AppTitle => static control =>
 	{
 		control.Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
 		control.TextColor = new Color(1f, 1f, 1f);
 	};
 
+	/// <inheritdoc cref="AppTitle"/>
+	/// <remarks>Only use if <see cref="AppTitle"/> does not work</remarks>
 	public static StyleWidgetHandler<Widget> Force_AppTitle => static control =>
 	{
 		((dynamic)control).Font      = new Font(FontFamilies.Sans, 40, FontStyle.Bold);
