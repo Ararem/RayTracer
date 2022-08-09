@@ -50,7 +50,7 @@ public sealed partial class RenderJobPanel : Panel
 	private static double TargetRefreshRate => 10; //Fps
 
 	/// <inheritdoc/>
-	protected override void OnPreLoad(EventArgs e)
+	protected override void OnLoadComplete(EventArgs e)
 	{
 		log.TrackEvent(this,e);
 
@@ -82,7 +82,7 @@ public sealed partial class RenderJobPanel : Panel
 		};
 		updateUiTimer.Start();
 
-		base.OnLoad(e);
+		base.OnLoadComplete(e);
 	}
 
 	/// <inheritdoc/>

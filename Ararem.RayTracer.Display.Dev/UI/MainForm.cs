@@ -7,7 +7,6 @@ using LibArarem.Core.Logging;
 using Serilog;
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -108,6 +107,7 @@ internal sealed class MainForm : Form
 					Padding = DefaultPadding,
 					Spacing = DefaultSpacing
 			};
+			Content = layout;
 			layout.BeginVertical();
 			layout.Add(
 					new Label

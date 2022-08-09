@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using LibArarem.Core.Logging;
 using NetFabric.Hyperlinq;
 using Serilog;
 using System;
@@ -40,7 +41,8 @@ public static class TaskWatcher
 	{
 		try
 		{
-			int totalTaskCount = 0, erroredTaskCount = 0, completeTaskCount = 0, incompleteTaskCount = 0;
+			using IDisposable __              = LogUtils.MarkContextAsExtremelyVerbose();
+			int               totalTaskCount = 0, erroredTaskCount = 0, completeTaskCount = 0, incompleteTaskCount = 0;
 			//Loop over all the tasks to check
 			while (WatchedTasks.TryTake(out (Task Task, bool ExitOnError) tuple))
 			{
