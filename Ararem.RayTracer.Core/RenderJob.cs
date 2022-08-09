@@ -460,7 +460,28 @@ public sealed class RenderJob : IDisposable
 		{
 			HitRecord               hit      = hitStateArray[currentDepth];
 			ArraySegment<HitRecord> prevHits = new(hitStateArray, 0, currentDepth); //Shouldn't include the current hit
-			finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[currentDepth + 1].IncomingRay, hit, prevHits);
+			finalColour = hit.Material.CalculateColour(finalColour, currentRay, hit, prevHits);
+			/*
+			 * Important note about using currentRay:
+			 * It's important that we use the last value from the intersection `for` loop, and update it after we calculate the colour, using the current hit's ray
+			 *
+			 * My previous code `finalColour = hit.Material.CalculateColour(finalColour, hitStateArray[currentDepth+1], hit, prevHits);`
+			 * Would sometimes fail randomly with "Index Out of Bounds" whenever we reached the max depth allowed by maxAllowedDepth
+			 * I realised it was due to the code trying to access the 'future ray' where one didn't exist.
+			 *
+			 * Assuming we reach our max bounces, in this loop, `currentDepth` is set to the max - 15
+			 * This is fine when we access the current hit (it's the last element), but when we try to access the next one (for the future ray),
+			 * It was rather intermittent, only failing when the maxAllowedDepth was 2^n-1.
+			 * Then, when we try to access element 16, it doesn't exist (out of bounds)
+			 * Since we're using an ArrayPool, it rounds array sizes up to the nearest power of 2
+			 * So when we have a max depth of 15, the array size we request is 16, which we get
+			 * For any other maxDepthAllowed, the array size is at least 1 larger than we need, so everything appears to be fine
+			 * (We just access the ray of an uninitialized HitRecord and get a `Ray {Origin = Zero, Direction = Zero}`)
+			 *
+			 * So by keeping the value from the intersection loop (which isn't processed),
+			 * We can use that instead for the last intersection, and update it reversely for the rest (neat eh?)
+			 */
+			currentRay  = hitStateArray[currentDepth].IncomingRay;
 		}
 
 		PrevHitPool.Return(hitStateArray);
