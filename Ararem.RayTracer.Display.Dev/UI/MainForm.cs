@@ -225,6 +225,7 @@ internal sealed class MainForm : Form
 			log.Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(DocumentPageOnClosed, EventArgs.Empty);
 		}
+		eventArgs.Page?.Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
