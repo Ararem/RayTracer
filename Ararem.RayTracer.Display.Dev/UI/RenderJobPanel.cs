@@ -47,7 +47,7 @@ public sealed partial class RenderJobPanel : Panel
 	public RenderOptions RenderOptions { get; } = new();
 
 	/// <summary>Target refreshes-per-second that we want</summary>
-	private static double TargetRefreshRate => 10; //Fps
+	private static double TargetRefreshRate => 1; //Fps
 
 	/// <inheritdoc/>
 	protected override void OnLoadComplete(EventArgs e)
@@ -74,7 +74,7 @@ public sealed partial class RenderJobPanel : Panel
 		Layout.Create();
 		log.Verbose("Layout created");
 
-		log.Verbose("Creating update UI timer with interval {Interval} ({Fps} FPS)", 1f/TargetRefreshRate, TargetRefreshRate);
+		log.Verbose("Creating update UI timer with interval {Interval:0's'} ({Fps:0' FPS'})", 1f/TargetRefreshRate, TargetRefreshRate);
 		// Periodically update the previews using a timer
 		updateUiTimer = new UITimer(UpdateUi)
 		{
@@ -95,13 +95,14 @@ public sealed partial class RenderJobPanel : Panel
 		// renderStatsPanel?.Dispose();
 		//Stop the UI timer from firing after we've disposed
 		log.Verbose("Dispose() called, stopping UI timer");
-		updateUiTimer?.Stop();
-		updateUiTimer?.Dispose();
+		updateUiTimer.Stop();
+		updateUiTimer.Dispose();
 	}
 
 	/// <summary>Updates all the UI</summary>
 	private void UpdateUi(object? sender, EventArgs eventArgs)
 	{
+		if (IsDisposed || updateUiTimer.IsDisposed) return;
 		//TODO: Add something to prevent UI freezes
 		/*
 		 * Note that we don't have to worry about locks or anything, since

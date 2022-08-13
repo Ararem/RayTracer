@@ -13,7 +13,20 @@ namespace Ararem.RayTracer.Core;
 /// <param name="LookFrom">Where the camera looks from (it's position)</param>
 /// <param name="U">Unknown Vector</param>
 /// <param name="V">Unknown Vector</param>
-public sealed record Camera(float LensRadius, Vector3 Horizontal, Vector3 Vertical, Vector3 LowerLeftCorner, Vector3 LookFrom, Vector3 U, Vector3 V)
+/// <param name="LookTowards">Point the camera should point towards - this will be the focus of the camera</param>
+/// <param name="UpVector">
+///  Vector direction the camera considers 'upwards'. Use this to rotate the camera around the central view ray (lookFrom -> lookToward) - inverting this
+///  is like rotating the camera upside-down
+/// </param>
+/// <param name="VerticalFov">Angle in degrees for the vertical field of view</param>
+/// <param name="AspectRatio">Aspect ratio of the camera (width/height)</param>
+/// <param name="LensRadius">Radius of the simulated lens. Larger values increase blur</param>
+/// <param name="FocusDistance">Distance from the camera at which rays are perfectly in focus</param>
+//TODO: Aspect ratio in the camera is really funky. I would prefer to store it (cached) in RenderOptions/RenderJob, and then multiply the uv coords before passing into GetRay()
+public sealed record Camera(Vector3 LookFrom, Vector3 LookTowards, Vector3 LookDirection, Vector3 UpVector, float VerticalFov, float AspectRatio,
+							float FocusDistance, //Properties that are nice for access later (these are passed into hte helper factory function)
+							float LensRadius, Vector3 Horizontal, Vector3 Vertical, Vector3 LowerLeftCorner, Vector3 U, Vector3 V //Actually important properties for GetRay()
+)
 {
 	/// <summary>Gets the world-space ray that corresponds to the given pixel's <paramref name="u"/><paramref name="v"/> coordinate</summary>
 	/// <param name="u">The UV coordinate of the pixel</param>
@@ -56,16 +69,16 @@ public sealed record Camera(float LensRadius, Vector3 Horizontal, Vector3 Vertic
 		float viewportWidth  = aspectRatio * viewportHeight;
 
 		//Magic that lets us position and rotate the camera
-		Vector3 w = Normalize(lookFrom - lookTowards);
-		if (Cross(upVector, w) == Zero)
+		Vector3 lookDir             = Normalize(lookFrom - lookTowards);
+		if (Cross(upVector, lookDir) == Zero)
 			throw new ArithmeticException("Camera cannot point in the same direction as its 'up' vector (Cross(CameraUpVector, LookDirection) must != Zero)");
-		Vector3 u = Normalize(Cross(upVector, w));
-		Vector3 v = Cross(w, u);
+		Vector3 u = Normalize(Cross(upVector, lookDir));
+		Vector3 v = Cross(lookDir, u);
 
 		Vector3 horizontal      = viewportWidth  * u * focusDistance;
 		Vector3 vertical        = viewportHeight * v * focusDistance;
-		Vector3 lowerLeftCorner = lookFrom - (horizontal / 2) - (vertical / 2) - (focusDistance * w);
+		Vector3 lowerLeftCorner = lookFrom - (horizontal / 2) - (vertical / 2) - (focusDistance * lookDir);
 
-		return new Camera(lensRadius, horizontal, vertical, lowerLeftCorner, lookFrom, u, v);
+		return new Camera(lookFrom, lookTowards, lookDir, upVector, verticalFov, aspectRatio, focusDistance, lensRadius, horizontal, vertical, lowerLeftCorner, u, v);
 	}
 }

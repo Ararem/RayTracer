@@ -4,6 +4,7 @@ namespace Ararem.RayTracer.Core;
 
 /// <summary>Class that stores statistics about a render</summary>
 //Yeah I'm using ulongs everywhere, just cause ints aren't large enough on large images, and it's easier to have them all the same
+//TODO: Refactor this to be a struct
 public sealed class RenderStats
 {
 	/// <summary>How many threads are currently rendering the scene</summary>

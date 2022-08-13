@@ -80,6 +80,7 @@ public static class TaskWatcher
 			//Add back the ones that haven't finished
 			while (NotYetCompleted.TryTake(out (Task Task, bool ExitOnError) result)) WatchedTasks.Add(result);
 
+			if(totalTaskCount !=0)
 			Log.Verbose("Processed watched tasks: {Errored} errored, {Incomplete} incomplete, {Complete} completed, {Total} total", erroredTaskCount, incompleteTaskCount, completeTaskCount, totalTaskCount);
 		}
 		catch (Exception e)
