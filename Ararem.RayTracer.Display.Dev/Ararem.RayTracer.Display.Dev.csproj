@@ -7,7 +7,7 @@
 	-->
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<ApplicationIcon>Resources/icon.ico</ApplicationIcon>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -18,11 +18,12 @@
 		<PackageIcon>Appearance\icon.png</PackageIcon>
 		<RepositoryUrl>https://www.github.com/Ararem/RayTracer</RepositoryUrl>
 		<RepositoryType>GitHub</RepositoryType>
+		<LangVersion>11</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<DebugType>full</DebugType>
-		<DocumentationFile>bin\Gtk\Debug\net6.0\Ararem.RayTracer.Display.Dev.xml</DocumentationFile>
+		<DocumentationFile>bin\Gtk\Debug\net7.0\Ararem.RayTracer.Display.Dev.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>

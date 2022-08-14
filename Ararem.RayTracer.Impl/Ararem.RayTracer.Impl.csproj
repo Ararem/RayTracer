@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -9,13 +9,13 @@
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<DebugType>full</DebugType>
-		<DocumentationFile>bin\Debug\net6.0\RayTracer.Impl.xml</DocumentationFile>
+		<DocumentationFile>bin\Debug\net7.0\RayTracer.Impl.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<DebugSymbols>true</DebugSymbols>
 		<DebugType>full</DebugType>
-		<DocumentationFile>bin\Release\net6.0\Ararem.RayTracer.Impl.xml</DocumentationFile>
+		<DocumentationFile>bin\Release\net7.0\Ararem.RayTracer.Impl.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
