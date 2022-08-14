@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using System.Numerics;
 
 namespace Ararem.RayTracer.Core;
 
@@ -12,11 +13,11 @@ public static class MathUtils
 	/// <param name="b">Second value to blend</param>
 	/// <param name="t">How much to blend. Should be [0..1] for results in the range [<paramref name="a"/>..<paramref name="b"/>]</param>
 	[Pure]
-	public static float Lerp(float a, float b, float t) => a + (t * (b - a));
+	public static T Lerp<T>(T a, T b, T t) where T : IFloatingPoint<T> => a + (t * (b - a));
 
 	/// <summary>Finds how far between two values a given value is.</summary>
 	[Pure]
-	public static float InverseLerp(float a, float b, float val) => (val - a) / (b - a);
+	public static T InverseLerp<T>(T a, T b, T val) where T : IFloatingPoint<T> => (val - a) / (b - a);
 
 	/// <summary>Remaps a number from one range to another</summary>
 	/// <param name="iMin">Input range minimum</param>
@@ -26,19 +27,18 @@ public static class MathUtils
 	/// <param name="val">Value to remap</param>
 	/// <returns></returns>
 	[Pure]
-	public static float Remap(float iMin, float iMax, float oMin, float oMax, float val) => Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
+	public static T Remap<T>(T iMin, T iMax, T oMin, T oMax, T val) where T : IFloatingPoint<T> => Lerp(oMin, oMax, InverseLerp(iMin, iMax, val));
 
 	/// <summary>Compresses a 2d index into a 1d index. Useful for un-nesting loops</summary>
 	[Pure]
-	public static ulong Compress2DIndex(ulong x, ulong y, ulong width) => x + (y * width);
+	public static T Compress2DIndex<T>(T x, T y, T width) where T : IBinaryInteger<T> => x + (y * width);
 
-	/// <summary>Decompresses an index made by (<see cref="Compress2DIndex"/>)</summary>
+	/// <summary>Decompresses an index made by (<see cref="Compress2DIndex{T}"/>)</summary>
 	[Pure]
-	public static (ulong X, ulong Y) Decompress2DIndex(ulong i, ulong width)
+	public static (T X, T Y) Decompress2DIndex<T>(T i, T width) where T : IBinaryInteger<T>
 	{
-		(ulong y, ulong x) = Math.DivRem(i, width);
-		// int x = i % width;
-		// int y = i / width;
+		T x = i % width;
+		T y = i / width;
 		return (x, y);
 	}
 
@@ -50,10 +50,10 @@ public static class MathUtils
 	///  <c>x % y</c>
 	/// </returns>
 	[Pure]
-	public static ulong SafeMod(ulong x, ulong y)
+	public static T SafeMod<T>(T x, T y) where T : INumber<T>
 	{
-		if (x == y) return 0;
-		if (y == 0) return x;
+		if (x == y) return T.Zero;
+		if (y == T.Zero) return x;
 		return x % y;
 	}
 }
