@@ -65,22 +65,22 @@ public sealed partial class RenderJobPanel
 			const string ratioUnit              = " px/px";
 			const string noStatAvailable = "N/A";
 
-			static string Vec<T>(T? t, [RequireStaticDelegate] Func<T, Vector3> getValue)
+			static string Vec<TState>(TState? t, [RequireStaticDelegate] Func<TState, Vector3> getValue)
 			{
 				return t is null ? noStatAvailable : getValue(t).ToString(decimalFormat);
 			}
 
-			static string Int<T>(T? t, [RequireStaticDelegate] Func<T, int> getValue, string unit) where T: INumeric
+			static string Int<TState,TNumber>(TState? t, [RequireStaticDelegate] Func<TState, TNumber> getValue, string unit) where TNumber: IBinaryInteger<TNumber>
 			{
-				return (t is null ? noStatAvailable : getValue(t).ToString(integralFormat)) + unit;
+				return (t is null ? noStatAvailable : getValue(t).ToString(integralFormat, null)) + unit;
 			}
 
-			static string Float<T>(T? t, [RequireStaticDelegate] Func<T, float> getValue, string unit)
+			static string Float<TState,TNumber>(TState? t, [RequireStaticDelegate] Func<TState, TNumber> getValue, string unit) where TNumber: IFloatingPoint<TNumber>
 			{
-				return (t is null ? noStatAvailable : getValue(t).ToString(decimalFormat)) + unit;
+				return (t is null ? noStatAvailable : getValue(t).ToString(integralFormat, null)) + unit;
 			}
 
-			static string String<T>(T? t, [RequireStaticDelegate]Func<T, string> getValue)
+			static string String<TState>(TState? t, [RequireStaticDelegate]Func<TState, string> getValue)
 			{
 				return t is null ? noStatAvailable : getValue(t);
 			}
