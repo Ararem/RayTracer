@@ -66,8 +66,6 @@ internal static class Logger
 		config = earlyAdjustConfig?.Invoke(config) ?? config; //If no config func is provided, `Invoke(...)` isn't called and it returns null, which is handled by the `?? config`
 		config = config.MinimumLevel.Is(LogEventLevel.Verbose)
 					   .WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
-					   .Enrich.WithThreadId()
-					   .Enrich.WithThreadName()
 					   .Enrich.FromLogContext()
 					   .Enrich.With<ExceptionDataEnricher>()
 					   .Enrich.WithDemystifiedStackTraces()

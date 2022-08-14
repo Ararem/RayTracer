@@ -71,7 +71,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		statsContainer = new GroupBox
 				{ ID = "Stats Container", Text = "Statistics", Content = statsTable, Size = new Size(0, 0), MinimumSize = new Size(1, 1) };
 
-		previewImage = new Bitmap(renderJob.RenderOptions.RenderWidth, renderJob.RenderOptions.RenderHeight, PixelFormat.Format24bppRgb)
+		previewImage = new Bitmap((int)renderJob.RenderOptions.RenderWidth,(int) renderJob.RenderOptions.RenderHeight, PixelFormat.Format24bppRgb)
 				{ ID = "Preview Bitmap" };
 		previewImageView = new DragZoomImageView
 				{ ID = "Preview Image View", Image = previewImage, Size = new Size(0, 0), ZoomButton = MouseButtons.Middle };
@@ -81,7 +81,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 				Size = new Size(0, 0), MinimumSize     = new Size(1, 1), Padding = 10
 		};
 
-		depthBufferBitmap = new Bitmap(DepthImageWidth, renderJob.RenderOptions.MaxBounceDepth, PixelFormat.Format32bppRgba)
+		depthBufferBitmap = new Bitmap(DepthImageWidth, (int)renderJob.RenderOptions.MaxBounceDepth, PixelFormat.Format32bppRgba)
 				{ ID = "Depth Buffer Bitmap" };
 		depthBufferImageView = new ImageView
 				{ ID = "Image View", Image = depthBufferBitmap, Size = new Size(-1, -1) };
@@ -195,19 +195,19 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			return val.ToString("d").PadLeft(leftAlign) + ' ' + val.ToString("h:mm:ss tt").PadRight(rightAlign);
 		}
 
-		static string FormatNum(long value)
+		static string FormatNum(ulong value)
 		{
 			return $"{value.ToString(numFormat),leftAlign}";
 		}
 
-		static string FormatNumDelta(long curr, long prev, TimeSpan deltaT, string unit = "")
+		static string FormatNumDelta(ulong curr, ulong prev, TimeSpan deltaT, string unit = "")
 		{
-			long   delta  = curr - prev;
+			ulong   delta  = curr - prev;
 			double tRatio = TimeSpan.FromSeconds(1) / deltaT;
 			return $"{Sign(delta) + (delta * tRatio).ToString(numFormat),leftAlign} {unit}";
 		}
 
-		static string FormatNumWithPercentage(long value, long total)
+		static string FormatNumWithPercentage(ulong value, ulong total)
 		{
 			return $"{value.ToString(numFormat),leftAlign} {'(' + ((float)value / total).ToString(percentFormat) + ')',rightAlign}";
 		}
@@ -254,7 +254,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		}
 		{
-			long total = renderStats.TotalRawPixels,
+			ulong total = renderStats.TotalRawPixels,
 				rend   = renderStats.RawPixelsRendered,
 				rem    = total - rend;
 			const string unit = "px/s";
@@ -272,17 +272,17 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Image", new (string Name, string Value, string? Delta)[]
 					{
 							//Assumes preview image has same dimensions as render buffer (which should always be the case)
-							("Width", FormatNum(previewImage.Width), null),
-							("Height", FormatNum(previewImage.Height), null),
+							("Width", FormatNum((ulong)previewImage.Width), null),
+							("Height", FormatNum((ulong)previewImage.Height), null),
 							("Pixels", FormatNum(renderStats.TotalTruePixels), null)
 					})
 			);
 		}
 		{
-			long total = renderJob.RenderOptions.Passes,
+			ulong total = renderJob.RenderOptions.Passes,
 				rend   = renderStats.PassesRendered,
 				rem    = total - rend;
-			long progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
+			ulong progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
 			//Calculate fraction of the passes that was rendered between updates
 			float passFrac     = (float)progress                                                        / renderStats.TotalTruePixels;
 			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
@@ -301,7 +301,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 			);
 		} //TODO: Intersection counts
 		{
-			long total = renderStats.RayCount,
+			ulong total = renderStats.RayCount,
 				scat   = renderStats.MaterialScatterCount,
 				abs    = renderStats.MaterialAbsorbedCount,
 				exceed = renderStats.BounceLimitExceeded,
@@ -324,8 +324,8 @@ internal sealed class RenderProgressDisplayPanel : Panel
 					("Scene", new (string Name, string Value, string? Delta)[]
 					{
 							("Name", $"{scene.Name,leftAlign}", null),
-							("Object Count", FormatNum(scene.SceneObjects.Length), null),
-							("Light Count", FormatNum(scene.Lights.Length), null)
+							("Object Count", FormatNum((ulong)scene.SceneObjects.Length), null),
+							("Light Count", FormatNum((ulong)scene.Lights.Length), null)
 					})
 			);
 		}
@@ -496,7 +496,7 @@ internal sealed class RenderProgressDisplayPanel : Panel
 		//Depth buffer
 		{
 			int       row             = statsTable.Dimensions.Height - 1;
-			int       maxDepth        = renderJob.RenderOptions.MaxBounceDepth;
+			int       maxDepth        = (int)renderJob.RenderOptions.MaxBounceDepth;
 			TableCell titleCell       = statsTable.Rows[row].Cells[0];
 			TableCell descriptionCell = statsTable.Rows[row].Cells[1];
 			TableCell depthBufferCell = statsTable.Rows[row].Cells[2];

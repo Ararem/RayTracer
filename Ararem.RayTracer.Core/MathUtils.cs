@@ -6,6 +6,7 @@ namespace Ararem.RayTracer.Core;
 [PublicAPI]
 public static class MathUtils
 {
+	//TODO: Fix with new INumeric interfaces
 	/// <summary>Blends between two values</summary>
 	/// <param name="a">First value to blend</param>
 	/// <param name="b">Second value to blend</param>
@@ -49,7 +50,7 @@ public static class MathUtils
 	///  <c>x % y</c>
 	/// </returns>
 	[Pure]
-	public static long SafeMod(long x, long y)
+	public static ulong SafeMod(ulong x, ulong y)
 	{
 		if (x == y) return 0;
 		if (y == 0) return x;
