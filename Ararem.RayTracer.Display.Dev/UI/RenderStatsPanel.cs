@@ -1,5 +1,6 @@
 using Ararem.RayTracer.Core;
 using Eto.Forms;
+using JetBrains.Annotations;
 using LibArarem.Core.Logging;
 using Serilog;
 using System;
@@ -56,31 +57,37 @@ public sealed partial class RenderJobPanel
 		#region Format methods
 
 			//TODO: Monad style for these?
-			const string numberFormat = "n2";
-			const string metresUnit   = " m";
-			const string degreesUnit  = " °";
-			const string noUnit       = "";
-			const string ratioUnit    = " px/px";
+			const string decimalFormat           = "n2"; //float, double, decimal
+			const string integralFormat           = "n0";//int, long, ulong, short
+			const string metresUnit             = " m";
+			const string degreesUnit            = " °";
+			const string noUnit                 = "";
+			const string ratioUnit              = " px/px";
+			const string noStatAvailable = "N/A";
 
-			static string Vec(Vector3 v)
+			static string Vec<T>(T? t, [RequireStaticDelegate] Func<T, Vector3> getValue)
 			{
-				return v.ToString(numberFormat);
+				return t is null ? noStatAvailable : getValue(t).ToString(decimalFormat);
 			}
 
-			static string Int(int i)
+			static string Int<T>(T? t, [RequireStaticDelegate] Func<T, int> getValue, string unit) where T: INumeric
 			{
-				return i.ToString(numberFormat);
+				return (t is null ? noStatAvailable : getValue(t).ToString(integralFormat)) + unit;
 			}
 
-			static string Float(float f, string unit)
+			static string Float<T>(T? t, [RequireStaticDelegate] Func<T, float> getValue, string unit)
 			{
-				return f.ToString(numberFormat) + unit;
+				return (t is null ? noStatAvailable : getValue(t).ToString(decimalFormat)) + unit;
+			}
+
+			static string String<T>(T? t, [RequireStaticDelegate]Func<T, string> getValue)
+			{
+				return t is null ? noStatAvailable : getValue(t);
 			}
 
 		#endregion
 			RenderJob?   job                    = ParentJobPanel.RenderJob;
 			Stopwatch    sw                     = Stopwatch.StartNew();
-			const string noStatsAvailableString = "N/A";
 			if (job is null) //If renderJob is null, we have no stats
 			{
 				currentStats = previousStats = null;
@@ -103,23 +110,23 @@ public sealed partial class RenderJobPanel
 			{
 				Scene? scene = job?.Scene;
 				groups.Add(Layout.BeginGroup("Scene", DefaultPadding, DefaultSpacing));
-				Layout.AddRow("Name",    scene?.Name                           ?? noStatsAvailableString);
-				Layout.AddRow("Objects", scene?.SceneObjects.Length.ToString() ?? noStatsAvailableString);
-				Layout.AddRow("Lights",  scene?.Lights.Length.ToString()       ?? noStatsAvailableString);
+				Layout.AddRow("Name",    String(scene, static s => s.Name));
+				Layout.AddRow("Object Count", Int(scene, static s => s.SceneObjects.Length, noUnit));
+				Layout.AddRow("Light Count",  Int(scene, static s => s.Lights.Length, noUnit));
 				{
 					Camera? cam = scene?.Camera;
-					Layout.AddRow("Camera", "Position:",     cam is {} ? $"{Vec(cam.LookFrom)} => {Vec(cam.LookTowards)}" : noStatsAvailableString);
-					Layout.AddRow(null,     "Vertical Fov:", cam is {} ? Float(cam.VerticalFov, degreesUnit) : noStatsAvailableString);
-					Layout.AddRow(null,     "Aspect:",       cam is {} ? Float(cam.AspectRatio, ratioUnit) : noStatsAvailableString);
-					Layout.AddRow(null,     "Lens:",         cam is {} ? $"Rad={Float(cam.LensRadius, metresUnit)} Dst={Float(cam.FocusDistance, metresUnit)}" : noStatsAvailableString);
+					Layout.AddRow("Camera", "Position:",     cam is {} ? $"{Vec(cam, static c=>c.LookFrom)} => {Vec(cam, static c=>c.LookTowards)}" : noStatAvailable);
+					Layout.AddRow(null,     "Vertical Fov:", Float(cam, static c => c.VerticalFov, degreesUnit));
+					Layout.AddRow(null,     "Aspect:",       Float(cam, static c => c.AspectRatio, ratioUnit));
+					Layout.AddRow(null,     "Lens:",         cam is {} ? $"{Float(cam, static c=>c.LensRadius, metresUnit)} radius\n{Float(cam, static c=>c.FocusDistance, metresUnit)} focus" : noStatAvailable);
 					if (extendedInfo)
 					{
-						Layout.AddRow(null, "Forward:",         cam is {} ? Vec(cam.LookDirection) : noStatsAvailableString);
-						Layout.AddRow(null, "Up:",              cam is {} ? Vec(cam.UpVector) : noStatsAvailableString);
-						Layout.AddRow(null, "Horizontal:",      cam is {} ? Vec(cam.Horizontal) : noStatsAvailableString);
-						Layout.AddRow(null, "Vertical:",        cam is {} ? Vec(cam.Vertical) : noStatsAvailableString);
-						Layout.AddRow(null, "LowerLeftCorner:", cam is {} ? Vec(cam.LowerLeftCorner) : noStatsAvailableString);
-						Layout.AddRow(null, "UV:",              cam is {} ? $"U={Vec(cam.U)}\nV={Vec(cam.V)}" : noStatsAvailableString);
+						Layout.AddRow(null, "Forward:",        Vec(cam, static c=> c.LookDirection));
+						Layout.AddRow(null, "Up:",             Vec(cam, static c=> c.UpVector));
+						Layout.AddRow(null, "Horizontal:",     Vec(cam, static c=> c.Horizontal));
+						Layout.AddRow(null, "Vertical:",       Vec(cam, static c=> c.Vertical));
+						Layout.AddRow(null, "LowerLeftCorner:",Vec(cam, static c=> c.LowerLeftCorner));
+						Layout.AddRow(null, "UV:",             $"U: {Vec(cam, static c=> c.U)}\nV: {Vec(cam, static c=>c.V)}");
 					}
 				}
 
