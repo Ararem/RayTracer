@@ -1,11 +1,5 @@
+using Ararem.RayTracer.Core;
 using BenchmarkDotNet.Attributes;
-using RayTracer.Core;
-using RayTracer.Impl;
-using RayTracer.Impl.Hittables;
-using RayTracer.Impl.Lights;
-using RayTracer.Impl.Skyboxes;
-using System.Numerics;
-using static System.Numerics.Vector3;
 
 // ReSharper disable all
 

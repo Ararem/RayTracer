@@ -16,6 +16,7 @@
 	<s:String x:Key="/Default/Environment/Hierarchy/Build/BuildTool/DotNetCliExePath/@EntryValue">/home/rrm/.dotnet/dotnet</s:String>
 	
 	<s:Boolean x:Key="/Default/Environment/Hierarchy/Build/BuildTool/RecentBuildToolPaths/=_002Fsnap_002Fdotnet_002Dsdk_005Fbeta_002Fcurrent_002Fsdk_002F7_002E0_002E100_002Dpreview_002E7_002E22377_002E5_002FMSBuild_002Edll/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/Environment/Hierarchy/Build/SolutionBuilderNext/ShouldRestoreNugetPackages/@EntryValue">True</s:Boolean>
 	
 	
 	
