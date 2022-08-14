@@ -5,6 +5,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -18,13 +19,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Spectre.Console" Version="0.43.0"/>
-		<PackageReference Include="Spectre.Console.ImageSharp" Version="0.43.0"/>
+		<PackageReference Include="NetFabric.Hyperlinq.Analyzer" Version="2.0.4">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Spectre.Console" Version="0.44.1-preview.0.29" />
+		<PackageReference Include="Spectre.Console.ImageSharp" Version="0.44.1-preview.0.29" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Ararem.RayTracer.Core\Ararem.RayTracer.Core.csproj"/>
-		<ProjectReference Include="..\Ararem.RayTracer.Impl\Ararem.RayTracer.Impl.csproj"/>
+		<ProjectReference Include="..\Ararem.RayTracer.Core\Ararem.RayTracer.Core.csproj" />
+		<ProjectReference Include="..\Ararem.RayTracer.Impl\Ararem.RayTracer.Impl.csproj" />
 	</ItemGroup>
 
 </Project>
