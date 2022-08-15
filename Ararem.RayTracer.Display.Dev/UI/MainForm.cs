@@ -121,14 +121,12 @@ internal sealed class MainForm : Form
 							VerticalAlignment = VerticalAlignment.Center
 					}
 			);
-			layout.BeginScrollable();
 			layout.Add(
 					documentControlContent = new DocumentControl
 					{
 							ID = "MainForm/Content/DocumentControl"
 					}
 			);
-			layout.EndScrollable();
 			layout.EndVertical();
 			log.Verbose("Finished adding to main dynamic layout");
 		}

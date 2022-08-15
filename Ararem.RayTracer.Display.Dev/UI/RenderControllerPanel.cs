@@ -56,58 +56,61 @@ public sealed partial class RenderJobPanel
 					Spacing = DefaultSpacing,
 					Padding = DefaultPadding
 			};
-			Layout.BeginScrollable(spacing: DefaultSpacing, padding: DefaultPadding);
 
 			log.Verbose("Creating property editors");
-			HandleULongProperty(nameof(RenderOptions.RenderWidth),  1, ulong.MaxValue);
-			HandleULongProperty(nameof(RenderOptions.RenderHeight), 1, ulong.MaxValue);
-			HandleULongProperty(nameof(RenderOptions.Passes),       1, ulong.MaxValue);
-			HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
-			HandleULongProperty(nameof(RenderOptions.ConcurrencyLevel),     1, (ulong)Environment.ProcessorCount);
-			HandleULongProperty(nameof(RenderOptions.MaxBounceDepth),       0, ulong.MaxValue);
-			HandleULongProperty(nameof(RenderOptions.LightSampleCountHint), 1, ulong.MaxValue);
-			HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
-			HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
-			HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
-			log.Verbose("Created property editors");
-
-			Layout.Add(null, yscale: true); //Add a spacer
-
-			log.Verbose("Creating scene select dropdown");
-			Label label = GetNameLabel("Scene");
-			SelectedSceneDropdown = new DropDown
 			{
-					ID    = $"{Layout.ID}/SelectedSceneDropdown",
-					Style = nameof(Monospace)
-			};
-			SelectedSceneDropdown.SelectedValueChanged += SelectedSceneDropdownChanged;
-			//A bit funky how we do this, but it works I guess
-			List<Scene> allScenes = BuiltinScenes.GetAll().ToList();
-			SelectedSceneDropdown.DataStore = allScenes;
-			Scene initial = allScenes.First(s => string.Equals(s.Name, SelectedScene.Name, StringComparison.Ordinal));
-			int   index   = allScenes.ToList().IndexOf(initial);
-			SelectedSceneDropdown.SelectedIndex = index;
-			Layout.AddRow(label, SelectedSceneDropdown);
-			log.Verbose("Created scene select dropdown");
+				{
+					Layout.BeginScrollable(border: BorderType.None, padding: DefaultPadding, spacing: DefaultSpacing);
+					HandleULongProperty(nameof(RenderOptions.RenderWidth),  1, ulong.MaxValue);
+					HandleULongProperty(nameof(RenderOptions.RenderHeight), 1, ulong.MaxValue);
+					HandleULongProperty(nameof(RenderOptions.Passes),       1, ulong.MaxValue);
+					HandleBoolProperty(nameof(RenderOptions.InfinitePasses));
+					HandleULongProperty(nameof(RenderOptions.ConcurrencyLevel),     1, (ulong)Environment.ProcessorCount);
+					HandleULongProperty(nameof(RenderOptions.MaxBounceDepth),       0, ulong.MaxValue);
+					HandleULongProperty(nameof(RenderOptions.LightSampleCountHint), 1, ulong.MaxValue);
+					HandleFloatProperty(nameof(RenderOptions.KMin), 0f, float.PositiveInfinity);
+					HandleFloatProperty(nameof(RenderOptions.KMax), 0f, float.PositiveInfinity);
+					HandleEnumProperty<GraphicsDebugVisualisation>(nameof(RenderOptions.DebugVisualisation));
+					log.Verbose("Created property editors");
 
-			Layout.EndScrollable();
+					log.Verbose("Creating scene select dropdown");
+					Label label = GetNameLabel("Scene");
+					SelectedSceneDropdown = new DropDown
+					{
+							ID    = $"{Layout.ID}/SelectedSceneDropdown",
+							Style = nameof(Monospace)
+					};
+					SelectedSceneDropdown.SelectedValueChanged += SelectedSceneDropdownChanged;
+					//A bit funky how we do this, but it works I guess
+					List<Scene> allScenes = BuiltinScenes.GetAll().ToList();
+					SelectedSceneDropdown.DataStore = allScenes;
+					Scene initial = allScenes.First(s => string.Equals(s.Name, SelectedScene.Name, StringComparison.Ordinal));
+					int   index   = allScenes.ToList().IndexOf(initial);
+					SelectedSceneDropdown.SelectedIndex = index;
+					Layout.AddRow(label, SelectedSceneDropdown);
+					log.Verbose("Created scene select dropdown");
+					Layout.EndScrollable();
+				}
 
-			//TODO: Button to save image
-			log.Verbose("Creating toggle render button");
-			ToggleRenderStateButton = new Button
-			{
-					ID    = $"{Layout.ID}/ToggleRenderButton",
-					Style = nameof(Bold),
-					Text  = "Toggle Render" //Shouldn't be ever shown like this but leave a placeholder just in case
-			};
-			Layout.AddCentered(ToggleRenderStateButton);
-			Command toggleRenderStateCommand = new(ToggleRenderButtonClicked)
-			{
-					ID = $"{ToggleRenderStateButton.ID}.Command"
-			};
-			ToggleRenderStateButton.Command = toggleRenderStateCommand;
-			log.Verbose("Created toggle render button");
+				//TODO: Button to save image
+				log.Verbose("Creating toggle render button");
+				ToggleRenderStateButton = new Button
+				{
+						ID    = $"{Layout.ID}/ToggleRenderButton",
+						Style = nameof(Bold),
+						Text  = "Toggle Render" //Shouldn't be ever shown like this but leave a placeholder just in case
+				};
+				Command toggleRenderStateCommand = new(ToggleRenderButtonClicked)
+				{
+						ID = $"{ToggleRenderStateButton.ID}.Command"
+				};
+				ToggleRenderStateButton.Command = toggleRenderStateCommand;
 
+				Layout.AddCentered(ToggleRenderStateButton);
+				log.Verbose("Created toggle render button");
+
+				// Layout.Add(null, true, yscale: true); //Add a spacer to make everything scale nicely
+			}
 			Layout.Create();
 			log.Verbose("Dynamic layout creating complete");
 			base.OnPreLoad(e);
@@ -231,11 +234,12 @@ public sealed partial class RenderJobPanel
 		private Label GetNameLabel(string propertyName, (object min, object max)? maybeRange = null) =>
 				new()
 				{
-						ID            = $"{Layout.ID}/{propertyName}.Label",
-						Text          = propertyName,
-						ToolTip       = maybeRange is {} range ? $"Valid range is [{range.min}..{range.max}]" : null,
-						Style         = nameof(Italic),
-						TextAlignment = TextAlignment.Center
+						ID                = $"{Layout.ID}/{propertyName}.Label",
+						Text              = propertyName,
+						ToolTip           = maybeRange is {} range ? $"Valid range is [{range.min}..{range.max}]" : null,
+						Style             = nameof(General),
+						TextAlignment     = TextAlignment.Center,
+						VerticalAlignment = VerticalAlignment.Center
 				};
 
 		private void HandleULongProperty(string propertyName, ulong min, ulong max)
@@ -257,7 +261,7 @@ public sealed partial class RenderJobPanel
 					MaxValue             = max,
 					Style                = nameof(Monospace),
 					ToolTip              = label.ToolTip,
-					FormatString = "'Test' ####"
+					FormatString         = "####"
 			};
 			stepper.ValueChanged += delegate
 			{
@@ -270,7 +274,7 @@ public sealed partial class RenderJobPanel
 			renderOptionEditors.Add(renderOptionEditor);
 
 			Layout.AddRow(label, renderOptionEditor.Control);
-			log.Verbose("Added integer property for property {@Property}", new {Name=propertyName, Min=min, Max =max,InitialValue=initialValue});
+			log.Verbose("Added integer property for property {@Property}", new { Name = propertyName, Min = min, Max = max, InitialValue = initialValue });
 		}
 
 		private void HandleBoolProperty(string propertyName)
@@ -301,7 +305,7 @@ public sealed partial class RenderJobPanel
 			renderOptionEditors.Add(renderOptionEditor);
 
 			Layout.AddRow(label, renderOptionEditor.Control);
-			log.Verbose("Added boolean property for property {@Property}", new {Name =propertyName,InitialValue =initialValue});
+			log.Verbose("Added boolean property for property {@Property}", new { Name = propertyName, InitialValue = initialValue });
 		}
 
 		private void HandleFloatProperty(string propertyName, float min, float max)
@@ -336,7 +340,7 @@ public sealed partial class RenderJobPanel
 			renderOptionEditors.Add(renderOptionEditor);
 
 			Layout.AddRow(label, renderOptionEditor.Control);
-			log.Verbose("Added float property for property {@Property}", new {Name =propertyName, Min =min, Max =max,InitialValue =initialValue});
+			log.Verbose("Added float property for property {@Property}", new { Name = propertyName, Min = min, Max = max, InitialValue = initialValue });
 		}
 
 		private void HandleEnumProperty<T>(string propertyName) where T : struct, Enum
@@ -365,7 +369,7 @@ public sealed partial class RenderJobPanel
 			renderOptionEditors.Add(renderOptionEditor);
 
 			Layout.AddRow(label, renderOptionEditor.Control);
-			log.Verbose("Added enum property for property {@Property}", new {Name =propertyName, InitialValue =initialValue, PossibleValues=Enum.GetValues<T>()});
+			log.Verbose("Added enum property for property {@Property}", new { Name = propertyName, InitialValue = initialValue, PossibleValues = Enum.GetValues<T>() });
 		}
 
 		private void LogPropChanged<T>(PropertyInfo property, T newVal)
