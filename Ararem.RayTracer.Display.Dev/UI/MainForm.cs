@@ -180,6 +180,7 @@ internal sealed class MainForm : Form
 
 		//TODO: Dispose the RenderJobPanel too once closed
 		DocumentPage oldPage = documentControlContent.SelectedPage;
+		oldPage.Detach();
 		log.Debug("Closing tab {Control}", oldPage);
 		/*
 		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
