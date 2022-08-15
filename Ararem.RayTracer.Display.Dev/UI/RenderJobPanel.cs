@@ -88,13 +88,14 @@ public sealed partial class RenderJobPanel : Panel
 	/// <inheritdoc/>
 	protected override void Dispose(bool disposing)
 	{
+		//TODO: The call to this never seems to be made for some reason..?
 		base.Dispose(disposing);
 		//Dispose of all our child panels
-		// renderBufferPanel?.Dispose();
-		// renderControllerPanel?.Dispose();
-		// renderStatsPanel?.Dispose();
+		renderBufferPanel?.Dispose();
+		renderControllerPanel?.Dispose();
+		renderStatsPanel?.Dispose();
 		//Stop the UI timer from firing after we've disposed
-		log.Verbose("Dispose() called, stopping UI timer");
+		log.Error("Dispose() called, stopping UI timer");
 		updateUiTimer.Stop();
 		updateUiTimer.Dispose();
 	}

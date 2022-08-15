@@ -12,8 +12,8 @@ using System.Numerics;
 using static LibArarem.Core.Logging.Enrichers.ExceptionDataEnricher;
 using static LibArarem.Core.Logging.Enrichers.CallerContextEnricher;
 using static LibArarem.Core.Logging.Enrichers.EventLevelIndentEnricher;
-using static LibArarem.Core.Logging.Enrichers.ThreadInfoEnricher;
 using static LibArarem.Core.Logging.Enrichers.InstanceContextEnricher;
+using static LibArarem.Core.Logging.Enrichers.ThreadInfoEnricher;
 using static Serilog.Log;
 
 namespace Ararem.RayTracer.Core;
@@ -40,7 +40,8 @@ internal static class Logger
 							ExtendedLog ? $"{{{ThreadNameProp},-30}} ({{{ThreadTypeProp},11}})" : null, //[strings] Name and type of the thread that the log call was on
 							$"{{{ThreadIdProp},10:'Thread #'##}}", //[int] Managed ID of the thread that the log call was on
 							$"{{{CallingTypeNameProp},22}}.{{{CallingMethodNameProp},-30}}@ {{{CallingMethodLineProp},3:n0}}:{{{CallingMethodColumnProp}:n0}}", //What piece of code made the call
-							"{Level:t3}", //[LogEventLevel] Severity of the event
+							"{Level:t3}", //[LogEventLevel] Severity of the event,
+							$"{{{InstanceContextProp}}}"
 					};
 
 					sb.Append('[');                                                           //Start details

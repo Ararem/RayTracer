@@ -256,7 +256,8 @@ public sealed partial class RenderJobPanel
 					MinValue             = min,
 					MaxValue             = max,
 					Style                = nameof(Monospace),
-					ToolTip              = label.ToolTip
+					ToolTip              = label.ToolTip,
+					FormatString = "'Test' ####"
 			};
 			stepper.ValueChanged += delegate
 			{

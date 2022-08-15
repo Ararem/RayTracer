@@ -4,11 +4,13 @@ using Eto.Drawing;
 using Eto.Forms;
 using JetBrains.Annotations;
 using LibArarem.Core.Logging;
+using NetFabric.Hyperlinq;
 using Serilog;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using Enumerable = System.Linq.Enumerable;
 
 namespace Ararem.RayTracer.Display.Dev.UI;
 
@@ -17,13 +19,13 @@ internal sealed class MainForm : Form
 {
 	private readonly ILogger log;
 
+	/// <summary>Main control that contains the tabs for each of the renders</summary>
+	private DocumentControl documentControlContent;
+
 	public MainForm()
 	{
 		log = LogUtils.WithInstanceContext(this);
 	}
-
-	/// <summary>Main control that contains the tabs for each of the renders</summary>
-	private DocumentControl documentControlContent;
 
 	/// <inheritdoc/>
 	protected override void OnPreLoad(EventArgs e)
@@ -176,11 +178,9 @@ internal sealed class MainForm : Form
 	{
 		log.TrackEvent(sender, eventArgs);
 
+		//TODO: Dispose the RenderJobPanel too once closed
 		DocumentPage oldPage = documentControlContent.SelectedPage;
 		log.Debug("Closing tab {Control}", oldPage);
-		bool couldRemove = documentControlContent.Pages.Remove(oldPage);
-		if (couldRemove is false)
-			log.ForContext("Item", oldPage).ForContext("Collection", documentControlContent.Pages).Warning("Could not remove tab from pages collection");
 		/*
 		 * HACK: Since DocumentControl doesn't provide a way to properly close tabs as if the close button was pressed, I gotta do a workaround
 		 *
@@ -206,7 +206,7 @@ internal sealed class MainForm : Form
 			 * I think it's trying to resolve the method from the base type (which is Eto.Forms.Control.Callback), which doesn't have the method OnPageClosed(),
 			 * despite the object instance being a DocumentControl.Callback, which does have the method OnPageClosed()
 			 */
-			dynamic           callbackObject = ((dynamic)documentControlContent).Handler.Callback;
+			dynamic callbackObject = ((dynamic)documentControlContent).Handler.Callback;
 			((object)callbackObject).GetType().GetMethod("OnPageClosed")!.Invoke(callbackObject, new object[] { documentControlContent, new DocumentPageEventArgs(oldPage) });
 		}
 		catch (Exception e)
@@ -225,7 +225,7 @@ internal sealed class MainForm : Form
 			log.Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(DocumentPageOnClosed, EventArgs.Empty);
 		}
-		eventArgs.Page?.Dispose();
+		eventArgs.Page.Content.Dispose();
 	}
 
 	/// <summary>Callback for when the [Create New Render] command is executed</summary>
@@ -285,7 +285,7 @@ internal sealed class MainForm : Form
 		//Walk up the stack to check if this method or Application.Quit are present, and if so, return immediately
 		MethodBase thisMethod    = MethodBase.GetCurrentMethod()!;
 		MethodBase appQuitMethod = typeof(Application).GetMethod(nameof(Application.Quit))!;
-		if (new StackTrace(1, false).GetFrames().Select(f => f.GetMethod()).Any(m => (m == thisMethod) || (m == appQuitMethod)))
+		if (Enumerable.Any(new StackTrace(1, false).GetFrames().Select(f => f.GetMethod()), m => (m == thisMethod) || (m == appQuitMethod)))
 		{
 			log.Verbose("Closed event recursion detected, returning immediately without sending quit signal");
 			return;

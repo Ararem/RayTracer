@@ -20,7 +20,7 @@ public readonly record struct HitRecord(Ray     IncomingRay, Vector3 WorldPoint,
 										Vector3 Normal,      float   K,          bool    OutsideFace, Vector2 UV, Hittable Hittable, Material Material, object? ShaderData = null);
 
 /// <summary>Exception class for when the <see cref="HitRecord.ShaderData"/> is invalid</summary>
-public class InvalidShaderDataException : Exception
+public sealed class InvalidShaderDataException : Exception
 {
 	/// <inheritdoc/>
 	public InvalidShaderDataException(object? actualValue, string? message = null, Exception? innerException = null) : base(message, innerException)

@@ -99,17 +99,16 @@ public sealed partial class RenderJobPanel
 				currentStats  = job.RenderStats;
 			}
 
-			List<DynamicGroup> groups = new();
-
 			Layout.Clear();
 			CheckBox toggleExtendedInfoCheck = new() { Checked = extendedInfo };
 			toggleExtendedInfoCheck.CheckedChanged += (_, _) => extendedInfo = toggleExtendedInfoCheck.Checked ?? false;
 			Layout.AddRow("Show Extended Info", toggleExtendedInfoCheck);
-			Layout.BeginScrollable(padding: DefaultPadding, spacing: DefaultSpacing);
+			Layout.BeginScrollable(padding: DefaultPadding, spacing: DefaultSpacing, border: BorderType.None);
 
+			//Scene
 			{
+				AddSectionTitleLabel("Scene");
 				Scene? scene = job?.Scene;
-				groups.Add(Layout.BeginGroup("Scene", DefaultPadding, DefaultSpacing));
 				Layout.AddRow("Name",    String(scene, static s => s.Name));
 				Layout.AddRow("Object Count", Int(scene, static s => s.SceneObjects.Length, noUnit));
 				Layout.AddRow("Light Count",  Int(scene, static s => s.Lights.Length, noUnit));
@@ -129,19 +128,25 @@ public sealed partial class RenderJobPanel
 						Layout.AddRow(null, "UV:",             $"U: {Vec(cam, static c=> c.U)}\nV: {Vec(cam, static c=>c.V)}");
 					}
 				}
+			}
 
-				Layout.EndGroup();
+			//Renderer
+			{
+				AddSectionTitleLabel("Renderer");
+				Layout.AddRow("Live Threads", Int(job, static j => j.RenderStats.ThreadsRunning, noUnit));
 			}
 
 			Layout.EndScrollable();
 			Layout.Create();
 
-			//Apply styles
-			for (int i = 0; i < groups.Count; i++) groups[i].GroupBox.Style = nameof(Force_Bold);
-
 			Invalidate(true); //Mark for redraw
 			log.Verbose("Stats updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 
+			void AddSectionTitleLabel(string title)
+			{
+				Label label = new() { Text = title, Style = nameof(Force_Bold) };
+				Layout.AddSeparateColumn(label);
+			}
 		}
 	}
 }

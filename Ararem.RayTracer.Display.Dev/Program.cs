@@ -241,8 +241,9 @@ internal static class Program
 
 	private static LoggerConfiguration EarlyAdjustConfig(LoggerConfiguration arg)
 	{
-		return arg.Filter.ByExcluding(evt => (evt.Level == LogEventLevel.Verbose) && evt.Properties.ContainsKey(nameof(LogUtils.MarkContextAsExtremelyVerbose)))
-			   .Destructure.ByTransformingWhere(static t => t.IsAssignableTo(typeof(Widget)), static (Widget w) => w.ToString())
+		return arg
+			   // .Filter.ByExcluding(evt => (evt.Level == LogEventLevel.Verbose) && evt.Properties.ContainsKey(nameof(LogUtils.MarkContextAsExtremelyVerbose)))
+			   .Destructure.ByTransformingWhere(static t => t.IsAssignableTo(typeof(Widget)), static (Widget w) => !w.IsDisposed? w.ToString() : $"{w.GetType()} (<Disposed>)") //Transform widgets into their ID
 			   .Destructure.ByTransforming<Command>(static c => string.IsNullOrEmpty(c.ID) ? $"{c} (<unnamed>)" : $"{c} ({c.ID})");
 	}
 
