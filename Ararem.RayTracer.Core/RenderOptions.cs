@@ -15,7 +15,7 @@ public sealed class RenderOptions
 	private          float                      kMax                 = float.PositiveInfinity;
 	private          float                      kMin                 = 0.001f;
 	private          ulong                      lightSampleCountHint = 2;
-	private readonly ulong                      maxBounceDepth       = 100;
+	private readonly ulong                      maxBounceDepth       = 10;
 	private          ulong                      passes               = 100;
 
 	/// <summary>Default constructor with default values</summary>

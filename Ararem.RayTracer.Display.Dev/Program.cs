@@ -243,7 +243,7 @@ internal static class Program
 	{
 		return arg
 			    .Filter.ByExcluding(evt => (evt.Level == LogEventLevel.Verbose) && evt.Properties.ContainsKey(nameof(LogUtils.MarkContextAsExtremelyVerbose)))
-			   .Destructure.ByTransformingWhere(static t => t.IsAssignableTo(typeof(Widget)), static (Widget w) => !w.IsDisposed? w.ToString() : $"{w.GetType()} (<Disposed>)") //Transform widgets into their ID
+			   .Destructure.ByTransformingWhere(static t => t.IsAssignableTo(typeof(Widget)), static (Widget w) => !w.IsDisposed? w.ID : "(<Disposed>)") //Transform widgets into their ID
 			   .Destructure.ByTransforming<Command>(static c => string.IsNullOrEmpty(c.ID) ? $"{c} (<unnamed>)" : $"{c} ({c.ID})");
 	}
 
@@ -274,7 +274,6 @@ internal static class Program
 	{
 		OnUnhandledException((Exception)e.ExceptionObject, sender, e.IsTerminating);
 	}
-
 
 	/// <summary>Makes the Console.Error stuff a different colour...</summary>
 	private sealed class ColouredConsoleErrorWriter : TextWriter

@@ -1,4 +1,5 @@
 using Ararem.RayTracer.Core.Acceleration;
+using System.Collections.Concurrent;
 
 namespace Ararem.RayTracer.Core;
 
@@ -11,18 +12,14 @@ public sealed class RenderStats
 	public ulong ThreadsRunning = 0;
 
 	/// <summary>Constructor for creating a new <see cref="RenderStats"/> object</summary>
-	/// <param name="options">Render options, used to assign and calculate some of the values</param>
-	public RenderStats(RenderOptions options)
+	public RenderStats()
 	{
-		RawRayDepthCounts = new ulong[options.MaxBounceDepth + 1]; //+1 because we can also have 0 bounces;
-		TotalTruePixels   = options.RenderWidth * options.RenderHeight;
-		TotalRawPixels    = options.RenderWidth * options.RenderHeight * options.Passes;
 	}
 
 	/// <summary>Copy constructor</summary>
 	public RenderStats(RenderStats original)
 	{
-		RawPixelsRendered     = original.RawPixelsRendered;
+		PixelsRendered     = original.PixelsRendered;
 		PassesRendered        = original.PassesRendered;
 		MaterialScatterCount  = original.MaterialScatterCount;
 		MaterialAbsorbedCount = original.MaterialAbsorbedCount;
@@ -32,28 +29,20 @@ public sealed class RenderStats
 		SkyRays               = original.SkyRays;
 		BounceLimitExceeded   = original.BounceLimitExceeded;
 		RayCount              = original.RayCount;
-		RawRayDepthCounts     = original.RawRayDepthCounts;
+		RayDepthCounts     = original.RayDepthCounts;
 		ThreadsRunning        = original.ThreadsRunning;
-		TotalRawPixels        = original.TotalRawPixels;
-		TotalTruePixels       = original.TotalTruePixels;
 	}
 
 	/// <inheritdoc/>
-	public override string ToString() => $"{nameof(RawPixelsRendered)}: {RawPixelsRendered}, {nameof(PassesRendered)}: {PassesRendered}, {nameof(MaterialScatterCount)}: {MaterialScatterCount}, {nameof(MaterialAbsorbedCount)}: {MaterialAbsorbedCount}, {nameof(AabbMisses)}: {AabbMisses}, {nameof(HittableMisses)}: {HittableMisses}, {nameof(HittableIntersections)}: {HittableIntersections}, {nameof(SkyRays)}: {SkyRays}, {nameof(BounceLimitExceeded)}: {BounceLimitExceeded}, {nameof(RayCount)}: {RayCount}, {nameof(RawRayDepthCounts)}: {RawRayDepthCounts}, {nameof(ThreadsRunning)}: {ThreadsRunning}, {nameof(TotalRawPixels)}: {TotalRawPixels}, {nameof(TotalTruePixels)}: {TotalTruePixels}";
+	public override string ToString() => $"{nameof(PixelsRendered)}: {PixelsRendered}, {nameof(PassesRendered)}: {PassesRendered}, {nameof(MaterialScatterCount)}: {MaterialScatterCount}, {nameof(MaterialAbsorbedCount)}: {MaterialAbsorbedCount}, {nameof(AabbMisses)}: {AabbMisses}, {nameof(HittableMisses)}: {HittableMisses}, {nameof(HittableIntersections)}: {HittableIntersections}, {nameof(SkyRays)}: {SkyRays}, {nameof(BounceLimitExceeded)}: {BounceLimitExceeded}, {nameof(RayCount)}: {RayCount}, {nameof(RayDepthCounts)}: {RayDepthCounts}, {nameof(ThreadsRunning)}: {ThreadsRunning}";
 
 #region Pixels & Passes
 
 	/// <summary>How many pixels have been rendered, including multisampled pixels</summary>
-	public ulong RawPixelsRendered = 0;
+	public ulong PixelsRendered = 0;
 
 	/// <summary>How many passes have been rendered</summary>
 	public ulong PassesRendered = 0;
-
-	/// <summary>How many 'raw' pixels need to be rendered (including multisampled pixels)</summary>
-	public ulong TotalRawPixels { get; }
-
-	/// <summary>How many 'true' pixels need to be rendered (not including multisampling)</summary>
-	public ulong TotalTruePixels { get; }
 
 #endregion
 
@@ -98,10 +87,10 @@ public sealed class RenderStats
 	public ulong RayCount = 0;
 
 	/// <summary>
-	///  A list that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces, [1] is 1
-	///  bounce, etc.
+	///  A dictionary that contains the number of times a ray 'finished' at a certain depth. The depth corresponds to the index, where [0] is no bounces (direct cam->hit), [1] is 1
+	///  bounce (cam->obj1->obj2), etc.
 	/// </summary>
-	public readonly ulong[] RawRayDepthCounts;
+	public readonly ConcurrentDictionary<ulong, ulong> RayDepthCounts = new(Environment.ProcessorCount,32); //Assume the user will use all threads for the concurrency level
 
 #endregion
 }

@@ -10,6 +10,8 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Enumerable = System.Linq.Enumerable;
 
 namespace Ararem.RayTracer.Display.Dev.UI;
@@ -166,9 +168,101 @@ internal sealed class MainForm : Form
 			newTabCommand.Execute();
 			log.Verbose("Initial tab created");
 		}
+
+		{
+			log.Verbose("Creating update UI timer with interval {Interval:0.000' s'} ({Fps:00' FPS'})", 1f / TargetRefreshRate, TargetRefreshRate);
+			// Periodically update the previews using a timer
+			// updateUiTimer = new UITimer(UpdateUi)
+			// {
+			// ID = $"{ID}/UITimer", Interval = 1f / TargetRefreshRate
+			// };
+			// updateUiTimer.Start();
+			new Thread(UpdateUiThread)
+			{
+					Name         = nameof(UpdateUiThread),
+					IsBackground = true,
+					Priority     = ThreadPriority.BelowNormal
+			}.Start();
+		}
 		log.Verbose("Load complete");
 		base.OnPreLoad(e);
 	}
+
+	/// <inheritdoc/>
+	protected override void Dispose(bool disposing)
+	{
+		log.Verbose("Dispose({Disposing})", disposing);
+		//Stop the UI timer from firing after we've disposed
+		log.Verbose("Stopping UI timer");
+		updateUiTimer.Stop();
+		updateUiTimer.Dispose();
+
+		base.Dispose(disposing);
+	}
+
+#region UI Updating
+
+	private void UpdateUiThread()
+	{
+		Stopwatch sw    = new();
+		try
+		{
+			while (true)
+			{
+				sw.Restart();
+				Application.Instance.Invoke(UpdateUi);
+				sw.Stop();
+
+				TimeSpan expected  = TargetFrameDuration;
+				TimeSpan actual    = sw.Elapsed;
+				if (actual <= expected) continue;
+
+				double   ratio     = actual / expected;
+				TimeSpan overshoot = actual - expected;
+				double   fps       = TimeSpan.FromSeconds(1) / actual;
+				log.Warning("Update took {Overshoot} longer than expected: {Elapsed}/{Fps:00.0' FPS'} ({Ratio:P2})", overshoot, actual, fps, ratio);
+				//Skip an iteration of the update to allow the application a bit of time for responsiveness
+				Thread.Sleep(TargetFrameDuration);
+
+				Thread.Sleep(10);
+			}
+		}
+		catch (Exception e)
+		{
+			log.Error(e, "Was unable to schedule UI update");
+		}
+	}
+
+	/// <summary>Target refreshes-per-second that we want</summary>
+	private static double TargetRefreshRate => 30; //Fps
+
+	private static TimeSpan TargetFrameDuration => TimeSpan.FromSeconds(1 / TargetRefreshRate);
+
+	private UITimer updateUiTimer;
+
+	private void UpdateUi(object? sender, EventArgs e) => UpdateUi();
+
+	private void UpdateUi()
+	{
+		using IDisposable _  = LogUtils.MarkContextAsExtremelyVerbose(); //Extra verbose because it will be called each frame
+		Stopwatch         sw = Stopwatch.StartNew();
+		log.Verbose("Updating UI");
+		SuspendLayout();
+
+		documentControlContent.Pages.AsValueEnumerable().ForEach(
+				(page, index) =>
+				{
+					Control content = page.Content;
+					if (content is not RenderJobPanel renderJobPanel) log.Warning($"Page at [{{Index}}] was not {nameof(RenderJobPanel)}, was {{Control}}", index, page);
+					else renderJobPanel.UpdateUi();
+				}
+		);
+		ResumeLayout();
+		Invalidate();
+		log.Verbose("Updated panel in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
+	}
+
+#endregion
 
 #region Callbacks
 
@@ -224,6 +318,7 @@ internal sealed class MainForm : Form
 			log.Debug("Just closed last tab, recreating to ensure we don't get below 1");
 			CreateNewTabCommandExecuted(DocumentPageOnClosed, EventArgs.Empty);
 		}
+
 		eventArgs.Page.Content.Dispose();
 	}
 

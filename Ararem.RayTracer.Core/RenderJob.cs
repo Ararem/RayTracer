@@ -44,7 +44,7 @@ public sealed class RenderJob : IDisposable
 		sampleCountBuffer = new int[renderOptions.RenderWidth    * renderOptions.RenderHeight];
 		Scene             = scene;
 
-		RenderStats = new RenderStats(renderOptions);
+		RenderStats = new RenderStats();
 
 		//Assign access for all the components that need it
 		#pragma warning disable CS0618
@@ -94,7 +94,7 @@ public sealed class RenderJob : IDisposable
 			try
 			{
 				Parallel.For(
-						0L, (long)RenderStats.TotalTruePixels, new ParallelOptions { MaxDegreeOfParallelism = (int)RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
+						0L, (long)RenderOptions.RenderWidth * (long)RenderOptions.RenderHeight, new ParallelOptions { MaxDegreeOfParallelism = (int)RenderOptions.ConcurrencyLevel, CancellationToken = cancellationToken }, () =>
 						{
 							Interlocked.Increment(ref RenderStats.ThreadsRunning);
 							return this;
@@ -105,7 +105,7 @@ public sealed class RenderJob : IDisposable
 							(ulong x, ulong y) = Decompress2DIndex(i, state.RenderOptions.RenderWidth);
 							Colour col = state.RenderPixelWithVisualisations(x, y);
 							state.UpdateBuffers(x, y, col);
-							Interlocked.Increment(ref state.RenderStats.RawPixelsRendered);
+							Interlocked.Increment(ref state.RenderStats.PixelsRendered);
 
 							return state;
 						}, static state => { Interlocked.Decrement(ref state.RenderStats.ThreadsRunning); }
@@ -453,7 +453,9 @@ public sealed class RenderJob : IDisposable
 		if (maxDepthReached == -1) //We didn't hit any object at all
 			return finalColour;    //So return the skybox colour directly (no materials to calculate and it would be broken anyway)
 
-		Interlocked.Increment(ref RenderStats.RawRayDepthCounts[maxDepthReached]);
+		ulong maxDepthUlong = (ulong) maxDepthReached;
+		// ReSharper disable once UnusedParameter.Local
+		RenderStats.RayDepthCounts.AddOrUpdate(maxDepthUlong, 1, (key, oldValue) => oldValue + 1);
 
 		//Now go in reverse for the colour pass
 		for (int currentDepth = maxDepthReached; currentDepth >= 0; currentDepth--)

@@ -411,7 +411,7 @@
 // 			//If the percentage rendered is very low, the division results in a number that's too large to fit in a timespan, which throws
 // 			try
 // 			{
-// 				estimatedTotalTime = elapsed / ((float)renderStats.RawPixelsRendered / renderStats.TotalRawPixels);
+// 				estimatedTotalTime = elapsed / ((float)renderStats.PixelsRendered / renderStats.TotalRawPixels);
 // 			}
 // 			catch (OverflowException)
 // 			{
@@ -430,13 +430,13 @@
 // 		}
 // 		{
 // 			long total = renderStats.TotalRawPixels,
-// 				rend   = renderStats.RawPixelsRendered,
+// 				rend   = renderStats.PixelsRendered,
 // 				rem    = total - rend;
 // 			const string unit = "px/s";
 // 			stringStats.Add(
 // 					("Raw Pixels", new (string Name, string Value, string? Delta)[]
 // 					{
-// 							("Rendered", FormatNumWithPercentage(rend, total), FormatNumDelta(rend, prevStats.RawPixelsRendered, deltaT, unit)),
+// 							("Rendered", FormatNumWithPercentage(rend, total), FormatNumDelta(rend, prevStats.PixelsRendered, deltaT, unit)),
 // 							("Remaining", FormatNumWithPercentage(rem, renderStats.TotalRawPixels), null),
 // 							("Total", FormatNum(renderStats.TotalRawPixels), null)
 // 					})
@@ -457,10 +457,10 @@
 // 			long total = renderJob.RenderOptions.Passes,
 // 				rend   = renderStats.PassesRendered,
 // 				rem    = total - rend;
-// 			long progress = SafeMod(renderStats.RawPixelsRendered, renderStats.TotalTruePixels);
+// 			long progress = SafeMod(renderStats.PixelsRendered, renderStats.TotalTruePixels);
 // 			//Calculate fraction of the passes that was rendered between updates
 // 			float passFrac     = (float)progress                                                        / renderStats.TotalTruePixels;
-// 			float prevPassFrac = (float)SafeMod(prevStats.RawPixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
+// 			float prevPassFrac = (float)SafeMod(prevStats.PixelsRendered, prevStats.TotalTruePixels) / prevStats.TotalTruePixels;
 // 			if (passFrac - prevPassFrac < 0) passFrac++; //This just ensures we don't get negatives when calculating the delta (from pass overflow)
 // 			float  fracDelta = passFrac - prevPassFrac;
 // 			double tRatio    = TimeSpan.FromSeconds(1) / deltaT;
@@ -715,9 +715,9 @@
 // 				#if true //Toggle whether to use a log function to compress the chart. Mostly needed when we have high max depth values
 // 				const double b        = .0000001;
 // 				double       m        = renderStats.RayCount;
-// 				double       fraction = Math.Log((b * renderStats.RawRayDepthCounts[depth]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
+// 				double       fraction = Math.Log((b * renderStats.RayDepthCounts[depth]) + 1, m) / Math.Log((b * m) + 1, m); //https://www.desmos.com/calculator/erite0if8u
 // 				#else
-// 				double fraction = renderStats.RawRayDepthCounts[depth] / renderStats.RawRayDepthCounts.Sum(u => (double)u); //https://www.desmos.com/calculator/erite0if8u
+// 				double fraction = renderStats.RayDepthCounts[depth] / renderStats.RayDepthCounts.Sum(u => (double)u); //https://www.desmos.com/calculator/erite0if8u
 // 				#endif
 //
 // 				doubleDepths[depth] = fraction;

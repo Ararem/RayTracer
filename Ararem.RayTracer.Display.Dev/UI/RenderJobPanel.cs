@@ -32,8 +32,6 @@ public sealed partial class RenderJobPanel : Panel
 	/// <summary>Panel that displays the statistics of the current <see cref="RenderJob"/></summary>
 	private RenderStatsPanel renderStatsPanel;
 
-	private UITimer updateUiTimer;
-
 	/// <summary>Main <see cref="DynamicLayout"/> for this panel. Is the same as accessing <see cref="Panel.Content"/></summary>
 	public DynamicLayout Layout { get; private set; }
 
@@ -45,9 +43,6 @@ public sealed partial class RenderJobPanel : Panel
 
 	/// <summary>Render options that affect how the <see cref="RenderJob"/> is rendered</summary>
 	public RenderOptions RenderOptions { get; } = new();
-
-	/// <summary>Target refreshes-per-second that we want</summary>
-	private static double TargetRefreshRate => 1; //Fps
 
 	/// <inheritdoc/>
 	protected override void OnLoadComplete(EventArgs e)
@@ -74,35 +69,26 @@ public sealed partial class RenderJobPanel : Panel
 		Layout.Create();
 		log.Verbose("Layout created");
 
-		log.Verbose("Creating update UI timer with interval {Interval:0's'} ({Fps:0' FPS'})", 1f/TargetRefreshRate, TargetRefreshRate);
-		// Periodically update the previews using a timer
-		updateUiTimer = new UITimer(UpdateUi)
-		{
-				ID = $"{ID}/UITimer", Interval = 1f / TargetRefreshRate
-		};
-		updateUiTimer.Start();
-
 		base.OnLoadComplete(e);
 	}
 
 	/// <inheritdoc/>
 	protected override void Dispose(bool disposing)
 	{
-		base.Dispose(disposing);
 		//Dispose of all our child panels
-		renderBufferPanel?.Dispose();
-		renderControllerPanel?.Dispose();
-		renderStatsPanel?.Dispose();
-		//Stop the UI timer from firing after we've disposed
-		log.Verbose("Dispose() called, stopping UI timer");
-		updateUiTimer.Stop();
-		updateUiTimer.Dispose();
+		if (disposing)
+		{
+			renderBufferPanel.Dispose();
+			renderControllerPanel.Dispose();
+			renderStatsPanel.Dispose();
+		}
+
+		base.Dispose(disposing);
 	}
 
 	/// <summary>Updates all the UI</summary>
-	private void UpdateUi(object? sender, EventArgs eventArgs)
+	public void UpdateUi()
 	{
-		if (IsDisposed || updateUiTimer.IsDisposed) return;
 		//TODO: Add something to prevent UI freezes
 		/*
 		 * Note that we don't have to worry about locks or anything, since
@@ -110,13 +96,12 @@ public sealed partial class RenderJobPanel : Panel
 		 * (B) - The timer is only ever reset *after* everything's already been updated, so no chance of two calls being executed at the same time
 		 */
 		Stopwatch         totalSw = Stopwatch.StartNew();
-		using IDisposable _       = LogUtils.MarkContextAsExtremelyVerbose();
-		log.Verbose("Updating UI");
+		log.Verbose("Updating panel");
 		renderControllerPanel.Update();
 		renderStatsPanel.Update();
 		renderBufferPanel.Update();
 		((DocumentPage)Parent).Invalidate();
 
-		log.Verbose("Updated UI in {Elapsed:#00.000 'ms'}", totalSw.Elapsed.TotalMilliseconds);
+		log.Verbose("Updated panel in {Elapsed:#00.000 'ms'}", totalSw.Elapsed.TotalMilliseconds);
 	}
 }
