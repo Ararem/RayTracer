@@ -1,7 +1,3 @@
-using Microsoft.VisualBasic.Logging;
-using System;
-using System.Linq.Expressions;
-using System.Runtime.Versioning;
 using static Serilog.Log;
 
 namespace Ararem.RayTracer.Display.Dev;
@@ -16,45 +12,18 @@ internal static class LogAggregator
 		GLib();
 	}
 
-	[SupportedOSPlatformGuard("linux")]
 	private static void GLib()
 	{
-		const string gLibLogClassName = "GLib.Log", gLibLogClassAssembly = "GLibSharp";
-		Type         gLibLogClass;
-		try
-		{
-			gLibLogClass = Type.GetType($"{gLibLogClassName}, {gLibLogClassAssembly}", true)!;
-		}
-		catch (Exception e)
-		{
-			Error(e, "Could not load GLib Log class ({ClassName}) in assembly {AssemblyName}", gLibLogClassName, gLibLogClassAssembly);
-			return;
-		}
-
-		void RedirectFunc<T>(string methodName, T @delegate) where T : Delegate
-		{
-			Verbose("Redirection method {MethodName} with delegate {@Delegate}", methodName, @delegate);
-			try
-			{
-
-			}
-			catch (Exception e)
-			{
-				Warning(e, "Could not redirect method");
-			}
-			Verbose("Redirected");
-		}
-
+		#if PLATFORM_GTK
 		/*
 		 * You may need to add the following environment variables for these to be logged
 		 *G_MESSAGES_DEBUG=all
 		 * G_ENABLE_DIAGNOSTIC=1
 		 */
-
 		Debug("Redirecting GLib logs");
 		Verbose(
-				"SetDefaultHandler",
-						delegate(string domain, LogLevelFlags level, string message)
+				"SetDefaultHandler: {@Value}", global::GLib.Log.SetDefaultHandler(
+						delegate(string domain, global::GLib.LogLevelFlags level, string message)
 						{
 							Debug("GLib - {Domain} @ {Level}: {Message}", domain, level, message);
 						}
@@ -77,6 +46,8 @@ internal static class LogAggregator
 				)
 		);
 		Debug("GLib redirected");
+		#else
+		Verbose("Platform is not GLib so skipping redirect");
+		#endif
 	}
-#endif
 }

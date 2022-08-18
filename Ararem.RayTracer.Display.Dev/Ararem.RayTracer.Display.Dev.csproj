@@ -23,7 +23,13 @@
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<DebugType>full</DebugType>
-		<DocumentationFile>bin\Gtk\Debug\net7.0\Ararem.RayTracer.Display.Dev.xml</DocumentationFile>
+		<DocumentationFile>bin\Wpf\Debug\Ararem.RayTracer.Display.Dev.xml</DocumentationFile>
+		<DefineConstants>TRACE, PLATFORM_WPF</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+	  <DefineConstants />
+	  <DocumentationFile>bin\Wpf\Release\Ararem.RayTracer.Display.Dev.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
