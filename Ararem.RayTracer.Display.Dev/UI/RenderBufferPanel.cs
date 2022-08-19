@@ -82,7 +82,7 @@ public sealed partial class RenderJobPanel
 			}
 
 			Invalidate(true);                                           //Mark for redraw
-			((DocumentPage)ParentJobPanel.Parent).Image = PreviewImage; //Make the icon of the DocumentPage be the same as the buffer
+			//((DocumentPage)ParentJobPanel.Parent).Image = PreviewImage; //Make the icon of the DocumentPage be the same as the buffer
 			log.Verbose("Image updated in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 		}
 	}

@@ -4,7 +4,9 @@
 
 * Swap floats to doubles and test the performance loss (might be preferable to use doubles everywhere instead of casting all the time)
 * Update all docs for new API and ensure everything is correct
-* Redo logging to ensure everything is logged correctly, at the appropriate levels (mainly UI things)
+* Restructure projects
+  * Import LibEternal into `Rt.Core`
+  * Create separate runners for each platform (Gtk, Wpf, MacOS, etc). Should each just have a `Main()` that calls platform-specific stuff (ie redirecting GLib logs) and then calls the `Rt.Display.Main()` entrypoint
 
 ## Materials/Textures
 
@@ -26,6 +28,5 @@
 
 ## Debugging/Development
 
-* Cancel render and return to main menu
 * Store scenes as files rather than C# properties
 * Custom shader/shape import from dll's rather than builtin?

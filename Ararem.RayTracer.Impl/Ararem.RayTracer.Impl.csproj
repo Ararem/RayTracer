@@ -28,6 +28,8 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
+	  <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+	  <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
 	  <PackageReference Include="SharpNoise" Version="0.12.1.1" />
 	</ItemGroup>
 

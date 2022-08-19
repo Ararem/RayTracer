@@ -9,6 +9,7 @@ using Serilog.Events;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -30,23 +31,87 @@ internal static class Program
 	public enum ExitCode
 	{
 		/// <summary>The exit was purposeful (e.g. the user clicked the quit button), and not due to exceptional circumstances</summary>
-		GracefulExit = 0,
+		GracefulExit = 00,
 
-		/// <inheritdoc cref="GracefulExit"/>
-		None = GracefulExit,
+		/// <summary>The app failed during the initialization stage because it could not set up the <see cref="AppDomain"/> exception handlers</summary>
+		/// <seealso cref="AppDomain.UnhandledException"/>
+		/// <seealso cref="AppDomain.FirstChanceException"/>
+		InitFail_CouldNotSetAppDomainExceptionHandlers = 01,
 
-		/// <summary>The app failed during the initialization stage</summary>
-		InitializationFailure,
+		/// <summary>The app failed during the initialization stage because it could not initialise the <see cref="TaskWatcher">Task Watcher</see>
+		/// </summary>
+		/// <seealso cref="Platform.Detect"/>
+		InitFail_CouldNotInitTaskWatcher = 02,
+
+		/// <summary>The app failed during the initialization stage because it could not set up the <see cref="Platform"/></summary>
+		/// <seealso cref="Platform.Detect"/>
+		InitFail_CouldNotInitPlatform = 03,
+
+		/// <summary>The app failed during the initialization stage because it could not create the <see cref="Application"/> object</summary>
+		/// <seealso cref="Platform.Detect"/>
+		InitFail_CouldNotCreateApplicationObject = 04,
+
+		/// <summary>The app failed during the initialization stage because it could not set the event handler for ETO unhandled exceptions</summary>
+		/// <seealso cref="Application.UnhandledException"/>
+		InitFail_CouldNotSetEtoExceptionHandler = 05,
+
+		/// <summary>The app failed during the initialization stage because it was unable to initialize the manager classes</summary>
+		/// <seealso cref="StyleManager"/>
+		/// <seealso cref="ResourceManager"/>
+		InitFail_CouldNotInitManagerClasses = 06,
+
+		/// <summary>The app failed during the initialization stage because it was unable to create a <see cref="MainForm"/> instance</summary>
+		/// <seealso cref="MainForm"/>
+		InitFail_CouldNotCreateMainForm = 07,
 
 		/// <summary>App failed while running</summary>
-		AppFailure
+		AppFailure = 08,
+
+		/// <summary>
+		/// In internal error was thrown that could not/was not handled, and the application fatally exited
+		/// </summary>
+		UncaughtInternalError = 101,
+
 	}
 
 	private static string Title             => AssemblyInfo.ProductName;
 	private static string AppTitleVersioned => $"{Title} - v {AssemblyInfo.Version}";
 
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
-	private static int Main(string[] args) => (int)MainInternal(args);
+	[STAThread]
+	private static int Main(string[] args)
+	{
+		ExitCode exitCode;
+		try
+		{
+			exitCode = MainInternal(args);
+		}
+		catch (Exception mainException)
+		{
+			//Yes it's dumb, but there have been occasions (rarely) where this has thrown...
+			//Often due to file not found errors with the Ben.Demystifier assembly
+			try
+			{
+				Console.Error.WriteLine(mainException.ToStringDemystified());
+			}
+			catch (Exception demystifyException)
+			{
+				Console.Error.WriteLine(
+						$@"Could not demystify exception:
+{demystifyException}
+
+Original exception:
+{mainException}"
+				);
+			}
+
+			exitCode = UncaughtInternalError;
+		}
+
+		int      intCode = (int)exitCode;
+		new StreamWriter(Console.OpenStandardOutput()).WriteLine("Exit code: {0} ({1})",Enum.GetName(exitCode), intCode); //Print exit code
+		return intCode;
+	}
 
 	[SuppressMessage("ReSharper.DPA", "DPA0001: Memory allocation issues")] //Mainly due to Eto.Forms doing it's own thing
 	private static ExitCode MainInternal(string[] args)
@@ -76,7 +141,15 @@ internal static class Program
 		//Console and init
 		#if DEBUG
 		Console.WriteLine($"{Title}: Starting program");
-		Console.Title = $"{AppTitleVersioned} [Console]";
+		try
+		{
+			Console.Title = $"{AppTitleVersioned} [Console]";
+		}
+		catch (Exception)
+		{
+			// ignored - title isn't important if it fails
+		}
+
 		Console.WriteLine($"{Title}: Initialising logger");
 		Console.ResetColor();
 		Console.SetError(new ColouredConsoleErrorWriter(Console.Error));
@@ -85,6 +158,7 @@ internal static class Program
 
 		Logger.Init(EarlyAdjustConfig);
 		LogAggregator.Init();
+		if(Console.OpenStandardOutput() == Stream.Null) Warning("No console standard IO streams found");
 
 		Information("Commandline args: {Args}", args);
 		Information("{AppTitle} starting",      AssemblyInfo.ProductName);
@@ -111,7 +185,19 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not set up app domain exception handlers");
-			return InitializationFailure;
+			return InitFail_CouldNotSetAppDomainExceptionHandlers;
+		}
+
+		try
+		{
+			Debug("Starting task watcher");
+			TaskWatcher.Init();
+			Debug("Task watcher started");
+		}
+		catch (Exception e)
+		{
+			Fatal(e, "Failed to initialize task watcher");
+			return InitFail_CouldNotInitTaskWatcher;
 		}
 
 		Platform platform;
@@ -124,7 +210,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise Eto.Forms platform");
-			return InitializationFailure;
+			return InitFail_CouldNotInitPlatform;
 		}
 
 		Application application;
@@ -143,7 +229,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise Eto.Forms application");
-			return InitializationFailure;
+			return InitFail_CouldNotCreateApplicationObject;
 		}
 
 		try
@@ -156,7 +242,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Failed to set up unhandled exception handler");
-			return InitializationFailure;
+			return InitFail_CouldNotSetEtoExceptionHandler;
 		}
 
 		try
@@ -169,7 +255,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not init manager classes");
-			return InitializationFailure;
+			return InitFail_CouldNotInitManagerClasses;
 		}
 
 		MainForm mainForm;
@@ -185,19 +271,7 @@ internal static class Program
 		catch (Exception e)
 		{
 			Fatal(e, "Could not initialise MainForm");
-			return InitializationFailure;
-		}
-
-		try
-		{
-			Debug("Starting task watcher");
-			TaskWatcher.Init();
-			Debug("Task watcher started");
-		}
-		catch (Exception e)
-		{
-			Fatal(e, "Failed to initialize task watcher");
-			return InitializationFailure;
+			return InitFail_CouldNotCreateMainForm;
 		}
 
 		try

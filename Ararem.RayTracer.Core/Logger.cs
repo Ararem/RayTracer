@@ -36,7 +36,7 @@ internal static class Logger
 					{
 							ExtendedLog ? "{Timestamp:O}" : "{Timestamp:HH:mm:ss.fff}", //[DateTime] Date and time of the log event (6/9/2020 4:20 pm for example)
 							"+{TimestampFromStart:G}", //[TimeSpan] Time offset since the process started
-							$"{{{LogEventNumberEnricher.EventNumberProp},9:'Evt #'####}}", //[ulong] Number of this log event
+							$"{{{LogEventNumberEnricher.EventNumberProp},9:'Evt #'#####}}", //[ulong] Number of this log event
 							ExtendedLog ? $"{{{ThreadNameProp},-30}} ({{{ThreadTypeProp},11}})" : null, //[strings] Name and type of the thread that the log call was on
 							$"{{{ThreadIdProp},10:'Thread #'##}}", //[int] Managed ID of the thread that the log call was on
 							$"{{{CallingTypeNameProp},22}}.{{{CallingMethodNameProp},-30}}@ {{{CallingMethodLineProp},3:n0}}:{{{CallingMethodColumnProp}:n0}}", //What piece of code made the call
@@ -64,9 +64,13 @@ internal static class Logger
 		Thread.CurrentThread.Name ??= "Main Thread";
 		SelfLog.Enable(str => Console.Error.WriteLine($"[SelfLog] {str}"));
 		LoggerConfiguration config = new();
+		File.Open("./current.log", FileMode.OpenOrCreate).Dispose(); //Ensure the file is cleared
 		config = earlyAdjustConfig?.Invoke(config) ?? config; //If no config func is provided, `Invoke(...)` isn't called and it returns null, which is handled by the `?? config`
 		config = config.MinimumLevel.Is(LogEventLevel.Verbose)
 					   .WriteTo.Console(outputTemplate: template, applyThemeToRedirectedOutput: true, theme: AnsiConsoleTheme.Code)
+					   .WriteTo.Debug(outputTemplate: template)
+					   .WriteTo.File(path: $"./log-{DateTime.Now:yyyy-MM-dd hh.mm.ss}.log",outputTemplate: template)
+					   .WriteTo.File(path: "./current.log",outputTemplate: template)
 					   .Enrich.FromLogContext()
 					   .Enrich.With<ExceptionDataEnricher>()
 					   .Enrich.WithDemystifiedStackTraces()

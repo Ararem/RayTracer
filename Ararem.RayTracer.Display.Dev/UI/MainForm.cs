@@ -192,11 +192,6 @@ internal sealed class MainForm : Form
 	protected override void Dispose(bool disposing)
 	{
 		log.Verbose("Dispose({Disposing})", disposing);
-		//Stop the UI timer from firing after we've disposed
-		log.Verbose("Stopping UI timer");
-		updateUiTimer.Stop();
-		updateUiTimer.Dispose();
-
 		base.Dispose(disposing);
 	}
 
@@ -209,6 +204,11 @@ internal sealed class MainForm : Form
 		{
 			while (true)
 			{
+				if (IsDisposed)
+				{
+					log.Verbose("MainForm disposed, exiting UI thread loop");
+					return;
+				}
 				sw.Restart();
 				Application.Instance.Invoke(UpdateUi);
 				sw.Stop();
@@ -223,7 +223,6 @@ internal sealed class MainForm : Form
 				log.Warning("Update took {Overshoot} longer than expected: {Elapsed}/{Fps:00.0' FPS'} ({Ratio:P2})", overshoot, actual, fps, ratio);
 				//Skip an iteration of the update to allow the application a bit of time for responsiveness
 				Thread.Sleep(TargetFrameDuration);
-
 				Thread.Sleep(10);
 			}
 		}
@@ -238,17 +237,17 @@ internal sealed class MainForm : Form
 
 	private static TimeSpan TargetFrameDuration => TimeSpan.FromSeconds(1 / TargetRefreshRate);
 
-	private UITimer updateUiTimer;
-
-	private void UpdateUi(object? sender, EventArgs e) => UpdateUi();
-
 	private void UpdateUi()
 	{
+		if (IsDisposed)
+		{
+			log.Verbose("MainForm disposed, skipping update");
+			return;
+		}
+
 		using IDisposable _  = LogUtils.MarkContextAsExtremelyVerbose(); //Extra verbose because it will be called each frame
 		Stopwatch         sw = Stopwatch.StartNew();
 		log.Verbose("Updating UI");
-		SuspendLayout();
-
 		documentControlContent.Pages.AsValueEnumerable().ForEach(
 				(page, index) =>
 				{
@@ -257,7 +256,6 @@ internal sealed class MainForm : Form
 					else renderJobPanel.UpdateUi();
 				}
 		);
-		ResumeLayout();
 		Invalidate();
 		log.Verbose("Updated panel in {Elapsed:#00.000 'ms'}", sw.Elapsed.TotalMilliseconds);
 	}

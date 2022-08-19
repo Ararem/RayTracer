@@ -47,6 +47,8 @@
 	<ItemGroup>
 		<PackageReference Include="Eto.Containers" Version="1.1.1-ci.8" />
 		<PackageReference Include="Figgle" Version="0.4.0" />
+		<PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
 		<PackageReference Include="SharpNoise" Version="0.12.1.1" />
 		<PackageReference Include="NetFabric.Hyperlinq.Analyzer" Version="2.0.4">
 			<PrivateAssets>all</PrivateAssets>
@@ -57,7 +59,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="oidn-natives\lib\libOpenImageDenoise.so" />
 		<Content Include="oidn-natives\lib\libOpenImageDenoise.so">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>

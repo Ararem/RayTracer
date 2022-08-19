@@ -112,7 +112,7 @@ public sealed partial class RenderJobPanel
 				// Layout.Add(null, true, yscale: true); //Add a spacer to make everything scale nicely
 			}
 			Layout.Create();
-			log.Verbose("Dynamic layout creating complete");
+			log.Verbose("Dynamic layout creation complete");
 			base.OnPreLoad(e);
 		}
 

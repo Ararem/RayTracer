@@ -45,7 +45,7 @@ public sealed partial class RenderJobPanel : Panel
 	public RenderOptions RenderOptions { get; } = new();
 
 	/// <inheritdoc/>
-	protected override void OnLoadComplete(EventArgs e)
+	protected override void OnPreLoad(EventArgs e)
 	{
 		log.TrackEvent(this,e);
 
@@ -69,7 +69,7 @@ public sealed partial class RenderJobPanel : Panel
 		Layout.Create();
 		log.Verbose("Layout created");
 
-		base.OnLoadComplete(e);
+		base.OnPreLoad(e);
 	}
 
 	/// <inheritdoc/>
